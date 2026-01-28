@@ -182,18 +182,22 @@ def t_e_s_t_forms(test_object):
     assert "FS_error" in res.headers
 
     # Upload a form that has select with "or other" fails.
-    paths = ["resources", "forms", "or_other", "consumers.xlsx"]
-    resource_file = os.path.join(test_object.path, *paths)
 
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/forms/add".format(
-            test_object.randonLogin, test_object.project
-        ),
-        {"form_pkey": "id"},
-        status=302,
-        upload_files=[("xlsx", resource_file)],
-    )
-    assert "FS_error" in res.headers
+    # This has been fixed in PyXForm 4.X where other is now added to the options
+    #
+
+    # paths = ["resources", "forms", "or_other", "consumers.xlsx"]
+    # resource_file = os.path.join(test_object.path, *paths)
+    #
+    # res = test_object.testapp.post(
+    #     "/user/{}/project/{}/forms/add".format(
+    #         test_object.randonLogin, test_object.project
+    #     ),
+    #     {"form_pkey": "id"},
+    #     status=302,
+    #     upload_files=[("xlsx", resource_file)],
+    # )
+    # assert "FS_error" in res.headers
 
     # Upload a form fails. Tables with more than 64 characters
     paths = ["resources", "forms", "bad_size", "bad_size.xlsx"]

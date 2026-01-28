@@ -5,7 +5,7 @@ import uuid
 
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
-
+from subprocess import Popen, PIPE
 from .sql import get_form_details
 
 
@@ -127,19 +127,65 @@ def t_e_s_t_repository(test_object):
         engine.execute(sql)
         engine.dispose()
 
+        jxform_to_mysql = os.path.join(
+            test_object.server_config["odktools.path"],
+            *["JXFormToMysql", "jxformtomysql"]
+        )
+        odk_dir = "/tmp/{}".format(str(uuid.uuid4()))
+        os.makedirs(odk_dir)
+
+        paths2 = ["resources", "forms", "mimic_complex", "b.srv"]
+        survey_file = str(os.path.join(test_object.path, *paths2))
+
+        args = [
+            jxform_to_mysql,
+            "-j " + survey_file,
+            "-t maintable",
+            "-v " + "I_D",
+            "-c " + os.path.join(odk_dir, *["create.sql"]),
+            "-C " + os.path.join(odk_dir, *["create.xml"]),
+            "-i " + os.path.join(odk_dir, *["insert.sql"]),
+            "-D " + os.path.join(odk_dir, *["drop.sql"]),
+            "-I " + os.path.join(odk_dir, *["insert.xml"]),
+            "-m " + os.path.join(odk_dir, *["metadata.sql"]),
+            "-f " + os.path.join(odk_dir, *["manifest.xml"]),
+            "-T " + os.path.join(odk_dir, *["iso639.sql"]),
+            "-e " + os.path.join(odk_dir, *["temp"]),
+            "-L",
+            "-o m",
+        ]
+
+        paths2 = ["resources", "forms", "complex_form", "cantones.csv"]
+        required_file = os.path.join(test_object.path, *paths2)
+        args.append(required_file)
+
+        paths2 = ["resources", "forms", "complex_form", "distritos.csv"]
+        required_file = os.path.join(test_object.path, *paths2)
+        args.append(required_file)
+
+        paths2 = ["resources", "forms", "complex_form", "generated.csv"]
+        required_file = os.path.join(test_object.path, *paths2)
+        args.append(required_file)
+
+        # We run jxformtomysql to get the latest version of the DB scripts
+        p = Popen(args, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = p.communicate()
+        if p.returncode != 0:
+            raise Exception(stderr + stdout)
+
         form_schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
 
-        paths2 = ["resources", "forms", "mimic_complex", "create.sql"]
-        create_sql = os.path.join(test_object.path, *paths2)
+        paths2 = ["create.sql"]
+        create_sql = os.path.join(odk_dir, *paths2)
 
-        paths2 = ["resources", "forms", "mimic_complex", "insert.sql"]
-        insert_sql = os.path.join(test_object.path, *paths2)
+        paths2 = ["insert.sql"]
+        insert_sql = os.path.join(odk_dir, *paths2)
 
-        paths2 = ["resources", "forms", "mimic_complex", "create.xml"]
-        create_xml = os.path.join(test_object.path, *paths2)
+        paths2 = ["create.xml"]
+        create_xml = os.path.join(odk_dir, *paths2)
 
-        paths2 = ["resources", "forms", "mimic_complex", "insert.xml"]
-        insert_xml = os.path.join(test_object.path, *paths2)
+        paths2 = ["insert.xml"]
+        insert_xml = os.path.join(odk_dir, *paths2)
 
         here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[0]
         paths2 = ["mysql.cnf"]
@@ -288,19 +334,65 @@ def t_e_s_t_repository(test_object):
         engine.execute(sql)
         engine.dispose()
 
+        jxform_to_mysql = os.path.join(
+            test_object.server_config["odktools.path"],
+            *["JXFormToMysql", "jxformtomysql"]
+        )
+        odk_dir = "/tmp/{}".format(str(uuid.uuid4()))
+        os.makedirs(odk_dir)
+
+        paths2 = ["resources", "forms", "mimic_complex", "b.srv"]
+        survey_file = str(os.path.join(test_object.path, *paths2))
+
+        args = [
+            jxform_to_mysql,
+            "-j " + survey_file,
+            "-t maintable",
+            "-v " + "I_D",
+            "-c " + os.path.join(odk_dir, *["create.sql"]),
+            "-C " + os.path.join(odk_dir, *["create.xml"]),
+            "-i " + os.path.join(odk_dir, *["insert.sql"]),
+            "-D " + os.path.join(odk_dir, *["drop.sql"]),
+            "-I " + os.path.join(odk_dir, *["insert.xml"]),
+            "-m " + os.path.join(odk_dir, *["metadata.sql"]),
+            "-f " + os.path.join(odk_dir, *["manifest.xml"]),
+            "-T " + os.path.join(odk_dir, *["iso639.sql"]),
+            "-e " + os.path.join(odk_dir, *["temp"]),
+            "-L",
+            "-o m",
+        ]
+
+        paths2 = ["resources", "forms", "complex_form", "cantones.csv"]
+        required_file = os.path.join(test_object.path, *paths2)
+        args.append(required_file)
+
+        paths2 = ["resources", "forms", "complex_form", "distritos.csv"]
+        required_file = os.path.join(test_object.path, *paths2)
+        args.append(required_file)
+
+        paths2 = ["resources", "forms", "complex_form", "generated.csv"]
+        required_file = os.path.join(test_object.path, *paths2)
+        args.append(required_file)
+
+        # We run jxformtomysql to get the latest version of the DB scripts
+        p = Popen(args, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = p.communicate()
+        if p.returncode != 0:
+            raise Exception(stderr + stdout)
+
         form_schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
 
-        paths2 = ["resources", "forms", "mimic_complex", "create.sql"]
-        create_sql = os.path.join(test_object.path, *paths2)
+        paths2 = ["create.sql"]
+        create_sql = os.path.join(odk_dir, *paths2)
 
-        paths2 = ["resources", "forms", "mimic_complex", "insert.sql"]
-        insert_sql = os.path.join(test_object.path, *paths2)
+        paths2 = ["insert.sql"]
+        insert_sql = os.path.join(odk_dir, *paths2)
 
-        paths2 = ["resources", "forms", "mimic_complex", "create.xml"]
-        create_xml = os.path.join(test_object.path, *paths2)
+        paths2 = ["create.xml"]
+        create_xml = os.path.join(odk_dir, *paths2)
 
-        paths2 = ["resources", "forms", "mimic_complex", "insert.xml"]
-        insert_xml = os.path.join(test_object.path, *paths2)
+        paths2 = ["insert.xml"]
+        insert_xml = os.path.join(odk_dir, *paths2)
 
         here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[0]
         paths2 = ["mysql.cnf"]
@@ -471,19 +563,65 @@ def t_e_s_t_repository(test_object):
         engine.execute(sql)
         engine.dispose()
 
+        jxform_to_mysql = os.path.join(
+            test_object.server_config["odktools.path"],
+            *["JXFormToMysql", "jxformtomysql"]
+        )
+        odk_dir = "/tmp/{}".format(str(uuid.uuid4()))
+        os.makedirs(odk_dir)
+
+        paths2 = ["resources", "forms", "mimic_complex", "b.srv"]
+        survey_file = str(os.path.join(test_object.path, *paths2))
+
+        args = [
+            jxform_to_mysql,
+            "-j " + survey_file,
+            "-t maintable",
+            "-v " + "I_D",
+            "-c " + os.path.join(odk_dir, *["create.sql"]),
+            "-C " + os.path.join(odk_dir, *["create.xml"]),
+            "-i " + os.path.join(odk_dir, *["insert.sql"]),
+            "-D " + os.path.join(odk_dir, *["drop.sql"]),
+            "-I " + os.path.join(odk_dir, *["insert.xml"]),
+            "-m " + os.path.join(odk_dir, *["metadata.sql"]),
+            "-f " + os.path.join(odk_dir, *["manifest.xml"]),
+            "-T " + os.path.join(odk_dir, *["iso639.sql"]),
+            "-e " + os.path.join(odk_dir, *["temp"]),
+            "-L",
+            "-o m",
+        ]
+
+        paths2 = ["resources", "forms", "complex_form", "cantones.csv"]
+        required_file = os.path.join(test_object.path, *paths2)
+        args.append(required_file)
+
+        paths2 = ["resources", "forms", "complex_form", "distritos.csv"]
+        required_file = os.path.join(test_object.path, *paths2)
+        args.append(required_file)
+
+        paths2 = ["resources", "forms", "complex_form", "generated.csv"]
+        required_file = os.path.join(test_object.path, *paths2)
+        args.append(required_file)
+
+        # We run jxformtomysql to get the latest version of the DB scripts
+        p = Popen(args, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = p.communicate()
+        if p.returncode != 0:
+            raise Exception(stderr + stdout)
+
         form_schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
 
-        paths2 = ["resources", "forms", "mimic_complex", "create.sql"]
-        create_sql = os.path.join(test_object.path, *paths2)
+        paths2 = ["create.sql"]
+        create_sql = os.path.join(odk_dir, *paths2)
 
-        paths2 = ["resources", "forms", "mimic_complex", "insert.sql"]
-        insert_sql = os.path.join(test_object.path, *paths2)
+        paths2 = ["insert.sql"]
+        insert_sql = os.path.join(odk_dir, *paths2)
 
-        paths2 = ["resources", "forms", "mimic_complex", "create.xml"]
-        create_xml = os.path.join(test_object.path, *paths2)
+        paths2 = ["create.xml"]
+        create_xml = os.path.join(odk_dir, *paths2)
 
-        paths2 = ["resources", "forms", "mimic_complex", "insert.xml"]
-        insert_xml = os.path.join(test_object.path, *paths2)
+        paths2 = ["insert.xml"]
+        insert_xml = os.path.join(odk_dir, *paths2)
 
         here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[0]
         paths2 = ["mysql.cnf"]

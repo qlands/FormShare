@@ -133,14 +133,19 @@ def build_database(
                 odk_dir,
                 *["forms", form_directory, "repository", "mysql_create_audit.sql"]
             )
-            send_task_status_to_form(settings, task_id, _("Inserting lookup values..."))
+            send_task_status_to_form(settings, task_id, _("Loading triggers..."))
             args = ["mysql", "--defaults-file=" + cnf_file, schema]
             with open(audit_file) as input_file:
                 proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
                 output, error_str = proc.communicate()
                 if proc.returncode != 0:
                     log_message(
-                        "Error loading triggers", error_str, output, " ".join(args)
+                        "Error loading triggers from file {} into schema {}".format(
+                            audit_file, schema
+                        ),
+                        error_str,
+                        output,
+                        " ".join(args),
                     )
                     error = True
         else:

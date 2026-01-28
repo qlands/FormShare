@@ -16,6 +16,7 @@ from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models.meta import Base
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
 from pyramid.paster import get_appsettings, setup_logging
+from requests.auth import HTTPBasicAuth
 
 
 def main(raw_args=None):
@@ -52,16 +53,18 @@ def main(raw_args=None):
 
     es_host = settings.get("elasticsearch.repository.host", "localhost")
     es_port = settings.get("elasticsearch.repository.port", 9200)
-    use_ssl = settings.get("elasticsearch.repository.use_ssl", "False")
+
+    es_user = settings.get("elasticsearch.user.name", "empty")
+    es_password = settings.get("elasticsearch.user.password", "empty")
+    es_scheme = settings.get("elasticsearch.user.scheme", "http")
+
     ready = False
     print("Waiting for ES to be ready")
     while not ready:
-        if use_ssl == "False":
-            resp = requests.get("http://{}:{}/_cluster/health".format(es_host, es_port))
-        else:
-            resp = requests.get(
-                "https://{}:{}/_cluster/health".format(es_host, es_port)
-            )
+        resp = requests.get(
+            "{}://{}:{}/_cluster/health".format(es_scheme, es_host, es_port),
+            auth=HTTPBasicAuth(es_user, es_password),
+        )
         data = resp.json()
         if data["status"] == "yellow" or data["status"] == "green":
             ready = True

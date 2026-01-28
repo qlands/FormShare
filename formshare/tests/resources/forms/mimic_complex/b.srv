@@ -1,0 +1,4506 @@
+{
+    "type": "survey",
+    "name": "data",
+    "title": "Sequia_LB_20190123",
+    "id_string": "LB_Sequia_MAG_20190123",
+    "sms_keyword": "LB_Sequia_MAG_20190123",
+    "default_language": "Spanish",
+    "children": [
+        {
+            "type": "note",
+            "name": "title_note",
+            "label": "Encuesta \"LíneaBase_Sequía_2018+2019 \""
+        },
+        {
+            "type": "group",
+            "name": "SECTION_META",
+            "label": "Sección METADATA",
+            "children": [
+                {
+                    "type": "note",
+                    "label": "Introducción",
+                    "name": "generated_note_name_4"
+                },
+                {
+                    "type": "text",
+                    "name": "interviewername",
+                    "label": "Nombre del entrevistador"
+                },
+                {
+                    "type": "deviceid",
+                    "name": "deviceid"
+                },
+                {
+                    "type": "start",
+                    "name": "starttime_auto"
+                },
+                {
+                    "type": "calculate",
+                    "name": "starttime_calculated",
+                    "bind": {
+                        "calculate": "once(if(boolean-from-string(${interviewername}), format-date-time(now(), '%H:%M:%S'), format-date-time(now(), '%H:%M:%S')))"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "group",
+            "name": "agreement_group",
+            "control": {
+                "appearance": "field-list"
+            },
+            "children": [
+                {
+                    "type": "note",
+                    "name": "agreement",
+                    "label": "Hola, mi nombre es ${interviewername}. La información recabada en esta encuesta es con propósitos técnicos y es estrictamente confidencial"
+                },
+                {
+                    "type": "select one",
+                    "name": "participation",
+                    "label": "¿Esta usted de acuerdo en proveer información para esta encuesta?",
+                    "bind": {
+                        "required": "yes",
+                        "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                    },
+                    "parameters": {},
+                    "itemset": "yes_no",
+                    "list_name": "yes_no",
+                    "choices": [
+                        {
+                            "name": "Y",
+                            "label": "Si"
+                        },
+                        {
+                            "name": "N",
+                            "label": "No"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "note",
+            "label": "AGRADEZCA A LAS PERSONAS POR SU TIEMPO Y ABANDONE LA CASA",
+            "bind": {
+                "relevant": "${participation} = 'N'"
+            },
+            "name": "generated_note_name_15"
+        },
+        {
+            "type": "group",
+            "name": "si_participa",
+            "bind": {
+                "relevant": "${participation} = 'Y'"
+            },
+            "children": [
+                {
+                    "type": "group",
+                    "name": "ubicacion_finca",
+                    "children": [
+                        {
+                            "type": "select one",
+                            "name": "provincia",
+                            "label": "Seleccione una provincia",
+                            "bind": {
+                                "required": "yes"
+                            },
+                            "parameters": {},
+                            "itemset": "provincia",
+                            "list_name": "provincia",
+                            "choices": [
+                                {
+                                    "name": "4",
+                                    "label": "San Jose"
+                                },
+                                {
+                                    "name": "6",
+                                    "label": "Alajuela"
+                                },
+                                {
+                                    "name": "3",
+                                    "label": "Cartago"
+                                },
+                                {
+                                    "name": "5",
+                                    "label": "Heredia"
+                                },
+                                {
+                                    "name": "7",
+                                    "label": "Guanacaste"
+                                },
+                                {
+                                    "name": "1",
+                                    "label": "Puntarenas"
+                                },
+                                {
+                                    "name": "2",
+                                    "label": "Limon"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "select one",
+                            "name": "canton",
+                            "label": "Seleccione un canton",
+                            "bind": {
+                                "required": "yes"
+                            },
+                            "control": {
+                                "appearance": "search('cantones', 'matches', 'prov_code', ${provincia})"
+                            },
+                            "parameters": {},
+                            "itemset": "canton",
+                            "list_name": "canton",
+                            "choices": [
+                                {
+                                    "name": "cant_code",
+                                    "label": "canton"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "select one",
+                            "name": "distrito",
+                            "label": "Seleccione un distrito",
+                            "bind": {
+                                "required": "yes"
+                            },
+                            "control": {
+                                "appearance": "search('distritos', 'matches', 'cant_code', ${canton})"
+                            },
+                            "parameters": {},
+                            "itemset": "distrito",
+                            "list_name": "distrito",
+                            "choices": [
+                                {
+                                    "name": "dist_code",
+                                    "label": "distrito"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "select one",
+                            "name": "me_project",
+                            "label": "Project",
+                            "parameters": {},
+                            "itemset": "generated.csv"
+                        },
+                        {
+                            "type": "text",
+                            "name": "caserio_nombre",
+                            "label": "Nombre del caserio direccion exacta"
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "name": "section_household_info",
+                    "label": "Sección: Información sobre el hogar",
+                    "children": [
+                        {
+                            "type": "group",
+                            "name": "RespondentDetails",
+                            "label": "Detalles del entrevistado",
+                            "control": {
+                                "appearance": "field-list"
+                            },
+                            "children": [
+                                {
+                                    "type": "note",
+                                    "label": "INFORMACION SOBRE EL HOGAR",
+                                    "hint": "En primer lugar, me gustaría preguntarle sobre las personas que habitan su hogar",
+                                    "name": "generated_note_name_28"
+                                },
+                                {
+                                    "type": "text",
+                                    "name": "respondentname",
+                                    "label": "¿Cuál es su nombre?"
+                                },
+                                {
+                                    "type": "text",
+                                    "name": "I_D",
+                                    "label": "Cuál es su N° de cédula?",
+                                    "hint": "Utilice el cero en lugar del guíon.",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                                    }
+                                },
+                                {
+                                    "type": "select one",
+                                    "name": "respondentsex",
+                                    "label": "¿El entrevistado es hombre o mujer?",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                                    },
+                                    "parameters": {},
+                                    "itemset": "male_female",
+                                    "list_name": "male_female",
+                                    "choices": [
+                                        {
+                                            "name": "M",
+                                            "label": "Hombre"
+                                        },
+                                        {
+                                            "name": "F",
+                                            "label": "Mujer"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "select one",
+                                    "name": "respondent_is_head",
+                                    "label": "¿Es usted el/la jefe(a) de la familia?",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                                    },
+                                    "parameters": {},
+                                    "itemset": "yes_no",
+                                    "list_name": "yes_no",
+                                    "choices": [
+                                        {
+                                            "name": "Y",
+                                            "label": "Si"
+                                        },
+                                        {
+                                            "name": "N",
+                                            "label": "No"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "group",
+                            "name": "household_config",
+                            "control": {
+                                "appearance": "field-list"
+                            },
+                            "children": [
+                                {
+                                    "type": "select one",
+                                    "name": "household_position",
+                                    "label": "¿Cuál es su relacion con el/la jefe(a) del hogar?",
+                                    "bind": {
+                                        "relevant": "${respondent_is_head} = 'N'"
+                                    },
+                                    "parameters": {},
+                                    "itemset": "hh_position",
+                                    "list_name": "hh_position",
+                                    "choices": [
+                                        {
+                                            "name": "married_to",
+                                            "label": "Casado con el jefe cabeza del hogar"
+                                        },
+                                        {
+                                            "name": "child",
+                                            "label": "Hijo del jefe cabeza del hogar"
+                                        },
+                                        {
+                                            "name": "parent",
+                                            "label": "Padre o Madre del jefe cabeza del Hogar"
+                                        },
+                                        {
+                                            "name": "family_other",
+                                            "label": "Otro miembro de la familia"
+                                        },
+                                        {
+                                            "name": "nonfamily",
+                                            "label": "Mandador o administrador de la finca"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "select one",
+                                    "name": "household_type",
+                                    "label": "La persona jefe del hogar, ¿es casada o tiene pareja ?",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                                    },
+                                    "parameters": {},
+                                    "itemset": "householdtype",
+                                    "list_name": "householdtype",
+                                    "choices": [
+                                        {
+                                            "name": "couple",
+                                            "label": "Tiene pareja (aún si no están casados)"
+                                        },
+                                        {
+                                            "name": "woman_single",
+                                            "label": "Mujer sola (viuda o hombre ausente del hogar)"
+                                        },
+                                        {
+                                            "name": "man_single",
+                                            "label": "Hombre solo (viudo o mujer ausente del hogar)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "select one",
+                                    "name": "Casa_productor",
+                                    "label": "¿Vive el agricultor y su familia en la finca?",
+                                    "hint": "Si responde que No, preguntar direccion de casa",
+                                    "parameters": {},
+                                    "itemset": "yes_no",
+                                    "list_name": "yes_no",
+                                    "choices": [
+                                        {
+                                            "name": "Y",
+                                            "label": "Si"
+                                        },
+                                        {
+                                            "name": "N",
+                                            "label": "No"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "text",
+                                    "name": "direccion_de_la_casa",
+                                    "label": "Dirección de la casa:"
+                                },
+                                {
+                                    "type": "integer",
+                                    "name": "numero_casa",
+                                    "label": "Teléfono de la casa:"
+                                },
+                                {
+                                    "type": "integer",
+                                    "name": "numero_movil",
+                                    "label": "Teléfono móvil dueño finca:"
+                                },
+                                {
+                                    "type": "select one",
+                                    "name": "work_away",
+                                    "label": "El jefe de la familia (o su pareja), ¿trabajan y viven lejos de su hogar?",
+                                    "hint": "Por al menos más de tres meses",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                                    },
+                                    "parameters": {},
+                                    "itemset": "work_away",
+                                    "list_name": "work_away",
+                                    "choices": [
+                                        {
+                                            "name": "none",
+                                            "label": "No"
+                                        },
+                                        {
+                                            "name": "man_works_away",
+                                            "label": "El hombre trabaja fuera"
+                                        },
+                                        {
+                                            "name": "woman_works_away",
+                                            "label": "La mujer trabaja fuera"
+                                        },
+                                        {
+                                            "name": "both_work_away",
+                                            "label": "Hombre y Mujer trabajan afuera"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "name": "householdpopulation",
+                    "label": "Sección: Habitantes del Hogar",
+                    "children": [
+                        {
+                            "type": "group",
+                            "name": "aged_under4s",
+                            "children": [
+                                {
+                                    "type": "integer",
+                                    "name": "children_under_4",
+                                    "label": "¿Cuántos niños de tres años o menos viven en su hogar?",
+                                    "hint": "De tres años",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria, introduzca un \"0\" si la respuesta es \"cero\" o \"ninguno\" !"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "group",
+                            "name": "aged_4to10",
+                            "control": {
+                                "appearance": "field-list"
+                            },
+                            "children": [
+                                {
+                                    "type": "integer",
+                                    "name": "children_4to10",
+                                    "label": "¿Cuántos niños entre los 4 y 10 años viven en su hogar?",
+                                    "hint": "De 4 años o menores de 11",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria, introduzca un \"0\" si la respuesta es \"cero\" o \"ninguno\" !"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "select one",
+                            "name": "children_4to10_educacion",
+                            "label": "¿Todos los niños entre 6 y 13 años que viven en su hogar, asisten a la escuela en el presente ciclo escolar ?",
+                            "bind": {
+                                "required": "yes",
+                                "jr:requiredMsg": "¡ Esta respuesta es necesaria !",
+                                "relevant": "${children_4to10} > 0"
+                            },
+                            "parameters": {},
+                            "itemset": "yes_no",
+                            "list_name": "yes_no",
+                            "choices": [
+                                {
+                                    "name": "Y",
+                                    "label": "Si"
+                                },
+                                {
+                                    "name": "N",
+                                    "label": "No"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "group",
+                            "name": "youthsgroup",
+                            "control": {
+                                "appearance": "field-list"
+                            },
+                            "children": [
+                                {
+                                    "type": "integer",
+                                    "name": "males11to24",
+                                    "label": "¿Cuántos varones entre 11 y 24 años viven en su hogar?",
+                                    "hint": "Entre 11 y 24 años",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria, introduzca un \"0\" si la respuesta es \"cero\" o \"ninguno\" !"
+                                    }
+                                },
+                                {
+                                    "type": "integer",
+                                    "name": "females11to24",
+                                    "label": "¿Cuantas mujeres entre 11 y 24 años viven en su hogar?",
+                                    "hint": "Entre 11 y 24 años",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria, introduzca un \"0\" si la respuesta es \"cero\" o \"ninguno\" !"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "group",
+                            "name": "adultsgroup",
+                            "control": {
+                                "appearance": "field-list"
+                            },
+                            "children": [
+                                {
+                                    "type": "integer",
+                                    "name": "males25to50",
+                                    "label": "¿Cuántos hombres entre 25 y 50 años viven en su hogar?",
+                                    "hint": "Entre 25 y 50 años",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria, introduzca un \"0\" si la respuesta es \"cero\" o \"ninguno\" !"
+                                    }
+                                },
+                                {
+                                    "type": "integer",
+                                    "name": "females25to50",
+                                    "label": "¿Cuántas mujeres entre 25 y 50 años viven en su hogar?",
+                                    "hint": "Entre 25 y 50 años",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria, introduzca un \"0\" si la respuesta es \"cero\" o \"ninguno\" !"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "group",
+                            "name": "eldersgroup",
+                            "control": {
+                                "appearance": "field-list"
+                            },
+                            "children": [
+                                {
+                                    "type": "integer",
+                                    "name": "malesover50",
+                                    "label": "¿Cuántos señores mayores de 50 años viven en su hogar?",
+                                    "hint": "Entre 51 y 64 años",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria, introduzca un \"0\" si la respuesta es \"cero\" o \"ninguno\" !"
+                                    }
+                                },
+                                {
+                                    "type": "integer",
+                                    "name": "femalesover50",
+                                    "label": "¿Cuántas señoras mayores de 50 años viven en su hogar?",
+                                    "hint": "Entre 51 y 64 años",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria, introduzca un \"0\" si la respuesta es \"cero\" o \"ninguno\" !"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "group",
+                            "name": "goldengroup",
+                            "control": {
+                                "appearance": "field-list"
+                            },
+                            "children": [
+                                {
+                                    "type": "integer",
+                                    "name": "adultsover65",
+                                    "label": "¿Cuántos personas mayores de 65 años viven en su hogar?",
+                                    "hint": "Mayores de 65 años",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria, introduzca un \"0\" si la respuesta es \"cero\" o \"ninguno\" !"
+                                    }
+                                },
+                                {
+                                    "type": "select one",
+                                    "name": "adultsover65_pension",
+                                    "label": "¿Alguna persona mayor de 65 años, recibe pensión de la C.C.S.S.?",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                                    },
+                                    "parameters": {},
+                                    "itemset": "yes_no",
+                                    "list_name": "yes_no",
+                                    "choices": [
+                                        {
+                                            "name": "Y",
+                                            "label": "Si"
+                                        },
+                                        {
+                                            "name": "N",
+                                            "label": "No"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "name": "SECTION_Farm_size",
+                    "label": "Sección: Tamaño de la tierra disponible para actividades agrícolas",
+                    "control": {
+                        "appearance": "field-list"
+                    },
+                    "children": [
+                        {
+                            "type": "note",
+                            "label": "TAMAÑO DE LA FINCA",
+                            "hint": "Ahora algunas preguntas sobre sus tierras.",
+                            "name": "generated_note_name_78"
+                        },
+                        {
+                            "type": "select all that apply",
+                            "name": "land_tenure",
+                            "label": "¿La finca es propia, alquilada o prestada?",
+                            "hint": "Para cultivos y pastoreo",
+                            "bind": {
+                                "required": "yes",
+                                "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                            },
+                            "parameters": {},
+                            "itemset": "land_tenure",
+                            "list_name": "land_tenure",
+                            "choices": [
+                                {
+                                    "name": "own_land",
+                                    "label": "La tierra es propia"
+                                },
+                                {
+                                    "name": "rent_in_land",
+                                    "label": "Renta tierra para poder sembrar"
+                                },
+                                {
+                                    "name": "rent_out_land",
+                                    "label": "Renta sus tierras a otras personas para que estos puedan sembrar"
+                                },
+                                {
+                                    "name": "borrowed_land",
+                                    "label": "la tierra es prestada"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "name": "land_ownership_group",
+                    "control": {
+                        "appearance": "field-list"
+                    },
+                    "bind": {
+                        "relevant": "selected(${land_tenure}, 'own_land')"
+                    },
+                    "children": [
+                        {
+                            "type": "decimal",
+                            "name": "landowned",
+                            "label": "¿Cuánta area tiene su finca?",
+                            "bind": {
+                                "required": "yes",
+                                "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                            }
+                        },
+                        {
+                            "type": "select one",
+                            "name": "unitland_owned",
+                            "label": "Unidades de área:",
+                            "bind": {
+                                "required": "yes",
+                                "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                            },
+                            "parameters": {},
+                            "itemset": "area_units",
+                            "list_name": "area_units",
+                            "choices": [
+                                {
+                                    "name": "hectare",
+                                    "label": "Hectareas"
+                                },
+                                {
+                                    "name": "mz",
+                                    "label": "Manzanas"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "select all that apply",
+                            "name": "land_ownership",
+                            "label": "¿Quien es el dueño de las tierras?",
+                            "hint": "Puede seleccionar múltiples respuestas",
+                            "bind": {
+                                "required": "yes",
+                                "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                            },
+                            "parameters": {},
+                            "itemset": "who_family",
+                            "list_name": "who_family",
+                            "choices": [
+                                {
+                                    "name": "Male",
+                                    "label": "Esposo"
+                                },
+                                {
+                                    "name": "Female",
+                                    "label": "Esposa o jefa de hogar"
+                                },
+                                {
+                                    "name": "Male_Youth_or_Child",
+                                    "label": "Joven o niño varón"
+                                },
+                                {
+                                    "name": "Female_Youth_or_Child",
+                                    "label": "Joven o niña mujer"
+                                },
+                                {
+                                    "name": "Other_family_male",
+                                    "label": "Otro miembro de la familia (hombre)"
+                                },
+                                {
+                                    "name": "Other_family_female",
+                                    "label": "Otro miembro de la familia (mujer)"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "name": "landrentals",
+                    "control": {
+                        "appearance": "field-list"
+                    },
+                    "bind": {
+                        "relevant": "selected(${land_tenure}, 'rent_in_land') or selected(${land_tenure}, 'rent_out_land')"
+                    },
+                    "children": [
+                        {
+                            "type": "decimal",
+                            "name": "landrentin",
+                            "label": "¿Qué superficie renta para trabajar?",
+                            "bind": {
+                                "relevant": "selected(${land_tenure}, 'rent_in_land')"
+                            }
+                        },
+                        {
+                            "type": "select one",
+                            "name": "unitland_rentin",
+                            "label": "Unidades de área:",
+                            "control": {
+                                "appearance": "minimal"
+                            },
+                            "default": "hectareas",
+                            "bind": {
+                                "relevant": "selected(${land_tenure}, 'rent_in_land')"
+                            },
+                            "parameters": {},
+                            "itemset": "area_units",
+                            "list_name": "area_units",
+                            "choices": [
+                                {
+                                    "name": "hectare",
+                                    "label": "Hectareas"
+                                },
+                                {
+                                    "name": "mz",
+                                    "label": "Manzanas"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "decimal",
+                            "name": "landrentout",
+                            "label": "¿Qué superficie renta de sus tierras a otras personas ?",
+                            "bind": {
+                                "relevant": "selected(${land_tenure}, 'rent_out_land')"
+                            }
+                        },
+                        {
+                            "type": "select one",
+                            "name": "unitland_rentout",
+                            "label": "Unidades de área:",
+                            "control": {
+                                "appearance": "minimal"
+                            },
+                            "default": "hectareas",
+                            "bind": {
+                                "relevant": "selected(${land_tenure}, 'rent_out_land')"
+                            },
+                            "parameters": {},
+                            "itemset": "area_units",
+                            "list_name": "area_units",
+                            "choices": [
+                                {
+                                    "name": "hectare",
+                                    "label": "Hectareas"
+                                },
+                                {
+                                    "name": "mz",
+                                    "label": "Manzanas"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "name": "total_land_cult",
+                    "control": {
+                        "appearance": "field-list"
+                    },
+                    "children": [
+                        {
+                            "type": "decimal",
+                            "name": "landcultivated",
+                            "label": "¿Cuánto suma el área de todos los terrenos que utiliza para cultivar ?",
+                            "hint": "Incluyendo todos los terrenos donde tenga cultivos en el campo, en su hogar jardín o cualquier otra parte",
+                            "bind": {
+                                "required": "yes",
+                                "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                            }
+                        },
+                        {
+                            "type": "select one",
+                            "name": "unitland",
+                            "label": "Unidades de área:",
+                            "control": {
+                                "appearance": "minimal"
+                            },
+                            "default": "hectareas",
+                            "parameters": {},
+                            "itemset": "area_units",
+                            "list_name": "area_units",
+                            "choices": [
+                                {
+                                    "name": "hectare",
+                                    "label": "Hectareas"
+                                },
+                                {
+                                    "name": "mz",
+                                    "label": "Manzanas"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "name": "areaunits_other",
+                    "label": "Especifique las unidades si son distintas:",
+                    "bind": {
+                        "relevant": "selected(${unitland}, 'other')"
+                    }
+                },
+                {
+                    "type": "select one",
+                    "name": "Agua_finca",
+                    "label": "Como suple el agua a su finca?",
+                    "hint": "Escoga la principal fuente de abastecimiento",
+                    "bind": {
+                        "required": "yes",
+                        "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                    },
+                    "parameters": {},
+                    "itemset": "agua",
+                    "list_name": "agua",
+                    "choices": [
+                        {
+                            "name": "fuente_Rio",
+                            "label": "Río o quebrada"
+                        },
+                        {
+                            "name": "fuente_pozo",
+                            "label": "Pozo perforado"
+                        },
+                        {
+                            "name": "fuente_lluvia",
+                            "label": "Cosecha agua lluvia"
+                        },
+                        {
+                            "name": "fuente_reservorio",
+                            "label": "Reservorio agua"
+                        },
+                        {
+                            "name": "fuente_pozo_artesanal",
+                            "label": "Pozo artesanal"
+                        },
+                        {
+                            "name": "Fuente_Cañeria_ASADA",
+                            "label": "Cañeria"
+                        }
+                    ]
+                },
+                {
+                    "type": "select one",
+                    "name": "agua_disponible",
+                    "label": "Tiempo de disponibilidad de la fuente de agua",
+                    "bind": {
+                        "required": "yes"
+                    },
+                    "parameters": {},
+                    "itemset": "agua_disp",
+                    "list_name": "agua_disp",
+                    "choices": [
+                        {
+                            "name": "estacional",
+                            "label": "Estacional (solo época de lluvia)"
+                        },
+                        {
+                            "name": "permanente",
+                            "label": "Permanente"
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "name": "crop_intro",
+                    "control": {
+                        "appearance": "field-list"
+                    },
+                    "children": [
+                        {
+                            "type": "note",
+                            "label": "CULTIVOS",
+                            "name": "generated_note_name_107"
+                        },
+                        {
+                            "type": "select one",
+                            "name": "grow_crops",
+                            "label": "¿Usted siembra algún cultivo?",
+                            "bind": {
+                                "required": "yes",
+                                "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                            },
+                            "parameters": {},
+                            "itemset": "yes_no",
+                            "list_name": "yes_no",
+                            "choices": [
+                                {
+                                    "name": "Y",
+                                    "label": "Si"
+                                },
+                                {
+                                    "name": "N",
+                                    "label": "No"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "name": "SECTION_Crop_Productivity",
+                    "label": "Sección: Productividad de los Cultivos",
+                    "bind": {
+                        "relevant": "${grow_crops} = 'Y'"
+                    },
+                    "children": [
+                        {
+                            "type": "group",
+                            "name": "cropcatalogue",
+                            "label": "Listado de Cultivos",
+                            "control": {
+                                "appearance": "field-list"
+                            },
+                            "children": [
+                                {
+                                    "type": "note",
+                                    "label": "PRODUCTIVIDAD DE LOS CULTIVOS",
+                                    "name": "generated_note_name_114"
+                                },
+                                {
+                                    "type": "select all that apply",
+                                    "name": "crops",
+                                    "label": "¿ACTUALMENTE, cuáles son los CUATRO cultivos más importantes que tiene en su finca?",
+                                    "hint": "La importancia radica en cuáles cultivos son los que generan más alimento o dinero para el hogar",
+                                    "bind": {
+                                        "constraint": "count-selected(.)<=5",
+                                        "jr:constraintMsg": {
+                                            "Translation": "Por favor, escoja hasta los CINCO cultivos más importantes"
+                                        },
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                                    },
+                                    "parameters": {},
+                                    "itemset": "crop_list",
+                                    "list_name": "crop_list",
+                                    "choices": [
+                                        {
+                                            "name": "arroz",
+                                            "label": "Arroz"
+                                        },
+                                        {
+                                            "name": "aguacate",
+                                            "label": "aguacate"
+                                        },
+                                        {
+                                            "name": "arveja",
+                                            "label": "Arveja"
+                                        },
+                                        {
+                                            "name": "avena",
+                                            "label": "Avena"
+                                        },
+                                        {
+                                            "name": "ayote",
+                                            "label": "Ayote"
+                                        },
+                                        {
+                                            "name": "banano_criollo",
+                                            "label": "Banano Criollo"
+                                        },
+                                        {
+                                            "name": "datil",
+                                            "label": "Datil"
+                                        },
+                                        {
+                                            "name": "red_macabu",
+                                            "label": "Red Macabu"
+                                        },
+                                        {
+                                            "name": "cacao",
+                                            "label": "Cacao"
+                                        },
+                                        {
+                                            "name": "cafe",
+                                            "label": "Café"
+                                        },
+                                        {
+                                            "name": "camote",
+                                            "label": "Camote"
+                                        },
+                                        {
+                                            "name": "cana_azucar",
+                                            "label": "Caña de azúcar"
+                                        },
+                                        {
+                                            "name": "cebolla",
+                                            "label": "Cebolla"
+                                        },
+                                        {
+                                            "name": "cebollino",
+                                            "label": "Cebollino"
+                                        },
+                                        {
+                                            "name": "chayote",
+                                            "label": "Chayote"
+                                        },
+                                        {
+                                            "name": "chile_dulce",
+                                            "label": "Chile dulce"
+                                        },
+                                        {
+                                            "name": "chile_picante",
+                                            "label": "Chile picante"
+                                        },
+                                        {
+                                            "name": "citricos",
+                                            "label": "Citricos"
+                                        },
+                                        {
+                                            "name": "coco",
+                                            "label": "Coco"
+                                        },
+                                        {
+                                            "name": "culantro",
+                                            "label": "Culantro"
+                                        },
+                                        {
+                                            "name": "culantro_coyote",
+                                            "label": "Culantro coyote"
+                                        },
+                                        {
+                                            "name": "curcuma",
+                                            "label": "Cúrcuma"
+                                        },
+                                        {
+                                            "name": "flores_tropicales",
+                                            "label": "Flores tropicales"
+                                        },
+                                        {
+                                            "name": "frijol",
+                                            "label": "Frijol"
+                                        },
+                                        {
+                                            "name": "guanabana",
+                                            "label": "Guánabana"
+                                        },
+                                        {
+                                            "name": "guayaba_taiwanesa",
+                                            "label": "Guayaba taiwanesa"
+                                        },
+                                        {
+                                            "name": "jengibre",
+                                            "label": "Jengibre"
+                                        },
+                                        {
+                                            "name": "lechuga",
+                                            "label": "Lechuga"
+                                        },
+                                        {
+                                            "name": "limon_mesino",
+                                            "label": "Limón Mesino"
+                                        },
+                                        {
+                                            "name": "limon_mandarina",
+                                            "label": "Limón Mandarina"
+                                        },
+                                        {
+                                            "name": "macadamia",
+                                            "label": "Macadamia"
+                                        },
+                                        {
+                                            "name": "maiz",
+                                            "label": "Maíz"
+                                        },
+                                        {
+                                            "name": "maiz_elote",
+                                            "label": "Maíz para elote"
+                                        },
+                                        {
+                                            "name": "malanga",
+                                            "label": "Malanga"
+                                        },
+                                        {
+                                            "name": "mandarina",
+                                            "label": "Mandarina"
+                                        },
+                                        {
+                                            "name": "mango",
+                                            "label": "Mango"
+                                        },
+                                        {
+                                            "name": "mani",
+                                            "label": "Mani"
+                                        },
+                                        {
+                                            "name": "manzana_agua",
+                                            "label": "Manzana de agua"
+                                        },
+                                        {
+                                            "name": "maracuya",
+                                            "label": "Maracuya"
+                                        },
+                                        {
+                                            "name": "naranja",
+                                            "label": "Naranja"
+                                        },
+                                        {
+                                            "name": "nuevo_cultivo",
+                                            "label": "Nuevo cultivo"
+                                        },
+                                        {
+                                            "name": "name",
+                                            "label": "Ñame"
+                                        },
+                                        {
+                                            "name": "nampi",
+                                            "label": "Ñampí o Chamol"
+                                        },
+                                        {
+                                            "name": "otras_hortalizas",
+                                            "label": "Otras hortalizas"
+                                        },
+                                        {
+                                            "name": "palma_aceitera",
+                                            "label": "Palma aceitera"
+                                        },
+                                        {
+                                            "name": "palmito",
+                                            "label": "Palmito"
+                                        },
+                                        {
+                                            "name": "papa",
+                                            "label": "Papa"
+                                        },
+                                        {
+                                            "name": "papaya",
+                                            "label": "Papaya"
+                                        },
+                                        {
+                                            "name": "pejibaye",
+                                            "label": "Pejibaye"
+                                        },
+                                        {
+                                            "name": "pepino",
+                                            "label": "Pepino"
+                                        },
+                                        {
+                                            "name": "pimienta",
+                                            "label": "Pimienta"
+                                        },
+                                        {
+                                            "name": "pina",
+                                            "label": "Piña"
+                                        },
+                                        {
+                                            "name": "pipian",
+                                            "label": "Pipián"
+                                        },
+                                        {
+                                            "name": "pithaya",
+                                            "label": "Pithaya"
+                                        },
+                                        {
+                                            "name": "plantaciones_forestales",
+                                            "label": "Plantaciones forestales"
+                                        },
+                                        {
+                                            "name": "plantas_ornamentales_follaje",
+                                            "label": "Plantas ornamentales follaje"
+                                        },
+                                        {
+                                            "name": "platano",
+                                            "label": "Platáno"
+                                        },
+                                        {
+                                            "name": "rambutan",
+                                            "label": "Rambután"
+                                        },
+                                        {
+                                            "name": "raicilla",
+                                            "label": "Raicilla"
+                                        },
+                                        {
+                                            "name": "repollo",
+                                            "label": "Repollo"
+                                        },
+                                        {
+                                            "name": "sandia",
+                                            "label": "Sandia"
+                                        },
+                                        {
+                                            "name": "sorgo",
+                                            "label": "Sorgo"
+                                        },
+                                        {
+                                            "name": "tiquisque",
+                                            "label": "Tiquisque"
+                                        },
+                                        {
+                                            "name": "tomate",
+                                            "label": "Tomate"
+                                        },
+                                        {
+                                            "name": "vainica",
+                                            "label": "Vainica"
+                                        },
+                                        {
+                                            "name": "yampi",
+                                            "label": "Yampi"
+                                        },
+                                        {
+                                            "name": "yuca",
+                                            "label": "Yuca"
+                                        },
+                                        {
+                                            "name": "yute",
+                                            "label": "Yute"
+                                        },
+                                        {
+                                            "name": "Otro_No.1",
+                                            "label": "Otro 1"
+                                        },
+                                        {
+                                            "name": "Otro_No.2",
+                                            "label": "Otro 2"
+                                        },
+                                        {
+                                            "name": "Otro_No.3",
+                                            "label": "Otro 3"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "calculate",
+                            "name": "crop_count",
+                            "bind": {
+                                "calculate": "count-selected(${crops})"
+                            }
+                        },
+                        {
+                            "type": "group",
+                            "name": "crops_other_specify",
+                            "label": "Otros Cultivos",
+                            "control": {
+                                "appearance": "field-list"
+                            },
+                            "children": [
+                                {
+                                    "type": "text",
+                                    "name": "crops_other1",
+                                    "label": "Especifíque otro cultivo No. 1",
+                                    "bind": {
+                                        "relevant": "selected(${crops}, 'other1')"
+                                    }
+                                },
+                                {
+                                    "type": "text",
+                                    "name": "crops_other2",
+                                    "label": "Especifíque otro cultivo No. 2",
+                                    "bind": {
+                                        "relevant": "selected(${crops}, 'other2')"
+                                    }
+                                },
+                                {
+                                    "type": "text",
+                                    "name": "crops_other3",
+                                    "label": "Especifíque otro cultivo No. 3",
+                                    "bind": {
+                                        "relevant": "selected(${crops}, 'other3')"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "repeat",
+                            "name": "crop_repeat",
+                            "label": "Detalles sobre cada cultivo (Loop)",
+                            "bind": {
+                                "relevant": "${crop_count} > 0"
+                            },
+                            "control": {
+                                "jr:count": "${crop_count}"
+                            },
+                            "children": [
+                                {
+                                    "type": "calculate",
+                                    "name": "crop_rep_number",
+                                    "bind": {
+                                        "calculate": "position(..)"
+                                    }
+                                },
+                                {
+                                    "type": "select one",
+                                    "name": "crop_name",
+                                    "label": "Le preguntaré sobre cada uno de los cultivos más importantes. Defina al cultivo número ${crop_rep_number}:",
+                                    "bind": {
+                                        "required": "yes",
+                                        "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                                    },
+                                    "control": {
+                                        "appearance": "minimal"
+                                    },
+                                    "choice_filter": "selected(${crops}, name)",
+                                    "parameters": {},
+                                    "itemset": "crop_list",
+                                    "list_name": "crop_list",
+                                    "choices": [
+                                        {
+                                            "name": "arroz",
+                                            "label": "Arroz"
+                                        },
+                                        {
+                                            "name": "aguacate",
+                                            "label": "aguacate"
+                                        },
+                                        {
+                                            "name": "arveja",
+                                            "label": "Arveja"
+                                        },
+                                        {
+                                            "name": "avena",
+                                            "label": "Avena"
+                                        },
+                                        {
+                                            "name": "ayote",
+                                            "label": "Ayote"
+                                        },
+                                        {
+                                            "name": "banano_criollo",
+                                            "label": "Banano Criollo"
+                                        },
+                                        {
+                                            "name": "datil",
+                                            "label": "Datil"
+                                        },
+                                        {
+                                            "name": "red_macabu",
+                                            "label": "Red Macabu"
+                                        },
+                                        {
+                                            "name": "cacao",
+                                            "label": "Cacao"
+                                        },
+                                        {
+                                            "name": "cafe",
+                                            "label": "Café"
+                                        },
+                                        {
+                                            "name": "camote",
+                                            "label": "Camote"
+                                        },
+                                        {
+                                            "name": "cana_azucar",
+                                            "label": "Caña de azúcar"
+                                        },
+                                        {
+                                            "name": "cebolla",
+                                            "label": "Cebolla"
+                                        },
+                                        {
+                                            "name": "cebollino",
+                                            "label": "Cebollino"
+                                        },
+                                        {
+                                            "name": "chayote",
+                                            "label": "Chayote"
+                                        },
+                                        {
+                                            "name": "chile_dulce",
+                                            "label": "Chile dulce"
+                                        },
+                                        {
+                                            "name": "chile_picante",
+                                            "label": "Chile picante"
+                                        },
+                                        {
+                                            "name": "citricos",
+                                            "label": "Citricos"
+                                        },
+                                        {
+                                            "name": "coco",
+                                            "label": "Coco"
+                                        },
+                                        {
+                                            "name": "culantro",
+                                            "label": "Culantro"
+                                        },
+                                        {
+                                            "name": "culantro_coyote",
+                                            "label": "Culantro coyote"
+                                        },
+                                        {
+                                            "name": "curcuma",
+                                            "label": "Cúrcuma"
+                                        },
+                                        {
+                                            "name": "flores_tropicales",
+                                            "label": "Flores tropicales"
+                                        },
+                                        {
+                                            "name": "frijol",
+                                            "label": "Frijol"
+                                        },
+                                        {
+                                            "name": "guanabana",
+                                            "label": "Guánabana"
+                                        },
+                                        {
+                                            "name": "guayaba_taiwanesa",
+                                            "label": "Guayaba taiwanesa"
+                                        },
+                                        {
+                                            "name": "jengibre",
+                                            "label": "Jengibre"
+                                        },
+                                        {
+                                            "name": "lechuga",
+                                            "label": "Lechuga"
+                                        },
+                                        {
+                                            "name": "limon_mesino",
+                                            "label": "Limón Mesino"
+                                        },
+                                        {
+                                            "name": "limon_mandarina",
+                                            "label": "Limón Mandarina"
+                                        },
+                                        {
+                                            "name": "macadamia",
+                                            "label": "Macadamia"
+                                        },
+                                        {
+                                            "name": "maiz",
+                                            "label": "Maíz"
+                                        },
+                                        {
+                                            "name": "maiz_elote",
+                                            "label": "Maíz para elote"
+                                        },
+                                        {
+                                            "name": "malanga",
+                                            "label": "Malanga"
+                                        },
+                                        {
+                                            "name": "mandarina",
+                                            "label": "Mandarina"
+                                        },
+                                        {
+                                            "name": "mango",
+                                            "label": "Mango"
+                                        },
+                                        {
+                                            "name": "mani",
+                                            "label": "Mani"
+                                        },
+                                        {
+                                            "name": "manzana_agua",
+                                            "label": "Manzana de agua"
+                                        },
+                                        {
+                                            "name": "maracuya",
+                                            "label": "Maracuya"
+                                        },
+                                        {
+                                            "name": "naranja",
+                                            "label": "Naranja"
+                                        },
+                                        {
+                                            "name": "nuevo_cultivo",
+                                            "label": "Nuevo cultivo"
+                                        },
+                                        {
+                                            "name": "name",
+                                            "label": "Ñame"
+                                        },
+                                        {
+                                            "name": "nampi",
+                                            "label": "Ñampí o Chamol"
+                                        },
+                                        {
+                                            "name": "otras_hortalizas",
+                                            "label": "Otras hortalizas"
+                                        },
+                                        {
+                                            "name": "palma_aceitera",
+                                            "label": "Palma aceitera"
+                                        },
+                                        {
+                                            "name": "palmito",
+                                            "label": "Palmito"
+                                        },
+                                        {
+                                            "name": "papa",
+                                            "label": "Papa"
+                                        },
+                                        {
+                                            "name": "papaya",
+                                            "label": "Papaya"
+                                        },
+                                        {
+                                            "name": "pejibaye",
+                                            "label": "Pejibaye"
+                                        },
+                                        {
+                                            "name": "pepino",
+                                            "label": "Pepino"
+                                        },
+                                        {
+                                            "name": "pimienta",
+                                            "label": "Pimienta"
+                                        },
+                                        {
+                                            "name": "pina",
+                                            "label": "Piña"
+                                        },
+                                        {
+                                            "name": "pipian",
+                                            "label": "Pipián"
+                                        },
+                                        {
+                                            "name": "pithaya",
+                                            "label": "Pithaya"
+                                        },
+                                        {
+                                            "name": "plantaciones_forestales",
+                                            "label": "Plantaciones forestales"
+                                        },
+                                        {
+                                            "name": "plantas_ornamentales_follaje",
+                                            "label": "Plantas ornamentales follaje"
+                                        },
+                                        {
+                                            "name": "platano",
+                                            "label": "Platáno"
+                                        },
+                                        {
+                                            "name": "rambutan",
+                                            "label": "Rambután"
+                                        },
+                                        {
+                                            "name": "raicilla",
+                                            "label": "Raicilla"
+                                        },
+                                        {
+                                            "name": "repollo",
+                                            "label": "Repollo"
+                                        },
+                                        {
+                                            "name": "sandia",
+                                            "label": "Sandia"
+                                        },
+                                        {
+                                            "name": "sorgo",
+                                            "label": "Sorgo"
+                                        },
+                                        {
+                                            "name": "tiquisque",
+                                            "label": "Tiquisque"
+                                        },
+                                        {
+                                            "name": "tomate",
+                                            "label": "Tomate"
+                                        },
+                                        {
+                                            "name": "vainica",
+                                            "label": "Vainica"
+                                        },
+                                        {
+                                            "name": "yampi",
+                                            "label": "Yampi"
+                                        },
+                                        {
+                                            "name": "yuca",
+                                            "label": "Yuca"
+                                        },
+                                        {
+                                            "name": "yute",
+                                            "label": "Yute"
+                                        },
+                                        {
+                                            "name": "Otro_No.1",
+                                            "label": "Otro 1"
+                                        },
+                                        {
+                                            "name": "Otro_No.2",
+                                            "label": "Otro 2"
+                                        },
+                                        {
+                                            "name": "Otro_No.3",
+                                            "label": "Otro 3"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "calculate",
+                                    "name": "crop_label",
+                                    "bind": {
+                                        "calculate": "jr:choice-name(${crop_name}, '${crop_name}')"
+                                    }
+                                },
+                                {
+                                    "type": "group",
+                                    "name": "crop_details",
+                                    "label": "Detalles del cultivo",
+                                    "control": {
+                                        "appearance": "field-list"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "note",
+                                            "label": "Cultivo número ${crop_rep_number}: ${crop_label}",
+                                            "name": "generated_note_name_132"
+                                        },
+                                        {
+                                            "type": "decimal",
+                                            "name": "crop_planted",
+                                            "label": "¿Canta area tiene sembrado del cultivo ${crop_label} ?",
+                                            "bind": {
+                                                "required": "yes",
+                                                "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                                            }
+                                        },
+                                        {
+                                            "type": "select one",
+                                            "name": "crop_yield_units",
+                                            "label": "unidades:",
+                                            "bind": {
+                                                "required": "yes"
+                                            },
+                                            "control": {
+                                                "appearance": "minimal"
+                                            },
+                                            "default": "kg",
+                                            "parameters": {},
+                                            "itemset": "planted_units",
+                                            "list_name": "planted_units",
+                                            "choices": [
+                                                {
+                                                    "name": "ha",
+                                                    "label": "Hectareas"
+                                                },
+                                                {
+                                                    "name": "mz",
+                                                    "label": "Manzanas"
+                                                },
+                                                {
+                                                    "name": "m2",
+                                                    "label": "Metros cuadrados"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "select one",
+                                            "name": "crop_irrigated",
+                                            "label": "¿Tiene este cultivo bajo riego?",
+                                            "bind": {
+                                                "required": "yes"
+                                            },
+                                            "parameters": {},
+                                            "itemset": "yes_no",
+                                            "list_name": "yes_no",
+                                            "choices": [
+                                                {
+                                                    "name": "Y",
+                                                    "label": "Si"
+                                                },
+                                                {
+                                                    "name": "N",
+                                                    "label": "No"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "date",
+                                            "name": "fecha_siembra",
+                                            "label": "Cuando sembro el cultivo",
+                                            "hint": "Sino se acuarda del dia, de un dia estimado",
+                                            "bind": {
+                                                "required": "yes"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "note",
+                    "label": "GANADO",
+                    "name": "generated_note_name_143"
+                },
+                {
+                    "type": "select one",
+                    "name": "livestock_owners",
+                    "label": "¿Tiene ganado u otros animales?",
+                    "bind": {
+                        "required": "yes",
+                        "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                    },
+                    "parameters": {},
+                    "itemset": "yes_no",
+                    "list_name": "yes_no",
+                    "choices": [
+                        {
+                            "name": "Y",
+                            "label": "Si"
+                        },
+                        {
+                            "name": "N",
+                            "label": "No"
+                        }
+                    ]
+                },
+                {
+                    "type": "select all that apply",
+                    "name": "livestock",
+                    "label": "¿Cuáles animales tienen en su finca?",
+                    "bind": {
+                        "constraint": "count-selected(.)<=5.",
+                        "required": "yes",
+                        "jr:requiredMsg": "¡ Esta respuesta es necesaria !",
+                        "relevant": "${livestock_owners} = 'Y'"
+                    },
+                    "parameters": {},
+                    "itemset": "livestock_list",
+                    "list_name": "livestock_list",
+                    "choices": [
+                        {
+                            "name": "cattle",
+                            "label": "Vacas, toros"
+                        },
+                        {
+                            "name": "goats",
+                            "label": "Cabras"
+                        },
+                        {
+                            "name": "sheep",
+                            "label": "Ovejas"
+                        },
+                        {
+                            "name": "pigs",
+                            "label": "Cerdos"
+                        },
+                        {
+                            "name": "chicken",
+                            "label": "Gallinas"
+                        },
+                        {
+                            "name": "otherpoultry",
+                            "label": "Otras aves"
+                        },
+                        {
+                            "name": "rabbits",
+                            "label": "Conejos"
+                        },
+                        {
+                            "name": "donkeys_horses",
+                            "label": "Burros, mulas o similares"
+                        },
+                        {
+                            "name": "fish",
+                            "label": "Peces"
+                        },
+                        {
+                            "name": "bees",
+                            "label": "Abejas"
+                        },
+                        {
+                            "name": "other1",
+                            "label": "Otro N°1"
+                        },
+                        {
+                            "name": "other2",
+                            "label": "Otro N°2"
+                        },
+                        {
+                            "name": "other3",
+                            "label": "Otro N°3"
+                        }
+                    ]
+                },
+                {
+                    "type": "calculate",
+                    "name": "livestock_count",
+                    "bind": {
+                        "calculate": "count-selected(${livestock})"
+                    }
+                },
+                {
+                    "type": "repeat",
+                    "name": "livestock_repeat",
+                    "label": "Detalles sobre cada animal (Loop)",
+                    "bind": {
+                        "relevant": "${livestock_count} > 0"
+                    },
+                    "control": {
+                        "jr:count": "${livestock_count}"
+                    },
+                    "children": [
+                        {
+                            "type": "calculate",
+                            "name": "live_rep_number",
+                            "bind": {
+                                "calculate": "position(..)"
+                            }
+                        },
+                        {
+                            "type": "select one",
+                            "name": "live_name",
+                            "label": "Le preguntaré sobre cada uno de los animales más importantes. Defina al animal número ${live_rep_number}:",
+                            "bind": {
+                                "required": "yes",
+                                "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                            },
+                            "control": {
+                                "appearance": "minimal"
+                            },
+                            "choice_filter": "selected(${livestock}, name)",
+                            "parameters": {},
+                            "itemset": "livestock_list",
+                            "list_name": "livestock_list",
+                            "choices": [
+                                {
+                                    "name": "cattle",
+                                    "label": "Vacas, toros"
+                                },
+                                {
+                                    "name": "goats",
+                                    "label": "Cabras"
+                                },
+                                {
+                                    "name": "sheep",
+                                    "label": "Ovejas"
+                                },
+                                {
+                                    "name": "pigs",
+                                    "label": "Cerdos"
+                                },
+                                {
+                                    "name": "chicken",
+                                    "label": "Gallinas"
+                                },
+                                {
+                                    "name": "otherpoultry",
+                                    "label": "Otras aves"
+                                },
+                                {
+                                    "name": "rabbits",
+                                    "label": "Conejos"
+                                },
+                                {
+                                    "name": "donkeys_horses",
+                                    "label": "Burros, mulas o similares"
+                                },
+                                {
+                                    "name": "fish",
+                                    "label": "Peces"
+                                },
+                                {
+                                    "name": "bees",
+                                    "label": "Abejas"
+                                },
+                                {
+                                    "name": "other1",
+                                    "label": "Otro N°1"
+                                },
+                                {
+                                    "name": "other2",
+                                    "label": "Otro N°2"
+                                },
+                                {
+                                    "name": "other3",
+                                    "label": "Otro N°3"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "calculate",
+                            "name": "live_label",
+                            "bind": {
+                                "calculate": "jr:choice-name(${live_name}, '${live_name}')"
+                            }
+                        },
+                        {
+                            "type": "integer",
+                            "name": "live_number",
+                            "label": "¿Cantos animales tiene de ${live_label} ?",
+                            "bind": {
+                                "required": "yes",
+                                "jr:requiredMsg": "¡ Esta respuesta es necesaria !",
+                                "relevant": "${live_name} != 'bees'"
+                            }
+                        },
+                        {
+                            "type": "integer",
+                            "name": "bee_number",
+                            "label": "Cuantas colmenas tiene",
+                            "bind": {
+                                "required": "yes",
+                                "relevant": "${live_name} = 'bees'"
+                            }
+                        },
+                        {
+                            "type": "select one",
+                            "name": "tipo_ganaderia",
+                            "label": "Que tipo de ganadería tiene?",
+                            "bind": {
+                                "required": "yes",
+                                "relevant": "${live_name} = 'cattle'"
+                            },
+                            "parameters": {},
+                            "itemset": "ganaderia",
+                            "list_name": "ganaderia",
+                            "choices": [
+                                {
+                                    "name": "cria",
+                                    "label": "Ganadería de cría"
+                                },
+                                {
+                                    "name": "doble",
+                                    "label": "Ganadería de doble propósito"
+                                },
+                                {
+                                    "name": "leche",
+                                    "label": "Ganadería de leche"
+                                },
+                                {
+                                    "name": "engorde",
+                                    "label": "Ganadería de engorde"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "select one",
+                            "name": "tipo_aves",
+                            "label": "Que tipo de avicultura tiene?",
+                            "bind": {
+                                "required": "yes",
+                                "relevant": "${live_name} = 'chicken'"
+                            },
+                            "parameters": {},
+                            "itemset": "aves",
+                            "list_name": "aves",
+                            "choices": [
+                                {
+                                    "name": "postura",
+                                    "label": "Aves de postura"
+                                },
+                                {
+                                    "name": "engorde",
+                                    "label": "Aves de engorde"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "select one",
+                            "name": "tiene_pastos",
+                            "label": "Tiene pastos",
+                            "bind": {
+                                "relevant": "${live_name} = 'cattle'"
+                            },
+                            "parameters": {},
+                            "itemset": "yes_no",
+                            "list_name": "yes_no",
+                            "choices": [
+                                {
+                                    "name": "Y",
+                                    "label": "Si"
+                                },
+                                {
+                                    "name": "N",
+                                    "label": "No"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "group",
+                            "name": "grp_pastos",
+                            "label": "Infornacion sobre pastos, ensilaje o henificación",
+                            "bind": {
+                                "relevant": "${tiene_pastos} = 'Y'"
+                            },
+                            "children": [
+                                {
+                                    "type": "group",
+                                    "name": "grp_pasto_total",
+                                    "control": {
+                                        "appearance": "field-list"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "decimal",
+                                            "name": "pasto_total",
+                                            "label": "Área de pastos total",
+                                            "bind": {
+                                                "required": "yes"
+                                            }
+                                        },
+                                        {
+                                            "type": "select one",
+                                            "name": "pasto_total_unit",
+                                            "label": "Unidad del area",
+                                            "bind": {
+                                                "required": "yes"
+                                            },
+                                            "parameters": {},
+                                            "itemset": "area_units",
+                                            "list_name": "area_units",
+                                            "choices": [
+                                                {
+                                                    "name": "hectare",
+                                                    "label": "Hectareas"
+                                                },
+                                                {
+                                                    "name": "mz",
+                                                    "label": "Manzanas"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "group",
+                                    "name": "grp_pasto_piso",
+                                    "control": {
+                                        "appearance": "field-list"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "decimal",
+                                            "name": "pasto_piso",
+                                            "label": "Área de pastos de piso naturalizado",
+                                            "bind": {
+                                                "required": "yes"
+                                            }
+                                        },
+                                        {
+                                            "type": "select one",
+                                            "name": "pasto_piso_unit",
+                                            "label": "Unidad del area",
+                                            "bind": {
+                                                "required": "yes"
+                                            },
+                                            "parameters": {},
+                                            "itemset": "area_units",
+                                            "list_name": "area_units",
+                                            "choices": [
+                                                {
+                                                    "name": "hectare",
+                                                    "label": "Hectareas"
+                                                },
+                                                {
+                                                    "name": "mz",
+                                                    "label": "Manzanas"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "group",
+                                    "name": "grp_pasto_mejorado",
+                                    "control": {
+                                        "appearance": "field-list"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "decimal",
+                                            "name": "pasto_mejorado",
+                                            "label": "Área de pastos de piso mejorado",
+                                            "bind": {
+                                                "required": "yes"
+                                            }
+                                        },
+                                        {
+                                            "type": "select one",
+                                            "name": "pasto_mejorado_unit",
+                                            "label": "Unidad del area",
+                                            "bind": {
+                                                "required": "yes"
+                                            },
+                                            "parameters": {},
+                                            "itemset": "area_units",
+                                            "list_name": "area_units",
+                                            "choices": [
+                                                {
+                                                    "name": "hectare",
+                                                    "label": "Hectareas"
+                                                },
+                                                {
+                                                    "name": "mz",
+                                                    "label": "Manzanas"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "group",
+                                    "name": "grp_pasto_corte",
+                                    "control": {
+                                        "appearance": "field-list"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "decimal",
+                                            "name": "pasto_corte",
+                                            "label": "Área de pastos de corte",
+                                            "bind": {
+                                                "required": "yes"
+                                            }
+                                        },
+                                        {
+                                            "type": "select one",
+                                            "name": "pasto_corte_unit",
+                                            "label": "Unidad del area",
+                                            "bind": {
+                                                "required": "yes"
+                                            },
+                                            "parameters": {},
+                                            "itemset": "area_units",
+                                            "list_name": "area_units",
+                                            "choices": [
+                                                {
+                                                    "name": "hectare",
+                                                    "label": "Hectareas"
+                                                },
+                                                {
+                                                    "name": "mz",
+                                                    "label": "Manzanas"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "group",
+                                    "name": "grp_ensilaje",
+                                    "control": {
+                                        "appearance": "field-list"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "decimal",
+                                            "name": "ensilaje",
+                                            "label": "Área de pastos de ensilaje o henificación",
+                                            "bind": {
+                                                "required": "yes"
+                                            }
+                                        },
+                                        {
+                                            "type": "select one",
+                                            "name": "ensilaje_unit",
+                                            "label": "Unidad del area",
+                                            "bind": {
+                                                "required": "yes"
+                                            },
+                                            "parameters": {},
+                                            "itemset": "area_units",
+                                            "list_name": "area_units",
+                                            "choices": [
+                                                {
+                                                    "name": "hectare",
+                                                    "label": "Hectareas"
+                                                },
+                                                {
+                                                    "name": "mz",
+                                                    "label": "Manzanas"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "date",
+                                    "name": "fecha_pasto",
+                                    "label": "Fecha de siembra del pasto de ensilaje o henificación",
+                                    "hint": "Sino se acuarda del dia, de un dia estimado",
+                                    "bind": {
+                                        "required": "yes"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "select one",
+                    "name": "tiene_ensilaje",
+                    "label": "Tiene ensilaje?",
+                    "bind": {
+                        "required": "yes"
+                    },
+                    "parameters": {},
+                    "itemset": "yes_no",
+                    "list_name": "yes_no",
+                    "choices": [
+                        {
+                            "name": "Y",
+                            "label": "Si"
+                        },
+                        {
+                            "name": "N",
+                            "label": "No"
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "name": "grp_tensilaje",
+                    "control": {
+                        "appearance": "field-list"
+                    },
+                    "bind": {
+                        "relevant": "${tiene_ensilaje} = 'Y'"
+                    },
+                    "children": [
+                        {
+                            "type": "decimal",
+                            "name": "ensilaje",
+                            "label": "Cantidad ensilada",
+                            "bind": {
+                                "required": "yes"
+                            }
+                        },
+                        {
+                            "type": "select one",
+                            "name": "ensilaje_unit",
+                            "label": "Unidad",
+                            "bind": {
+                                "required": "yes"
+                            },
+                            "parameters": {},
+                            "itemset": "unidad_ensilaje",
+                            "list_name": "unidad_ensilaje",
+                            "choices": [
+                                {
+                                    "name": "toneladas",
+                                    "label": "Tonelada"
+                                },
+                                {
+                                    "name": "pacas",
+                                    "label": "Pacas 18 Kg"
+                                },
+                                {
+                                    "name": "silopacas",
+                                    "label": "Silopacas 400 kg"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "name": "offfarm_inc_intro",
+                    "control": {
+                        "appearance": "field-list"
+                    },
+                    "children": [
+                        {
+                            "type": "note",
+                            "label": "Ingresos por trabajo fuera de la finca",
+                            "name": "generated_note_name_197"
+                        },
+                        {
+                            "type": "select one",
+                            "name": "offfarm_incomes_any",
+                            "label": "¿Tiene algúna fuente de ingresos aparte de lo que obtiene de la venta de los productos de la finca?",
+                            "bind": {
+                                "required": "yes",
+                                "jr:requiredMsg": "¡ Esta respuesta es necesaria !"
+                            },
+                            "parameters": {},
+                            "itemset": "yes_no",
+                            "list_name": "yes_no",
+                            "choices": [
+                                {
+                                    "name": "Y",
+                                    "label": "Si"
+                                },
+                                {
+                                    "name": "N",
+                                    "label": "No"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "name": "offfarm_income_sources",
+                    "control": {
+                        "appearance": "field-list"
+                    },
+                    "bind": {
+                        "relevant": "${offfarm_incomes_any} = 'Y'"
+                    },
+                    "children": [
+                        {
+                            "type": "note",
+                            "name": "SECTION_Off_Farm_Income",
+                            "label": "Sección: Ingresos por trabajo fuera de la finca"
+                        },
+                        {
+                            "type": "select one",
+                            "name": "offfarm_income_ag",
+                            "label": "¿Qué tanto de esos ingresos son relacionados a agricultura? E.g., Jornalero agricola",
+                            "bind": {
+                                "relevant": "${offfarm_incomes_any} = 'Y'"
+                            },
+                            "parameters": {},
+                            "itemset": "proporcion",
+                            "list_name": "proporcion",
+                            "choices": [
+                                {
+                                    "name": "Todo o casi todo",
+                                    "label": "Todo o casi todo"
+                                },
+                                {
+                                    "name": "La mayoria",
+                                    "label": "La mayoria"
+                                },
+                                {
+                                    "name": "La mitad",
+                                    "label": "La mitad"
+                                },
+                                {
+                                    "name": "Algo",
+                                    "label": "Algo"
+                                },
+                                {
+                                    "name": "Casi nada",
+                                    "label": "Casi nada"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "select one",
+                    "name": "prop_onfarm",
+                    "label": "Del ingreso total cuanto proviene de la finca",
+                    "parameters": {},
+                    "itemset": "proporcion",
+                    "list_name": "proporcion",
+                    "choices": [
+                        {
+                            "name": "Todo o casi todo",
+                            "label": "Todo o casi todo"
+                        },
+                        {
+                            "name": "La mayoria",
+                            "label": "La mayoria"
+                        },
+                        {
+                            "name": "La mitad",
+                            "label": "La mitad"
+                        },
+                        {
+                            "name": "Algo",
+                            "label": "Algo"
+                        },
+                        {
+                            "name": "Casi nada",
+                            "label": "Casi nada"
+                        }
+                    ]
+                },
+                {
+                    "type": "select one",
+                    "name": "prop_crops",
+                    "label": "Del ingreso total de la finca cuanto proviene cultivos",
+                    "parameters": {},
+                    "itemset": "proporcion",
+                    "list_name": "proporcion",
+                    "choices": [
+                        {
+                            "name": "Todo o casi todo",
+                            "label": "Todo o casi todo"
+                        },
+                        {
+                            "name": "La mayoria",
+                            "label": "La mayoria"
+                        },
+                        {
+                            "name": "La mitad",
+                            "label": "La mitad"
+                        },
+                        {
+                            "name": "Algo",
+                            "label": "Algo"
+                        },
+                        {
+                            "name": "Casi nada",
+                            "label": "Casi nada"
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "name": "SECTION",
+                    "label": "Sección: Cierre de la entrevista",
+                    "children": [
+                        {
+                            "type": "group",
+                            "name": "nearly_finished",
+                            "control": {
+                                "appearance": "field-list"
+                            },
+                            "children": [
+                                {
+                                    "type": "note",
+                                    "label": "CIERRE",
+                                    "name": "generated_note_name_211"
+                                },
+                                {
+                                    "type": "note",
+                                    "name": "respondent_comments",
+                                    "label": "Antes de terminar, tiene algúna pregunta o comentario?",
+                                    "hint": "De ser posible, trate de responder usted mismo a las preguntas del entrevistado"
+                                },
+                                {
+                                    "type": "note",
+                                    "label": "Agradezca a los entrevistados por su tiempo y por compartir la información",
+                                    "hint": "Salga de la casa",
+                                    "name": "generated_note_name_214"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "geopoint",
+                            "name": "GPS",
+                            "label": "Coordenadas GPS de la Finca",
+                            "hint": "Este punto GPS debe de ser tomado en la entrada de la finca.",
+                            "bind": {
+                                "required": "yes"
+                            },
+                            "control": {}
+                        },
+                        {
+                            "type": "end",
+                            "name": "endtime_auto"
+                        },
+                        {
+                            "type": "calculate",
+                            "name": "endtime_calculated",
+                            "bind": {
+                                "calculate": "if(boolean-from-string(${interviewername}), format-date-time(now(), '%H:%M:%S'), format-date-time(now(), '%H:%M:%S'))"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "note",
+                    "label": "¡ Entrevista Completa !",
+                    "name": "generated_note_name_221"
+                }
+            ]
+        },
+        {
+            "name": "meta",
+            "type": "group",
+            "control": {
+                "bodyless": true
+            },
+            "children": [
+                {
+                    "name": "instanceID",
+                    "bind": {
+                        "readonly": "true()",
+                        "jr:preload": "uid"
+                    },
+                    "type": "calculate"
+                }
+            ]
+        }
+    ],
+    "version": "1",
+    "choices": {
+        "Ag_Inputs": [
+            {
+                "name": "Fertilisers",
+                "label": "Fertilizante"
+            },
+            {
+                "name": "Manure",
+                "label": "Estiércol abono"
+            },
+            {
+                "name": "Compost",
+                "label": "Composta"
+            },
+            {
+                "name": "Pesticides",
+                "label": "Pesticidas (incluye: herbicidas, fungicidas, químicos post-cosecha, etc.)"
+            },
+            {
+                "name": "Hybrid_Seeds",
+                "label": "Semilla mejorada"
+            },
+            {
+                "name": "other",
+                "label": "Otro"
+            },
+            {
+                "name": "none",
+                "label": "Ninguno"
+            }
+        ],
+        "agua": [
+            {
+                "name": "fuente_Rio",
+                "label": "Río o quebrada"
+            },
+            {
+                "name": "fuente_pozo",
+                "label": "Pozo perforado"
+            },
+            {
+                "name": "fuente_lluvia",
+                "label": "Cosecha agua lluvia"
+            },
+            {
+                "name": "fuente_reservorio",
+                "label": "Reservorio agua"
+            },
+            {
+                "name": "fuente_pozo_artesanal",
+                "label": "Pozo artesanal"
+            },
+            {
+                "name": "Fuente_Cañeria_ASADA",
+                "label": "Cañeria"
+            }
+        ],
+        "agua_disp": [
+            {
+                "name": "estacional",
+                "label": "Estacional (solo época de lluvia)"
+            },
+            {
+                "name": "permanente",
+                "label": "Permanente"
+            }
+        ],
+        "aid_finca": [
+            {
+                "name": "Food",
+                "label": "Alimentos"
+            },
+            {
+                "name": "Cash",
+                "label": "Subsidio por desempleo"
+            },
+            {
+                "name": "Materials",
+                "label": "Materiales reparacion o reconstrucción infraestructura agropecuaria"
+            },
+            {
+                "name": "Agri_Inputs",
+                "label": "Insumos (fertilizantes, semillas, herramientas, otros)"
+            },
+            {
+                "name": "Pesticides",
+                "label": "Pesticidas (incluye: herbicidas, fungicidas, químicos post-cosecha, etc.)"
+            },
+            {
+                "name": "Animals",
+                "label": "Animales"
+            },
+            {
+                "name": "other",
+                "label": "Otros"
+            }
+        ],
+        "area_units": [
+            {
+                "name": "hectare",
+                "label": "Hectareas"
+            },
+            {
+                "name": "mz",
+                "label": "Manzanas"
+            }
+        ],
+        "breeds": [
+            {
+                "name": "local",
+                "label": "raza criolla (locales)"
+            },
+            {
+                "name": "improved",
+                "label": "raza mejorada"
+            },
+            {
+                "name": "mixed",
+                "label": "criolla y mejorada"
+            }
+        ],
+        "child_farm": [
+            {
+                "name": "Y",
+                "label": "Si"
+            },
+            {
+                "name": "N",
+                "label": "No"
+            },
+            {
+                "name": "some",
+                "label": "Algunos de ellos"
+            },
+            {
+                "name": "too_young",
+                "label": "Muy joven para decidir"
+            },
+            {
+                "name": "dont_have",
+                "label": "No tiene"
+            }
+        ],
+        "crop_list": [
+            {
+                "name": "arroz",
+                "label": "Arroz"
+            },
+            {
+                "name": "aguacate",
+                "label": "aguacate"
+            },
+            {
+                "name": "arveja",
+                "label": "Arveja"
+            },
+            {
+                "name": "avena",
+                "label": "Avena"
+            },
+            {
+                "name": "ayote",
+                "label": "Ayote"
+            },
+            {
+                "name": "banano_criollo",
+                "label": "Banano Criollo"
+            },
+            {
+                "name": "datil",
+                "label": "Datil"
+            },
+            {
+                "name": "red_macabu",
+                "label": "Red Macabu"
+            },
+            {
+                "name": "cacao",
+                "label": "Cacao"
+            },
+            {
+                "name": "cafe",
+                "label": "Café"
+            },
+            {
+                "name": "camote",
+                "label": "Camote"
+            },
+            {
+                "name": "cana_azucar",
+                "label": "Caña de azúcar"
+            },
+            {
+                "name": "cebolla",
+                "label": "Cebolla"
+            },
+            {
+                "name": "cebollino",
+                "label": "Cebollino"
+            },
+            {
+                "name": "chayote",
+                "label": "Chayote"
+            },
+            {
+                "name": "chile_dulce",
+                "label": "Chile dulce"
+            },
+            {
+                "name": "chile_picante",
+                "label": "Chile picante"
+            },
+            {
+                "name": "citricos",
+                "label": "Citricos"
+            },
+            {
+                "name": "coco",
+                "label": "Coco"
+            },
+            {
+                "name": "culantro",
+                "label": "Culantro"
+            },
+            {
+                "name": "culantro_coyote",
+                "label": "Culantro coyote"
+            },
+            {
+                "name": "curcuma",
+                "label": "Cúrcuma"
+            },
+            {
+                "name": "flores_tropicales",
+                "label": "Flores tropicales"
+            },
+            {
+                "name": "frijol",
+                "label": "Frijol"
+            },
+            {
+                "name": "guanabana",
+                "label": "Guánabana"
+            },
+            {
+                "name": "guayaba_taiwanesa",
+                "label": "Guayaba taiwanesa"
+            },
+            {
+                "name": "jengibre",
+                "label": "Jengibre"
+            },
+            {
+                "name": "lechuga",
+                "label": "Lechuga"
+            },
+            {
+                "name": "limon_mesino",
+                "label": "Limón Mesino"
+            },
+            {
+                "name": "limon_mandarina",
+                "label": "Limón Mandarina"
+            },
+            {
+                "name": "macadamia",
+                "label": "Macadamia"
+            },
+            {
+                "name": "maiz",
+                "label": "Maíz"
+            },
+            {
+                "name": "maiz_elote",
+                "label": "Maíz para elote"
+            },
+            {
+                "name": "malanga",
+                "label": "Malanga"
+            },
+            {
+                "name": "mandarina",
+                "label": "Mandarina"
+            },
+            {
+                "name": "mango",
+                "label": "Mango"
+            },
+            {
+                "name": "mani",
+                "label": "Mani"
+            },
+            {
+                "name": "manzana_agua",
+                "label": "Manzana de agua"
+            },
+            {
+                "name": "maracuya",
+                "label": "Maracuya"
+            },
+            {
+                "name": "naranja",
+                "label": "Naranja"
+            },
+            {
+                "name": "nuevo_cultivo",
+                "label": "Nuevo cultivo"
+            },
+            {
+                "name": "name",
+                "label": "Ñame"
+            },
+            {
+                "name": "nampi",
+                "label": "Ñampí o Chamol"
+            },
+            {
+                "name": "otras_hortalizas",
+                "label": "Otras hortalizas"
+            },
+            {
+                "name": "palma_aceitera",
+                "label": "Palma aceitera"
+            },
+            {
+                "name": "palmito",
+                "label": "Palmito"
+            },
+            {
+                "name": "papa",
+                "label": "Papa"
+            },
+            {
+                "name": "papaya",
+                "label": "Papaya"
+            },
+            {
+                "name": "pejibaye",
+                "label": "Pejibaye"
+            },
+            {
+                "name": "pepino",
+                "label": "Pepino"
+            },
+            {
+                "name": "pimienta",
+                "label": "Pimienta"
+            },
+            {
+                "name": "pina",
+                "label": "Piña"
+            },
+            {
+                "name": "pipian",
+                "label": "Pipián"
+            },
+            {
+                "name": "pithaya",
+                "label": "Pithaya"
+            },
+            {
+                "name": "plantaciones_forestales",
+                "label": "Plantaciones forestales"
+            },
+            {
+                "name": "plantas_ornamentales_follaje",
+                "label": "Plantas ornamentales follaje"
+            },
+            {
+                "name": "platano",
+                "label": "Platáno"
+            },
+            {
+                "name": "rambutan",
+                "label": "Rambután"
+            },
+            {
+                "name": "raicilla",
+                "label": "Raicilla"
+            },
+            {
+                "name": "repollo",
+                "label": "Repollo"
+            },
+            {
+                "name": "sandia",
+                "label": "Sandia"
+            },
+            {
+                "name": "sorgo",
+                "label": "Sorgo"
+            },
+            {
+                "name": "tiquisque",
+                "label": "Tiquisque"
+            },
+            {
+                "name": "tomate",
+                "label": "Tomate"
+            },
+            {
+                "name": "vainica",
+                "label": "Vainica"
+            },
+            {
+                "name": "yampi",
+                "label": "Yampi"
+            },
+            {
+                "name": "yuca",
+                "label": "Yuca"
+            },
+            {
+                "name": "yute",
+                "label": "Yute"
+            },
+            {
+                "name": "Otro_No.1",
+                "label": "Otro 1"
+            },
+            {
+                "name": "Otro_No.2",
+                "label": "Otro 2"
+            },
+            {
+                "name": "Otro_No.3",
+                "label": "Otro 3"
+            }
+        ],
+        "Crop_Products": [
+            {
+                "name": "Flour_meal",
+                "label": "Harina"
+            },
+            {
+                "name": "Foods_for_sale",
+                "label": "Alimentos para vender (pan, comida, tamales, aperitivos)"
+            },
+            {
+                "name": "Food_ingredients",
+                "label": "Ingredientes para platillos (condimentos, café, té)"
+            },
+            {
+                "name": "Dried_foods",
+                "label": "Frutas secas, nueces o algo similar."
+            },
+            {
+                "name": "Jams",
+                "label": "Conservas dulces (mermeladas, jarabes, siropes, etc.)"
+            },
+            {
+                "name": "Pickles",
+                "label": "Encurtidos (en vinagre)"
+            },
+            {
+                "name": "Drinks",
+                "label": "Bebidas (con o sin alcohol)"
+            },
+            {
+                "name": "Medicines",
+                "label": "Medicinas"
+            },
+            {
+                "name": "Objects",
+                "label": "Canastas, artesanías, etc."
+            },
+            {
+                "name": "Fuel",
+                "label": "Madera como combustible, carbón etc."
+            }
+        ],
+        "crop_residue_use": [
+            {
+                "name": "soil",
+                "label": "Lo deja en el terreno"
+            },
+            {
+                "name": "burn",
+                "label": "Lo quema en el campo"
+            },
+            {
+                "name": "fuel",
+                "label": "Como combustible"
+            },
+            {
+                "name": "feed",
+                "label": "Para alimentar animales"
+            },
+            {
+                "name": "compost",
+                "label": "Hace composta"
+            },
+            {
+                "name": "construction",
+                "label": "Material de construcción"
+            },
+            {
+                "name": "sell",
+                "label": "Lo vende"
+            }
+        ],
+        "crop_sale_price_quantityunits": [
+            {
+                "name": "total_income_per_year",
+                "label": "ganancias totales del año"
+            },
+            {
+                "name": "price_per_kg",
+                "label": "precio por kg"
+            },
+            {
+                "name": "price_per_fanega",
+                "label": "precio por fanega"
+            },
+            {
+                "name": "price_per_quintal",
+                "label": "precio por quintal"
+            },
+            {
+                "name": "price_per_caja",
+                "label": "precio por caja"
+            },
+            {
+                "name": "price_per_racimo",
+                "label": "precio por racimo"
+            },
+            {
+                "name": "price_per_ton",
+                "label": "precio por tonelada"
+            },
+            {
+                "name": "price_per_pound",
+                "label": "precio por libra"
+            },
+            {
+                "name": "other",
+                "label": "Otras"
+            }
+        ],
+        "Crop_Storage": [
+            {
+                "name": "Sacks",
+                "label": "En sacos"
+            },
+            {
+                "name": "Hermetic_bags",
+                "label": "Bolsas selladas herméticas"
+            },
+            {
+                "name": "Solid_container",
+                "label": "En contenedores sólidos (de plástico,barro, metal, etc.)"
+            },
+            {
+                "name": "Granary",
+                "label": "Troje tradicional"
+            },
+            {
+                "name": "Other",
+                "label": "Otra"
+            },
+            {
+                "name": "None",
+                "label": "No se almacenan"
+            }
+        ],
+        "Crop_Store_Treatment": [
+            {
+                "name": "Post_Harvest_chemicals",
+                "label": "Insecticida / químicos"
+            },
+            {
+                "name": "Traditional",
+                "label": "Tradicional (ceniza, hojas)"
+            },
+            {
+                "name": "Other",
+                "label": "Otro"
+            }
+        ],
+        "crop_use": [
+            {
+                "name": "eat",
+                "label": "Alimentación o uso en el hogar"
+            },
+            {
+                "name": "sell",
+                "label": "Lo vende"
+            },
+            {
+                "name": "feed_livestock",
+                "label": "Lo da como alimento a los animales"
+            },
+            {
+                "name": "givetrade",
+                "label": "Lo regala o intercambia"
+            },
+            {
+                "name": "no_harvest",
+                "label": "No cosecha"
+            }
+        ],
+        "cropyield_units": [
+            {
+                "name": "kg",
+                "label": "Kilogramo"
+            },
+            {
+                "name": "boxes",
+                "label": "Cajas"
+            },
+            {
+                "name": "bunches",
+                "label": "Racimos"
+            },
+            {
+                "name": "fanega",
+                "label": "fanega"
+            },
+            {
+                "name": "units",
+                "label": "Unidades"
+            },
+            {
+                "name": "quintal",
+                "label": "Quintal"
+            },
+            {
+                "name": "tons",
+                "label": "Tonelada"
+            },
+            {
+                "name": "rollos",
+                "label": "rollos"
+            },
+            {
+                "name": "other",
+                "label": "Otra unidad"
+            }
+        ],
+        "currency": [
+            {
+                "name": "Colones",
+                "label": "Colones"
+            },
+            {
+                "name": "Dolares",
+                "label": "Dolares US$"
+            }
+        ],
+        "dairy_products": [
+            {
+                "name": "cheese",
+                "label": "Queso"
+            },
+            {
+                "name": "butter",
+                "label": "Mantequilla"
+            },
+            {
+                "name": "other",
+                "label": "Otro"
+            }
+        ],
+        "dairy_units": [
+            {
+                "name": "kg",
+                "label": "Kilogramo"
+            },
+            {
+                "name": "grams",
+                "label": "Gramos"
+            },
+            {
+                "name": "pounds",
+                "label": "Libras"
+            },
+            {
+                "name": "litres",
+                "label": "Litro"
+            },
+            {
+                "name": "other",
+                "label": "Otro"
+            }
+        ],
+        "debts_destination": [
+            {
+                "name": "Casa",
+                "label": "construcción:reparación casa"
+            },
+            {
+                "name": "Pecuario",
+                "label": "compra de animales finca"
+            },
+            {
+                "name": "Cultivo",
+                "label": "Agricola"
+            }
+        ],
+        "early_harvest_reasons": [
+            {
+                "name": "Theft",
+                "label": "Por temor a que se lo robaran"
+            },
+            {
+                "name": "Hunger",
+                "label": "Para tener alimento en el hogar"
+            },
+            {
+                "name": "Income",
+                "label": "Por necesidad de generar dinero"
+            },
+            {
+                "name": "Erratic_Rainfall",
+                "label": "Malas condiciones de clima (lluvias erráticas o mal tiempo)"
+            },
+            {
+                "name": "Other",
+                "label": "Otro"
+            }
+        ],
+        "education": [
+            {
+                "name": "illiterate",
+                "label": "No sabe leer y escribir"
+            },
+            {
+                "name": "literate",
+                "label": "Sabe leer y escribir"
+            },
+            {
+                "name": "primary",
+                "label": "Primaria"
+            },
+            {
+                "name": "secondary",
+                "label": "Ha completado secundaria"
+            },
+            {
+                "name": "postsecondary",
+                "label": "Ha completado educación superior técnica o universitaria"
+            }
+        ],
+        "eggs_units": [
+            {
+                "name": "pieces/animal/day",
+                "label": "Huevos por animal por día"
+            },
+            {
+                "name": "pieces/day",
+                "label": "Huevos por día"
+            },
+            {
+                "name": "pieces/week",
+                "label": "Huevos por semana"
+            },
+            {
+                "name": "pieces/month",
+                "label": "Huevos por mes"
+            },
+            {
+                "name": "other",
+                "label": "Otra"
+            }
+        ],
+        "farm_aid": [
+            {
+                "name": "aum_producc",
+                "label": "Aumentó producción"
+            },
+            {
+                "name": "bajo_producc",
+                "label": "Bajó producción"
+            },
+            {
+                "name": "igual_producc",
+                "label": "Mantiene la producción"
+            },
+            {
+                "name": "otro_cultivo",
+                "label": "Cambió de cultivo"
+            }
+        ],
+        "Farm_labour": [
+            {
+                "name": "Households",
+                "label": "Padres de familia"
+            },
+            {
+                "name": "Sons",
+                "label": "Hijos de la familia"
+            },
+            {
+                "name": "Reciprocal",
+                "label": "Se ayudan y cooperan con otros parientes, amigos o vecinos"
+            },
+            {
+                "name": "Hire_labour",
+                "label": "Paga jornaleros o peones"
+            }
+        ],
+        "farm_planning_who": [
+            {
+                "name": "Male",
+                "label": "Esposo"
+            },
+            {
+                "name": "Female",
+                "label": "Esposa o jefa de hogar"
+            },
+            {
+                "name": "Male_Youth_or_Child",
+                "label": "Joven o niño varón"
+            },
+            {
+                "name": "Female_Youth_or_Child",
+                "label": "Joven o niña mujer"
+            },
+            {
+                "name": "Other_family_male",
+                "label": "Otro miembro de la familia (hombre)"
+            },
+            {
+                "name": "Other_family_female",
+                "label": "Otro miembro de la familia (mujer)"
+            }
+        ],
+        "fert_types": [
+            {
+                "name": "urea",
+                "label": "Urea"
+            },
+            {
+                "name": "nutran",
+                "label": "nutran"
+            },
+            {
+                "name": "NPK202020",
+                "label": "NPK 20-20-20"
+            },
+            {
+                "name": "NPK1688",
+                "label": "NPK 16-8-8"
+            },
+            {
+                "name": "NPK103010",
+                "label": "10-30-10"
+            },
+            {
+                "name": "NPK122412",
+                "label": "12-24-12"
+            },
+            {
+                "name": "sulfato_amonio",
+                "label": "sulfato de amonio"
+            },
+            {
+                "name": "NPK15331",
+                "label": "15-3-31"
+            },
+            {
+                "name": "NPK1851562",
+                "label": "18-5-15-6-0.2"
+            },
+            {
+                "name": "Phosphorous",
+                "label": "Fósforo"
+            },
+            {
+                "name": "Potassium",
+                "label": "KMag"
+            },
+            {
+                "name": "NPK",
+                "label": "NPK"
+            },
+            {
+                "name": "SSP",
+                "label": "SSP"
+            },
+            {
+                "name": "TSP",
+                "label": "triple super fosfato"
+            },
+            {
+                "name": "other",
+                "label": "Otro"
+            }
+        ],
+        "fert_units": [
+            {
+                "name": "kg",
+                "label": "Kilogramo"
+            },
+            {
+                "name": "quintal",
+                "label": "Quintal"
+            },
+            {
+                "name": "other",
+                "label": "Otra"
+            }
+        ],
+        "fish_units": [
+            {
+                "name": "fishes",
+                "label": "Número de pescados"
+            },
+            {
+                "name": "kg",
+                "label": "Kilogramo"
+            },
+            {
+                "name": "other",
+                "label": "Otro"
+            }
+        ],
+        "frequency_food": [
+            {
+                "name": "daily",
+                "label": "Muchas veces (diario, o almenos 3 veces por semana)"
+            },
+            {
+                "name": "weekly",
+                "label": "Algunas veces (1 o  2 veces por semana)"
+            },
+            {
+                "name": "monthly",
+                "label": "Pocas (1 o 2 por mes)"
+            },
+            {
+                "name": "never",
+                "label": "Muy rara vez o nunca (menos de una vez al mes)"
+            }
+        ],
+        "good_harvest": [
+            {
+                "name": "good_harvest",
+                "label": "Buena cosecha"
+            },
+            {
+                "name": "normal_harvest",
+                "label": "Cosecha normal"
+            },
+            {
+                "name": "bad_harvest",
+                "label": "Mala cosecha"
+            }
+        ],
+        "govern_aid": [
+            {
+                "name": "CNE",
+                "label": "Comisión emergencias"
+            },
+            {
+                "name": "IMAS",
+                "label": "IMAS"
+            },
+            {
+                "name": "MAG",
+                "label": "MAG"
+            },
+            {
+                "name": "INDER",
+                "label": "INDER"
+            },
+            {
+                "name": "MTTS",
+                "label": "Ministerio Trabajo"
+            },
+            {
+                "name": "Otros",
+                "label": "Otros"
+            },
+            {
+                "name": "100",
+                "label": "Ninguna"
+            }
+        ],
+        "govern_help": [
+            {
+                "name": "rec_propios",
+                "label": "Sembrar con recursos propios"
+            },
+            {
+                "name": "prestado",
+                "label": "Pedir dinero prestado"
+            },
+            {
+                "name": "no_sembrar",
+                "label": "No sembrar nada"
+            },
+            {
+                "name": "menos_area",
+                "label": "Sembrar menos área"
+            },
+            {
+                "name": "cambio_cultivo",
+                "label": "Cambiar de cultivo"
+            },
+            {
+                "name": "trabajar_fuera",
+                "label": "Trabajar fuera de la finca"
+            },
+            {
+                "name": "Venta",
+                "label": "Vender la finca"
+            }
+        ],
+        "hh_position": [
+            {
+                "name": "married_to",
+                "label": "Casado con el jefe cabeza del hogar"
+            },
+            {
+                "name": "child",
+                "label": "Hijo del jefe cabeza del hogar"
+            },
+            {
+                "name": "parent",
+                "label": "Padre o Madre del jefe cabeza del Hogar"
+            },
+            {
+                "name": "family_other",
+                "label": "Otro miembro de la familia"
+            },
+            {
+                "name": "nonfamily",
+                "label": "Mandador o administrador de la finca"
+            }
+        ],
+        "HHID": [
+            {
+                "name": "1"
+            }
+        ],
+        "honey_units": [
+            {
+                "name": "kg",
+                "label": "Kilogramo"
+            },
+            {
+                "name": "litres",
+                "label": "Litro"
+            },
+            {
+                "name": "pounds",
+                "label": "Libras"
+            },
+            {
+                "name": "other",
+                "label": "Otro"
+            }
+        ],
+        "householdtype": [
+            {
+                "name": "couple",
+                "label": "Tiene pareja (aún si no están casados)"
+            },
+            {
+                "name": "woman_single",
+                "label": "Mujer sola (viuda o hombre ausente del hogar)"
+            },
+            {
+                "name": "man_single",
+                "label": "Hombre solo (viudo o mujer ausente del hogar)"
+            }
+        ],
+        "debts_payment": [
+            {
+                "name": "quater",
+                "label": "Menos de la 1/4 parte"
+            },
+            {
+                "name": "half",
+                "label": "Menos de la mitad"
+            },
+            {
+                "name": "more_than_half",
+                "label": "Mas de la mitad"
+            }
+        ],
+        "innov": [
+            {
+                "name": "First",
+                "label": "Primero"
+            },
+            {
+                "name": "Copy",
+                "label": "Espera para ver si funciona para otros"
+            },
+            {
+                "name": "Late",
+                "label": "Al final"
+            },
+            {
+                "name": "Never",
+                "label": "No intento nuevas cosas"
+            }
+        ],
+        "intercrop": [
+            {
+                "name": "monoculture",
+                "label": "Lo siembra solo"
+            },
+            {
+                "name": "intercrop",
+                "label": "Lo siembra intercalado con otros cultivos"
+            }
+        ],
+        "irrigation_method": [
+            {
+                "name": "Basin",
+                "label": "Cuenca excavada alrededor de las plantas"
+            },
+            {
+                "name": "Gravity",
+                "label": "Gravedad"
+            },
+            {
+                "name": "Sprinkler",
+                "label": "Aspersión"
+            },
+            {
+                "name": "Drip",
+                "label": "Goteo"
+            },
+            {
+                "name": "Other",
+                "label": "Otro"
+            }
+        ],
+        "land_tenure": [
+            {
+                "name": "own_land",
+                "label": "La tierra es propia"
+            },
+            {
+                "name": "rent_in_land",
+                "label": "Renta tierra para poder sembrar"
+            },
+            {
+                "name": "rent_out_land",
+                "label": "Renta sus tierras a otras personas para que estos puedan sembrar"
+            },
+            {
+                "name": "borrowed_land",
+                "label": "la tierra es prestada"
+            }
+        ],
+        "legumes_fert": [
+            {
+                "name": "No_dont_grow",
+                "label": "No, no cultiva ninguna"
+            },
+            {
+                "name": "No_crop_only",
+                "label": "No, solo las cultiva como alimento o para vender"
+            },
+            {
+                "name": "Intercrop",
+                "label": "Sí, cultiva legumbres intercalados con otros cultivos"
+            },
+            {
+                "name": "Rotation",
+                "label": "Sí, cultiva legumbres antes y después de otros cultivos"
+            }
+        ],
+        "canton": [
+            {
+                "name": "cant_code",
+                "label": "canton"
+            }
+        ],
+        "distrito": [
+            {
+                "name": "dist_code",
+                "label": "distrito"
+            }
+        ],
+        "provincia": [
+            {
+                "name": "4",
+                "label": "San Jose"
+            },
+            {
+                "name": "6",
+                "label": "Alajuela"
+            },
+            {
+                "name": "3",
+                "label": "Cartago"
+            },
+            {
+                "name": "5",
+                "label": "Heredia"
+            },
+            {
+                "name": "7",
+                "label": "Guanacaste"
+            },
+            {
+                "name": "1",
+                "label": "Puntarenas"
+            },
+            {
+                "name": "2",
+                "label": "Limon"
+            }
+        ],
+        "Livestock_Inputs": [
+            {
+                "name": "Vaccinations",
+                "label": "Vacunas"
+            },
+            {
+                "name": "Deworming",
+                "label": "Desparasitante"
+            },
+            {
+                "name": "Antibiotics",
+                "label": "Antibióticos"
+            },
+            {
+                "name": "Traditional",
+                "label": "Remedios tradicionales"
+            },
+            {
+                "name": "Other",
+                "label": "Otro"
+            }
+        ],
+        "livestock_list": [
+            {
+                "name": "cattle",
+                "label": "Vacas, toros"
+            },
+            {
+                "name": "goats",
+                "label": "Cabras"
+            },
+            {
+                "name": "sheep",
+                "label": "Ovejas"
+            },
+            {
+                "name": "pigs",
+                "label": "Cerdos"
+            },
+            {
+                "name": "chicken",
+                "label": "Gallinas"
+            },
+            {
+                "name": "otherpoultry",
+                "label": "Otras aves"
+            },
+            {
+                "name": "rabbits",
+                "label": "Conejos"
+            },
+            {
+                "name": "donkeys_horses",
+                "label": "Burros, mulas o similares"
+            },
+            {
+                "name": "fish",
+                "label": "Peces"
+            },
+            {
+                "name": "bees",
+                "label": "Abejas"
+            },
+            {
+                "name": "other1",
+                "label": "Otro N°1"
+            },
+            {
+                "name": "other2",
+                "label": "Otro N°2"
+            },
+            {
+                "name": "other3",
+                "label": "Otro N°3"
+            }
+        ],
+        "male_female": [
+            {
+                "name": "M",
+                "label": "Hombre"
+            },
+            {
+                "name": "F",
+                "label": "Mujer"
+            }
+        ],
+        "manure_use": [
+            {
+                "name": "soil_direct",
+                "label": "Lo aplica directamente en los cultivos"
+            },
+            {
+                "name": "store_pile",
+                "label": "Lo apila (al menos un mes) antes de usarlo"
+            },
+            {
+                "name": "store_enclosed",
+                "label": "Lo almacena en un espacio cerrado (por lo menos un mes) antes de usarlo"
+            },
+            {
+                "name": "fuel",
+                "label": "Lo usa como combustible"
+            },
+            {
+                "name": "sell",
+                "label": "Lo vende"
+            },
+            {
+                "name": "dispose",
+                "label": "Lo desecha"
+            },
+            {
+                "name": "biodigester",
+                "label": "Biodigestor"
+            }
+        ],
+        "milk_units": [
+            {
+                "name": "l/animal/day",
+                "label": "Litros por animal por día"
+            },
+            {
+                "name": "l/day",
+                "label": "Litros en total por día"
+            },
+            {
+                "name": "other",
+                "label": "Otra"
+            }
+        ],
+        "milk_use": [
+            {
+                "name": "use",
+                "label": "La consumen en casa"
+            },
+            {
+                "name": "sell",
+                "label": "La venden"
+            },
+            {
+                "name": "dairy",
+                "label": "Hacen productos lácteos (queso,mantequilla,crema etc.)"
+            },
+            {
+                "name": "givetrade",
+                "label": "La regalan o intercambian"
+            }
+        ],
+        "months": [
+            {
+                "name": "jan",
+                "label": "Enero"
+            },
+            {
+                "name": "feb",
+                "label": "Febrero"
+            },
+            {
+                "name": "mar",
+                "label": "Marzo"
+            },
+            {
+                "name": "apr",
+                "label": "Abril"
+            },
+            {
+                "name": "may",
+                "label": "Mayo"
+            },
+            {
+                "name": "jun",
+                "label": "Junio"
+            },
+            {
+                "name": "jul",
+                "label": "Julio"
+            },
+            {
+                "name": "aug",
+                "label": "Agosto"
+            },
+            {
+                "name": "sep",
+                "label": "Septiembre"
+            },
+            {
+                "name": "oct",
+                "label": "Octubre"
+            },
+            {
+                "name": "nov",
+                "label": "Noviembre"
+            },
+            {
+                "name": "dec",
+                "label": "Diciembre"
+            }
+        ],
+        "offfarm_income_amount": [
+            {
+                "name": "All",
+                "label": "Todo o casi todo por trabajo FUERA de la finca-Casi nada de la finca"
+            },
+            {
+                "name": "Most",
+                "label": "La mayoría FUERA de la finca-algo de la finca"
+            },
+            {
+                "name": "Half",
+                "label": "La mitad de FUERA de la finca-La mitad de la finca"
+            },
+            {
+                "name": "UnderHalf",
+                "label": "Algo de FUERA de la finca-La mayoria de la finca"
+            },
+            {
+                "name": "Little",
+                "label": "Casi nada de FUERA de la finca-La mayoría de la finca"
+            }
+        ],
+        "offfarm_incomes": [
+            {
+                "name": "otherfarms",
+                "label": "Jornalero en otras fincas"
+            },
+            {
+                "name": "otherlabour",
+                "label": "Jornalero trabajo no agrícola"
+            },
+            {
+                "name": "localbusiness",
+                "label": "Trabajo en negocio local"
+            },
+            {
+                "name": "ownbusiness",
+                "label": "Negocio propio"
+            },
+            {
+                "name": "remittances",
+                "label": "Remesas"
+            },
+            {
+                "name": "gov_institution",
+                "label": "Trabaja en el gobierno o institución pública"
+            },
+            {
+                "name": "pension",
+                "label": "Recibe pensión alguien en la familia"
+            },
+            {
+                "name": "stipend",
+                "label": "Recibe beca estudiantil alguien en la familia"
+            },
+            {
+                "name": "rentland",
+                "label": "Renta sus tierras a otras personas"
+            },
+            {
+                "name": "rentequipment",
+                "label": "Renta equipo o animales a otras personas"
+            },
+            {
+                "name": "other",
+                "label": "Otro"
+            }
+        ],
+        "own_grazing": [
+            {
+                "name": "own",
+                "label": "Es propia la tierra"
+            },
+            {
+                "name": "not_own",
+                "label": "No es dueño de la tierra"
+            },
+            {
+                "name": "own_some",
+                "label": "Posee parte de la tierra"
+            }
+        ],
+        "product_use": [
+            {
+                "name": "use",
+                "label": "La consumen en casa"
+            },
+            {
+                "name": "sell",
+                "label": "La venden"
+            },
+            {
+                "name": "givetrade",
+                "label": "Regalan o intercambian"
+            }
+        ],
+        "proportions": [
+            {
+                "name": "All",
+                "label": "Todo o casi todo (90-100%)"
+            },
+            {
+                "name": "Most",
+                "label": "Mas de la mitad (60-90%)"
+            },
+            {
+                "name": "Half",
+                "label": "La mitad (40-60%)"
+            },
+            {
+                "name": "UnderHalf",
+                "label": "Menos de la mitad (10-40%)"
+            },
+            {
+                "name": "Little",
+                "label": "Poco (1-10%)"
+            },
+            {
+                "name": "None",
+                "label": "Nada (0%)"
+            }
+        ],
+        "rapport": [
+            {
+                "name": "easy",
+                "label": "Fácil"
+            },
+            {
+                "name": "medium",
+                "label": "Medianamente fácil"
+            },
+            {
+                "name": "difficult",
+                "label": "Difícil"
+            },
+            {
+                "name": "very_difficult",
+                "label": "Muy Difícil"
+            }
+        ],
+        "reliability": [
+            {
+                "name": "5",
+                "label": "Muy confiable"
+            },
+            {
+                "name": "4",
+                "label": "Confiable"
+            },
+            {
+                "name": "3",
+                "label": "Buena"
+            },
+            {
+                "name": "2",
+                "label": "Dudas ocasionales"
+            },
+            {
+                "name": "1",
+                "label": "Regular o con serias dudas"
+            }
+        ],
+        "satisfaction": [
+            {
+                "name": "very_satisfied",
+                "label": "Muy satisfecho"
+            },
+            {
+                "name": "satisfied",
+                "label": "Satisfecho"
+            },
+            {
+                "name": "unsatisfied",
+                "label": "Insatisfecho"
+            },
+            {
+                "name": "very_unsatisfied",
+                "label": "Muy Insatisfecho"
+            }
+        ],
+        "slope": [
+            {
+                "name": "flat",
+                "label": "Plano"
+            },
+            {
+                "name": "slope",
+                "label": "Mediana pendiente"
+            },
+            {
+                "name": "steep_slope",
+                "label": "Mucha pendiente"
+            }
+        ],
+        "source_food": [
+            {
+                "name": "on-farm",
+                "label": "Lo producen uds mismos"
+            },
+            {
+                "name": "bought",
+                "label": "Lo compran"
+            },
+            {
+                "name": "Free",
+                "label": "Se lo regalan, lo juntan, intercambian"
+            }
+        ],
+        "spend": [
+            {
+                "name": "food",
+                "label": "Comprar comida"
+            },
+            {
+                "name": "possessions",
+                "label": "Comprar posesiones (ropa, utencilios del hogar)"
+            },
+            {
+                "name": "invest_farm",
+                "label": "Mejoras para la finca (maquinaria, fertilizante, ganado, cultivos)"
+            },
+            {
+                "name": "invest_people",
+                "label": "Gasto en las personas (educación, atención médica, viajes a la ciudad, luz, agua y otros)"
+            },
+            {
+                "name": "savings",
+                "label": "Ahorrar el dinero"
+            }
+        ],
+        "spending": [
+            {
+                "name": "food",
+                "label": "En comprar alimento"
+            },
+            {
+                "name": "possessions",
+                "label": "En comprar artículos, como: ropa, utencilios para el hogar"
+            },
+            {
+                "name": "invest_farm",
+                "label": "Mejoras para la finca, como: maquinaria, fertilizante"
+            },
+            {
+                "name": "invest_people",
+                "label": "Gasto en las personas como: educación, atención médica, viajes a la ciudad"
+            }
+        ],
+        "tillage": [
+            {
+                "name": "by_hand",
+                "label": "A mano"
+            },
+            {
+                "name": "by_animal",
+                "label": "Con yunta"
+            },
+            {
+                "name": "by_machine",
+                "label": "Con máquina o tractor"
+            }
+        ],
+        "timeunits": [
+            {
+                "name": "year",
+                "label": "año"
+            },
+            {
+                "name": "month",
+                "label": "mes"
+            },
+            {
+                "name": "week",
+                "label": "semana"
+            },
+            {
+                "name": "day",
+                "label": "día"
+            },
+            {
+                "name": "other",
+                "label": "otra"
+            }
+        ],
+        "tree_management": [
+            {
+                "name": "Y",
+                "label": "Si"
+            },
+            {
+                "name": "N",
+                "label": "No"
+            },
+            {
+                "name": "Only_felling",
+                "label": "Solo cortan los arboles para limpiar el terreno"
+            }
+        ],
+        "tree_use": [
+            {
+                "name": "Food",
+                "label": "Como alimento o frutas"
+            },
+            {
+                "name": "Fuel",
+                "label": "Para leña combustible"
+            },
+            {
+                "name": "Timber",
+                "label": "Madera"
+            },
+            {
+                "name": "Fodder",
+                "label": "Alimento para los animales"
+            },
+            {
+                "name": "Land_benefits",
+                "label": "Como beneficio para la tierra (suelo, agua, refugio, sombra, otro.)"
+            },
+            {
+                "name": "Other",
+                "label": "Otro"
+            }
+        ],
+        "Values_rating_1": [
+            {
+                "name": "important",
+                "label": "Gran influencia"
+            },
+            {
+                "name": "not_important",
+                "label": "Poca influencia"
+            },
+            {
+                "name": "opposed",
+                "label": "Nada de influencia"
+            }
+        ],
+        "water_source": [
+            {
+                "name": "Reservoir",
+                "label": "Estanque o represa  comunal"
+            },
+            {
+                "name": "Pond",
+                "label": "represa  propio"
+            },
+            {
+                "name": "Fish_Pond",
+                "label": "represa  o estanque con peces"
+            },
+            {
+                "name": "River",
+                "label": "Río o quebrada"
+            },
+            {
+                "name": "Well",
+                "label": "Pozo"
+            },
+            {
+                "name": "Rainwater",
+                "label": "Cosecha de lluvia"
+            },
+            {
+                "name": "other",
+                "label": "Otro"
+            }
+        ],
+        "who_family": [
+            {
+                "name": "Male",
+                "label": "Esposo"
+            },
+            {
+                "name": "Female",
+                "label": "Esposa o jefa de hogar"
+            },
+            {
+                "name": "Male_Youth_or_Child",
+                "label": "Joven o niño varón"
+            },
+            {
+                "name": "Female_Youth_or_Child",
+                "label": "Joven o niña mujer"
+            },
+            {
+                "name": "Other_family_male",
+                "label": "Otro miembro de la familia (hombre)"
+            },
+            {
+                "name": "Other_family_female",
+                "label": "Otro miembro de la familia (mujer)"
+            }
+        ],
+        "work_away": [
+            {
+                "name": "none",
+                "label": "No"
+            },
+            {
+                "name": "man_works_away",
+                "label": "El hombre trabaja fuera"
+            },
+            {
+                "name": "woman_works_away",
+                "label": "La mujer trabaja fuera"
+            },
+            {
+                "name": "both_work_away",
+                "label": "Hombre y Mujer trabajan afuera"
+            }
+        ],
+        "piso": [
+            {
+                "name": "Mosaico_ceramica_terrazo",
+                "label": "Mosaico, cerámica, terrazo"
+            },
+            {
+                "name": "cemento",
+                "label": "Cemento"
+            },
+            {
+                "name": "madera",
+                "label": "Madera"
+            },
+            {
+                "name": "natural",
+                "label": "Material natural (Bambú, Caña brava, Chonta, tierra)"
+            }
+        ],
+        "electronicos": [
+            {
+                "name": "refri",
+                "label": "Refrigerador"
+            },
+            {
+                "name": "Tv",
+                "label": "Tv pantalla plana"
+            },
+            {
+                "name": "celular",
+                "label": "telefono celular"
+            },
+            {
+                "name": "internet",
+                "label": "internet"
+            }
+        ],
+        "y_n_s": [
+            {
+                "name": "Y",
+                "label": "Sí"
+            },
+            {
+                "name": "N",
+                "label": "No"
+            },
+            {
+                "name": "some",
+                "label": "Algunos"
+            },
+            {
+                "name": "dont_have",
+                "label": "No posee ninguno"
+            }
+        ],
+        "yes_no": [
+            {
+                "name": "Y",
+                "label": "Si"
+            },
+            {
+                "name": "N",
+                "label": "No"
+            }
+        ],
+        "yes_no_not": [
+            {
+                "name": "Y",
+                "label": "Si"
+            },
+            {
+                "name": "N",
+                "label": "No"
+            },
+            {
+                "name": "None",
+                "label": "No hay ninguno"
+            }
+        ],
+        "planted_units": [
+            {
+                "name": "ha",
+                "label": "Hectareas"
+            },
+            {
+                "name": "mz",
+                "label": "Manzanas"
+            },
+            {
+                "name": "m2",
+                "label": "Metros cuadrados"
+            }
+        ],
+        "proporcion": [
+            {
+                "name": "Todo o casi todo",
+                "label": "Todo o casi todo"
+            },
+            {
+                "name": "La mayoria",
+                "label": "La mayoria"
+            },
+            {
+                "name": "La mitad",
+                "label": "La mitad"
+            },
+            {
+                "name": "Algo",
+                "label": "Algo"
+            },
+            {
+                "name": "Casi nada",
+                "label": "Casi nada"
+            }
+        ],
+        "ganaderia": [
+            {
+                "name": "cria",
+                "label": "Ganadería de cría"
+            },
+            {
+                "name": "doble",
+                "label": "Ganadería de doble propósito"
+            },
+            {
+                "name": "leche",
+                "label": "Ganadería de leche"
+            },
+            {
+                "name": "engorde",
+                "label": "Ganadería de engorde"
+            }
+        ],
+        "aves": [
+            {
+                "name": "postura",
+                "label": "Aves de postura"
+            },
+            {
+                "name": "engorde",
+                "label": "Aves de engorde"
+            }
+        ],
+        "unidad_ensilaje": [
+            {
+                "name": "toneladas",
+                "label": "Tonelada"
+            },
+            {
+                "name": "pacas",
+                "label": "Pacas 18 Kg"
+            },
+            {
+                "name": "silopacas",
+                "label": "Silopacas 400 kg"
+            }
+        ]
+    }
+}

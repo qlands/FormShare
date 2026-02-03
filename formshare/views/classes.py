@@ -227,6 +227,33 @@ class ODKView(object):
         response.text = str(xml_data, "utf-8")
         return response
 
+    def pre_process_view(self):
+        continue_processing = True
+        plugin_view_result = None
+        if self.request.matched_route is not None:
+            for plugin in p.PluginImplementations(p.IODKView):
+                result = plugin.before_processing_odk_view(
+                    self.request.matched_route.name,
+                    self.request,
+                    {
+                        "user": self.user,
+                    },
+                )
+                if result is not None:
+                    continue_processing, plugin_view_result = result
+                if not continue_processing:
+                    break
+        if not continue_processing:
+            return plugin_view_result
+
+        view_result = self.process_view()
+        if self.request.matched_route is not None:
+            for plugin in p.PluginImplementations(p.IODKView):
+                view_result = plugin.after_processing_odk_view(
+                    self.request.matched_route.name, self.request, view_result
+                )
+        return view_result
+
     def __call__(self):
         project_code = self.request.matchdict["projcode"]
         user_id = self.request.matchdict["userid"]
@@ -237,7 +264,7 @@ class ODKView(object):
                 if self.request.headers["Authorization"].find("Basic ") == -1:
                     self.get_auth_dict()
                     self.user = self.authHeader["Digest username"]
-                    return self.process_view()
+                    return self.pre_process_view()
                 else:
                     if self.request.headers["Authorization"].find("Bearer") >= 0:
                         parts = self.request.headers.get("Authorization", "").split(" ")
@@ -255,7 +282,7 @@ class ODKView(object):
                                 ):
                                     self.api = True
                                     self.user = token_user
-                                    return self.process_view()
+                                    return self.pre_process_view()
                     headers = [
                         (
                             "WWW-Authenticate",
@@ -272,7 +299,7 @@ class ODKView(object):
                     return response
             else:
                 self.user = self.request.encget("FS_user_for_testing", default="None")
-                return self.process_view()
+                return self.pre_process_view()
         else:
             if not project_has_crowdsourcing(self.request, project_id):
                 headers = [
@@ -291,7 +318,7 @@ class ODKView(object):
                 return reponse
             else:
                 self.user = ""
-                return self.process_view()
+                return self.pre_process_view()
 
     def process_view(self):
         # At this point children of odkView have:
@@ -718,9 +745,11 @@ class PrivateView(object):
         self.classResult["warning_messages"] = self.warning_messages
         self.classResult["showWelcome"] = self.showWelcome
 
+        continue_processing = True
+        plugin_view_result = None
         if self.request.matched_route is not None:
             for plugin in p.PluginImplementations(p.IPrivateView):
-                plugin.before_processing(
+                result = plugin.before_processing(
                     self.request.matched_route.name,
                     self.request,
                     {
@@ -732,12 +761,18 @@ class PrivateView(object):
                         "user": self.user,
                     },
                 )
+                if result is not None:
+                    continue_processing, plugin_view_result = result
+                if not continue_processing:
+                    break
         self.request.response.headers.pop("FS_error", None)
         self.classResult["user_timezone"] = get_user_timezone(
             self.request, self.user.login
         )
         self.user_timezone = get_user_timezone(self.request, self.user.login)
         update_last_login(self.request, self.user.login)
+        if not continue_processing:
+            return plugin_view_result
         self.viewResult = self.process_view()
 
         if not self.returnRawViewResult:

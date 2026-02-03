@@ -217,11 +217,13 @@
                 allowHTML: true,
             });
 
-            {% if activeUser.super == 1 or request.h.get_setting(request,'show.settings.menu','False') == 'True' %}
-                $('.spin-icon').click(function (){
-                    $(".theme-config-box").toggleClass("show");
-                });
-            {% endif %}
+            {% block js_settings_menu %}
+                {% if activeUser.super == 1 or request.h.get_setting(request,'show.settings.menu','False') == 'True' %}
+                    $('.spin-icon').click(function (){
+                        $(".theme-config-box").toggleClass("show");
+                    });
+                {% endif %}
+            {% endblock js_settings_menu %}
 
             let xform_upload_started = false;
             $('#form_upload_form').submit(function() {

@@ -2954,6 +2954,7 @@ def create_repository(
                                 "rname", "fk_" + str(uuid.uuid4()).replace("-", "_")
                             )
                             field.set("rlookup", "false")
+                            field.set("on_delete", "RESTRICT")
                             # Save the changes in the XML Create file
                             if not os.path.exists(create_xml_file + ".case.bk"):
                                 shutil.copy(

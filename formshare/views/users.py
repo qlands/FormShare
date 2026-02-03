@@ -23,6 +23,7 @@ from formshare.processes.db.user import update_password
 from formshare.processes.elasticsearch.user_index import get_user_index_manager
 from formshare.views.classes import PrivateView
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+import base64
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -294,6 +295,12 @@ class EditUserView(PrivateView):
         }
 
 
+def new_tenant_id():
+    u = uuid.uuid4()
+    s = base64.urlsafe_b64encode(u.bytes).rstrip(b"=").decode()
+    return s[:16]
+
+
 class AddUserView(PrivateView):
     def __init__(self, request):
         PrivateView.__init__(self, request)
@@ -326,10 +333,17 @@ class AddUserView(PrivateView):
             plugin_roles = plugin.get_roles(self.request.registry.settings)
             available_roles = available_roles + plugin_roles
 
-        tenants = get_tenants(self.request)
+        if self.user.tenant == "main":
+            tenants = get_tenants(self.request)
+        else:
+            tenants = []
 
         if self.request.method == "POST":
             user_details = self.get_post_dict()
+
+            if self.user.tenant != "main":
+                user_details["user_id"] = new_tenant_id()
+
             if re.match(r"^[A-Za-z0-9._]+$", user_details["user_id"]):
                 if not user_exists(self.request, user_details["user_id"], False):
                     if user_details["user_password"] != "":
@@ -397,16 +411,6 @@ class AddUserView(PrivateView):
                                             user_details["user_tenant"] = "main"
                                     else:
                                         user_details["user_tenant"] = self.user.tenant
-
-                                    if user_details["user_tenant"] != "main":
-                                        user_details["user_id"] = (
-                                            user_details["user_tenant"]
-                                            + "_"
-                                            + user_details["user_id"]
-                                        )
-                                        user_details["user_id"] = user_details[
-                                            "user_id"
-                                        ].replace("__", "_")
 
                                     user_details["user_password"] = encoded_password
                                     user_details.pop("user_password2", None)
@@ -528,6 +532,11 @@ class AddUserView(PrivateView):
         else:
             use_tenants = False
 
+        if self.user.tenant != "main":
+            request_user = False
+        else:
+            request_user = True
+
         return {
             "userid": user_id,
             "userData": user_details,
@@ -536,4 +545,5 @@ class AddUserView(PrivateView):
             "use_roles": use_roles,
             "tenants": tenants,
             "use_tenants": use_tenants,
+            "request_user": request_user,
         }

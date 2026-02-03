@@ -25,6 +25,7 @@ __all__ = [
     "IRegistration",
     "IPublicView",
     "IPrivateView",
+    "IODKView",
     "IAssistantView",
     "IPartnerView",
     "ILogOut",
@@ -1124,7 +1125,8 @@ class IPrivateView(Interface):  # pragma: no cover
         :param route_name: The name of the route
         :param request: Pyramid request object
         :param class_data: Class parameters as dict
-        :return: None
+        :return: True or False if continue to process the view, and a result.
+        For example True,None  or False,Pyramid_Response_Object
         """
         raise NotImplementedError(
             "IPrivateView before_processing must be implemented in subclasses"
@@ -1142,6 +1144,38 @@ class IPrivateView(Interface):  # pragma: no cover
         """
         raise NotImplementedError(
             "IPrivateView after_processing must be implemented in subclasses"
+        )
+
+
+class IODKView(Interface):  # pragma: no cover
+    """
+    Allows to hook into FormShare's private class.
+    """
+
+    def before_processing_odk_view(self, route_name, request, class_data):
+        """
+        Called by FormShare's ODKView class before processing an ODK view
+        :param route_name: The name of the route
+        :param request: Pyramid request object
+        :param class_data: Class parameters as dict
+        :return: True or False if continue to process the view, and a result.
+        For example True,None  or False,Pyramid_Response_Object
+        """
+        raise NotImplementedError(
+            "IODKView before_processing_odk_view must be implemented in subclasses"
+        )
+
+    def after_processing_odk_view(self, route_name, request, response_object):
+        """
+        Called by FormShare's ODKView class after processing the ODK view but just before returning the
+        context
+        :param route_name: The name of the route
+        :param request: Pyramid request object
+        :param response_object: Response Object
+        :return: response_object or another response object
+        """
+        raise NotImplementedError(
+            "IODKView after_processing_odk_view must be implemented in subclasses"
         )
 
 

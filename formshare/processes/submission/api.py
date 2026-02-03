@@ -10,7 +10,7 @@ import shutil
 import uuid
 from decimal import Decimal
 from subprocess import Popen, PIPE
-
+from sqlalchemy.exc import IntegrityError
 import paginate
 import pandas as pd
 from PIL import Image
@@ -1476,6 +1476,8 @@ def delete_submission(
     assistant_uuid=None,
 ):
     schema = get_form_schema(request, project, form)
+    _ = request.translate
+
     sql = (
         "SELECT surveyid FROM "
         + schema
@@ -1485,6 +1487,32 @@ def delete_submission(
     )
     records = request.dbsession.execute(sql).fetchone()
     submission_id = records.surveyid
+
+    # Remove the submission from the repository
+    save_point = request.tm.savepoint()
+
+    sql = "SET @odktools_current_user = '" + user + "'"
+    request.dbsession.execute(sql)
+    try:
+        sql = "DELETE FROM " + schema + ".maintable WHERE rowuuid = '" + row_uuid + "'"
+        request.dbsession.execute(sql)
+        request.dbsession.flush()
+    except IntegrityError:
+        save_point.rollback()
+        log.error("Cannot delete submission {}".format(row_uuid))
+        if move_to_logs:
+            return False, _(
+                "Cannot move submission {} to the logs. If this submission belongs to a case creator form, "
+                "then you need to move the logs any related follow-up submissions before moving this "
+                "submissions to the logs.".format(row_uuid)
+            )
+        else:
+            return False, _(
+                "Cannot delete submission {}. If this submission belongs to a case creator form, then you need to "
+                "delete any related follow-up submissions before deleting this submission.".format(
+                    row_uuid
+                )
+            )
 
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
@@ -1631,12 +1659,6 @@ def delete_submission(
                 user, project_code, form, submission_id, str(e)
             )
         )
-
-    # Remove the submission from the repository database
-    sql = "SET @odktools_current_user = '" + user + "'"
-    request.dbsession.execute(sql)
-    sql = "DELETE FROM " + schema + ".maintable WHERE rowuuid = '" + row_uuid + "'"
-    request.dbsession.execute(sql)
 
     if not move_to_logs:
         # Remove the submission from FormShare

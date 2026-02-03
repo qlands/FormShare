@@ -38,9 +38,12 @@ from pyramid.response import Response
 from pyramid.security import remember
 from pyramid.session import check_csrf_token
 from formshare.processes.db.utility import get_db_connection
+import base64
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
+
+BASE62_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 
 class HealthView(PublicView):
@@ -594,12 +597,37 @@ def partner_log_out_view(request):
     raise HTTPFound(location=loc, headers=headers)
 
 
+def base62_encode(num):
+    if num == 0:
+        return BASE62_ALPHABET[0]
+
+    arr = []
+    base = len(BASE62_ALPHABET)
+
+    while num:
+        num, rem = divmod(num, base)
+        arr.append(BASE62_ALPHABET[rem])
+
+    arr.reverse()
+    return "".join(arr)
+
+
+def new_user_id(length=16):
+    u = uuid.uuid4()
+    encoded = base62_encode(u.int)
+    return encoded[:length]
+
+
 class RegisterView(PublicView):
     def process_view(self):
         if self.request.registry.settings["auth.register_users_via_web"] == "false":
             raise HTTPNotFound()
 
-        if self.request.registry.settings.get("auth.use_roles", "false") == "true":
+        if (
+            self.request.registry.settings.get("auth.use_roles", "false") == "true"
+            and self.request.registry.settings.get("formshare.saas.mode", "False")
+            == "False"
+        ):
             raise HTTPNotFound()
 
         # If we logged in then go to dashboard
@@ -630,6 +658,15 @@ class RegisterView(PublicView):
                 r"^[A-Za-z0-9._@-]+$", data["user_email"]
             ):
                 if data["user_password"] != "":
+                    if (
+                        self.request.registry.settings.get(
+                            "auth.auto_gen_user_id", "False"
+                        )
+                        == "True"
+                    ):
+                        data["user_id"] = new_user_id()
+                        print("User ID is: {}".format(data["user_id"]))
+
                     if re.match(r"^[A-Za-z0-9._]+$", data["user_id"]):
                         if data["user_password"] == data["user_password2"]:
                             if len(data["user_password"]) <= 50:
@@ -791,4 +828,13 @@ class RegisterView(PublicView):
             else:
                 log.error("Invalid email {}".format(data["user_email"]))
                 self.append_to_errors(self._("Invalid email"))
-        return {"next": next, "userdata": data}
+
+        if (
+            self.request.registry.settings.get("auth.auto_gen_user_id", "false")
+            == "true"
+        ):
+            request_user = False
+        else:
+            request_user = True
+
+        return {"next": next, "userdata": data, "request_user": request_user}

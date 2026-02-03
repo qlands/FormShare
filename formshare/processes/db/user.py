@@ -344,14 +344,22 @@ def get_user_name(request, user):
         return None
 
 
-def get_user_id_with_email(request, email):
-    res = (
-        request.dbsession.query(User)
-        .filter(func.lower(User.user_email) == func.lower(email))
-        .filter(User.user_active == 1)
-        .filter(User.user_is_workspace == 0)
-        .first()
-    )
+def get_user_id_with_email(request, email, active_only=True):
+    if active_only:
+        res = (
+            request.dbsession.query(User)
+            .filter(func.lower(User.user_email) == func.lower(email))
+            .filter(User.user_active == 1)
+            .filter(User.user_is_workspace == 0)
+            .first()
+        )
+    else:
+        res = (
+            request.dbsession.query(User)
+            .filter(func.lower(User.user_email) == func.lower(email))
+            .filter(User.user_is_workspace == 0)
+            .first()
+        )
     if res is not None:
         return res.user_id
     else:

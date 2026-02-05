@@ -1,5 +1,5 @@
 import datetime
-
+import formshare.plugins as p
 import validators
 from dateutil.relativedelta import relativedelta
 from formshare.config.encdecdata import decode_data
@@ -34,6 +34,9 @@ class User(object):
         else:
             self.about = user_data["user_about"]
         self.apikey = user_data["user_apikey"]
+        self.metadata = {}
+        for plugin in p.PluginImplementations(p.IUserObject):
+            self.metadata = plugin.update_metadata(request, user_data, self.metadata)
 
     def check_password(self, password, request):
         self.set_gravatar_url(request, self.name, 45)

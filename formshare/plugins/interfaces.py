@@ -36,6 +36,7 @@ __all__ = [
     "IAssistantGroup",
     "IFormAccess",
     "IUser",
+    "IUserObject",
     "IEnvironment",
     "IXMLSubmission",
     "IMediaSubmission",
@@ -1682,6 +1683,17 @@ class IUser(Interface):  # pragma: no cover
         :return: None
         """
         raise NotImplementedError("after_edit must be implemented in subclasses")
+
+
+class IUserObject(Interface):
+    def update_metadata(self, request, user_data, user_metadata):
+        """
+        Called by FormShare so plugins can include metadata in the user object used in all private views
+        :param request: ``pyramid.request`` object
+        :param user_data: User information
+        :param user_metadata: User metadata as dictionary
+        :return: a modified version of user_metadata dictionary
+        """
 
 
 class IPartner(Interface):  # pragma: no cover

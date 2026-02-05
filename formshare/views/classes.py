@@ -663,7 +663,20 @@ class PrivateView(object):
 
         self.userID = self.request.matchdict["userid"]
         if not user_exists(self.request, self.userID):
+            policy = self.get_policy("main")
+            login_data = policy.authenticated_userid(self.request)
+            if login_data is not None:
+                login_data = literal_eval(login_data)
+                current_login = login_data["login"]
+                if validators.email(current_login):
+                    current_login = get_user_id_with_email(
+                        self.request, current_login, False
+                    )
+                if self.userID == current_login:
+                    logout_page = self.request.route_url("logout")
+                    raise HTTPFound(location=logout_page)
             raise HTTPNotFound()
+
         self.classResult["userDetails"] = get_user_details(self.request, self.userID)
 
         if self.request.headers.get("Authorization", "").find("Bearer") >= 0:

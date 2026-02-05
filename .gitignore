@@ -132,4 +132,4 @@ mysql.cnf
 test_config.json
 .out.txt.swp
 .isort.cfg
-formshare/tests/resources/forms/complex_form/for_import/xml/report.txt
+formshare/tests/resources/forms/complex_form/for_import/xml/report.txtformshare/static/formshare_storage_en.pdf

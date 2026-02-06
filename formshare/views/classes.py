@@ -126,6 +126,7 @@ class ODKView(object):
         self.realm = request.registry.settings["auth.realm"]
         self.authHeader = {}
         self.user = ""
+        self.user_id = ""
         self.api = False
 
     def get_auth_dict(self):  # pragma: no cover
@@ -237,6 +238,7 @@ class ODKView(object):
                     self.request,
                     {
                         "user": self.user,
+                        "user_id": self.user_id,
                     },
                 )
                 if result is not None:
@@ -257,6 +259,7 @@ class ODKView(object):
     def __call__(self):
         project_code = self.request.matchdict["projcode"]
         user_id = self.request.matchdict["userid"]
+        self.user_id = user_id
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         testing_calls = self.request.encget("FS_for_testing", default="false")
         if "Authorization" in self.request.headers or testing_calls == "true":

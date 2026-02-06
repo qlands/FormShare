@@ -1,5 +1,19 @@
 {% extends 'base.jinja2' %}
 
+{% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+    {% if selected_timezone == 'formshare' %}
+        {% set timezone = system_timezone %}
+    {% else %}
+        {% if selected_timezone == 'user' %}
+            {% set timezone = user_timezone.user_timezone %}
+        {% else %}
+            {% set timezone = activeProject.project_timezone %}
+        {% endif %}
+    {% endif %}
+{% else %}
+    {% set timezone = None %}
+{% endif %}
+
 {% block css %}
     {% cssresource request,'formshare','style' %}
     <style>

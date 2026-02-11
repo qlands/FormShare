@@ -406,33 +406,42 @@ def update_profile(request, user, profile_data):
 
 
 def update_last_login(request, user):
-    engine = create_engine(
-        request.registry.settings.get("sqlalchemy.url"), poolclass=NullPool
-    )
+    # engine = create_engine(
+    #     request.registry.settings.get("sqlalchemy.url"), poolclass=NullPool
+    # )
+    # try:
+    #     connection = engine.connect()
+    # except Exception as e:
+    #     engine.dispose()
+    #     log.error(
+    #         "Error {} when updating last login for user {}. Cannot connect to MySQL".format(
+    #             str(e), user
+    #         )
+    #     )
+    #     return False, str(e)
+    # string_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # sql = "UPDATE fsuser set user_llogin = '{}' WHERE user_id = '{}'".format(
+    #     string_date, user
+    # )
+    # try:
+    #     connection.execute(sql)
+    #     connection.invalidate()
+    #     engine.dispose()
+    #     return True, ""
+    # except Exception as e:
+    #     log.error("Error {} when updating last login for user {}".format(str(e), user))
+    #     connection.invalidate()
+    #     engine.dispose()
+    #     return False, str(e)
+    save_point = request.tm.savepoint()
     try:
-        connection = engine.connect()
-    except Exception as e:
-        engine.dispose()
-        log.error(
-            "Error {} when updating last login for user {}. Cannot connect to MySQL".format(
-                str(e), user
-            )
+        request.dbsession.query(User).filter(User.user_id == user).update(
+            {"user_llogin": datetime.datetime.now()}
         )
-        return False, str(e)
-    string_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    sql = "UPDATE fsuser set user_llogin = '{}' WHERE user_id = '{}'".format(
-        string_date, user
-    )
-    try:
-        connection.execute(sql)
-        connection.invalidate()
-        engine.dispose()
-        return True, ""
+        request.dbsession.flush()
     except Exception as e:
+        save_point.rollback()
         log.error("Error {} when updating last login for user {}".format(str(e), user))
-        connection.invalidate()
-        engine.dispose()
-        return False, str(e)
 
 
 def get_user_by_api_key(request, api_key, api_secret, with_stats=True):

@@ -1151,9 +1151,20 @@ def get_active_project(request, user):
         if res is not None:
             mapped_data = map_from_schema(res)
             if mapped_data["access_type"] == 1:
-                request.dbsession.query(Userproject).filter(
-                    Userproject.project_id == mapped_data["project_id"]
-                ).filter(Userproject.user_id == user).update({"project_active": 1})
+                save_point = request.tm.savepoint()
+                try:
+                    request.dbsession.query(Userproject).filter(
+                        Userproject.project_id == mapped_data["project_id"]
+                    ).filter(Userproject.user_id == user).update({"project_active": 1})
+                    request.dbsession.flush()
+                except Exception as e:
+                    log.error(
+                        "Unable to activate project {} for user {}. Error: {}".format(
+                            mapped_data["project_id"], user, str(e)
+                        )
+                    )
+                    save_point.rollback()
+
                 mapped_data["owner"] = user
                 return mapped_data
             else:
@@ -1164,9 +1175,20 @@ def get_active_project(request, user):
                     .first()
                 )
                 if res is not None:
-                    request.dbsession.query(Userproject).filter(
-                        Userproject.project_id == mapped_data["project_id"]
-                    ).filter(Userproject.user_id == user).update({"project_active": 1})
+                    save_point = request.tm.savepoint()
+                    try:
+                        request.dbsession.query(Userproject).filter(
+                            Userproject.project_id == mapped_data["project_id"]
+                        ).filter(Userproject.user_id == user).update(
+                            {"project_active": 1}
+                        )
+                        request.dbsession.flush()
+                    except Exception as e:
+                        log.error(
+                            "Unable to activate project {} for user {}. Error: {}".format(
+                                mapped_data["project_id"], user, str(e)
+                            )
+                        )
                     mapped_data["owner"] = res.user_id
                     return mapped_data
                 else:

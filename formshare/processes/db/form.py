@@ -1261,9 +1261,17 @@ def is_form_blocked(request, project, form):
 
 
 def block_forms_with_schema(request, schema):
-    request.dbsession.query(Odkform).filter(Odkform.form_schema == schema).update(
-        {"form_blocked": 1}
-    )
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.query(Odkform).filter(Odkform.form_schema == schema).update(
+            {"form_blocked": 1}
+        )
+        request.dbsession.flush()
+    except Exception as e:
+        log.error(
+            "Unable to block forms with schema {}. Error {}".format(schema, str(e))
+        )
+        save_point.rollback()
 
 
 def get_form_xml_create_file(request, project, form):
@@ -1453,9 +1461,19 @@ def form_version_exists(request, project, form, version):
 
 
 def update_form_color_by_database(request, database, hex_color):
-    request.dbsession.query(Odkform).filter(Odkform.form_schema == database).update(
-        {"form_hexcolor": hex_color}
-    )
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.query(Odkform).filter(Odkform.form_schema == database).update(
+            {"form_hexcolor": hex_color}
+        )
+        request.dbsession.flush()
+    except Exception as e:
+        log.error(
+            "Unable to update colors to forms with schema {}. Error {}".format(
+                database, str(e)
+            )
+        )
+        save_point.rollback()
 
 
 def delete_form_by_database(request, database):
@@ -1477,18 +1495,38 @@ def delete_form_by_database(request, database):
             }
         )
     log.warning("END BIG DATABASE DELETE")
-    request.dbsession.query(Odkform).filter(Odkform.form_schema == database).update(
-        {"parent_project": None, "parent_form": None}
-    )
-    request.dbsession.query(Odkform).filter(Odkform.form_schema == database).delete()
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.query(Odkform).filter(Odkform.form_schema == database).update(
+            {"parent_project": None, "parent_form": None}
+        )
+        request.dbsession.query(Odkform).filter(
+            Odkform.form_schema == database
+        ).delete()
+        request.dbsession.flush()
+    except Exception as e:
+        log.error(
+            "Unable to delete forms with schema {}. Error {}".format(database, str(e))
+        )
+        save_point.rollback()
     return result
 
 
 def update_form_directory(request, project, form, directory):  # pragma: no cover
     # This function has no coverage because it should not happen. Cannot be covered by unitTest
-    request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
-        Odkform.form_id == form
-    ).update({"form_directory": directory})
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
+            Odkform.form_id == form
+        ).update({"form_directory": directory})
+        request.dbsession.flush()
+    except Exception as e:
+        log.error(
+            "Error {} while updating form directory for form {} in project {}".format(
+                str(e), form, project
+            )
+        )
+        save_point.rollback()
 
 
 def update_media_lastgen(request, project, form, file_name, last_generated_on):
@@ -1524,6 +1562,7 @@ def update_form(request, project, form, form_data):
         .one()
     )
     if blocked[0] == 0:
+        save_point = request.tm.savepoint()
         request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
             Odkform.form_id == form
         ).update(mapped_data)
@@ -1538,7 +1577,6 @@ def update_form(request, project, form, form_data):
                     update_form_color_by_database(
                         request, this_form_schema, this_form_color
                     )
-        save_point = request.tm.savepoint()
         try:
             request.dbsession.flush()
             return True, ""
@@ -1616,10 +1654,10 @@ def set_form_status(request, project, form, status):
         .one()
     )
     if blocked[0] == 0:
+        save_point = request.tm.savepoint()
         request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
             Odkform.form_id == form
         ).update({"form_accsub": status})
-        save_point = request.tm.savepoint()
         try:
             request.dbsession.flush()
             return True, ""

@@ -10,6 +10,11 @@ from formshare.models import map_from_schema
 from formshare.plugins.core import PluginImplementations
 from formshare.plugins.interfaces import IUserAuthentication, IUserPassword, IRoles
 from sqlalchemy import func
+import logging
+from formshare.processes.logging.loggerclass import SecretLogger
+
+logging.setLoggerClass(SecretLogger)
+log = logging.getLogger("formshare")
 
 
 class User(object):
@@ -161,28 +166,46 @@ def reset_key_exists(request, reset_key):
 
 def set_password_reset_token(request, user_id, reset_key, reset_token):
     token_expires_on = datetime.datetime.now() + relativedelta(hours=+24)
-    request.dbsession.query(userModel).filter(userModel.user_id == user_id).filter(
-        userModel.user_password_reset_key.is_(None)
-    ).update(
-        {
-            "user_password_reset_key": reset_key,
-            "user_password_reset_token": reset_token,
-            "user_password_reset_expires_on": token_expires_on,
-        }
-    )
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.query(userModel).filter(userModel.user_id == user_id).filter(
+            userModel.user_password_reset_key.is_(None)
+        ).update(
+            {
+                "user_password_reset_key": reset_key,
+                "user_password_reset_token": reset_token,
+                "user_password_reset_expires_on": token_expires_on,
+            }
+        )
+        request.dbsession.flush()
+    except Exception as e:
+        log.error(
+            "Unable to set password reset token for user {}. Error: {}".format(
+                user_id, str(e)
+            )
+        )
+        save_point.rollback()
 
 
 def reset_password(request, user_id, reset_key, reset_token, new_password):
-    request.dbsession.query(userModel).filter(userModel.user_id == user_id).filter(
-        userModel.user_password_reset_key == reset_key
-    ).filter(userModel.user_password_reset_token == reset_token).update(
-        {
-            "user_password_reset_key": None,
-            "user_password_reset_token": None,
-            "user_password_reset_expires_on": None,
-            "user_password": new_password,
-        }
-    )
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.query(userModel).filter(userModel.user_id == user_id).filter(
+            userModel.user_password_reset_key == reset_key
+        ).filter(userModel.user_password_reset_token == reset_token).update(
+            {
+                "user_password_reset_key": None,
+                "user_password_reset_token": None,
+                "user_password_reset_expires_on": None,
+                "user_password": new_password,
+            }
+        )
+        request.dbsession.flush()
+    except Exception as e:
+        log.error(
+            "Unable to reset password for user {}. Error: {}".format(user_id, str(e))
+        )
+        save_point.rollback()
 
 
 def get_formshare_user_data(request, user, is_email):

@@ -541,9 +541,19 @@ def get_assistant_permissions_on_a_form(
 
 # This update the stage information so he can come back
 def update_form_repository_info(request, project, form, data):
-    request.dbsession.query(Form).filter(Form.project_id == project).filter(
-        Form.form_id == form
-    ).update(data)
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.query(Form).filter(Form.project_id == project).filter(
+            Form.form_id == form
+        ).update(data)
+        request.dbsession.flush()
+    except Exception as e:
+        log.error(
+            "Unable to update repository info for form {} in project {}. Error: {}".format(
+                form, project, str(e)
+            )
+        )
+        save_point.rollback()
 
 
 def get_form_data(project, form, request):
@@ -592,6 +602,7 @@ def get_form_data(project, form, request):
 
 
 def checkout_submission(request, project, form, submission, assistant_uuid):
+    save_point = request.tm.savepoint()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 2})
@@ -606,7 +617,6 @@ def checkout_submission(request, project, form, submission, assistant_uuid):
         log_action=2,
         coll_uuid=assistant_uuid,
     )
-    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
@@ -618,6 +628,7 @@ def checkout_submission(request, project, form, submission, assistant_uuid):
 
 
 def cancel_checkout(request, project, form, submission, assistant_uuid):
+    save_point = request.tm.savepoint()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -632,7 +643,6 @@ def cancel_checkout(request, project, form, submission, assistant_uuid):
         log_action=5,
         coll_uuid=assistant_uuid,
     )
-    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
@@ -648,6 +658,7 @@ def cancel_checkout(request, project, form, submission, assistant_uuid):
 
 
 def cancel_revision(request, project, form, submission, assistant_uuid, revision):
+    save_point = request.tm.savepoint()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -663,7 +674,6 @@ def cancel_revision(request, project, form, submission, assistant_uuid, revision
         coll_uuid=assistant_uuid,
         log_commit=revision,
     )
-    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
@@ -679,6 +689,7 @@ def cancel_revision(request, project, form, submission, assistant_uuid, revision
 
 
 def fix_revision(request, project, form, submission, assistant_uuid, revision):
+    save_point = request.tm.savepoint()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 0})
@@ -694,7 +705,6 @@ def fix_revision(request, project, form, submission, assistant_uuid, revision):
         coll_uuid=assistant_uuid,
         log_commit=revision,
     )
-    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
@@ -708,6 +718,7 @@ def fix_revision(request, project, form, submission, assistant_uuid, revision):
 
 
 def fix_submission(request, project, form, submission, assistant_uuid):
+    save_point = request.tm.savepoint()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 0})
@@ -722,7 +733,6 @@ def fix_submission(request, project, form, submission, assistant_uuid):
         log_action=0,
         coll_uuid=assistant_uuid,
     )
-    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
@@ -734,6 +744,7 @@ def fix_submission(request, project, form, submission, assistant_uuid):
 
 
 def fail_revision(request, project, form, submission, assistant_uuid, revision):
+    save_point = request.tm.savepoint()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -749,7 +760,6 @@ def fail_revision(request, project, form, submission, assistant_uuid, revision):
         coll_uuid=assistant_uuid,
         log_commit=revision,
     )
-    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
@@ -765,6 +775,7 @@ def fail_revision(request, project, form, submission, assistant_uuid, revision):
 
 
 def disregard_revision(request, project, form, submission, assistant_uuid, notes):
+    save_point = request.tm.savepoint()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 4})
@@ -780,7 +791,6 @@ def disregard_revision(request, project, form, submission, assistant_uuid, notes
         coll_uuid=assistant_uuid,
         log_notes=notes,
     )
-    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
@@ -796,6 +806,7 @@ def disregard_revision(request, project, form, submission, assistant_uuid, notes
 def cancel_disregard_revision(
     request, project, form, submission, assistant_uuid, notes
 ):
+    save_point = request.tm.savepoint()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -811,7 +822,6 @@ def cancel_disregard_revision(
         coll_uuid=assistant_uuid,
         log_notes=notes,
     )
-    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()

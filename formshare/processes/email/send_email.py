@@ -65,11 +65,11 @@ def send_password_email(request, email_to, reset_token, reset_key, user_dict):
     )
 
 
-def send_error_to_technical_team(request, error_message):
+def send_error_to_technical_team(request, error_message, subject="500 Error"):
     email_from = request.registry.settings.get("mail.from", None)
     email_to = request.registry.settings.get("mail.error", None)
     if email_from is not None and email_to is not None:
-        return send_email(request, email_from, email_to, "500 Error", error_message)
+        return send_email(request, email_from, email_to, subject, error_message)
     else:
         log.error(
             "FormShare has no email settings in place. Email service is disabled."

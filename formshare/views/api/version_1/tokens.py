@@ -1,12 +1,15 @@
 import json
 import secrets
 from datetime import datetime
-
+import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 from dateutil.relativedelta import relativedelta
 from formshare.models import User, Collaborator
-from formshare.processes.email.send_email import send_token_email
 from pyramid.response import Response
 from formshare.config.encdecdata import decode_data
+
+logging.setLoggerClass(SecretLogger)
+log = logging.getLogger("formshare")
 
 
 class TokenView(object):
@@ -54,14 +57,24 @@ class TokenView(object):
                         if current_secret.decode() == api_secret:
                             token = secrets.token_hex(16)
                             token_expires_on = datetime.now() + relativedelta(hours=+24)
-                            self.request.dbsession.query(User).filter(
-                                User.user_apikey == api_key
-                            ).update(
-                                {
-                                    "user_apitoken": token,
-                                    "user_apitoken_expires_on": token_expires_on,
-                                }
-                            )
+                            save_point = self.request.tm.savepoint()
+                            try:
+                                self.request.dbsession.query(User).filter(
+                                    User.user_apikey == api_key
+                                ).update(
+                                    {
+                                        "user_apitoken": token,
+                                        "user_apitoken_expires_on": token_expires_on,
+                                    }
+                                )
+                                self.request.dbsession.flush()
+                            except Exception as e:
+                                log.error(
+                                    "Unable to set token for user {}. Error {}",
+                                    format(api_key, str(e)),
+                                )
+                                save_point.rollback()
+
                             # send_token_email(self.request, res.user_email, token_expires_on)
                             response = Response(
                                 content_type="application/json",

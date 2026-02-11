@@ -40,14 +40,25 @@ def update_settings(request, key, value):
         json.dumps(value)
     except Exception as e:
         return False, str(e)
-
-    request.dbsession.query(Settings).filter(Settings.settings_key == key).update(
-        {"settings_value": value}
-    )
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.query(Settings).filter(Settings.settings_key == key).update(
+            {"settings_value": value}
+        )
+        request.dbsession.flush()
+    except Exception as e:
+        save_point.rollback()
+        log.error("Error updating setting for key {}. Error {}.".format(key, str(e)))
 
 
 def delete_settings(request, key):
-    request.dbsession.query(Settings).filter(Settings.settings_key == key).delete()
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.query(Settings).filter(Settings.settings_key == key).delete()
+        request.dbsession.flush()
+    except Exception as e:
+        save_point.rollback()
+        log.error("Error deleting setting for key {}. Error {}.".format(key, str(e)))
 
 
 def get_settings(request, key):

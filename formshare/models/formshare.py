@@ -153,6 +153,7 @@ class Project(Base):
     project_abstract = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_cdate = Column(DateTime)
     project_public = Column(INTEGER)
+    project_archived = Column(INTEGER, server_default=text("'0'"))
     project_image = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_case = Column(INTEGER, server_default=text("'0'"))
     project_encrypted = Column(INTEGER, server_default=text("'0'"))

@@ -154,6 +154,8 @@ class Project(Base):
     project_cdate = Column(DateTime)
     project_public = Column(INTEGER)
     project_archived = Column(INTEGER, server_default=text("'0'"))
+    project_archived_by = Column(Unicode(120))
+    project_archived_date = Column(DateTime)
     project_image = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_case = Column(INTEGER, server_default=text("'0'"))
     project_encrypted = Column(INTEGER, server_default=text("'0'"))

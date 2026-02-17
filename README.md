@@ -73,7 +73,7 @@ FormShare can produce dates and times in the following time zones:
   - Duplicated submissions go to a cleaning pipeline system that makes it easier to compare submissions and decide what to do with the duplicates.
 - Filtering submissions by submission metadata (e.g., date and time received on server).
 - Data cleaning API integration with R, STATA, or SPSS.
-- OData real-time data feed for analysis with tools like Excel and Power BI. **With all CRUD operations supported (e. g., update)**. You can even use [Excel](https://github.com/qlands/MrBot-OData-Add-In) to clean data.
+
 - Data dictionary with personal information protection.
 
 ### Product management
@@ -92,20 +92,12 @@ Though FormShare with the default settings can handle a load that would fit most
 - Data exports support concurrent processing. A survey like RHoMIS with 100,000 submissions and millions of rows would take less than a minute to export to JSON or CSV.
 - The performance of the user interface or the data cleaning interface is not affected by the number of submissions.
 
-### Analytics
-
-- Real-time analytics from R using the [FormShare R Package](https://cran.r-project.org/web/packages/FormShare/index.html).
-- Real-time analytics from platforms like [Tableau](https://public.tableau.com/en-us/s/) and [Power BI](https://powerbi.microsoft.com/en-us/) using the [FormShare OData extension](https://github.com/qlands/formshare_odata_plugin).
-
 ### Extensibility and others
 
 - Extensibility system, e.g., You can write extensions to connect FormShare with Microsoft 365 authentication system. See a list of extensions [below](#Customization-and-Extension).
 - Documentation for running on AWS using Docker.
 - Data fields tagged with ontological codes. This is useful when comparing variables across studies even if variable names are different.
 
-### Future features
-
-- Real-time data aggregation (pull data from different forms into one common data bucket). This is useful when dealing with slightly different forms for different geographies but where that certain fields could be aggregated into a common pot for analysis.
 
 ScreenShot
 ----------
@@ -114,13 +106,15 @@ ScreenShot
 
 Releases
 ------------
-The current stable release is 2.44.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.44.0) 
+The current stable release is 2.50.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.50.0) 
 
-The database signature for stable 2.44.0 is 58d91afe341f
+The database signature for stable 2.50.0 is b3711f9c82a0
 
-The Docker image for stable 2.44.0 is 20250902
+The Docker image for stable 2.50.0 is 20260218
 
-Requires ODKTools [2.17](https://github.com/qlands/odktools/tree/stable-2.17)
+Requires ODKTools [2.18](https://github.com/qlands/odktools/tree/stable-2.18)
+
+**Never upgrade FormShare from one Docker image to another without checking the "Upgrading information" section below.**
 
 Installation
 ------------
@@ -129,7 +123,7 @@ Please read the [installation guide](install_steps.md) if you want to install Fo
 The below is a common recipe for running FormShare using docker:
 
 ```shell
-# From a fresh installation of Ubuntu 18.04.03 from https://ubuntu.com/download/server
+# From a fresh installation of Ubuntu 22.04 from https://ubuntu.com/download/server
 # Update the repositories and packages
 sudo add-apt-repository multiverse
 sudo apt-get update
@@ -140,9 +134,9 @@ sudo apt-get install -y docker-compose
 
 # Get the Docker Compose file
 cd /opt
-sudo mkdir formshare_docker_compose_20250902
-cd formshare_docker_compose_20250902
-sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.44.0/docker_compose/docker-compose.yml
+sudo mkdir formshare_docker_compose_20260218
+cd formshare_docker_compose_20260218
+sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.50.0/docker_compose/docker-compose.yml
 
 # Make the directory structure for FormShare
 sudo mkdir /opt/formshare
@@ -166,11 +160,11 @@ sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
 # Download all the required Docker Images
-cd /opt/formshare_docker_compose_20250902
+cd /opt/formshare_docker_compose_20260218
 sudo docker-compose pull
 
 # Edit the docker-compose.yml file to set the MySQL root and FormShare admin passwords
-sudo nano /opt/formshare_docker_compose_20250902/docker-compose.yml
+sudo nano /opt/formshare_docker_compose_20260218/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
 Edit line 10: Change the root password from "my_secure_password" to your password
@@ -218,7 +212,7 @@ sudo service apache2 start
 # Subsequent start will take about 2 minutes. You can check the status with "sudo docker stats". 
 # FormShare will be ready for usage when the container reaches more than 500 kB of MEM USAGE
 # This is the only two commands you need to start FormShare after a server restart
-cd /opt/formshare_docker_compose_20250902
+cd /opt/formshare_docker_compose_20260218
 sudo docker-compose up -d
 
 # Browse to FormShare
@@ -257,7 +251,27 @@ cd /opt/formshare_gunicorn
 
 ## Upgrading information
 
-### Important Note: Elasticsearch migration 2 - Upgrading Docker images >= 20211019
+### Important Note: MySQL and Redis Session - Migration 1 - Upgrading FormShare to a version > 2.44.0
+
+Versions of FormShare > 2.44.0 use MySQL 8.4.7 that requires TLS and removed "mysql_native_password". It also upgraded Redis Sessions to 1.8.1. Settings must be modified manually:
+
+1. Modify "sqlalchemy.url" in the settings file to remove "ssl_disabled=True" from the URI
+2. Modify the file "mysql.cnf" to remove the lines "ssl-mode = DISABLED"
+3. Modify "redis.sessions.host" to read "redis.sessions.redis_host"
+4. Modify "redis.sessions.port" to read "redis.sessions.redis_port"
+
+### Important Note: Elasticsearch - Migration 3 - Upgrading FormShare to a version > 2.44.0
+
+Versions of FormShare > 2.44.0 use Elasticsearch 9.2.1. There is no automatic migration from Elasticsearch 7.14.2 to 9.2.1. Indexes must be migrated manually:
+
+1. Upgrade 7.14.2 → 7.17.x (or latest 7.X). Check the deprecations logs using "GET _migration/deprecations" 
+2. Upgrade 7.17.x → 8.12.x (or latest 8.x). This is a clean jump.
+3. Update your Docker environment to handle TLS certificates and ELASTIC_PASSWORD
+4. Check the deprecations logs.
+5. Upgrade 8.x → 9.2.X. This jump is smooth *as long as* you fixed deprecations in the previous step.
+
+
+### Important Note: Elasticsearch - Migration 2 - Upgrading Docker images >= 20211019
 
 Docker images >= 20211019 (from stable 2.10.0) use and check for Elasticsearch version 7.14.X. To upgrade FormShare beyond 20211019 you need to update the docker-compose.yml to use the Docker image 7.14.X of Elasticsearch **for all the nodes of Elasticsearch that you have**. **If you are upgrading from images < 20210801 then you need  to perform perform migration 1 first (see below)**.  You also need to update the configuration of your nodes:
 
@@ -377,7 +391,7 @@ In the FormShare service under the volumes section add the following volume:
 
 Note for AWS: Inbound and outbound communication to port 9001 must be allowed for FormShare to support client-server communication.
 
-### Important Note: Elasticsearch migration 1 - Upgrading Docker images < **20210411** (stable 2.8.0) to images >= **20210411**
+### Important Note: Elasticsearch - Migration 1 - Upgrading Docker images < **20210411** (stable 2.8.0) to images >= **20210411**
 
 Docker images >= 20210411 (from stable 2.8.0) use and check for Elasticsearch version 6.8.14. To upgrade FormShare beyond 20210411 you need to update the docker-compose.yml to use the Docker image 6.8.14 of Elasticsearch **for all the nodes of Elasticsearch that you have**.
 
@@ -471,7 +485,6 @@ You basically can extend FormShare to fit your needs. We are working on proper d
 
 Some examples of plug-ins are:
 
-- [OData](https://github.com/qlands/formshare_odata_plugin). This plug-in will create [OData](https://www.odata.org/) services for each FormShare repository that you have. An OData service has many advantages but most importantly it allows you to access your data in real-time from platforms like [Tableau](https://public.tableau.com/en-us/s/) and [Power BI](https://powerbi.microsoft.com/en-us/). You can also use it to [clean data from Excel](https://github.com/qlands/MrBot-OData-Add-In).
 - [Enketo](https://github.com/qlands/formshare_enketo_plugin). This plug-in will allow you to collect ODK data using the Internet Browser through [Enketo](https://enketo.org/). This plug-in is useful for users that cannot use ODK Collect.
 
 

@@ -3,7 +3,7 @@ version: 2
 jobs:
   py-3.10: &build-template
     docker:
-      - image: qlands/odktools_circleci:20241215
+      - image: qlands/odktools_circleci:20260216
 
       # -----------------------------------------------
       # Elasticsearch 9.2.1 (HTTP only, TLS transport only)
@@ -22,7 +22,7 @@ jobs:
           - xpack.security.transport.ssl.truststore.path=/usr/share/elasticsearch/config/certs/transport.p12
 
           # fixed password for CI
-          - ELASTIC_PASSWORD=formshareci
+          - ELASTIC_PASSWORD=RxlCXBATIkd8meZ97XH8z
 
           - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
 
@@ -34,7 +34,7 @@ jobs:
       # -----------------------------------------------
       # MySQL 8.0.42
       # -----------------------------------------------
-      - image: mysql:8.0.42
+      - image: mysql:8.4.7
         command: "--default-authentication-plugin=mysql_native_password"
         cap_add:
           - SYS_NICE
@@ -71,12 +71,7 @@ jobs:
             unzip -o es_certs/ca.zip -d es_certs/ca/
 
             # 2. Create node cert (transport only)
-            cat > es_certs/instances.yml <<EOF
-instances:
-  - name: "es-ci"
-    dns: ["localhost"]
-    ip: ["127.0.0.1"]
-EOF
+            printf 'instances:\n  - name: es-ci\n    dns:\n      - localhost\n    ip:\n      - 127.0.0.1\n' > es_certs/instances.yml
 
             docker run --rm -v $(pwd)/es_certs:/certs \
               docker.elastic.co/elasticsearch/elasticsearch:9.2.1 \

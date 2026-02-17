@@ -1,37 +1,62 @@
 version: 2
 
 jobs:
-  py-3.10: &build-template
+  py-3.13:
     docker:
       - image: qlands/odktools_circleci:20260216
 
-      # -----------------------------------------------
-      # Elasticsearch 9.2.1 (HTTP only, TLS transport only)
-      # -----------------------------------------------
+      # ---------------------------------------------------------
+      # Elasticsearch 9.2.1
+      # - HTTP (no TLS) for client traffic: http://localhost:9200
+      # - TLS ONLY for transport (required)
+      # - Self-generates transport certs on startup (no docker needed)
+      # ---------------------------------------------------------
       - image: docker.elastic.co/elasticsearch/elasticsearch:9.2.1
         environment:
           - discovery.type=single-node
           - bootstrap.memory_lock=true
+
+          # Security required in ES 9.x
           - xpack.security.enabled=true
+
+          # HTTP is plaintext
           - xpack.security.http.ssl.enabled=false
 
-          # required: TLS for transport only
+          # Transport TLS required
           - xpack.security.transport.ssl.enabled=true
           - xpack.security.transport.ssl.verification_mode=certificate
           - xpack.security.transport.ssl.keystore.path=/usr/share/elasticsearch/config/certs/transport.p12
           - xpack.security.transport.ssl.truststore.path=/usr/share/elasticsearch/config/certs/transport.p12
 
-          # fixed password for CI
+          # Fixed password for CI
           - ELASTIC_PASSWORD=RxlCXBATIkd8meZ97XH8z
 
           - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        command: >
+          bash -lc '
+            set -euo pipefail;
+            CERT_DIR=/usr/share/elasticsearch/config/certs;
+            mkdir -p "$CERT_DIR";
 
-        volumes:
-          - ./es_certs:/usr/share/elasticsearch/config/certs
+            # Create CA (PKCS#12, empty password)
+            if [ ! -f "$CERT_DIR/ca.p12" ]; then
+              bin/elasticsearch-certutil ca --silent --out "$CERT_DIR/ca.p12" --pass "";
+            fi
+
+            # Create transport cert (PKCS#12, empty password)
+            if [ ! -f "$CERT_DIR/transport.p12" ]; then
+              bin/elasticsearch-certutil cert --silent \
+                --ca "$CERT_DIR/ca.p12" --ca-pass "" \
+                --out "$CERT_DIR/transport.p12" --pass "" \
+                --dns localhost --ip 127.0.0.1;
+            fi
+
+            exec /usr/local/bin/docker-entrypoint.sh;
+          '
         ports:
           - 9200:9200
 
-      # -----------------------------------------------
+      # ---------------------------------------------------------
       # MySQL 8.0.42
       # -----------------------------------------------
       - image: mysql:8.4.7
@@ -49,56 +74,16 @@ jobs:
     steps:
       - checkout
 
-      # allow only branch master-2.0
-      - run: |
+      - run: | # We will just build master-2.0 branch
           if [ "$CIRCLE_BRANCH" != "master-2.0" ]; then
             exit 1
           fi
 
-      # ---------------------------------------------------
-      # Generate Elasticsearch TRANSPORT TLS certificates
-      # ---------------------------------------------------
-      - run:
-          name: Generate transport certificates for Elasticsearch 9.2.1
-          command: |
-            mkdir -p es_certs
-
-            # 1. Create CA
-            docker run --rm -v $(pwd)/es_certs:/certs \
-              docker.elastic.co/elasticsearch/elasticsearch:9.2.1 \
-              bin/elasticsearch-certutil ca --silent --pem --out /certs/ca.zip
-
-            unzip -o es_certs/ca.zip -d es_certs/ca/
-
-            # 2. Create node cert (transport only)
-            printf 'instances:\n  - name: es-ci\n    dns:\n      - localhost\n    ip:\n      - 127.0.0.1\n' > es_certs/instances.yml
-
-            docker run --rm -v $(pwd)/es_certs:/certs \
-              docker.elastic.co/elasticsearch/elasticsearch:9.2.1 \
-              bin/elasticsearch-certutil cert --silent \
-                --in /certs/instances.yml \
-                --ca-cert /certs/ca/ca.crt \
-                --ca-key /certs/ca/ca.key \
-                --pem --out /certs/node.zip
-
-            unzip -o es_certs/node.zip -d es_certs/node/
-
-            # 3. Convert PEM → PKCS#12 for transport
-            openssl pkcs12 -export \
-              -in es_certs/node/es-ci.crt \
-              -inkey es_certs/node/es-ci.key \
-              -certfile es_certs/ca/ca.crt \
-              -passout pass: \
-              -out es_certs/transport.p12
-
       - restore_cache:
           key: requirements-{{ .Branch }}-{{ .Environment.CIRCLE_JOB }}-{{ checksum "requirements.txt" }}
 
-      # ---------------------------------------------------
-      # Start Redis and Mosquitto inside the build image
-      # ---------------------------------------------------
       - run:
-          name: Start Redis + Mosquitto
+          name: Run Redis + Mosquitto
           command: |
             sudo chown -R redis /etc/redis
             sudo chgrp -R redis /etc/redis
@@ -111,9 +96,38 @@ jobs:
             tail -f /dev/null
           background: true
 
-      # ---------------------------------------------------
-      # Install dependencies + configure FormShare
-      # ---------------------------------------------------
+      - run:
+          name: Wait for MySQL + Elasticsearch
+          command: |
+            set -e
+
+            echo "Waiting for MySQL..."
+            for i in $(seq 1 60); do
+              if mysql -h 127.0.0.1 -u root --ssl-mode=DISABLED --password=circleci -e "SELECT 1" >/dev/null 2>&1; then
+                echo "MySQL is up."
+                break
+              fi
+              sleep 2
+              if [ "$i" -eq 60 ]; then
+                echo "MySQL did not start in time."
+                exit 1
+              fi
+            done
+
+            echo "Waiting for Elasticsearch (HTTP)..."
+            for i in $(seq 1 90); do
+              if curl -s -u elastic:formshareci http://localhost:9200 >/dev/null 2>&1; then
+                echo "Elasticsearch is up."
+                break
+              fi
+              sleep 2
+              if [ "$i" -eq 90 ]; then
+                echo "Elasticsearch did not start in time."
+                curl -s http://localhost:9200 || true
+                exit 1
+              fi
+            done
+
       - run:
           name: Install dependencies
           command: |
@@ -132,13 +146,14 @@ jobs:
             pip install -r requirements.txt --user
             pip install csvkit==1.0.6 --user
             pip install codecov --user
-            /home/circleci/.local/bin/codecov
+            /home/circleci/.local/bin/codecov || true
 
-            mysql -h 127.0.0.1 -u root --ssl-mode=DISABLED --password=circleci --execute='CREATE SCHEMA IF NOT EXISTS formshare'
-            mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -h 127.0.0.1 -u root --password=circleci mysql
+            mysql -h 127.0.0.1 -u root --ssl-mode=DISABLED --password=circleci \
+              --execute='CREATE SCHEMA IF NOT EXISTS formshare'
+            mysql_tzinfo_to_sql /usr/share/zoneinfo | \
+              mysql -h 127.0.0.1 -u root --password=circleci mysql
 
-            python3 create_config.py \
-              --daemon --capture_output \
+            python3 create_config.py --daemon --capture_output \
               --mysql_host 127.0.0.1 \
               --mysql_user_name root \
               --mysql_user_password circleci \
@@ -154,7 +169,8 @@ jobs:
               /opt/formshare_config/development.ini
 
             ln -s /opt/formshare_config/development.ini ./development.ini
-            python3 download_nltk_packages.py
+
+            python3 ./download_nltk_packages.py
             python3 configure_celery.py ./development.ini
             python3 configure_flatten.py
             python3 setup.py install --user
@@ -168,50 +184,35 @@ jobs:
 
             pip install -e git+https://github.com/qlands/formshare_test_plugin.git@main#egg=formshare_test_plugin --user
 
-      # ---------------------------------------------------
-      # Black format check
-      # ---------------------------------------------------
       - run:
-          name: Test code formatting
+          name: Test code is well formatted
           command: |
             /home/circleci/.local/bin/black --version
             /home/circleci/.local/bin/black formshare --check || exit 1
 
-      # ---------------------------------------------------
-      # Celery worker for tests
-      # ---------------------------------------------------
       - run:
-          name: Run Celery
+          name: Run Celery in the background
           command: |
             export COLUMNS=80
             export FORMSHARE_PYTEST_RUNNING=true
             /home/circleci/.local/bin/celery -A formshare.config.celery_app worker \
-                --loglevel=info -Q FormShare
+              --loglevel=info -Q FormShare
           background: true
 
-      # ---------------------------------------------------
-      # Run tests
-      # ---------------------------------------------------
       - run:
-          name: Run Pytest
+          name: Run tests
           command: |
             export FORMSHARE_PYTEST_RUNNING=true
             /home/circleci/.local/bin/pytest -s --cov=formshare
 
-      # ---------------------------------------------------
-      # Upload coverage
-      # ---------------------------------------------------
       - run:
-          name: Upload coverage to Codecov
+          name: upload coverage report
           command: |
             /home/circleci/.local/bin/coverage xml
             (/home/circleci/.local/bin/codecov --required -X search gcov pycov -f coverage.xml) || echo 'Codecov failed to upload'
 
-      # ---------------------------------------------------
-      # Build Python package artifacts
-      # ---------------------------------------------------
       - run:
-          name: Build distribution artifacts
+          name: Building artifacts
           command: |
             python3 setup.py sdist
             python3 setup.py bdist_wheel
@@ -230,4 +231,4 @@ workflows:
   version: 2
   build:
     jobs:
-      - py-3.10
+      - py-3.13

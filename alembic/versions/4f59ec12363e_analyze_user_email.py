@@ -68,6 +68,9 @@ def upgrade():
                 "https://{}:{}/_cluster/health".format(es_host, es_port)
             )
         data = resp.json()
+        print("******************999")
+        print(data)
+        print("******************999")
         if data["status"] == "yellow" or data["status"] == "green":
             ready = True
         else:

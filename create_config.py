@@ -133,6 +133,8 @@ def main():
         "error_log_file": args.error_log_file,
         "forwarded_allow_ip": args.forwarded_allow_ip,
         "redis_sessions_secret": redis_sessions_secret,
+        "elasticsearch_user_name": os.getenv("ELASTIC_USER", "elastic"),
+        "elasticsearch_user_password": os.getenv("ELASTIC_PASSWORD", "none"),
     }
     rendered_template = template_environment.get_template("formshare.jinja2").render(
         context

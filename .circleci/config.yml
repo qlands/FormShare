@@ -4,6 +4,9 @@ jobs:
   py-3.13:
     docker:
       - image: qlands/odktools_circleci:20260216
+        environment:
+          - ELASTIC_USER=elastic
+          - ELASTIC_PASSWORD=RxlCXBATIkd8meZ97XH8z
 
       # ---------------------------------------------------------
       # Elasticsearch 9.2.1

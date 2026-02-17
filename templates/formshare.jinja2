@@ -117,6 +117,8 @@ elasticsearch.records.use_ssl = True
 {% else %}
 elasticsearch.records.use_ssl = False
 {% endif %}
+elasticsearch.user.name = {{ elasticsearch_user_name }}
+elasticsearch.user.password = {{ elasticsearch_user_password }}
 
 ###
 # Repository configuration

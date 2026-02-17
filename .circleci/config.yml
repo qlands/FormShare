@@ -172,10 +172,10 @@ jobs:
             python3 ./download_nltk_packages.py
             python3 configure_celery.py ./development.ini
             python3 configure_flatten.py
+            echo "Running install"
             python3 setup.py install --user
             python3 setup.py compile_catalog
 
-            /home/circleci/.local/bin/disable_ssl ./development.ini
             /home/circleci/.local/bin/configure_alembic ./development.ini .
             /home/circleci/.local/bin/configure_mysql ./development.ini .
             /home/circleci/.local/bin/configure_tests ./development.ini .

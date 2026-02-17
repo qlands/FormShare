@@ -75,15 +75,10 @@ def upgrade():
         else:
             time.sleep(30)
     print("ES is ready")
-
-    if use_ssl == "False":
-        resp = requests.get(
-            "http://{}:{}/_cat/indices?format=json".format(es_host, es_port)
-        )
-    else:
-        resp = requests.get(
-            "https://{}:{}/_cat/indices?format=json".format(es_host, es_port)
-        )
+    resp = requests.get(
+        "{}://{}:{}/_cat/indices?format=json".format(es_scheme, es_host, es_port),
+        auth=HTTPBasicAuth(es_user, es_password),
+    )
     indexes = resp.json()
     user_index_found = False
     for an_index in indexes:

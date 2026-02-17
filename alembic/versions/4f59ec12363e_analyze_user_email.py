@@ -12,6 +12,7 @@ import requests
 from alembic import context
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
 from pyramid.paster import get_appsettings, setup_logging
+from requests.auth import HTTPBasicAuth
 
 # revision identifiers, used by Alembic.
 revision = "4f59ec12363e"
@@ -57,20 +58,18 @@ def upgrade():
     use_ssl = settings.get("elasticsearch.user.use_ssl", "False")
     es_host = settings.get("elasticsearch.user.host", "localhost")
     es_port = settings.get("elasticsearch.user.port", 9200)
+    es_user = settings.get("elasticsearch.user.name", "empty")
+    es_password = settings.get("elasticsearch.user.password", "empty")
+    es_scheme = settings.get("elasticsearch.user.scheme", "http")
 
     ready = False
     print("Waiting for ES to be ready")
     while not ready:
-        if use_ssl == "False":
-            resp = requests.get("http://{}:{}/_cluster/health".format(es_host, es_port))
-        else:
-            resp = requests.get(
-                "https://{}:{}/_cluster/health".format(es_host, es_port)
-            )
+        resp = requests.get(
+            "{}://{}:{}/_cluster/health".format(es_scheme, es_host, es_port),
+            auth=HTTPBasicAuth(es_user, es_password),
+        )
         data = resp.json()
-        print("******************999")
-        print(data)
-        print("******************999")
         if data["status"] == "yellow" or data["status"] == "green":
             ready = True
         else:

@@ -20,6 +20,7 @@ from formshare.processes.elasticsearch.record_index import (
 )
 from pyramid.paster import get_appsettings
 from sqlalchemy.orm.session import Session
+from requests.auth import HTTPBasicAuth
 
 # revision identifiers, used by Alembic.
 revision = "987c58df333b"
@@ -31,16 +32,16 @@ depends_on = None
 def check_es_ready(settings):
     es_host = settings.get("elasticsearch.records.host", "localhost")
     es_port = settings.get("elasticsearch.records.port", 9200)
-    use_ssl = settings.get("elasticsearch.records.use_ssl", "False")
+    es_user = settings.get("elasticsearch.user.name", "empty")
+    es_password = settings.get("elasticsearch.user.password", "empty")
+    es_scheme = settings.get("elasticsearch.user.scheme", "http")
     ready = False
     print("Waiting for ES to be ready")
     while not ready:
-        if use_ssl == "False":
-            resp = requests.get("http://{}:{}/_cluster/health".format(es_host, es_port))
-        else:
-            resp = requests.get(
-                "https://{}:{}/_cluster/health".format(es_host, es_port)
-            )
+        resp = requests.get(
+            "{}://{}:{}/_cluster/health".format(es_scheme, es_host, es_port),
+            auth=HTTPBasicAuth(es_user, es_password),
+        )
         data = resp.json()
         if data["status"] == "yellow" or data["status"] == "green":
             ready = True

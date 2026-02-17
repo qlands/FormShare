@@ -16,6 +16,7 @@ from formshare.models.formshare import Odkform, Project, Userproject
 from formshare.processes.elasticsearch.repository_index import create_connection
 from pyramid.paster import get_appsettings, setup_logging
 from sqlalchemy.orm.session import Session
+from requests.auth import HTTPBasicAuth
 
 # revision identifiers, used by Alembic.
 revision = "0d5b7b290d86"
@@ -40,7 +41,9 @@ def upgrade():
 
     es_host = settings.get("elasticsearch.repository.host", "localhost")
     es_port = settings.get("elasticsearch.repository.port", 9200)
-    use_ssl = settings.get("elasticsearch.repository.use_ssl", "False")
+    es_user = settings.get("elasticsearch.user.name", "empty")
+    es_password = settings.get("elasticsearch.user.password", "empty")
+    es_scheme = settings.get("elasticsearch.user.scheme", "http")
 
     op.add_column("odkform", sa.Column("form_index", sa.UnicodeText(), nullable=True))
     # ### end Alembic commands ###
@@ -50,14 +53,10 @@ def upgrade():
         ready = False
         print("Waiting for ES to be ready")
         while not ready:
-            if use_ssl == "False":
-                resp = requests.get(
-                    "http://{}:{}/_cluster/health".format(es_host, es_port)
-                )
-            else:
-                resp = requests.get(
-                    "https://{}:{}/_cluster/health".format(es_host, es_port)
-                )
+            resp = requests.get(
+                "{}://{}:{}/_cluster/health".format(es_scheme, es_host, es_port),
+                auth=HTTPBasicAuth(es_user, es_password),
+            )
             data = resp.json()
             if data["status"] == "yellow" or data["status"] == "green":
                 ready = True

@@ -102,7 +102,7 @@ jobs:
 
             echo "Waiting for MySQL..."
             for i in $(seq 1 60); do
-              if mysql -h 127.0.0.1 -u root --ssl-mode=DISABLED --password=circleci -e "SELECT 1" >/dev/null 2>&1; then
+              if mysql -h 127.0.0.1 -u root --password=circleci -e "SELECT 1" >/dev/null 2>&1; then
                 echo "MySQL is up."
                 break
               fi
@@ -147,7 +147,7 @@ jobs:
             pip install codecov --user
             /home/circleci/.local/bin/codecov || true
 
-            mysql -h 127.0.0.1 -u root --ssl-mode=DISABLED --password=circleci \
+            mysql -h 127.0.0.1 -u root --password=circleci \
               --execute='CREATE SCHEMA IF NOT EXISTS formshare'
             mysql_tzinfo_to_sql /usr/share/zoneinfo | \
               mysql -h 127.0.0.1 -u root --password=circleci mysql

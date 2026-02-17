@@ -173,7 +173,7 @@ jobs:
             python3 configure_celery.py ./development.ini
             python3 configure_flatten.py
             echo "Running install"
-            python3 setup.py install --user
+            pip install . --user
             python3 setup.py compile_catalog
 
             /home/circleci/.local/bin/configure_alembic ./development.ini .

@@ -1,6 +1,6 @@
 FROM cimg/python:3.13.3
 
-MAINTAINER QLands Technology Consultants
+MAINTAINER QLands Software Inc.
 RUN sudo apt-get update && sudo apt-get -y upgrade
 RUN sudo apt-get install -y software-properties-common
 RUN sudo add-apt-repository universe

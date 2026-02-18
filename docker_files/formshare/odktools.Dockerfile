@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-MAINTAINER QLands Technology Consultants
+MAINTAINER QLands Software Inc.
 RUN apt-get update && apt-get -y upgrade
 RUN apt-get install -y software-properties-common
 RUN add-apt-repository universe
@@ -10,8 +10,8 @@ RUN apt-get install -y wget
 
 RUN add-apt-repository ppa:mosquitto-dev/mosquitto-ppa -y
 
-RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.32-1_all.deb
-RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC dpkg -i ./mysql-apt-config_0.8.32-1_all.deb
+RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.36-1_all.deb
+RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC dpkg -i ./mysql-apt-config_0.8.36-1_all.deb
 
 RUN apt-get update
 
@@ -34,7 +34,7 @@ RUN cp csv2xlsx /bin
 
 WORKDIR /opt
 RUN mkdir odktools-deps
-RUN git clone https://github.com/qlands/odktools.git -b stable-2.17
+RUN git clone https://github.com/qlands/odktools.git -b stable-2.18
 
 WORKDIR /opt/odktools-deps
 RUN wget https://github.com/jmcnamara/libxlsxwriter/archive/refs/tags/v1.1.8.tar.gz

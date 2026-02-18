@@ -1,0 +1,62 @@
+version: "3.8"
+
+# FormShare application stack.
+#
+# Usage:
+#   docker compose --env-file .env -f docker-compose.formshare.yml up -d
+#
+# If you're bringing everything up together (deps + app):
+#   docker compose --env-file .env -f docker-compose.deps.yml -f docker-compose.formshare.yml up -d
+
+services:
+  formshare:
+    image: ${FORMSHARE_IMAGE:-qlands/formshare2:20260218}
+    container_name: ${COMPOSE_PROJECT_NAME:-formshare}_app
+
+    environment:
+      # --- MySQL ---
+      MYSQL_HOST_NAME: ${MYSQL_HOST_NAME:-mysql}
+      MYSQL_USER_NAME: ${MYSQL_USER_NAME:-root}
+      MYSQL_USER_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+      # --- Initial admin ---
+      FORMSHARE_ADMIN_USER: ${FORMSHARE_ADMIN_USER:-admin}
+      FORMSHARE_ADMIN_EMAIL: ${FORMSHARE_ADMIN_EMAIL:-admin@myserver.com}
+      FORMSHARE_ADMIN_PASSWORD: ${FORMSHARE_ADMIN_PASSWORD}
+
+      # --- Elasticsearch ---
+      ELASTIC_SEARCH_HOST: ${ELASTIC_SEARCH_HOST:-es01}
+      ELASTIC_SEARCH_PORT: ${ELASTIC_SEARCH_PORT:-9200}
+      ELASTIC_USER: ${ELASTIC_USER:-elastic}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+
+      # --- FormShare binding / reverse proxy ---
+      # Use 0.0.0.0 in-container; publish with ports below.
+      FORMSHARE_HOST: ${FORMSHARE_HOST:-0.0.0.0}
+      FORMSHARE_PORT: ${FORMSHARE_PORT:-5900}
+      # If you run behind a reverse proxy, set this to the proxy network/CIDR.
+      FORWARDED_ALLOW_IP: ${FORWARDED_ALLOW_IP:-*}
+
+      # --- Wait for deps ---
+      WAIT_HOSTS_TIMEOUT: ${WAIT_HOSTS_TIMEOUT:-360}
+      WAIT_HOSTS: ${WAIT_HOSTS:-mysql:3306,es01:9200}
+
+    volumes:
+      - ${FS_DATA_DIR:-/opt/formshare}/repository:/opt/formshare_repository
+      - ${FS_DATA_DIR:-/opt/formshare}/log:/opt/formshare_log
+      - ${FS_DATA_DIR:-/opt/formshare}/celery:/opt/formshare_celery
+      - ${FS_DATA_DIR:-/opt/formshare}/config:/opt/formshare_config
+      - ${FS_DATA_DIR:-/opt/formshare}/plugins:/opt/formshare_plugins
+      - ${FS_DATA_DIR:-/opt/formshare}/formshare_odata_webapps:/opt/formshare_odata_webapps
+      - ${FS_DATA_DIR:-/opt/formshare}/mosquitto:/etc/mosquitto/conf.d/
+
+    ports:
+      - "${FORMSHARE_PORT:-5900}:5900"
+      - "${FORMSHARE_MONITORING_PORT:-9001}:9001"
+
+    networks:
+      - fsnet
+
+networks:
+  fsnet:
+    name: ${FS_NETWORK_NAME:-formshare_fsnet}

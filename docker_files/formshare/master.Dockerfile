@@ -1,6 +1,6 @@
-FROM qlands/odktools:20241215
+FROM qlands/odktools:20260217
 
-MAINTAINER QLands Technology Consultants
+MAINTAINER QLands Software Inc.
 
 WORKDIR /opt
 RUN mkdir formshare_repository
@@ -28,7 +28,7 @@ COPY ./docker_files/mosquitto/websocket.conf /root
 COPY ./docker_files/mosquitto/access.acl /root
 
 RUN mkdir formshare_gunicorn
-RUN python3 -m venv formshare_env
+RUN python3.13 -m venv formshare_env
 
 RUN git clone https://github.com/qlands/FormShare.git formshare
 RUN . ./formshare_env/bin/activate && pip install wheel && pip install -r /opt/formshare/requirements.txt && python /opt/formshare/download_nltk_packages.py

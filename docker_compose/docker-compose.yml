@@ -166,7 +166,7 @@ services:
         ipv4_address: 172.28.1.3
 
   formshare_20260218:
-    image: qlands/formshare2:20260218
+    image: qlands/formshare2_community:20260218
     container_name: formshare_20260218
     environment:
       MYSQL_HOST_NAME: 172.28.1.5

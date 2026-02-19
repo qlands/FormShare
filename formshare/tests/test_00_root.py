@@ -284,7 +284,7 @@ class FunctionalTests(unittest.TestCase):
         t_e_s_t_form_access(self.test_object)
         print("Testing unauthorized access")
         t_e_s_t_unauthorized_access(self.test_object)
-        
+
         print("Testing create super user")
         t_e_s_t_create_super_user()
         print("Testing configure alembic")

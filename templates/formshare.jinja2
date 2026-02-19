@@ -18,11 +18,7 @@ pyramid.includes =
 # Database connection
 ###
 #For MySQL
-{% if mysql_use_ssl == True %}
 sqlalchemy.url = mysql+mysqlconnector://{{ mysql_user_name }}:{{ mysql_user_password }}@{{ mysql_host }}:{{ mysql_port }}/{{ mysql_schema }}?charset=utf8mb4
-{% else %}
-sqlalchemy.url = mysql+mysqlconnector://{{ mysql_user_name }}:{{ mysql_user_password }}@{{ mysql_host }}:{{ mysql_port }}/{{ mysql_schema }}?charset=utf8mb4&ssl_disabled=True
-{% endif %}
 
 ###
 # Security settings. You must change this parameters for every installation of FormShare. Each password must be different
@@ -77,11 +73,6 @@ elasticfeeds.port = {{ elastic_search_port }}
 #elasticfeeds.number_of_shards_in_network = 5
 #elasticfeeds.number_of_replicas_in_network = 1
 #elasticfeeds.max_link_size = 10000
-{% if elastic_search_ssl %}
-elasticfeeds.use_ssl = True
-{% else %}
-elasticfeeds.use_ssl = False
-{% endif %}
 
 elasticsearch.user.index_name = formshare_users
 #elasticsearch.user.number_of_shards = 5
@@ -89,22 +80,12 @@ elasticsearch.user.index_name = formshare_users
 elasticsearch.user.host = {{ elastic_search_host }}
 elasticsearch.user.port = {{ elastic_search_port }}
 #elasticsearch.user.url_prefix = None
-{% if elastic_search_ssl %}
-elasticsearch.user.use_ssl = True
-{% else %}
-elasticsearch.user.use_ssl = False
-{% endif %}
 
 #elasticsearch.repository.number_of_shards = 5
 #elasticsearch.repository.number_of_replicas = 1
 elasticsearch.repository.host = {{ elastic_search_host }}
 elasticsearch.repository.port = {{ elastic_search_port }}
 #elasticsearch.repository.url_prefix = None
-{% if elastic_search_ssl %}
-elasticsearch.repository.use_ssl = True
-{% else %}
-elasticsearch.repository.use_ssl = False
-{% endif %}
 
 elasticsearch.records.index_name = formshare_records
 #elasticsearch.records.number_of_shards = 5
@@ -112,11 +93,6 @@ elasticsearch.records.index_name = formshare_records
 elasticsearch.records.host = {{ elastic_search_host }}
 elasticsearch.records.port = {{ elastic_search_port }}
 #elasticsearch.records.url_prefix = None
-{% if elastic_search_ssl %}
-elasticsearch.records.use_ssl = True
-{% else %}
-elasticsearch.records.use_ssl = False
-{% endif %}
 elasticsearch.user.name = {{ elasticsearch_user_name }}
 elasticsearch.user.password = {{ elasticsearch_user_password }}
 
@@ -130,9 +106,6 @@ mysql.host = {{ mysql_host }}
 mysql.port = {{ mysql_port }}
 mysql.user = {{ mysql_user_name }}
 mysql.password = {{ mysql_user_password }}
-{% if mysql_use_ssl == True %}
-mysql.use.ssl = true
-{% endif %}
 
 ###
 # Mail server configuration

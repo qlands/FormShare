@@ -50,19 +50,11 @@ def main(raw_args=None):
     port = get_ini_value(os.path.abspath(args.ini_path), "mysql.port", "3306")
     user = get_ini_value(os.path.abspath(args.ini_path), "mysql.user", "empty!")
     password = get_ini_value(os.path.abspath(args.ini_path), "mysql.password", "empty!")
-    mysql_use_ssl = get_ini_value(
-        os.path.abspath(args.ini_path), "mysql.use.ssl", "false"
-    )
-    if mysql_use_ssl == "true":
-        mysql_use_ssl = True
-    else:
-        mysql_use_ssl = False
     context = {
         "host": host,
         "port": port,
         "user": user,
         "password": password,
-        "mysql_use_ssl": mysql_use_ssl,
     }
 
     rendered_template = template_environment.get_template("mysql.jinja2").render(

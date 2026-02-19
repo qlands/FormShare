@@ -17,7 +17,7 @@ services:
       # --- MySQL ---
       MYSQL_HOST_NAME: ${MYSQL_HOST_NAME:-mysql}
       MYSQL_USER_NAME: ${MYSQL_USER_NAME:-root}
-      MYSQL_USER_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER_PASSWORD: ${MYSQL_USER_PASSWORD}
 
       # --- Initial admin ---
       FORMSHARE_ADMIN_USER: ${FORMSHARE_ADMIN_USER:-admin}

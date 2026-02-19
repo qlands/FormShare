@@ -2,30 +2,45 @@ Memory required:  8GB of RAM
 
 Before you run docker-compose you need to:
 
-1) Install docker-compose and give it enough memory
+1) Create the following directories and give them proper access:
+sudo mkdir -p /opt/formshare_community/celery
+sudo mkdir -p /opt/formshare_community/log
+sudo mkdir -p /opt/formshare_community/repository
+sudo mkdir -p /opt/formshare_community/config
+sudo mkdir -p /opt/formshare_community/mysql
+sudo mkdir -p /opt/formshare_community/plugins
+sudo mkdir -p /opt/formshare_community/mosquitto
+sudo mkdir -p /opt/formshare_community/elasticsearch/certs
+sudo mkdir -p /opt/formshare_community/elasticsearch/esdata
+sudo mkdir -p /opt/formshare_community/elasticsearch/esdata2
+sudo chmod -R g+w /opt/formshare_community
+
+2) Install docker-compose and give it enough memory
 sudo apt-get install -y docker-compose
 sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
-2) Create a .env file using the example
+3) Create a .env file using the example
 cp .env.example .env
 
-3) Edit .env file to change:
+4) Edit .env file to change:
 -The mysql security credentials:
-line 19: MYSQL_ROOT_PASSWORD=change_me_mysql_root
+MYSQL_USER_NAME=root
+MYSQL_ROOT_PASSWORD=change_me_mysql_root
+MYSQL_USER_PASSWORD=change_me_mysql_root
 
 - The Elasticsearch security credentials:
-line 24: ELASTIC_PASSWORD=change_me_elastic
+ELASTIC_PASSWORD=change_me_elastic
 
 -The admin credentials:
-line 27: FORMSHARE_ADMIN_USER: admin
-line 28: FORMSHARE_ADMIN_EMAIL: admin@myserver.com
-line 29: FORMSHARE_ADMIN_PASSWORD: change_me_admin
+FORMSHARE_ADMIN_USER: admin
+FORMSHARE_ADMIN_EMAIL: admin@myserver.com
+FORMSHARE_ADMIN_PASSWORD: change_me_admin
 
-4) Start MySQL and Elasticsearch
+5) Start MySQL and Elasticsearch
 docker compose --env-file .env -f servers.yml up -d
 
-5) Start FormShare
+6) Start FormShare
 docker compose --env-file .env -f formshare.yml up -d
 
 Docker will pull the necessary images and run FormShare. After all images are pulled and

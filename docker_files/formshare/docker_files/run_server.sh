@@ -10,28 +10,14 @@ fi
 /etc/init.d/mosquitto stop
 /etc/init.d/mosquitto start
 mysql_use_ssl="${MYSQL_USE_SSL:=false}"
-if [ $mysql_use_ssl = "false" ]; then
-  mysql -h $MYSQL_HOST_NAME -u $MYSQL_USER_NAME --ssl-mode=DISABLED --password=$MYSQL_USER_PASSWORD --execute='CREATE SCHEMA IF NOT EXISTS formshare'
-else
-  mysql -h $MYSQL_HOST_NAME -u $MYSQL_USER_NAME --password=$MYSQL_USER_PASSWORD --execute='CREATE SCHEMA IF NOT EXISTS formshare'
-fi
+mysql -h $MYSQL_HOST_NAME -u $MYSQL_USER_NAME --password=$MYSQL_USER_PASSWORD --execute='CREATE SCHEMA IF NOT EXISTS formshare'
+
 mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u $MYSQL_USER_NAME --password=$MYSQL_USER_PASSWORD mysql
 source /opt/formshare_env/bin/activate
-cd /opt/formshare
-elastic_search_ssl="${ELASTIC_SEARCH_SSL:=false}"
-if [ $elastic_search_ssl = "false" ]; then
-  if [ $mysql_use_ssl = "false" ]; then
-    python create_config.py --daemon --capture_output --mysql_host $MYSQL_HOST_NAME --mysql_user_name $MYSQL_USER_NAME --mysql_user_password $MYSQL_USER_PASSWORD --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --formshare_host $FORMSHARE_HOST --formshare_port $FORMSHARE_PORT --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
-  else
-    python create_config.py --daemon --capture_output --mysql_use_ssl --mysql_host $MYSQL_HOST_NAME --mysql_user_name $MYSQL_USER_NAME --mysql_user_password $MYSQL_USER_PASSWORD --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --formshare_host $FORMSHARE_HOST --formshare_port $FORMSHARE_PORT --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
-  fi
-else
-  if [ $mysql_use_ssl = "false" ]; then
-    python create_config.py --daemon --capture_output --mysql_host $MYSQL_HOST_NAME --mysql_user_name $MYSQL_USER_NAME --mysql_user_password $MYSQL_USER_PASSWORD --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --elastic_search_ssl --formshare_host $FORMSHARE_HOST --formshare_port $FORMSHARE_PORT --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
-  else
-    python create_config.py --daemon --capture_output --mysql_use_ssl --mysql_host $MYSQL_HOST_NAME --mysql_user_name $MYSQL_USER_NAME --mysql_user_password $MYSQL_USER_PASSWORD --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --elastic_search_ssl --formshare_host $FORMSHARE_HOST --formshare_port $FORMSHARE_PORT --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
-  fi
-fi
+cd /opt/formshare || exit
+
+python create_config.py --daemon --capture_output --mysql_host $MYSQL_HOST_NAME --mysql_user_name $MYSQL_USER_NAME --mysql_user_password $MYSQL_USER_PASSWORD --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --formshare_host $FORMSHARE_HOST --formshare_port $FORMSHARE_PORT --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
+
 ln -s /opt/formshare_config/development.ini ./development.ini
 python configure_celery.py ./development.ini
 python configure_flatten.py
@@ -48,14 +34,6 @@ configure_tests ./development.ini .
 ln -s ./alembic.ini /opt/formshare_config/alembic.ini
 ln -s ./mysql.cnf /opt/formshare_config/mysql.cnf
 
-configure_fluent="${CONFIGURE_FLUENT:=false}"
-if [ $configure_fluent = "true" ]; then
-  if [ $elastic_search_ssl = "false" ]; then
-    configure_fluent --formshare_path /opt/formshare --formshare_log_file /opt/formshare_log/error_log --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT /opt/formshare_fluentd/fluent.conf
-  else
-    configure_fluent --formshare_path /opt/formshare --formshare_log_file /opt/formshare_log/error_log --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --elastic_search_ssl /opt/formshare_fluentd/fluent.conf
-  fi
-fi
 alembic upgrade head
 create_superuser --user_id $FORMSHARE_ADMIN_USER --user_email $FORMSHARE_ADMIN_EMAIL --user_password $FORMSHARE_ADMIN_PASSWORD ./development.ini
 

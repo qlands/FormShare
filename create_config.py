@@ -92,6 +92,8 @@ def main():
     main_secret = random_password(14).replace("%", "~")
     redis_sessions_secret = random_password(14).replace("%", "~")
     assistant_secret = random_password(14).replace("%", "!")
+    partner_secret = random_password(14).replace("%", "!")
+    mosquitto_password = random_password(14).replace("%", "!")
     auth_secret = random_password(14).replace("%", "#")
     auth_secret2 = random_password(14).replace("%", "#")
     aes_key = random_password(29).replace("%", "#")
@@ -111,6 +113,8 @@ def main():
         "mysql_user_password": args.mysql_user_password,
         "main_secret": main_secret,
         "assistant_secret": assistant_secret,
+        "partner_secret": partner_secret,
+        "mosquitto_password": mosquitto_password,
         "auth_secret": auth_secret,
         "auth_secret2": auth_secret2,
         "aes_key": aes_key,

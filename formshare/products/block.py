@@ -52,7 +52,7 @@ def _release_lock(redis_client, lock_key, token):
 
 
 def get_redis_client(settings):
-    redis_host = settings.get("redis.sessions.host", "localhost")
-    redis_port = int(settings.get("redis.sessions.port", "6379"))
+    redis_host = settings.get("redis.sessions.redis_host", "localhost")
+    redis_port = int(settings.get("redis.sessions.redis_port", "6379"))
     redis_client = redis.StrictRedis(host=redis_host, port=redis_port, db=5)
     return redis_client

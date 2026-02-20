@@ -9,14 +9,14 @@ if [ ! -f /etc/mosquitto/conf.d/mosquitto.conf ]; then
 fi
 /etc/init.d/mosquitto stop
 /etc/init.d/mosquitto start
-mysql_use_ssl="${MYSQL_USE_SSL:=false}"
+
 mysql -h $MYSQL_HOST_NAME -u $MYSQL_USER_NAME --password=$MYSQL_USER_PASSWORD --execute='CREATE SCHEMA IF NOT EXISTS formshare'
 
-mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u $MYSQL_USER_NAME --password=$MYSQL_USER_PASSWORD mysql
+mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -h $MYSQL_HOST_NAME -u $MYSQL_USER_NAME --password=$MYSQL_USER_PASSWORD mysql
 source /opt/formshare_env/bin/activate
 cd /opt/formshare || exit
 
-python create_config.py --daemon --capture_output --mysql_host $MYSQL_HOST_NAME --mysql_user_name $MYSQL_USER_NAME --mysql_user_password $MYSQL_USER_PASSWORD --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --formshare_host $FORMSHARE_HOST --formshare_port $FORMSHARE_PORT --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
+python create_config.py --daemon --capture_output --mysql_host $MYSQL_HOST_NAME --mysql_user_name $MYSQL_USER_NAME --mysql_user_password $MYSQL_USER_PASSWORD --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --formshare_host $FORMSHARE_HOST --formshare_port $FORMSHARE_PORT --forwarded_allow_ip "${FORWARDED_ALLOW_IP}" --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
 
 ln -s /opt/formshare_config/development.ini ./development.ini
 python configure_celery.py ./development.ini
@@ -24,9 +24,7 @@ python configure_flatten.py
 chmod +x /opt/formshare/formshare/scripts/flatten_jsons.py
 python setup.py develop
 python setup.py compile_catalog
-if [ $mysql_use_ssl = "false" ]; then
-  disable_ssl ./development.ini
-fi
+
 configure_alembic ./development.ini .
 configure_mysql ./development.ini .
 configure_tests ./development.ini .

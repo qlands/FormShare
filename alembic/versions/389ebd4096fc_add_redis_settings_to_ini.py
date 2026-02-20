@@ -61,8 +61,10 @@ def upgrade():
         "redis.sessions.cookie_name",
         "formshare_session",
     )
-    modify_ini_file(config, "ADD", "app:formshare", "redis.sessions.host", "localhost")
-    modify_ini_file(config, "ADD", "app:formshare", "redis.sessions.port", "6379")
+    modify_ini_file(
+        config, "ADD", "app:formshare", "redis.sessions.redis_host", "localhost"
+    )
+    modify_ini_file(config, "ADD", "app:formshare", "redis.sessions.redis_port", "6379")
     modify_ini_file(
         config, "ADD", "app:formshare", "celery.broker", "redis://localhost:6379/0"
     )
@@ -80,8 +82,8 @@ def downgrade():
     config.read(config_uri)
     modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.secret")
     modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.cookie_name")
-    modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.host")
-    modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.port")
+    modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.redis_host")
+    modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.redis_port")
     modify_ini_file(
         config,
         "ADD",

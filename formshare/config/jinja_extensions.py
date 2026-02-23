@@ -6,8 +6,7 @@ import re
 import formshare.resources as r
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
-from jinja2 import ext
-from jinja2 import nodes
+from jinja2 import ext, nodes
 from webhelpers2.html import literal
 
 jinjaEnv = Environment()
@@ -120,39 +119,60 @@ class ExtendThis(ext.Extension):  # pragma: no cover
 
 class BaseExtension(ext.Extension):  # pragma: no cover
     """
-    Base class for creating custom jinja2 tags.
-    parse expects a tag of the format
-    {% tag_name args, kw %}
-    after parsing it will call _call(args, kw) which must be defined.
+    Base class for custom Jinja2 tags.
 
-    This code is based on CKAN
-    :Copyright: (C) 2007 Open Knowledge Foundation
-    :license: AGPL V3, see LICENSE for more details.
+    Expected tag format:
+        {% tag_name arg1, arg2, key=value, ... %}
+
+    Subclasses must implement:
+        _call(args_list, kwargs_dict, **context_kwargs) -> str | Markup | ...
     """
 
     def parse(self, parser):
         stream = parser.stream
-        tag = next(stream)
-        # get arguments
-        args = []
-        kwargs = []
-        while not stream.current.test_any("block_end"):
-            if args or kwargs:
+        start_token = next(stream)  # the tag token itself
+
+        args_list: list[nodes.Expr] = []
+        kw_pairs: list[nodes.Pair] = []
+
+        # Parse zero or more comma-separated items until the end of the block.
+        # Each item is either:
+        #   - a keyword assignment:  name = expression
+        #   - a positional expression
+        first = True
+        while not stream.current.test("block_end"):
+            if not first:
                 stream.expect("comma")
-            if stream.current.test("name") and stream.look().test("assign"):
-                key = nodes.Const(next(stream).value)
-                stream.skip()
-                value = parser.parse_expression()
-                kwargs.append(nodes.Pair(key, value, lineno=key.lineno))
+            first = False
+
+            if self._looks_like_kwarg(stream):
+                name_token = stream.expect("name")
+                stream.expect("assign")
+                key_node = nodes.Const(name_token.value, lineno=name_token.lineno)
+                val_node = parser.parse_expression()
+                kw_pairs.append(
+                    nodes.Pair(key_node, val_node, lineno=name_token.lineno)
+                )
             else:
-                args.append(parser.parse_expression())
+                args_list.append(parser.parse_expression())
 
-        def make_call_node(*kw):
-            return self.call_method(
-                "_call", args=[nodes.List(args), nodes.Dict(kwargs)], kwargs=kw
-            )
+        # Build call: self._call([args...], {kwargs...})
+        call = self.call_method(
+            "_call",
+            args=[
+                nodes.List(args_list, lineno=start_token.lineno),
+                nodes.Dict(kw_pairs, lineno=start_token.lineno),
+            ],
+        )
 
-        return nodes.Output([make_call_node()]).set_lineno(tag.lineno)
+        return nodes.Output([call]).set_lineno(start_token.lineno)
+
+    @staticmethod
+    def _looks_like_kwarg(stream) -> bool:
+        """
+        Detect pattern: <name> '='
+        """
+        return stream.current.test("name") and stream.look().test("assign")
 
 
 class JSResourceExtension(BaseExtension):  # pragma: no cover
@@ -173,28 +193,3 @@ class CSSResourceExtension(BaseExtension):  # pragma: no cover
         assert len(args) == 3
         assert len(kwargs) == 0
         return render_resource(args[0], args[1], "CSS", args[2])
-
-
-def regularise_html(html):  # pragma: no cover
-    """
-    Take badly formatted html with strings
-
-
-    This code is based on CKAN
-    :Copyright (C) 2007 Open Knowledge Foundation
-    :license: AGPL V3, see LICENSE for more details.
-    :param html: The html to be formated
-    :return: Formated html
-    """
-
-    if html is None:
-        return
-    html = re.sub("\n", " ", html)
-    matches = re.findall("(<[^>]*>|%[^%]\([^)]*\)\w|[^<%]+|%)", html)
-    for i in range(len(matches)):
-        match = matches[i]
-        if match.startswith("<") or match.startswith("%"):
-            continue
-        matches[i] = re.sub("\s{2,}", " ", match)
-    html = "".join(matches)
-    return html

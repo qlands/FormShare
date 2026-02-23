@@ -13,10 +13,8 @@
             <div class="col-lg-3 ">
                 <address>
                     {% block address %}
-                        <strong><span class="navy"><a href="https://www.qlands.com" target="_blank">QLands Inc.</a></span></strong><br/>
-                        204 S Sandy Ln<br/>
-                        Sinking Spring 19608, PA, USA<br/>
-                        <abbr title="{{ _('Telephone') }}">{{ _('P') }}:</abbr> +1 484 743 6177
+                        <strong><span class="navy"><a href="https://www.qlands.com" target="_blank">QLands Software Inc.</a></span></strong><br/>
+                        PA, USA<br/>
                     {% endblock address %}
                 </address>
             </div>
@@ -51,10 +49,10 @@
             <div class="col-lg-12 text-center m-t-lg m-b-lg">
                 {% block version %}
                     <strong>{{ _('Version') }} {{ request.h.get_version() }}</strong>
-                    <p><strong>&copy; 2025 QLands Inc.</strong></p>
+                    <p><strong>&copy; 2026 QLands Software Inc.</strong></p>
                 {% endblock version %}
                 {% block version_extra %}
-                    <small>{{ _('FormShare, the FormShare logo, and the slogan "Centralize data – Decentralize knowledge" are either registered trademarks or trademarks of QLands Inc. All other products, logos, or name brands are trademarks of their respective holders, including QLands Inc.') }}</small>
+                    <small>{{ _('FormShare, the FormShare logo, and the slogan "Centralize data – Decentralize knowledge" are either registered trademarks or trademarks of QLands Software Inc. All other products, logos, or name brands are trademarks of their respective holders.') }}</small>
                 {% endblock version_extra %}
             </div>
         </div>

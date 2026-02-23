@@ -7,7 +7,6 @@ __all__ = [
     "IRoutes",
     "IConfig",
     "IResource",
-    "IPluginObserver",
     "IPluralize",
     "ISchema",
     "IDatabase",
@@ -57,29 +56,42 @@ __all__ = [
 
 
 from inspect import isclass
-
+from typing import Any
 from pyutilib.component.core import Interface as _pca_Interface
 
 
 class Interface(_pca_Interface):  # pragma: no cover
     """
-    This code is based on CKAN
-    :Copyright (C) 2007 Open Knowledge Foundation
-    :license: AGPL V3, see LICENSE for more details.
+    Thin convenience wrapper around PyUtilib's Interface.
 
+    Provides friendly helpers for checking whether a class/instance declares
+    implementation of this interface.
     """
 
     @classmethod
-    def provided_by(cls, instance):
-        return cls.implemented_by(instance.__class__)
+    def provided_by(cls, instance) -> bool:
+        """
+        Return True if `instance`'s class implements this interface.
+        """
+        return cls.implemented_by(type(instance))
 
     @classmethod
-    def implemented_by(cls, other):
-        if not isclass(other):
-            raise TypeError("Class expected", other)
+    def implemented_by(cls, candidate) -> bool:
+        """
+        Return True if `candidate` (a class) implements this interface.
+        """
+        if not isclass(candidate):
+            raise TypeError("Class expected", candidate)
+
+        impl = getattr(candidate, "_implements", None)
+        if not impl:
+            return False
+
+        # PyUtilib typically stores a sequence/set of interfaces in _implements
         try:
-            return cls in other._implements
-        except AttributeError:
+            return cls in impl
+        except TypeError:
+            # If it's not a container for some reason, treat as not implemented
             return False
 
 
@@ -2115,38 +2127,3 @@ class IRoles(Interface):
         This function must return an array of roles like [{"role_id": "can_action", "role_name": "Description"}]
         """
         raise NotImplementedError("get_roles must be implemented in subclasses")
-
-
-class IPluginObserver(Interface):  # pragma: no cover
-    """
-    Plugin to the plugin loading mechanism
-
-    This code is based on CKAN
-    :Copyright (C) 2007 Open Knowledge Foundation
-    :license: AGPL V3, see LICENSE for more details.
-
-    """
-
-    def before_load(self, plugin):
-        """
-        Called before a plugin is loaded
-        This method is passed the plugin class.
-        """
-
-    def after_load(self, service):
-        """
-        Called after a plugin has been loaded.
-        This method is passed the instantiated service object.
-        """
-
-    def before_unload(self, plugin):
-        """
-        Called before a plugin is loaded
-        This method is passed the plugin class.
-        """
-
-    def after_unload(self, service):
-        """
-        Called after a plugin has been unloaded.
-        This method is passed the instantiated service object.
-        """

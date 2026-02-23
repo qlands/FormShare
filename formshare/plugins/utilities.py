@@ -52,17 +52,19 @@ __all__ = [
 ]
 
 
-def __return_current_path():  # pragma: no cover - Tested by loading testing plugins but not Covered
+import os
+import sys
+from pathlib import Path
+
+
+def _caller_dir(levels_up: int = 2) -> str:  # pragma: no cover
     """
-    This code is based on CKAN
-    :Copyright (C) 2007 Open Knowledge Foundation
-    :license: AGPL V3, see LICENSE for more details.
-    :return:
+    Return the directory of the caller's source file using sys._getframe().
+    Faster than inspect-based approaches.
     """
-    frame, filename, line_number, function_name, lines, index = inspect.getouterframes(
-        inspect.currentframe()
-    )[2]
-    return os.path.dirname(filename)
+    frame = sys._getframe(levels_up)
+    filename = frame.f_code.co_filename
+    return str(Path(filename).resolve().parent)
 
 
 def add_templates_directory(
@@ -70,7 +72,7 @@ def add_templates_directory(
 ):  # pragma: no cover - Tested by loading
     # testing plugins but not Covered
     if not os.path.isabs(relative_path):
-        caller_path = __return_current_path()
+        caller_path = _caller_dir()
         templates_path = os.path.join(caller_path, relative_path)
     else:
         templates_path = relative_path
@@ -89,7 +91,7 @@ def add_static_view(
 ):  # pragma: no cover - Tested by loading
     # testing plugins but not Covered
     if not os.path.isabs(relative_path):
-        caller_path = __return_current_path()
+        caller_path = _caller_dir()
         static_path = os.path.join(caller_path, relative_path)
     else:
         static_path = relative_path
@@ -123,7 +125,7 @@ def add_library(
     name, path
 ):  # pragma: no cover - Tested by loading testing plugins but not Covered
     if not os.path.isabs(path):
-        caller_path = __return_current_path()
+        caller_path = _caller_dir()
         library_path = os.path.join(caller_path, path)
     else:
         library_path = path

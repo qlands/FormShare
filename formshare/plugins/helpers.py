@@ -15,9 +15,8 @@ import timeago
 import validators
 from dateutil.parser import parse
 from formshare.models import TimeZone
-
-# from pattern.en import pluralize as pluralize_en
-# from pattern.es import pluralize as pluralize_es
+from typing import Any, Callable, Dict, Optional
+from collections.abc import Mapping
 from pytz import timezone
 
 logging.setLoggerClass(SecretLogger)
@@ -52,50 +51,46 @@ def convert_date(date):
         log.error("Error while converting date '{}'. Error: {}".format(date, str(e)))
 
 
+class HelperNotDefined(Exception):
+    """Raised when a requested template helper is not registered."""
+
+
 class HelperAttributeDict(dict):
     """
-    This code is based on CKAN
-    :Copyright (C) 2007 Open Knowledge Foundation
-    :license: AGPL V3.
+    Dict with attribute access (d.key) for template helpers.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(HelperAttributeDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
-
-    def __getitem__(self, key):
+    def __getattr__(self, name: str) -> Any:
         try:
-            value = super(HelperAttributeDict, self).__getitem__(key)
-        except KeyError:
-            raise Exception(
-                "Helper function '{key}' has not been defined.".format(key=key)
-            )
-        return value
+            return self[name]
+        except KeyError as e:
+            raise HelperNotDefined(
+                f"Helper function '{name}' has not been defined."
+            ) from e
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        self[name] = value
+
+    def __getitem__(self, key: str) -> Any:
+        try:
+            return super().__getitem__(key)
+        except KeyError as e:
+            raise HelperNotDefined(
+                f"Helper function '{key}' has not been defined."
+            ) from e
 
 
 # Builtin helper functions.
-_builtin_functions = {}
+_builtin_functions: Dict[str, Callable[..., Any]] = {}
 helper_functions = HelperAttributeDict()
 
 
-def core_helper(f, name=None):
+def core_helper(f, name: Optional[str] = None):
     """
     Register a function as a builtin helper method.
-
-    This code is based on CKAN
-        :Copyright (C) 2007 Open Knowledge Foundation
-        :license: AGPL V3, see LICENSE for more details.
-
     """
-
-    def _get_name(func_or_class):
-        # Handles both methods and class instances.
-        try:
-            return func_or_class.__name__
-        except AttributeError:
-            return func_or_class.__class__.__name__
-
-    _builtin_functions[name or _get_name(f)] = f
+    helper_name = name or getattr(f, "__name__", f.__class__.__name__)
+    _builtin_functions[helper_name] = f
     return f
 
 
@@ -412,15 +407,11 @@ def user_has_role(user, role):
 def load_plugin_helpers():
     """
     (Re)loads the list of helpers provided by plugins.
-
-    This code is based on CKAN
-        :Copyright (C) 2007 Open Knowledge Foundation
-        :license: AGPL V3, see LICENSE for more details.
     """
-    global helper_functions
-
     helper_functions.clear()
     helper_functions.update(_builtin_functions)
 
     for plugin in reversed(list(p.PluginImplementations(p.ITemplateHelpers))):
-        helper_functions.update(plugin.get_helpers())
+        helpers = plugin.get_helpers() or {}
+        if isinstance(helpers, Mapping):
+            helper_functions.update(helpers)

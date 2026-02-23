@@ -1,13 +1,14 @@
-"""
-Provides plugin services to the FormShare
+from __future__ import annotations
 
-This code is based on CKAN
-:Copyright (C) 2007 Open Knowledge Foundation
-:license: AGPL V3, see LICENSE for more details.
-"""
+from dataclasses import dataclass, field
+from typing import Any, Dict, Iterable, List, Optional, Sequence
 
-from formshare.plugins.interfaces import IPluginObserver
-from pkg_resources import iter_entry_points
+try:
+    # Python 3.10+
+    from importlib.metadata import entry_points, EntryPoint
+except ImportError:  # pragma: no cover (very old Python)
+    from importlib_metadata import entry_points, EntryPoint  # type: ignore
+
 from pyutilib.component.core import ExtensionPoint as PluginImplementations
 from pyutilib.component.core import Plugin as _pca_Plugin
 from pyutilib.component.core import SingletonPlugin as _pca_SingletonPlugin
@@ -28,13 +29,9 @@ __all__ = [
     "load_all_celery",
 ]
 
-# Entry point group.
+# Entry point groups
 PLUGINS_ENTRY_POINT_GROUP = "formshare.plugins"
-
-# Entry point group.
 CELERY_PLUGINS_ENTRY_POINT_GROUP = "formshare.celery.plugins"
-
-# Entry point for test plugins.
 TEST_PLUGINS_ENTRY_POINT_GROUP = "formshare.test_plugins"
 
 GROUPS = [
@@ -42,18 +39,10 @@ GROUPS = [
     TEST_PLUGINS_ENTRY_POINT_GROUP,
     CELERY_PLUGINS_ENTRY_POINT_GROUP,
 ]
-# These lists are used to ensure that the correct extensions are enabled.
-_PLUGINS = []
-_PLUGINS_CLASS = []
-
-# To aid retrieving extensions by name
-_PLUGINS_SERVICE = {}
 
 
 class PluginNotFoundException(Exception):
-    """
-    Raised when a requested plugin cannot be found.
-    """
+    """Raised when a requested plugin cannot be found."""
 
 
 class Plugin(_pca_Plugin):
@@ -67,7 +56,7 @@ class Plugin(_pca_Plugin):
 
 class SingletonPlugin(_pca_SingletonPlugin):
     """
-    Base class for plugins which are singletons (ie most of them)
+    Base class for plugins which are singletons (i.e. most of them).
 
     One singleton instance of this class will be created when the plugin is
     loaded. Subsequent calls to the class constructor will always return the
@@ -75,67 +64,78 @@ class SingletonPlugin(_pca_SingletonPlugin):
     """
 
 
-def get_plugin(plugin):  # pragma: no cover  # Not used
-    """
-    Get an instance of a active plugin by name.  This is helpful for
-    testing.
-    :param plugin: Plugin name
-    :return: Instance of plugin name
-    """
-    if plugin in _PLUGINS_SERVICE:
-        return _PLUGINS_SERVICE[plugin]
+@dataclass
+class _Registry:
+    # Names in the order they were loaded
+    loaded_names: List[str] = field(default_factory=list)
+
+    # Class objects of loaded plugin services (to mirror prior behavior)
+    loaded_classes: List[type] = field(default_factory=list)
+
+    # Singleton instances addressable by plugin name
+    singletons: Dict[str, Any] = field(default_factory=dict)
+
+    def is_loaded(self, name: str) -> bool:
+        return name in self.loaded_names
+
+    def clear(self) -> None:
+        self.loaded_names.clear()
+        self.loaded_classes.clear()
+        self.singletons.clear()
 
 
-def load_all(settings):
+_REGISTRY = _Registry()
+
+
+def get_plugin(plugin: str):  # pragma: no cover  # Not used
+    """
+    Get an instance of an active singleton plugin by name. Helpful for testing.
+    """
+    return _REGISTRY.singletons.get(plugin)
+
+
+def load_all(settings: dict) -> None:
     """
     Load all plugins listed in the 'formshare.plugins' settings variable.
-    :param settings: Pytamid settings
+    :param settings: Pyramid settings dict-like
     """
-    # Clear any loaded plugins
     unload_all()
-
-    plugins = settings.get(PLUGINS_ENTRY_POINT_GROUP, "").split()
-
+    plugins = (settings.get(PLUGINS_ENTRY_POINT_GROUP, "") or "").split()
     load(*plugins)
 
 
-def load_all_celery(plugin_list):
+def load_all_celery(plugin_list: str) -> None:
     """
-    Load all celery plugins listed in plugin_list. This is called by celery_app.py
+    Load all celery plugins listed in plugin_list. This is called by celery_app.py.
     :param plugin_list: List of celery plugins separated by space
     """
-    # Clear any loaded plugins
     unload_all()
-    plugins = plugin_list.split()
+    plugins = (plugin_list or "").split()
     load(*plugins)
 
 
-def load(*plugins):
+def load(*plugins: str):
     """
     Load named plugin(s).
-    :param plugins: Pointer to the plugins
-    :return: Return extension instance if only one was loaded. If more that one has been requested then a list of
-             instances is returned in the order they were asked for.
+
+    :param plugins: plugin entry point names
+    :return: If one plugin requested, return its instance; otherwise a list of instances.
     """
-    output = []
+    output: List[Any] = []
 
-    observers = PluginImplementations(IPluginObserver)
-    for plugin in plugins:
-        if plugin in _PLUGINS:  # pragma: no cover
-            raise Exception("Plugin `%s` already loaded" % plugin)
+    for name in plugins:
+        if _REGISTRY.is_loaded(name):  # pragma: no cover
+            raise Exception(f"Plugin `{name}` already loaded")
 
-        service = _get_service(plugin)
-        for observer_plugin in observers:
-            observer_plugin.before_load(service)
+        service = _get_service(name)
+
         service.activate()
-        for observer_plugin in observers:
-            observer_plugin.after_load(service)
 
-        _PLUGINS.append(plugin)
-        _PLUGINS_CLASS.append(service.__class__)
+        _REGISTRY.loaded_names.append(name)
+        _REGISTRY.loaded_classes.append(service.__class__)
 
         if isinstance(service, SingletonPlugin):
-            _PLUGINS_SERVICE[plugin] = service
+            _REGISTRY.singletons[name] = service
 
         output.append(service)
 
@@ -144,65 +144,71 @@ def load(*plugins):
     return output
 
 
-def unload_all():
+def unload_all() -> None:
     """
-    Unload (deactivate) all loaded plugins in the reverse order that they
-    were loaded.
+    Unload (deactivate) all loaded plugins in the reverse order that they were loaded.
     """
-    unload(*reversed(_PLUGINS))
+    unload(*reversed(_REGISTRY.loaded_names))
 
 
-def unload(*plugins):  # pragma: no cover. Not used at the moment
+def unload(*plugins: str):  # pragma: no cover (Not used at the moment)
     """
     Unload named plugin(s).
-    :param plugins: List of plugins
+    :param plugins: plugin names
     """
 
-    observers = PluginImplementations(IPluginObserver)
+    for name in plugins:
+        if not _REGISTRY.is_loaded(name):
+            raise Exception(f"Cannot unload plugin `{name}`")
 
-    for plugin in plugins:
-        if plugin in _PLUGINS:
-            _PLUGINS.remove(plugin)
-            if plugin in _PLUGINS_SERVICE:
-                del _PLUGINS_SERVICE[plugin]
-        else:
-            raise Exception("Cannot unload plugin `%s`" % plugin)
+        service = _get_service(name)
 
-        service = _get_service(plugin)
-        for observer_plugin in observers:
-            observer_plugin.before_unload(service)
-
-        service.deactivate()
-
-        _PLUGINS_CLASS.remove(service.__class__)
-
-        for observer_plugin in observers:
-            observer_plugin.after_unload(service)
+        # Update registry AFTER successful deactivate
+        _REGISTRY.loaded_names.remove(name)
+        if name in _REGISTRY.singletons:
+            del _REGISTRY.singletons[name]
+        try:
+            _REGISTRY.loaded_classes.remove(service.__class__)
+        except ValueError:
+            # If service class wasn't recorded for some reason, ignore
+            pass
 
 
-def plugin_loaded(name):  # pragma: no cover. Not used at the moment
+def plugin_loaded(name: str) -> bool:  # pragma: no cover
+    """Return True if a particular plugin is loaded."""
+    return _REGISTRY.is_loaded(name)
+
+
+def _iter_entry_points_for(group: str, name: str) -> Iterable[EntryPoint]:
     """
-    See if a particular plugin is loaded.
-    :param name: Plugin name
-    :return: Boolean
+    Yield entry points matching (group, name) across Python versions.
     """
-    if name in _PLUGINS:
-        return True
-    return False
+    eps = entry_points()
+
+    # Python 3.10+: entry_points().select(group=..., name=...)
+    if hasattr(eps, "select"):
+        yield from eps.select(group=group, name=name)  # type: ignore[attr-defined]
+        return
+
+    # Older importlib_metadata: mapping-like
+    group_eps = eps.get(group, [])  # type: ignore[call-arg]
+    for ep in group_eps:
+        if getattr(ep, "name", None) == name:
+            yield ep
 
 
-def _get_service(plugin_name):  # pragma: no cover. Not used at the moment
+def _get_service(plugin_name: str):  # pragma: no cover
     """
-    Return a service (ie an instance of a plugin class).
-    :param plugin_name: the name of a plugin entry point
-    :return: the service object
+    Return a service (i.e. an instance of a plugin class) from entry points.
+    :param plugin_name: entry point name
+    :return: plugin service instance
     """
-    if isinstance(plugin_name, str):
-        for group in GROUPS:
-            iterator = iter_entry_points(group=group, name=plugin_name)
-            plugin = next(iterator, None)
-            if plugin:
-                return plugin.load()(name=plugin_name)
-        raise PluginNotFoundException(plugin_name)
-    else:
+    if not isinstance(plugin_name, str):
         raise TypeError("Expected a plugin name", plugin_name)
+
+    for group in GROUPS:
+        for ep in _iter_entry_points_for(group=group, name=plugin_name):
+            plugin_cls = ep.load()
+            return plugin_cls(name=plugin_name)
+
+    raise PluginNotFoundException(plugin_name)

@@ -1,13 +1,9 @@
 version: "3.8"
 
-# Dependency stack for FormShare (databases/search).
+# Dependency stack for FormShare (MySQL & ElasticSearch).
 #
 # Usage:
 #   docker compose --env-file .env -f docker-compose.deps.yml up -d
-#
-# Notes:
-# - No fixed IPs: services discover each other by service name (Docker DNS).
-# - Secrets/config move to .env (see .env.example).
 
 services:
   mysql:

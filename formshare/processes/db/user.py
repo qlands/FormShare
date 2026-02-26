@@ -298,15 +298,25 @@ def get_tenants(request):
     return map_from_schema(res)
 
 
-def get_user_details(request, user, just_active=True, get_stats=True):
+def get_user_details(
+    request, user, just_active=True, get_stats=True, include_workspaces=False
+):
     if just_active:
-        res = (
-            request.dbsession.query(User)
-            .filter(User.user_id == user)
-            .filter(User.user_active == 1)
-            .filter(User.user_is_workspace == 0)
-            .first()
-        )
+        if not include_workspaces:
+            res = (
+                request.dbsession.query(User)
+                .filter(User.user_id == user)
+                .filter(User.user_active == 1)
+                .filter(User.user_is_workspace == 0)
+                .first()
+            )
+        else:
+            res = (
+                request.dbsession.query(User)
+                .filter(User.user_id == user)
+                .filter(User.user_active == 1)
+                .first()
+            )
     else:
         res = request.dbsession.query(User).filter(User.user_id == user).first()
     if res is not None:

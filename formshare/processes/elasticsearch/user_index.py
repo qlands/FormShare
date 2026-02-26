@@ -304,7 +304,7 @@ class UserIndexManager(object):
                                         }
                                     }
                                 ],
-                                "filter": [{"term": {"tenant_id": tenant_id}}],
+                                "filter": [{"match": {"tenant_id": tenant_id}}],
                             }
                         }
                     }
@@ -316,7 +316,7 @@ class UserIndexManager(object):
                         "query": {
                             "bool": {
                                 "must": [{"match_phrase": {"all_data": query}}],
-                                "filter": [{"term": {"tenant_id": tenant_id}}],
+                                "filter": [{"match": {"tenant_id": tenant_id}}],
                             }
                         }
                     }
@@ -336,7 +336,7 @@ class UserIndexManager(object):
                                     }
                                 }
                             ],
-                            "filter": [{"term": {"tenant_id": tenant_id}}],
+                            "filter": [{"match": {"tenant_id": tenant_id}}],
                         }
                     }
                 }

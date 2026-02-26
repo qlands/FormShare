@@ -9,10 +9,10 @@ class APIUserSearchSelect2(PrivateView):
     def process_view(self):
         index_manager = get_user_index_manager(self.request)
         q = self.request.params.get("q", "")
-        if self.request.registry.settings.get("formshare.saas.mode", "False"):
-            fixed_tenant = None
-        else:
+        if self.request.registry.settings.get("formshare.saas.mode", "False") == "True":
             fixed_tenant = self.user.tenant
+        else:
+            fixed_tenant = None
 
         include_me = self.request.params.get("include_me", "False")
         if include_me == "False":

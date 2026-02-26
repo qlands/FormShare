@@ -55,6 +55,8 @@ class CollaboratorsListView(PrivateView):
                     user_details = get_user_details(
                         self.request, collaborator_details["collaborator"]
                     )
+                    if user_details["user_tenant"] != self.user.tenant:
+                        raise HTTPNotFound
                     if user_details:
                         continue_adding = True
                         for plugin in p.PluginImplementations(p.ICollaborator):
@@ -132,6 +134,11 @@ class CollaboratorsListView(PrivateView):
                 else:
                     self.append_to_errors(self._("You need to specify a collaborator"))
             if "change_role" in collaborator_details.keys():
+                user_details = get_user_details(
+                    self.request, collaborator_details["collaborator_id"]
+                )
+                if user_details["user_tenant"] != self.user.tenant:
+                    raise HTTPNotFound
                 changed, message = set_collaborator_role(
                     self.request,
                     project_id,
@@ -184,6 +191,11 @@ class RemoveCollaborator(PrivateView):
         if self.request.method == "POST":
             self.returnRawViewResult = True
             collaborator_id = self.request.matchdict["collid"]
+
+            user_details = get_user_details(self.request, collaborator_id)
+            if user_details["user_tenant"] != self.user.tenant:
+                raise HTTPNotFound
+
             continue_remove = True
             next_page = self.request.route_url(
                 "collaborators", userid=user_id, projcode=project_code

@@ -84,9 +84,8 @@ class EditUserView(PrivateView):
                 ):
                     raise HTTPNotFound
         user_data = get_user_details(self.request, user_to_modify, False)
-        if self.request.registry.settings.get("formshare.saas.mode", "False") == "True":
-            if user_data["user_tenant"] != self.user.tenant:
-                raise HTTPNotFound
+        if user_data["user_tenant"] != self.user.tenant:
+            raise HTTPNotFound
 
         user_roles = get_user_roles(self.request, user_to_modify)
         tenants = get_tenants(self.request)

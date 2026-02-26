@@ -39,7 +39,7 @@ class APIUserSearchSelect2(PrivateView):
                 )
                 select2_result = []
                 for result in query_result:
-                    if result["user_id"] != self.userID or include_me:
+                    if result["user_id"] != self.user.login or include_me:
                         select2_result.append(
                             {
                                 "id": result["user_id"],

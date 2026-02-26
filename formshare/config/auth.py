@@ -145,7 +145,7 @@ def get_user_roles(request, user_id):
         .all()
     )
 
-    final_roles = ["can_projects", "can_forms"]
+    final_roles = []
     # Only add to the final list of roles those that have been defined through plugins
     for a_role in res:
         if a_role.role_id in roles:

@@ -28,6 +28,8 @@ import base64
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
+BASE62_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
 
 class UsersListView(PrivateView):
     def __init__(self, request):
@@ -48,7 +50,11 @@ class UsersListView(PrivateView):
                 )
                 == "true"
             ):
-                raise HTTPNotFound
+                if (
+                    self.request.registry.settings.get("formshare.saas.mode", "False")
+                    == "False"
+                ):
+                    raise HTTPNotFound
         return {"userid": user_id}
 
 
@@ -72,8 +78,16 @@ class EditUserView(PrivateView):
                 )
                 == "true"
             ):
-                raise HTTPNotFound
+                if (
+                    self.request.registry.settings.get("formshare.saas.mode", "False")
+                    == "False"
+                ):
+                    raise HTTPNotFound
         user_data = get_user_details(self.request, user_to_modify, False)
+        if self.request.registry.settings.get("formshare.saas.mode", "False") == "True":
+            if user_data["user_tenant"] != self.user.tenant:
+                raise HTTPNotFound
+
         user_roles = get_user_roles(self.request, user_to_modify)
         tenants = get_tenants(self.request)
 
@@ -98,6 +112,10 @@ class EditUserView(PrivateView):
                 action = "modify"
                 if "user_id" in user_details.keys():
                     user_details.pop("user_id")
+
+                if "user_apisecret" in user_details.keys():
+                    if user_details["user_apisecret"].strip() == "":
+                        user_details.pop("user_apisecret")
 
                 email_valid = validators.email(user_details["user_email"])
                 if not email_valid:
@@ -156,21 +174,22 @@ class EditUserView(PrivateView):
                             user_details["user_apitoken"] = (
                                 "invalid_" + secrets.token_hex(16) + "_invalid"
                             )
-                        if (
-                            user_data["user_apisecret"]
-                            != user_details["user_apisecret"]
-                        ):
-                            log.warning(
-                                "Administrator {} changed the API secret of user {} from {} to {}".format(
-                                    user_id,
-                                    user_to_modify,
-                                    user_data["user_apisecret"],
-                                    user_details["user_apisecret"],
+                        if "user_apisecret" in user_details.keys():
+                            if (
+                                user_data["user_apisecret"]
+                                != user_details["user_apisecret"]
+                            ):
+                                log.warning(
+                                    "Administrator {} changed the API secret of user {} from {} to {}".format(
+                                        user_id,
+                                        user_to_modify,
+                                        user_data["user_apisecret"],
+                                        user_details["user_apisecret"],
+                                    )
                                 )
-                            )
-                            user_details["user_apitoken"] = (
-                                "invalid_" + secrets.token_hex(16) + "_invalid"
-                            )
+                                user_details["user_apitoken"] = (
+                                    "invalid_" + secrets.token_hex(16) + "_invalid"
+                                )
                         continue_edit = True
                         for plugin in p.PluginImplementations(p.IUser):
                             if continue_edit:
@@ -203,7 +222,7 @@ class EditUserView(PrivateView):
                                     "user_id": user_to_modify,
                                     "user_email": user_details["user_email"],
                                     "tenant_id": user_details["user_tenant"],
-                                    "user_name": user_to_modify,
+                                    "user_name": user_details["user_name"],
                                 }
 
                                 user_index.update_user(user_to_modify, user_index_data)
@@ -295,10 +314,25 @@ class EditUserView(PrivateView):
         }
 
 
-def new_tenant_id():
+def base62_encode(num):
+    if num == 0:
+        return BASE62_ALPHABET[0]
+
+    arr = []
+    base = len(BASE62_ALPHABET)
+
+    while num:
+        num, rem = divmod(num, base)
+        arr.append(BASE62_ALPHABET[rem])
+
+    arr.reverse()
+    return "".join(arr)
+
+
+def new_user_id(length=16):
     u = uuid.uuid4()
-    s = base64.urlsafe_b64encode(u.bytes).rstrip(b"=").decode()
-    return s[:16]
+    encoded = base62_encode(u.int)
+    return encoded[:length]
 
 
 class AddUserView(PrivateView):
@@ -320,7 +354,11 @@ class AddUserView(PrivateView):
                 )
                 == "true"
             ):
-                raise HTTPNotFound
+                if (
+                    self.request.registry.settings.get("formshare.saas.mode", "False")
+                    == "False"
+                ):
+                    raise HTTPNotFound
         user_details = {}
         user_roles = []
 
@@ -342,7 +380,7 @@ class AddUserView(PrivateView):
             user_details = self.get_post_dict()
 
             if self.user.tenant != "main":
-                user_details["user_id"] = new_tenant_id()
+                user_details["user_id"] = new_user_id()
 
             if re.match(r"^[A-Za-z0-9._]+$", user_details["user_id"]):
                 if not user_exists(self.request, user_details["user_id"], False):

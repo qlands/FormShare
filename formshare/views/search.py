@@ -9,7 +9,7 @@ class APIUserSearchSelect2(PrivateView):
     def process_view(self):
         index_manager = get_user_index_manager(self.request)
         q = self.request.params.get("q", "")
-        if "cross_tenant_search" in self.request.params.keys():
+        if self.request.registry.settings.get("formshare.saas.mode", "False"):
             fixed_tenant = None
         else:
             fixed_tenant = self.user.tenant

@@ -138,6 +138,7 @@ def t_e_s_t_dashboard(test_object):
             "modify": "",
             "user_email": random_login + "@qlands.com",
             "user_apikey": str(uuid.uuid4()),
+            "user_name": "User {}".format(random_login),
             "user_apisecret": secrets.token_hex(16),
             "user_active": "1",
         },

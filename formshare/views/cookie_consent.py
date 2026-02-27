@@ -1,4 +1,5 @@
 import json
+from urllib.parse import quote
 
 from formshare.processes.db.cookie_consent import save_consent
 from formshare.views.classes import PublicView
@@ -14,8 +15,8 @@ class SaveCookieConsentView(PublicView):
         action = data.get("action", "custom")
         ip = self.request.client_addr or ""
         save_consent(self.request, ip, functional, analytical, marketing, action)
-        cookie_value = json.dumps(
-            {"e": 1, "f": functional, "a": analytical, "m": marketing}
+        cookie_value = quote(
+            json.dumps({"e": 1, "f": functional, "a": analytical, "m": marketing})
         )
         self.request.response.set_cookie(
             "_COOKIE_CONSENT_",

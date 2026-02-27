@@ -1,0 +1,60 @@
+{% if not request.cookies.get('_COOKIE_CONSENT_') %}
+<div id="cookie_banner" style="position:fixed; bottom:0; left:0; right:0; z-index:9999; background:#2f2f2f; color:#fff; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+    <div style="flex:1; min-width:200px; font-size:13px;">
+        {{ _('We use cookies to improve your experience. Essential cookies are always active. You may accept, deny, or configure optional cookies.') }}
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="cookie_settings_btn" class="btn btn-sm btn-default" style="color: black" type="button">{{ _('Settings') }}</button>
+        <button id="cookie_accept_all_btn" class="btn btn-sm btn-primary" type="button">{{ _('Accept All') }}</button>
+        <button id="cookie_deny_btn" class="btn btn-sm btn-danger" type="button">{{ _('Deny') }}</button>
+    </div>
+</div>
+{% endif %}
+
+{# Cookie settings modal — always rendered so footer link works even after consent #}
+<div class="modal inmodal" id="cookie_settings_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content animated bounceInRight">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                <h4 class="modal-title">{{ _('Cookie Settings') }}</h4>
+                <small class="font-bold">{{ _('Manage your cookie preferences') }}</small>
+            </div>
+            <div class="modal-body">
+                <table class="table" style="margin-bottom:0;">
+                    <tbody>
+                        <tr>
+                            <td><strong>{{ _('Essential') }}</strong><br><small>{{ _('Required for the site to function. Cannot be disabled.') }}</small></td>
+                            <td class="text-right">
+                                <input type="checkbox" id="cookie_toggle_essential" checked disabled>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>{{ _('Functional') }}</strong><br><small>{{ _('Enable enhanced functionality and personalisation.') }}</small></td>
+                            <td class="text-right">
+                                <input type="checkbox" id="cookie_toggle_functional">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>{{ _('Analytical') }}</strong><br><small>{{ _('Help us understand how visitors interact with the site.') }}</small></td>
+                            <td class="text-right">
+                                <input type="checkbox" id="cookie_toggle_analytical">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>{{ _('Marketing') }}</strong><br><small>{{ _('Used for targeted advertising and measuring campaign effectiveness.') }}</small></td>
+                            <td class="text-right">
+                                <input type="checkbox" id="cookie_toggle_marketing">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                <button type="button" id="cookie_save_settings_btn" class="btn btn-primary">{{ _('Save Settings') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+

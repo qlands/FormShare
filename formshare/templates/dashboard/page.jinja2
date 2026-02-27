@@ -166,6 +166,8 @@
             </div>
         {% endblock busy_screen %}
 
+        {% include 'dashboard/snippets/cookie_banner.jinja2' %}
+
         {% block body_end %}
 
         {% endblock body_end %}
@@ -185,6 +187,7 @@
                 $(document).ready(function() {
                     {% include 'dashboard/snippets/pop_flash_js.jinja2' %}
                 });
+                {% include 'dashboard/snippets/cookie_banner_js.jinja2' %}
             </script>
             {% include 'dashboard/snippets/change_language.jinja2' %}
             {% include 'dashboard/snippets/change_timezone.jinja2' %}

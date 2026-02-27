@@ -35,6 +35,8 @@ from formshare.models.formshare import (
     Tenant,
     Roles,
     UserRoles,
+    CookieConsent,
+    CookieConsentLog,
 )
 from formshare.models.schema import *
 from sqlalchemy import engine_from_config

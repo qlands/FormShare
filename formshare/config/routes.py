@@ -195,6 +195,7 @@ from formshare.views.testing import (
     TestAssistantErrorView,
 )
 from formshare.views.users import UsersListView, EditUserView, AddUserView
+from formshare.views.cookie_consent import SaveCookieConsentView
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -236,6 +237,11 @@ def load_routes(config, settings):
     # FormShare routes
     routes.append(add_route("home", "/", HomeView, "landing/index.jinja2"))
     routes.append(add_route("health", "/health", HealthView, "json"))
+    routes.append(
+        add_route(
+            "cookie_consent_save", "/cookie/consent", SaveCookieConsentView, "json"
+        )
+    )
 
     routes.append(
         add_route("refresh", "/refresh", RefreshSessionView, "generic/refresh.jinja2")

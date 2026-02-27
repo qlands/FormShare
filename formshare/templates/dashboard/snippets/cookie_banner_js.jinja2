@@ -1,0 +1,84 @@
+(function () {
+    function parseCookieConsent() {
+        var name = "_COOKIE_CONSENT_=";
+        var parts = document.cookie.split(';');
+        for (var i = 0; i < parts.length; i++) {
+            var c = parts[i].trim();
+            if (c.indexOf(name) === 0) {
+                try {
+                    return JSON.parse(decodeURIComponent(c.substring(name.length)));
+                } catch (e) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    function hideBanner() {
+        var banner = document.getElementById('cookie_banner');
+        if (banner) {
+            banner.style.display = 'none';
+        }
+    }
+
+    function postConsent(functional, analytical, marketing, action, callback) {
+        $.post("{{ request.route_url('cookie_consent_save') }}", {
+            functional: functional,
+            analytical: analytical,
+            marketing: marketing,
+            action: action
+        }, function () {
+            if (callback) callback();
+        });
+    }
+
+    function populateModal(consent) {
+        var f = consent ? consent.f : 0;
+        var a = consent ? consent.a : 0;
+        var m = consent ? consent.m : 0;
+        $('#cookie_toggle_functional').prop('checked', f === 1);
+        $('#cookie_toggle_analytical').prop('checked', a === 1);
+        $('#cookie_toggle_marketing').prop('checked', m === 1);
+    }
+
+    $(document).ready(function () {
+        var existing = parseCookieConsent();
+        if (existing) {
+            hideBanner();
+        }
+
+        $('#cookie_accept_all_btn').on('click', function () {
+            postConsent(1, 1, 1, 'accept_all', function () {
+                hideBanner();
+            });
+        });
+
+        $('#cookie_deny_btn').on('click', function () {
+            postConsent(0, 0, 0, 'deny', function () {
+                hideBanner();
+            });
+        });
+
+        $('#cookie_settings_btn').on('click', function () {
+            populateModal(parseCookieConsent());
+            $('#cookie_settings_modal').modal('show');
+        });
+
+        $('#cookie_settings_link').on('click', function (e) {
+            e.preventDefault();
+            populateModal(parseCookieConsent());
+            $('#cookie_settings_modal').modal('show');
+        });
+
+        $('#cookie_save_settings_btn').on('click', function () {
+            var f = $('#cookie_toggle_functional').is(':checked') ? 1 : 0;
+            var a = $('#cookie_toggle_analytical').is(':checked') ? 1 : 0;
+            var m = $('#cookie_toggle_marketing').is(':checked') ? 1 : 0;
+            postConsent(f, a, m, 'custom', function () {
+                $('#cookie_settings_modal').modal('hide');
+                hideBanner();
+            });
+        });
+    });
+}());

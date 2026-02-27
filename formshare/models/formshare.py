@@ -893,3 +893,29 @@ class CaseLookUp(Base):
     field_editable = Column(INTEGER, server_default=text("'1'"))
 
     project = relationship("Project")
+
+
+class CookieConsent(Base):
+    __tablename__ = "cookieconsent"
+
+    consent_id = Column(Unicode(64), primary_key=True)
+    consent_ip = Column(Unicode(45), index=True)
+    consent_cdate = Column(DateTime)
+    consent_udate = Column(DateTime)
+    consent_essential = Column(INTEGER)
+    consent_functional = Column(INTEGER)
+    consent_analytical = Column(INTEGER)
+    consent_marketing = Column(INTEGER)
+
+
+class CookieConsentLog(Base):
+    __tablename__ = "cookieconsentlog"
+
+    log_id = Column(Unicode(64), primary_key=True)
+    log_ip = Column(Unicode(45))
+    log_date = Column(DateTime)
+    log_action = Column(Unicode(20))
+    log_essential = Column(INTEGER)
+    log_functional = Column(INTEGER)
+    log_analytical = Column(INTEGER)
+    log_marketing = Column(INTEGER)

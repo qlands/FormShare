@@ -55,9 +55,9 @@ class CollaboratorsListView(PrivateView):
                     user_details = get_user_details(
                         self.request, collaborator_details["collaborator"]
                     )
-                    if user_details["user_tenant"] != self.user.tenant:
-                        raise HTTPNotFound
                     if user_details:
+                        if user_details["user_tenant"] != self.user.tenant:
+                            raise HTTPNotFound
                         continue_adding = True
                         for plugin in p.PluginImplementations(p.ICollaborator):
                             if continue_adding:

@@ -84,6 +84,9 @@ class EditUserView(PrivateView):
                 ):
                     raise HTTPNotFound
         user_data = get_user_details(self.request, user_to_modify, False)
+        if not user_data:
+            raise HTTPNotFound
+
         if user_data["user_tenant"] != self.user.tenant:
             raise HTTPNotFound
 

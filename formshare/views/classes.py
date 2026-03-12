@@ -6,8 +6,7 @@ formshare.resources.resources
 Provides the basic view classes for FormShare and
 the Digest Authorization for ODK
 
-:copyright: (c) 2017 by QLands Technology Consultants.
-:license: AGPL, see LICENSE for more details.
+:copyright: (c) 2026 by QLands Software Inc.
 """
 
 import datetime
@@ -443,6 +442,8 @@ keys_to_remove = [
     "user_apisecret",
     "user_query_password",
     "user_apikey",
+    "user_email",
+    "superset_password",
     "user_apitoken",
     "user_apitoken_expires_on",
     "user_query_user",
@@ -786,7 +787,7 @@ class PrivateView(object):
             self.request, self.user.login
         )
         self.user_timezone = get_user_timezone(self.request, self.user.login)
-        update_last_login(self.request, self.user.login)
+        # update_last_login(self.request, self.user.login)
         if not continue_processing:
             return plugin_view_result
         self.viewResult = self.process_view()

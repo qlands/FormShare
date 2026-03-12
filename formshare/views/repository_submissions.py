@@ -433,6 +433,8 @@ class DeleteAllSubmissions(PrivateView):
             request_data = self.get_post_dict()
             owner = get_project_owner(self.request, project_id)
             user_data = get_user_data(owner, self.request)
+            if user_data is None:
+                user_data = get_user_data(self.user.login, self.request)
             if request_data.get("owner_email", "") != "":
                 if user_data.email == request_data.get("owner_email", ""):
                     deleted, message = delete_all_submission(

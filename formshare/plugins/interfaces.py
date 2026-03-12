@@ -1866,6 +1866,20 @@ class IJSONSubmission(Interface):  # pragma: no cover
         :return Error code, message: 0 or other error code and a message
         """
 
+    def before_storing_submission(
+        self, request, user, project, form, assistant, json_file
+    ):
+        """
+        Called by FormShare before FormShare call JSONToMySQL
+        :param request: Pyramid request object
+        :param user: User ID
+        :param project: Project ID
+        :param form: XForm ID
+        :param assistant: Assistant ID submitting the JSON file
+        :param json_file: JSON submission file
+        :return True, "" or False, "Why"
+        """
+
     def after_processing_submission_in_repository(
         self, request, user, project, form, assistant, submission, error, json_file
     ):

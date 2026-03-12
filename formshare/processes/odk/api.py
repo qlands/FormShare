@@ -3342,6 +3342,26 @@ def store_json_file(
                         for file in files:
                             args.append(file)
                     # log.error(" ".join(args))
+
+                    continue_processing = True
+                    for a_plugin in plugins.PluginImplementations(
+                        plugins.IJSONSubmission
+                    ):
+                        continue_processing, message = (
+                            a_plugin.before_storing_submission(
+                                request,
+                                user,
+                                project,
+                                form,
+                                assistant_uuid,
+                                json_file,
+                            )
+                        )
+                        if not continue_processing:
+                            break
+                    if not continue_processing:
+                        return 1, message
+
                     p = Popen(args, stdout=PIPE, stderr=PIPE)
                     stdout, stderr = p.communicate()
                     # An error 2 is an SQL error that goes to the logs

@@ -15,7 +15,6 @@ from pyramid.paster import get_appsettings, setup_logging
 import json
 from requests.auth import HTTPBasicAuth
 
-
 # revision identifiers, used by Alembic.
 revision = "a5b3b7c5ec81"
 down_revision = "e7a8c6148f51"

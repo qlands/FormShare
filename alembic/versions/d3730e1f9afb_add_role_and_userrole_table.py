@@ -10,7 +10,6 @@ from alembic import op
 import sqlalchemy as sa
 from datetime import datetime
 
-
 # revision identifiers, used by Alembic.
 revision = "d3730e1f9afb"
 down_revision = "03441e0d7d31"
@@ -65,26 +64,22 @@ def upgrade():
     op.create_index(op.f("ix_userrole_role_id"), "userrole", ["role_id"], unique=False)
 
     conn.execute(
-        sa.text(
-            """
+        sa.text("""
             INSERT INTO userrole (user_id, role_id, grant_date)
             SELECT user_id, 'can_projects', :grant_date
             FROM fsuser
             WHERE user_can_projects = 1
-            """
-        ),
+            """),
         {"grant_date": datetime.utcnow()},
     )
 
     conn.execute(
-        sa.text(
-            """
+        sa.text("""
             INSERT INTO userrole (user_id, role_id, grant_date)
             SELECT user_id, 'can_forms', :grant_date
             FROM fsuser
             WHERE user_can_forms = 1
-            """
-        ),
+            """),
         {"grant_date": datetime.utcnow()},
     )
 

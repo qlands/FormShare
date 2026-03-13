@@ -22,7 +22,6 @@ from formshare.models import (
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
-
 __all__ = [
     "get_project_assistants",
     "delete_assistant",

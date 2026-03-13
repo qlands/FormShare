@@ -17,7 +17,6 @@ from formshare.products.block import (
     LockAcquisitionError,
 )
 
-
 log = get_task_logger(__name__)
 
 

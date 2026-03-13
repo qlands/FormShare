@@ -12,6 +12,7 @@ from decimal import Decimal
 from subprocess import Popen, PIPE
 from sqlalchemy.exc import IntegrityError
 import paginate
+from formshare import plugins as p
 import pandas as pd
 from PIL import Image
 from formshare.models.formshare import Submission, Jsonlog
@@ -1488,6 +1489,18 @@ def delete_submission(
     records = request.dbsession.execute(sql).fetchone()
     submission_id = records.surveyid
 
+    continue_processing = True
+    message = ""
+    for plugin in p.PluginImplementations(p.IDeleteSubmission):
+        continue_processing, message = plugin.before_deleting_submission(
+            request, user, project, form, submission_id
+        )
+        if not continue_processing:
+            break
+
+    if not continue_processing:
+        return False, message
+
     # Remove the submission from the repository
     save_point = request.tm.savepoint()
 
@@ -1516,6 +1529,14 @@ def delete_submission(
 
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
+
+    paths = ["forms", form_directory, "submissions", submission_id]
+    path = os.path.join(odk_dir, *paths)
+
+    for plugin in p.PluginImplementations(p.IDeleteSubmission):
+        plugin.after_deleting_submission(
+            request, user, project, form, submission_id, path
+        )
 
     if not move_to_logs:
         log.info(

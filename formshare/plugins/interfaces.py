@@ -52,6 +52,7 @@ __all__ = [
     "IFormFileGenerator",
     "IAuthenticationPolicy",
     "IRoles",
+    "IDeleteSubmission",
 ]
 
 
@@ -1844,6 +1845,35 @@ class IXMLSubmission(Interface):  # pragma: no cover
         :param error: Whether or not FormShare processed the XMK file
         :param xml_file: XML submission file
         :return: None
+        """
+
+
+class IDeleteSubmission(Interface):  # pragma: no cover
+    """Allows to hook into the process that deletes a submission from the database"""
+
+    def before_deleting_submission(self, request, user, project, form, submission):
+        """
+        Called by FormShare before FormShare process before deleting a submission
+        :param request: Pyramid request object
+        :param user: User ID
+        :param project: Project ID
+        :param form: XForm ID
+        :param submission: Submission ID
+        :return Error True, "" or False, Message
+        """
+
+    def after_deleting_submission(
+        self, request, user, project, form, submission, submission_directory
+    ):
+        """
+        Called by FormShare before FormShare process before deleting a submission
+        :param request: Pyramid request object
+        :param user: User ID
+        :param project: Project ID
+        :param form: XForm ID
+        :param submission: Submission ID
+        :param submission_directory: Submission directory
+        :return Error True, "" or False, Message
         """
 
 

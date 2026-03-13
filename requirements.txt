@@ -14,7 +14,7 @@ backports.tarfile==1.2.0
 beautifulsoup4==4.14.2
 billiard==4.2.3
 binaryornot==0.4.4
-black==25.11.0
+black==26.3.1
 boto==2.49.0
 celery==5.5.3
 certifi==2025.11.12

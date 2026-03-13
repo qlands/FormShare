@@ -1,7 +1,11 @@
 import gettext
 import logging
+import os
+from email import encoders
 from formshare.processes.logging.loggerclass import SecretLogger
 import smtplib
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
 
@@ -14,7 +18,15 @@ log = logging.getLogger("formshare")
 
 @celeryApp.task(bind=True, base=CeleryTask)
 def send_async_email(
-    self, settings, email_from, email_to, subject, message, reply_to, locale
+    self,
+    settings,
+    email_from,
+    email_to,
+    subject,
+    message,
+    reply_to,
+    locale,
+    attachments=None,
 ):  # pragma: no cover
     # This function is out of unitTest because it required a SMTP server for testing
     parts = __file__.split("/processes/")
@@ -23,7 +35,27 @@ def send_async_email(
     es.install()
     _ = es.gettext
 
-    message = MIMEText(message.encode("utf-8"), "plain", "utf-8")
+    if attachments:
+        msg = MIMEMultipart()
+        msg.attach(MIMEText(message.encode("utf-8"), "plain", "utf-8"))
+        for file_path in attachments:
+            try:
+                with open(file_path, "rb") as f:
+                    part = MIMEBase("application", "octet-stream")
+                    part.set_payload(f.read())
+                encoders.encode_base64(part)
+                part.add_header(
+                    "Content-Disposition",
+                    "attachment",
+                    filename=os.path.basename(file_path),
+                )
+                msg.attach(part)
+            except Exception as e:
+                log.error("Error {} while attaching file {}".format(str(e), file_path))
+        message = msg
+    else:
+        message = MIMEText(message.encode("utf-8"), "plain", "utf-8")
+
     message["From"] = email_from
     message["To"] = email_to
     message["Date"] = formatdate(localtime=True)

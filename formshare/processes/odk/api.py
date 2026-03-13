@@ -3,6 +3,9 @@ import glob
 import io
 import json
 import logging
+
+from validators import email
+
 from formshare.processes.logging.loggerclass import SecretLogger
 import mimetypes
 import os
@@ -427,6 +430,11 @@ def check_jxform_file(
     if extra_columns_invalid is None:
         extra_columns_invalid = []
     _ = request.translate
+
+    xlsx_file = json_file.replace(".srv", ".xlsx")
+    if not os.path.isfile(xlsx_file):
+        xlsx_file = json_file.replace(".srv", ".xls")
+
     jxform_to_mysql = os.path.join(
         request.registry.settings["odktools.path"], *["JXFormToMysql", "jxformtomysql"]
     )
@@ -582,6 +590,17 @@ def check_jxform_file(
                         "in repeat, group and variable names."
                     )
                 )
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 19, message
         if p.returncode == 20:
             log.error(
@@ -604,6 +623,17 @@ def check_jxform_file(
                     message = message + "\t" + variable_name + " \n"
 
                 message = message + "\n" + _("Please change those names and try again.")
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 20, message
         if p.returncode == 21:
             log.error(
@@ -642,6 +672,17 @@ def check_jxform_file(
                     + "\n"
                     + _("Please remove the duplicated choices and try again.")
                 )
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 21, message
 
         if p.returncode == 25:
@@ -649,6 +690,17 @@ def check_jxform_file(
                 "This ODK form mixes coded and not coded languages. "
                 "For example label::English (en) and label::Español. "
                 "You need to code all the labels that are marked for translation."
+            )
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
             )
             return 25, message
 
@@ -658,6 +710,17 @@ def check_jxform_file(
                 "E.g., the variable cannot be note, picture, video, sound, select_multiple, or geospatial. "
                 "It cannot be instanceID. The most appropriate types are text, datetime, barcode, calculate, "
                 "select_one, or integer"
+            )
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
             )
             return 17, message
 
@@ -704,6 +767,17 @@ def check_jxform_file(
                         "Please shorten the name of the tables and/or the selects and try again."
                     )
                 )
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 24, message
 
         if (
@@ -741,6 +815,17 @@ def check_jxform_file(
                         "in repeat, group and variable names."
                     )
                 )
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 18, message
         if p.returncode == 14:
             message = (
@@ -755,6 +840,17 @@ def check_jxform_file(
                     message = (
                         message + "\t" + os.path.basename(a_file.get("name", "")) + "\n"
                     )
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 14, message
         if p.returncode == 15:
             message = "The following files have an invalid structure: \n"
@@ -763,6 +859,17 @@ def check_jxform_file(
             if files_with_problems:
                 for a_file in files_with_problems:
                     message = message + "\t" + a_file.get("name", "") + "\n"
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 15, message
         if p.returncode == 9:
             log.error(
@@ -797,6 +904,17 @@ def check_jxform_file(
                         )
                         + "\n"
                     )
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 9, message
 
         if p.returncode == 36:
@@ -833,6 +951,17 @@ def check_jxform_file(
                         )
                         + "\n"
                     )
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 36, message
 
         if p.returncode == 7:
@@ -844,12 +973,24 @@ def check_jxform_file(
                 + " while checking PyXForm. Command line: "
                 + " ".join(args)
             )
+            message = _(
+                "Malformed language in your ODK. Labels must be translated in this way: label::Language (Language_code). "
+                "For example, label::English (en), or label::English-Australia (es-au), or label::Gikuyu (kik)"
+            )
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return (
                 7,
-                _(
-                    "Malformed language in your ODK. Labels must be translated in this way: label::Language (Language_code). "
-                    "For example, label::English (en), or label::English-Australia (es-au), or label::Gikuyu (kik)"
-                ),
+                message,
             )
 
         if p.returncode == 8:
@@ -861,13 +1002,25 @@ def check_jxform_file(
                 + " while checking PyXForm. Command line: "
                 + " ".join(args)
             )
+            message = _(
+                "You have choice lists with names but not labels. "
+                "Did you missed the :: between label and language? "
+                "Like label:English (en)"
+            )
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return (
                 8,
-                _(
-                    "You have choice lists with names but not labels. "
-                    "Did you missed the :: between label and language? "
-                    "Like label:English (en)"
-                ),
+                message,
             )
         if p.returncode == 26:
             message = "The following GeoJSON file cannot be opened: \n"
@@ -876,6 +1029,17 @@ def check_jxform_file(
             if files_with_problems:
                 for a_file in files_with_problems:
                     message = message + "\t" + a_file.get("name", "") + "\n"
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 26, message
         if p.returncode == 27:
             message = "The following GeoJSON file is not a FeatureCollection: \n"
@@ -884,6 +1048,17 @@ def check_jxform_file(
             if files_with_problems:
                 for a_file in files_with_problems:
                     message = message + "\t" + a_file.get("name", "") + "\n"
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 27, message
         if p.returncode == 28:
             message = "The following GeoJSON file does not have features: \n"
@@ -892,6 +1067,17 @@ def check_jxform_file(
             if files_with_problems:
                 for a_file in files_with_problems:
                     message = message + "\t" + a_file.get("name", "") + "\n"
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 28, message
         if p.returncode == 29:
             message = "The following GeoJSON file does not have properties: \n"
@@ -900,6 +1086,17 @@ def check_jxform_file(
             if files_with_problems:
                 for a_file in files_with_problems:
                     message = message + "\t" + a_file.get("name", "") + "\n"
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 29, message
         if p.returncode == 30:
             message = (
@@ -910,6 +1107,17 @@ def check_jxform_file(
             if files_with_problems:
                 for a_file in files_with_problems:
                     message = message + "\t" + a_file.get("name", "") + "\n"
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 30, message
         if p.returncode == 31:
             message = "The following GeoJSON file has features without geometry: \n"
@@ -918,6 +1126,17 @@ def check_jxform_file(
             if files_with_problems:
                 for a_file in files_with_problems:
                     message = message + "\t" + a_file.get("name", "") + "\n"
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 31, message
         if p.returncode == 32:
             message = "The following GeoJSON file has features that are not point: \n"
@@ -926,6 +1145,17 @@ def check_jxform_file(
             if files_with_problems:
                 for a_file in files_with_problems:
                     message = message + "\t" + a_file.get("name", "") + "\n"
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 32, message
         if p.returncode == 2:
             log.error(
@@ -1002,6 +1232,17 @@ def check_jxform_file(
             message = message + _(
                 "Please edit your ODK XLSX/XLS file, group several items inside repeats with "
                 "repeat_count = 1 and try to upload the form again."
+            )
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
             )
             return 2, message
 
@@ -1085,6 +1326,17 @@ def check_jxform_file(
                 "Please edit your ODK XLSX/XLS file, split your variables across repeats with repeat_count = 1, "
                 "and try to upload the form again."
             )
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
             return 34, message
 
         if p.returncode == 35:
@@ -1098,13 +1350,27 @@ def check_jxform_file(
             )
             return 35, message
 
-        log.error(
+        message = (
             ". Error: {}".format(p.returncode)
             + "-"
             + stderr.decode()
             + stdout.decode()
             + " while checking PyXForm. Command line: "
             + " ".join(args)
+        )
+        log.error(message)
+        email_message = (
+            "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+        )
+        email_message = email_message + message
+        attachments = [xlsx_file]
+        send_error_to_technical_team(
+            request,
+            email_message,
+            "An user is having trouble uploading a form",
+            attachments,
         )
         return p.returncode, stderr.decode()
 
@@ -1560,6 +1826,10 @@ def upload_odk_form(
                             shutil.rmtree(dir_to_delete)
                             return False, plugin_message
                     else:
+                        message = (
+                            message
+                            + "\n\n The technical team has been contacted about this issue and someone will get back to you with a solution ASAP. In the meantime you can read more about this issue at https://docs.formshare.org/fundamentals/forms/common-errors-in-a-form ."
+                        )
                         return False, message
                 else:
                     return False, _("The form already exists in this project")
@@ -2112,6 +2382,10 @@ def update_odk_form(
                                     shutil.rmtree(dir_to_delete)
                                     return False, message
                             else:
+                                message = (
+                                    message
+                                    + "\n\n The technical team has been contacted about this issue and someone will get back to you with a solution ASAP. In the meantime you can read more about this issue at https://docs.formshare.org/fundamentals/forms/common-errors-in-a-form ."
+                                )
                                 return False, message
                         else:
                             return False, _(

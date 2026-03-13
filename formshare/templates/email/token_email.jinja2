@@ -1,7 +1,7 @@
 {% block email_body %}
     {% block email_hello %}
         {{ _('Hello from FormShare') }}
-        https://formshare.org
+        {{ formshare_site }}
     {% endblock email_hello %}
     {% block email_message %}
         {{ _('This email is a security alert') }}.

@@ -15,7 +15,9 @@ def render_template(template_filename, context):
     return jinjaEnv.get_template(template_filename).render(context)
 
 
-def send_email(request, email_from, email_to, subject, message, reply_to=None):
+def send_email(
+    request, email_from, email_to, subject, message, reply_to=None, attachments=None
+):
     settings = {}
     for key, value in request.registry.settings.items():
         if isinstance(value, str) or isinstance(value, int):
@@ -30,6 +32,7 @@ def send_email(request, email_from, email_to, subject, message, reply_to=None):
             message,
             reply_to,
             request.locale_name,
+            attachments,
         ),
         queue="FormShare",
     )
@@ -50,6 +53,7 @@ def send_password_email(request, email_to, reset_token, reset_key, user_dict):
         return False
     date_string = readble_date(datetime.datetime.now(), request.locale_name)
     reset_url = request.route_url("reset_password", reset_key=reset_key)
+    formshare_site = request.application_url
     text = render_template(
         "email/recover_email.jinja2",
         {
@@ -57,6 +61,7 @@ def send_password_email(request, email_to, reset_token, reset_key, user_dict):
             "reset_token": reset_token,
             "user_dict": user_dict,
             "reset_url": reset_url,
+            "formshare_site": formshare_site,
             "_": _,
         },
     )
@@ -65,11 +70,15 @@ def send_password_email(request, email_to, reset_token, reset_key, user_dict):
     )
 
 
-def send_error_to_technical_team(request, error_message, subject="500 Error"):
+def send_error_to_technical_team(
+    request, error_message, subject="500 Error", attachments=None
+):
     email_from = request.registry.settings.get("mail.from", None)
     email_to = request.registry.settings.get("mail.error", None)
     if email_from is not None and email_to is not None:
-        return send_email(request, email_from, email_to, subject, error_message)
+        return send_email(
+            request, email_from, email_to, subject, error_message, None, attachments
+        )
     else:
         log.error(
             "FormShare has no email settings in place. Email service is disabled."
@@ -129,12 +138,13 @@ def send_token_email(request, email_to, token_expires_on):  # pragma: no cover
         return False
     if email_from == "":
         return False
-
+    formshare_site = request.application_url
     text = render_template(
         "email/token_email.jinja2",
         {
             "_": _,
             "token_expiration_date": token_expires_on,
+            "formshare_site": formshare_site,
         },
     )
     return send_email(

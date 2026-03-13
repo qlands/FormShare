@@ -85,7 +85,7 @@ paho-mqtt==2.1.0
 Pairtree==0.8.1
 pandas==2.3.3
 PasteDeploy==3.1.0
-pathspec==0.12.1
+pathspec==1.0.4
 pdfminer.six==20251230
 pillow==12.1.1
 plaster==1.1.2

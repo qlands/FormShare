@@ -15,6 +15,7 @@ from formshare.models import (
     User,
 )
 from formshare.processes.db.form import get_by_details, get_form_data
+from formshare.processes.db.user import get_user_name
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
 )
@@ -1150,6 +1151,15 @@ def get_user_projects(request, user, logged_user):
         project["has_case_lookup_table"] = project_has_case_lookup_table(
             request, project["project_id"]
         )
+        if project["project_archived"] == 1:
+            project["project_archived_by"] = get_user_name(
+                request, project["project_archived_by"]
+            )
+        else:
+            if project["project_unarchived_by"] is not None:
+                project["project_unarchived_by"] = get_user_name(
+                    request, project["project_unarchived_by"]
+                )
 
     projects = sorted(projects, key=lambda prj: project["project_cdate"], reverse=True)
     return projects

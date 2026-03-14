@@ -12,7 +12,10 @@ class APIUserSearchSelect2(PrivateView):
         if self.request.registry.settings.get("formshare.saas.mode", "False") == "True":
             fixed_tenant = self.user.tenant
         else:
-            fixed_tenant = None
+            if self.user.tenant != "main":
+                fixed_tenant = None
+            else:
+                fixed_tenant = self.user.tenant
 
         include_me = self.request.params.get("include_me", "False")
         if include_me == "False":

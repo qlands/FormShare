@@ -253,6 +253,7 @@ def get_user_databases(request, user_id):
         .filter(Odkform.project_id == Userproject.project_id)
         .filter(Odkform.project_id == Project.project_id)
         .filter(Userproject.project_accepted == 1)
+        .filter(Project.project_archived == 0)
         .filter(Userproject.user_id == user_id)
         .filter(Odkform.form_schema.isnot(None))
         .order_by(Project.project_name)

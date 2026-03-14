@@ -12,6 +12,7 @@ from formshare.models import (
     Odkform,
     ProjectFile,
     CaseLookUp,
+    User,
 )
 from formshare.processes.db.form import get_by_details, get_form_data
 from formshare.processes.elasticsearch.repository_index import (
@@ -50,6 +51,8 @@ __all__ = [
     "project_has_crowdsourcing",
     "get_forms_number",
     "get_project_tenant",
+    "get_project_query_users",
+    "is_project_archived",
 ]
 
 logging.setLoggerClass(SecretLogger)
@@ -1005,6 +1008,49 @@ def get_project_owner(request, project):
         return res.user_id
     else:
         return None
+
+
+def get_project_query_users(request, project_id):
+    res = (
+        request.dbsession.query(
+            Odkform.form_schema,
+            Odkform.form_id,
+            User.user_query_user,
+        )
+        .distinct(Odkform.form_schema)
+        .filter(Odkform.project_id == Userproject.project_id)
+        .filter(Userproject.user_id == User.user_id)
+        .filter(Userproject.project_accepted == 1)
+        .filter(Odkform.project_id == project_id)
+        .filter(Odkform.form_schema.isnot(None))
+        .filter(User.user_query_user.isnot(None))
+        .all()
+    )
+    if res is not None:
+        query_users = []
+        for a_query_user in res:
+            query_users.append(
+                {
+                    "form_id": a_query_user.form_id,
+                    "form_schema": a_query_user.form_schema,
+                    "user_query_user": a_query_user.user_query_user,
+                }
+            )
+        if query_users:
+            return query_users
+    return None
+
+
+def is_project_archived(request, project_id):
+    res = (
+        request.dbsession.query(Project.project_id)
+        .filter(Project.project_id == project_id)
+        .filter(Project.project_archived == 1)
+        .count()
+    )
+    if res == 0:
+        return False
+    return True
 
 
 def is_collaborator(request, user, project, accepted_status=1):

@@ -50,6 +50,7 @@ def main(global_config, **settings):
             ",".join(plugin_list)
         )
     )
+    settings["active_plugins"] = plugin_list
     p.load_all(settings)
 
     """This function returns a Pyramid WSGI application."""

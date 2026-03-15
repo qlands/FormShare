@@ -17,6 +17,7 @@ import zipfile
 from hashlib import md5
 from subprocess import Popen, PIPE
 from uuid import uuid4
+from urllib.parse import quote
 import pandas as pd
 import formshare.plugins as plugins
 from bs4 import BeautifulSoup
@@ -2945,7 +2946,8 @@ def get_xml_form(request, project, form):
         response = FileResponse(
             xml_file, request=request, content_type=content_type, cache_max_age=0
         )
-        response.content_disposition = 'attachment; filename="' + file_name + '"'
+        encoded_name = quote(file_name.encode("utf-8"), safe="")
+        response.content_disposition = "attachment; filename*=UTF-8''" + encoded_name
         return response
     else:
         return None
@@ -2968,7 +2970,10 @@ def get_submission_file(request, project, form, submission):
             response = FileResponse(
                 path, request=request, content_type=content_type, cache_max_age=0
             )
-            response.content_disposition = 'attachment; filename="' + file_name + '"'
+            encoded_name = quote(file_name.encode("utf-8"), safe="")
+            response.content_disposition = (
+                "attachment; filename*=UTF-8''" + encoded_name
+            )
             return response
         else:
             raise HTTPNotFound()

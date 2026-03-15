@@ -17,7 +17,6 @@ class APIUserSearchSelect2(PrivateView):
             else:
                 fixed_tenant = self.user.tenant
 
-
         include_me = self.request.params.get("include_me", "False")
         if include_me == "False":
             include_me = False

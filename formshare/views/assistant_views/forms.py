@@ -18,8 +18,8 @@ from formshare.processes.db import (
     modify_assistant,
 )
 from formshare.views.classes import AssistantView
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from pyramid.response import FileResponse
+from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
+from formshare.middleware.response import FileResponse
 
 
 class AssistantForms(AssistantView):

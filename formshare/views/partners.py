@@ -24,7 +24,7 @@ from formshare.processes.db.user import get_user_details
 from formshare.processes.elasticsearch.partner_index import get_partner_index_manager
 from formshare.products.products import get_product_description, get_product
 from formshare.views.classes import PrivateView
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")

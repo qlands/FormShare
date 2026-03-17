@@ -10,7 +10,7 @@ from formshare.processes.elasticsearch.user_index import (
     UserNotExistError,
 )
 from formshare.views.classes import ProfileView
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")

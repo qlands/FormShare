@@ -16,7 +16,7 @@ from formshare.processes.db import (
 )
 from formshare.processes.email.send_email import send_collaboration_email
 from formshare.views.classes import PrivateView
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
 
 
 class CollaboratorsListView(PrivateView):

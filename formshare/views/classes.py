@@ -54,10 +54,10 @@ from formshare.processes.db import (
     get_assistant_uuid,
     get_user_id_with_email,
 )
-from pyramid.httpexceptions import HTTPFound
-from pyramid.httpexceptions import HTTPNotFound, exception_response
-from pyramid.response import Response, FileResponse
-from pyramid.session import check_csrf_token
+from formshare.middleware.httpexceptions import HTTPFound
+from formshare.middleware.httpexceptions import HTTPNotFound, exception_response
+from formshare.middleware.response import Response, FileResponse
+from formshare.middleware.session import check_csrf_token
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")

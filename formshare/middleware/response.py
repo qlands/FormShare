@@ -5,7 +5,7 @@ formshare.middleware.response
 Response classes that replace pyramid.response.
 
 Migration note:
-    from pyramid.response import Response, FileResponse
+    from formshare.middleware.response import Response, FileResponse
     becomes:
     from formshare.middleware.response import Response, FileResponse
 """

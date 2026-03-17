@@ -121,3 +121,55 @@ class FormShareSession:
     def invalidate(self):
         """Clear the entire session (replaces Pyramid's session.invalidate())."""
         self._data.clear()
+
+    # ------------------------------------------------------------------
+    # CSRF token  (replaces Pyramid's session.get_csrf_token() /
+    #              new_csrf_token() + pyramid.session.check_csrf_token)
+    # ------------------------------------------------------------------
+
+    _CSRF_KEY = "_csrf_token"
+
+    def get_csrf_token(self) -> str:
+        """Return the session CSRF token, generating one if absent."""
+        import secrets
+        if self._CSRF_KEY not in self._data:
+            self._data[self._CSRF_KEY] = secrets.token_urlsafe(32)
+        return self._data[self._CSRF_KEY]
+
+    def new_csrf_token(self) -> str:
+        """Force-generate a new CSRF token and store it."""
+        import secrets
+        token = secrets.token_urlsafe(32)
+        self._data[self._CSRF_KEY] = token
+        return token
+
+
+# ---------------------------------------------------------------------------
+# Module-level check_csrf_token (replaces pyramid.session.check_csrf_token)
+# ---------------------------------------------------------------------------
+
+
+def check_csrf_token(request, token="csrf_token", header="X-CSRF-Token", raises=True):
+    """Validate the CSRF token submitted with the request.
+
+    Checks the POST field named *token* or the HTTP header *header* against
+    the token stored in ``request.session``.
+
+    Args:
+        request:  A FormShareRequest.
+        token:    POST field name that carries the CSRF token.
+        header:   HTTP header name that may carry the CSRF token.
+        raises:   If True (default) raise HTTPBadRequest on mismatch;
+                  if False return False instead.
+
+    Returns:
+        True on success, False on failure (when raises=False).
+    """
+    supplied = request.POST.get(token) or request.headers.get(header)
+    expected = request.session.get_csrf_token()
+    if supplied != expected:
+        if raises:
+            from formshare.middleware.httpexceptions import HTTPBadRequest
+            raise HTTPBadRequest("CSRF token mismatch")
+        return False
+    return True

@@ -32,11 +32,11 @@ from formshare.processes.elasticsearch.user_index import get_user_index_manager
 from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.email.send_email import send_password_email
 from formshare.views.classes import PublicView, ExceptionView
-from pyramid.httpexceptions import HTTPFound
-from pyramid.httpexceptions import HTTPNotFound
-from pyramid.response import Response
+from formshare.middleware.httpexceptions import HTTPFound
+from formshare.middleware.httpexceptions import HTTPNotFound
+from formshare.middleware.response import Response
 from pyramid.security import remember
-from pyramid.session import check_csrf_token
+from formshare.middleware.session import check_csrf_token
 from formshare.processes.db.utility import get_db_connection
 import base64
 

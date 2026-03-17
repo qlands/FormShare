@@ -36,8 +36,8 @@ from formshare.processes.submission.api import (
 )
 from formshare.products.products import get_form_products
 from formshare.views.classes import PartnerView
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-from pyramid.response import FileResponse
+from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound
+from formshare.middleware.response import FileResponse
 
 
 class PartnerForms(PartnerView):

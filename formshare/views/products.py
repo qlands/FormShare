@@ -11,8 +11,8 @@ from formshare.processes.db import (
     get_project_access_type,
 )
 from formshare.views.classes import PrivateView, PublicView
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-from pyramid.response import FileResponse
+from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound
+from formshare.middleware.response import FileResponse
 
 
 class DownloadPrivateProduct(PrivateView):

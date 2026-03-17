@@ -87,9 +87,9 @@ from formshare.products.fs1import.fs1import import formshare_one_import_json
 from formshare.products.repository import create_database_repository
 from formshare.products.xmlimport.xmlimport import xml_import
 from lxml import etree
-from pyramid.httpexceptions import HTTPNotFound
-from pyramid.response import FileResponse
-from pyramid.response import Response
+from formshare.middleware.httpexceptions import HTTPNotFound
+from formshare.middleware.response import FileResponse
+from formshare.middleware.response import Response
 from pyxform import xls2xform
 from pyxform.errors import PyXFormError
 from pyxform.xls2json import parse_file_to_json

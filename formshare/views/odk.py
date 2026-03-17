@@ -17,7 +17,7 @@ from formshare.processes.odk.api import (
 )
 from formshare.processes.db.assistant import get_odk_assistant_uuid
 from formshare.views.classes import ODKView
-from pyramid.response import Response
+from formshare.middleware.response import Response
 
 
 class ODKFormList(ODKView):

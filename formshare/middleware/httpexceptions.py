@@ -8,7 +8,7 @@ All exceptions carry status_code, detail, and headers so the view
 dispatcher can convert them to proper Starlette/FastAPI responses.
 
 Migration note:
-    from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+    from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
     becomes:
     from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
 """

@@ -4,8 +4,8 @@ import uuid
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 import pandas as pd
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from pyramid.response import FileResponse
+from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
+from formshare.middleware.response import FileResponse
 import shutil
 import formshare.plugins as p
 import validators

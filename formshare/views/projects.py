@@ -55,9 +55,9 @@ from formshare.processes.storage import (
 )
 from formshare.processes.submission.api import get_gps_points_from_project
 from formshare.views.classes import ProjectsView
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from pyramid.response import FileResponse
-from pyramid.response import Response
+from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
+from formshare.middleware.response import FileResponse
+from formshare.middleware.response import Response
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")

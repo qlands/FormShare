@@ -26,7 +26,7 @@ from formshare.views.classes import (
     AssistantView,
     PartnerView,
 )
-from pyramid.httpexceptions import HTTPNotFound
+from formshare.middleware.httpexceptions import HTTPNotFound
 
 __all__ = [
     "add_templates_directory",

@@ -1,7 +1,7 @@
 import json
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
-from pyramid.response import Response
+from formshare.middleware.response import Response
 from formshare.processes.db import get_form_data, is_form_blocked
 from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
 from formshare.processes.submission.api import (
@@ -18,7 +18,7 @@ from formshare.processes.db.dictionary import (
     get_lookup_relation_fields,
 )
 from formshare.views.classes import AssistantView
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound, HTTPForbidden
+from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound, HTTPForbidden
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")

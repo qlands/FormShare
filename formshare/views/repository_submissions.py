@@ -24,7 +24,7 @@ from formshare.processes.submission.api import (
     update_record_with_id,
 )
 from formshare.views.classes import PrivateView, UpdateAPIView
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound
 
 
 class ManageSubmissions(PrivateView):

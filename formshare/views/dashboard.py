@@ -15,7 +15,7 @@ from formshare.processes.elasticsearch.repository_index import (
     get_number_of_datasets_with_gps_in_project,
 )
 from formshare.views.classes import DashboardView
-from pyramid.httpexceptions import HTTPNotFound
+from formshare.middleware.httpexceptions import HTTPNotFound
 
 
 class UserDashBoardView(DashboardView):

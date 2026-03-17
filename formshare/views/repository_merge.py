@@ -18,7 +18,7 @@ from formshare.processes.odk.processes import get_form_data
 from formshare.products.merge import merge_form
 from formshare.views.classes import PrivateView
 from lxml import etree
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")

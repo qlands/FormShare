@@ -17,9 +17,9 @@ from formshare.processes.submission.api import (
     update_field_sensitive,
 )
 from formshare.views.classes import PrivateView
-from pyramid.httpexceptions import HTTPNotFound
-from pyramid.response import Response
-from pyramid.httpexceptions import HTTPFound
+from formshare.middleware.httpexceptions import HTTPNotFound
+from formshare.middleware.response import Response
+from formshare.middleware.httpexceptions import HTTPFound
 
 
 class EditDictionaryTables(PrivateView):

@@ -15,7 +15,7 @@ from formshare.processes.settings import (
     get_settings,
 )
 from formshare.views.classes import PartnerView, AssistantView
-from pyramid.httpexceptions import HTTPNotFound
+from formshare.middleware.httpexceptions import HTTPNotFound
 
 
 class TestUserView(FormSharePrivateView):

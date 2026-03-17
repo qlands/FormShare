@@ -5,7 +5,7 @@ import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 from dateutil.relativedelta import relativedelta
 from formshare.models import User, Collaborator
-from pyramid.response import Response
+from formshare.middleware.response import Response
 from formshare.config.encdecdata import decode_data
 
 logging.setLoggerClass(SecretLogger)

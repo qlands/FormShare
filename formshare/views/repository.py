@@ -15,7 +15,7 @@ from formshare.processes.odk.api import create_repository, get_odk_path
 from formshare.processes.odk.processes import get_form_data
 from formshare.views.classes import PrivateView
 from lxml import etree
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound
 import formshare.plugins as plugins
 
 logging.setLoggerClass(SecretLogger)

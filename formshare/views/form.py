@@ -130,8 +130,8 @@ from formshare.products.export.zip_json import (
 )
 from formshare.views.classes import PrivateView
 from lxml import etree
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from pyramid.response import FileResponse
+from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
+from formshare.middleware.response import FileResponse
 from formshare.processes.odk.geojson import check_geojson, update_lookup_from_geo_json
 
 logging.setLoggerClass(SecretLogger)

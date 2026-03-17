@@ -36,8 +36,8 @@ from formshare.processes.odk.processes import (
 )
 from formshare.processes.submission.api import get_submission_media_files
 from formshare.views.classes import AssistantView
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound, HTTPForbidden
-from pyramid.response import FileResponse
+from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound, HTTPForbidden
+from formshare.middleware.response import FileResponse
 from webhelpers2.html import literal
 
 logging.setLoggerClass(SecretLogger)

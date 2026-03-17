@@ -1,15 +1,163 @@
-FormShare 2.0 - Data Management Software
-Copyright (C) 2018 QLands Technology Consultants
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as
-published by the Free Software Foundation, either version 3 of the
-License, or (at your option) any later version.
+QLANDS COMMUNITY LICENSE (QCL) v1.1
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
+Copyright (c) QLands Software Inc.
 
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+This license governs the use, modification, and redistribution of the software known as
+FormShare and any related components distributed by QLands Software Inc. (“QLands”).
+
+This license is a source‑available license designed to permit use, study, modification,
+and redistribution of the Software while protecting QLands’ ability to operate and
+commercialize hosted services based on the Software.
+
+--------------------------------------------------------------------
+1. DEFINITIONS
+--------------------------------------------------------------------
+
+“Software” means the FormShare source code, documentation, configuration files,
+and related materials distributed by QLands Software Inc.
+
+“You” means any individual or legal entity exercising permissions granted by
+this License.
+
+“Hosted Service” means providing access to the functionality of the Software
+over a network (including but not limited to HTTP, APIs, or other remote access)
+to users outside your organization.
+
+“Commercial Purpose” means any activity intended for commercial advantage or
+monetary compensation, including but not limited to subscription fees,
+service fees, usage fees, advertising revenue, consulting packages tied to
+hosting, or any other direct or indirect commercial benefit.
+
+“Organization” means a single legal entity and its majority‑owned subsidiaries.
+
+--------------------------------------------------------------------
+2. GRANT OF RIGHTS
+--------------------------------------------------------------------
+
+Subject to the terms and conditions of this License, QLands Software Inc.
+grants you a non‑exclusive, worldwide, royalty‑free license to:
+
+• Use the Software.
+• Study and modify the Software.
+• Create derivative works of the Software.
+• Redistribute the Software and derivative works in source or binary form.
+
+Redistributions must include:
+
+• This License text.
+• All copyright notices contained in the original Software.
+
+--------------------------------------------------------------------
+3. RESTRICTION ON HOSTED SERVICES
+--------------------------------------------------------------------
+
+You may not provide the Software or any derivative work as a Hosted Service
+to third parties without obtaining a commercial license from QLands Software Inc.
+
+This restriction applies whether or not:
+
+• The Software has been modified
+• Plugins or extensions have been added
+• The Software is redistributed under another name
+• The service is offered free of charge
+
+Prohibited activities include but are not limited to:
+
+• Operating a hosted instance of the Software for third parties
+• Providing managed hosting services based on the Software
+• Offering Software functionality through a web service or API
+• Packaging the Software as a platform or SaaS product
+• Operating a public instance intended for external users
+
+The restriction applies regardless of whether users are charged for access.
+
+Internal use within a single Organization is permitted.
+
+--------------------------------------------------------------------
+4. PERMITTED USES
+--------------------------------------------------------------------
+
+The following uses are permitted under this License:
+
+• Internal deployment within an Organization
+• Academic and research use
+• Non‑commercial experimentation or development
+• Contributions of modifications back to the Software
+• Distribution of the Software in source or binary form under this License
+
+--------------------------------------------------------------------
+5. PLUGINS AND EXTENSIONS
+--------------------------------------------------------------------
+
+You may develop plugins, modules, integrations, or extensions for the Software.
+
+However, such plugins or extensions may not be used to enable a Hosted Service
+based on the Software unless authorized by QLands Software Inc.
+
+Plugins themselves may be distributed under any license of your choosing,
+provided they do not enable a prohibited Hosted Service deployment.
+
+--------------------------------------------------------------------
+6. TRADEMARKS
+--------------------------------------------------------------------
+
+This License does not grant any rights to use the trademarks, service marks,
+or logos of QLands Software Inc.
+
+“FormShare” and related marks are trademarks of QLands Software Inc.
+
+Redistributions or forks of the Software must not use the FormShare name,
+logo, or branding in a way that suggests endorsement by QLands unless
+explicit written permission is granted.
+
+--------------------------------------------------------------------
+7. COMMERCIAL LICENSING
+--------------------------------------------------------------------
+
+QLands Software Inc. offers separate commercial licenses that permit:
+
+• Commercial SaaS deployments
+• Managed hosting services
+• White‑label deployments
+• Enterprise distribution
+
+For commercial licensing inquiries contact:
+
+sales@qlands.com
+
+For legal questions regarding this license contact:
+
+legal@qlands.com
+
+--------------------------------------------------------------------
+8. TERMINATION
+--------------------------------------------------------------------
+
+If you violate any provision of this License, the rights granted under this
+License terminate automatically.
+
+Upon termination you must cease all use and distribution of the Software.
+
+--------------------------------------------------------------------
+9. DISCLAIMER OF WARRANTY
+--------------------------------------------------------------------
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+NONINFRINGEMENT.
+
+IN NO EVENT SHALL QLANDS SOFTWARE INC. BE LIABLE FOR ANY CLAIM,
+DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+
+--------------------------------------------------------------------
+10. GOVERNING LAW
+--------------------------------------------------------------------
+
+This License shall be governed by and interpreted in accordance with the
+laws applicable in the jurisdiction in which QLands Software Inc. is
+incorporated, without regard to conflict of law provisions.
+
+--------------------------------------------------------------------
+END OF LICENSE

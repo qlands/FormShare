@@ -28,7 +28,7 @@ import formshare.plugins as p
 from formshare.config.fastapi_config import FormShareConfig
 from formshare.config.environment import load_environment
 from formshare.config.config_indexes import configure_indexes
-from formshare.models import get_engine, get_session_factory
+from formshare.models import get_engine, get_session_factory, startup_tasks
 from formshare.middleware.auth import build_policies
 from formshare.middleware.settings import init_settings
 
@@ -134,6 +134,7 @@ def create_app(settings: dict | None = None, ini_path: str | None = None):
     # ------------------------------------------------------------------
     engine = get_engine(settings)
     db_session_factory = get_session_factory(engine)
+    startup_tasks(engine, settings)
 
     # ------------------------------------------------------------------
     # 4. Persist settings globally (request.registry.settings shim)

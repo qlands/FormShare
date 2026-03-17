@@ -50,7 +50,6 @@ from sqlalchemy import exc
 from sqlalchemy.orm.session import Session
 from sqlalchemy.pool import NullPool
 from webhelpers2.html import literal
-from zope.sqlalchemy import mark_changed
 
 __all__ = [
     "get_submission_media_files",
@@ -1204,7 +1203,6 @@ def get_request_data_jqgrid(
         sql = sql + " ORDER BY " + table_order + " " + order_direction
     sql = sql + " LIMIT " + str(start) + "," + str(length)
 
-    mark_changed(request.dbsession)
     records = request.dbsession.execute(sql).fetchall()
     data = []
 
@@ -1759,7 +1757,6 @@ def delete_all_submission(request, user, project, form, deleted_by):
         request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
             Jsonlog.form_id == form
         ).delete()
-        mark_changed(request.dbsession)
 
         odk_dir = get_odk_path(request)
         form_directory = get_form_directory(request, project, form)
@@ -1779,7 +1776,7 @@ def delete_all_submission(request, user, project, form, deleted_by):
         request.dbsession.execute(sql)
         sql = "DELETE FROM " + schema + ".maintable"
         request.dbsession.execute(sql)
-        mark_changed(request.dbsession)
+
         log.info(
             "ZapSubmissions: User {} has deleted all submissions in form {} for project {} on {}".format(
                 deleted_by, form, project, string_date

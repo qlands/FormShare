@@ -1,7 +1,6 @@
 import os
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
-import zope.sqlalchemy
 from formshare.models.formshare import (
     Base,
     Collaboratorlog,
@@ -39,7 +38,7 @@ from formshare.models.formshare import (
     CookieConsentLog,
 )
 from formshare.models.schema import *
-from sqlalchemy import engine_from_config
+from sqlalchemy import engine_from_config, text
 from sqlalchemy.orm import configure_mappers
 from sqlalchemy.orm import sessionmaker
 from formshare.plugins.core import PluginImplementations
@@ -83,92 +82,61 @@ def get_session_factory(engine):
     return factory
 
 
-def get_tm_session(session_factory, transaction_manager):
+def startup_tasks(engine, settings):
     """
-    Get a ``sqlalchemy.orm.Session`` instance backed by a transaction.
+    Run one-time startup tasks after the engine is created.
 
-    This function will hook the session to the transaction manager which
-    will take care of committing any changes.
-
-    - When using pyramid_tm it will automatically be committed or aborted
-      depending on whether an exception is raised.
-
-    - When using scripts you should wrap the session in a manager yourself.
-      For example::
-
-          import transaction
-
-          engine = get_engine(settings)
-          session_factory = get_session_factory(engine)
-          with transaction.manager:
-              dbsession = get_tm_session(session_factory, transaction.manager)
-
+    Previously called via Pyramid's includeme() hook; now called directly
+    from the FastAPI app factory (formshare.app.create_app).
     """
-    dbsession = session_factory()
-    zope.sqlalchemy.register(dbsession, transaction_manager=transaction_manager)
-    return dbsession
-
-
-def includeme(config):
-    """
-    Initialize the model for a Pyramid app.
-
-    Activate this setup using ``config.include('formshare.models')``.
-
-    """
-    settings = config.get_settings()
-    settings["tm.manager_hook"] = "pyramid_tm.explicit_manager"
-
-    # use pyramid_tm to hook the transaction lifecycle to the request
-    config.include("pyramid_tm")
-
-    # use pyramid_retry to retry a request when transient exceptions occur
-    config.include("pyramid_retry")
-    engine = get_engine(settings)
-    try:
-        engine.execute("PURGE BINARY LOGS BEFORE '2999-12-12 23:59:59';")
-    except Exception as e:
-        log.error("Unable to purge binary logs. Error: {}".format(str(e)))
-    schemas = engine.execute("show schemas").fetchall()
-    path_to_init_file = os.path.dirname(
-        os.path.realpath(settings["global:config:file"])
-    )
-    with open(path_to_init_file + "/temp_tables.log", "w") as myfile:
-        for an_schema in schemas:
-            if an_schema[0].find("FS_") == 0:
-                tables = engine.execute(
-                    "SHOW TABLES FROM {}".format(an_schema[0])
-                ).fetchall()
-                for a_table in tables:
-                    if a_table[0].find("TMP_") == 0:
-                        myfile.write(
-                            "DROP TABLE {}.{};\n".format(an_schema[0], a_table[0])
-                        )
-
-    # Get all plugin roles and try to insert them into the roles table
-    plugins_roles = []
-    for plugin in PluginImplementations(IRoles):
-        plugin_roles = plugin.get_roles(settings)
-        plugins_roles = plugins_roles + plugin_roles
-    for a_role in plugins_roles:
-        sql = "INSERT IGNORE INTO role (role_id, role_name) VALUES ('{}', '{}')".format(
-            a_role["role_id"], a_role["role_name"]
-        )
+    with engine.connect() as conn:
+        # Purge old binary logs (best-effort, non-fatal)
         try:
-            engine.execute(sql)
+            conn.execute(text("PURGE BINARY LOGS BEFORE '2999-12-12 23:59:59';"))
         except Exception as e:
-            log.error("Unable to add role {} Error: {}".format(a_role.role_id, str(e)))
+            log.error("Unable to purge binary logs. Error: {}".format(str(e)))
 
-    session_factory = get_session_factory(engine)
-    config.registry["dbsession_factory"] = session_factory
-    config.registry["dbsession_metadata"] = Base.metadata
+        # Write a DROP script for any leftover TMP_* tables in FS_* schemas
+        config_file = settings.get("global:config:file", "")
+        if config_file:
+            path_to_init_file = os.path.dirname(os.path.realpath(config_file))
+            try:
+                schemas = conn.execute(text("SHOW SCHEMAS")).fetchall()
+                with open(path_to_init_file + "/temp_tables.log", "w") as myfile:
+                    for an_schema in schemas:
+                        if an_schema[0].find("FS_") == 0:
+                            tables = conn.execute(
+                                text("SHOW TABLES FROM {}".format(an_schema[0]))
+                            ).fetchall()
+                            for a_table in tables:
+                                if a_table[0].find("TMP_") == 0:
+                                    myfile.write(
+                                        "DROP TABLE {}.{};\n".format(
+                                            an_schema[0], a_table[0]
+                                        )
+                                    )
+            except Exception as e:
+                log.error(
+                    "Unable to scan schemas for temp tables. Error: {}".format(str(e))
+                )
 
-    # make request.dbsession available for use in Pyramid
-    config.add_request_method(
-        # r.tm is the transaction manager used by pyramid_tm
-        lambda r: get_tm_session(session_factory, r.tm),
-        "dbsession",
-        reify=True,
-    )
+        # Insert any plugin-defined roles (INSERT IGNORE — safe to repeat)
+        plugins_roles = []
+        for plugin in PluginImplementations(IRoles):
+            plugin_roles = plugin.get_roles(settings)
+            plugins_roles = plugins_roles + plugin_roles
+        for a_role in plugins_roles:
+            sql = text(
+                "INSERT IGNORE INTO role (role_id, role_name) VALUES (:role_id, :role_name)"
+            )
+            try:
+                conn.execute(
+                    sql,
+                    {"role_id": a_role["role_id"], "role_name": a_role["role_name"]},
+                )
+            except Exception as e:
+                log.error(
+                    "Unable to add role {} Error: {}".format(a_role["role_id"], str(e))
+                )
 
     initialize_schema()

@@ -27,6 +27,7 @@ import functools
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
+from starlette.requests import Request
 from starlette.responses import (
     HTMLResponse,
     JSONResponse,
@@ -71,7 +72,7 @@ def make_endpoint(view_class, renderer, db_session_factory, jinja_env, app_state
         Must contain ``"settings"``, ``"policies"``, ``"helpers"``.
     """
 
-    async def endpoint(request):
+    async def endpoint(request: Request):
         from formshare.middleware import FormShareRequest
         from formshare.middleware.httpexceptions import (
             HTTPException as FSHTTPException,
@@ -149,7 +150,7 @@ def make_error_endpoint(view_class, renderer, db_session_factory, jinja_env, app
     registered with FastAPI's exception_handler decorator.
     """
 
-    async def handler(request, exc):
+    async def handler(request: Request, exc):
         from formshare.middleware import FormShareRequest
         from formshare.middleware.httpexceptions import (
             HTTPException as FSHTTPException,

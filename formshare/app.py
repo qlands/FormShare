@@ -42,15 +42,19 @@ log = logging.getLogger("formshare")
 
 
 def load_settings_from_ini(ini_path: str) -> dict:
-    """Read an old-style FormShare .ini file and return a flat settings dict."""
-    cfg = ConfigParser()
+    """Read a FormShare .ini file and return a flat settings dict."""
+    # Inject 'here' so %(here)s interpolation works (PasteDeploy compat)
+    here = os.path.dirname(os.path.abspath(ini_path))
+    cfg = ConfigParser(defaults={"here": here})
     cfg.read(ini_path)
 
     settings: dict = {}
 
-    # Merge [app:formshare] section
+    # Merge [app:formshare] section (cfg.items includes DEFAULT keys, strip 'here')
     if cfg.has_section("app:formshare"):
-        settings.update(dict(cfg.items("app:formshare")))
+        section = dict(cfg.items("app:formshare"))
+        section.pop("here", None)
+        settings.update(section)
 
     apppath = os.path.dirname(os.path.abspath(__file__))
     settings.setdefault("apppath", apppath)

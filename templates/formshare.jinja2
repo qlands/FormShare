@@ -1,18 +1,8 @@
 ###
 # app configuration
-# https://docs.pylonsproject.org/projects/pyramid/en/latest/narr/environment.html
 ###
 
 [app:formshare]
-use = egg:formshare
-
-pyramid.reload_templates = true
-pyramid.debug_authorization = false
-pyramid.debug_notfound = false
-pyramid.debug_routematch = false
-pyramid.default_locale_name = en
-pyramid.includes =
-    pyramid_debugtoolbar
 
 ###
 # Database connection
@@ -149,29 +139,26 @@ use_timezones = True
 # debugtoolbar.hosts = 127.0.0.1 ::1
 
 ###
-# WSGI server configuration
-# FormShare will run in http://localhost:5900/formshare
+# Server configuration
+# Start with: gunicorn formshare.app:create_app -k uvicorn.workers.UvicornWorker
+#             --bind {{ formshare_host }}:{{ formshare_port }}
+# Or:         uvicorn formshare.app:create_app --factory
+#             --host {{ formshare_host }} --port {{ formshare_port }}
 ###
-[composite:main]
-use = egg:rutter#urlmap
-/formshare = formshare
-
 [server:main]
-use = egg:gunicorn
 host = {{ formshare_host }}
 port = {{ formshare_port }}
 workers = 1
-worker_class = gevent
-capture_output = {{ capture_output }}
-proxy_protocol = True
+worker_class = uvicorn.workers.UvicornWorker
+timeout = 3200
 daemon = {{ daemon }}
 pidfile = {{ pid_file }}
 errorlog = {{ error_log_file }}
+capture_output = {{ capture_output }}
 forwarded_allow_ips = {{ forwarded_allow_ip }}
 
 ###
 # Logging configuration
-# https://docs.pylonsproject.org/projects/pyramid/en/latest/narr/logging.html
 ###
 [loggers]
 keys = root, formshare, sqlalchemy

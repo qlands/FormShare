@@ -99,33 +99,40 @@ def make_endpoint(view_class, renderer, db_session_factory, jinja_env, app_state
             # Convert to an intermediate FSResponse so that response callbacks
             # (e.g. the JS-extraction resource_callback) can read/write .body
             # and .content_type before we produce the final Starlette response.
-            fs_response = _result_to_fs_response(
-                result, renderer, jinja_env, fs_request
-            )
+            try:
+                fs_response = _result_to_fs_response(
+                    result, renderer, jinja_env, fs_request
+                )
 
-            # Merge any header/status mutations the view made via request.response
-            for name, value in fs_request.response.headers.items():
-                fs_response.headers[name] = value
-            if fs_request.response.status_code != 200:
-                fs_response.status_code = fs_request.response.status_code
+                # Merge any header/status mutations the view made via request.response
+                for name, value in fs_request.response.headers.items():
+                    fs_response.headers[name] = value
+                if fs_request.response.status_code != 200:
+                    fs_response.status_code = fs_request.response.status_code
 
-            # Run response callbacks on the FSResponse
-            fs_request.run_response_callbacks(fs_response)
+                # Run response callbacks on the FSResponse
+                fs_request.run_response_callbacks(fs_response)
 
-            # Final conversion to Starlette
-            from formshare.middleware.response import FileResponse as FSFileResponse
+                # Final conversion to Starlette
+                from formshare.middleware.response import FileResponse as FSFileResponse
 
-            if isinstance(fs_response, FSFileResponse):
+                if isinstance(fs_response, FSFileResponse):
+                    return fs_response.to_starlette()
+
+                # Starlette passthrough case – flush any accumulated headers into it
+                if hasattr(fs_response, "_starlette_passthrough"):
+                    sr = fs_response._starlette_passthrough
+                    for name, value in fs_response.headers.items():
+                        sr.headers[name] = value
+                    return sr
+
                 return fs_response.to_starlette()
-
-            # Starlette passthrough case – flush any accumulated headers into it
-            if hasattr(fs_response, "_starlette_passthrough"):
-                sr = fs_response._starlette_passthrough
-                for name, value in fs_response.headers.items():
-                    sr.headers[name] = value
-                return sr
-
-            return fs_response.to_starlette()
+            except Exception:
+                log.exception(
+                    "Exception in response pipeline for view %s",
+                    view_class.__name__,
+                )
+                raise
 
         finally:
             # Roll back any uncommitted state (e.g. from reads that autobegin'd
@@ -183,12 +190,22 @@ def make_error_endpoint(view_class, renderer, db_session_factory, jinja_env, app
                 result, renderer, jinja_env, fs_request
             )
 
+            # Apply header/status mutations set by the error view
+            # (e.g. NotFoundView sets self.request.response.status = 404)
+            for name, value in fs_request.response.headers.items():
+                fs_response.headers[name] = value
+            if fs_request.response.status_code != 200:
+                fs_response.status_code = fs_request.response.status_code
+
             from formshare.middleware.response import FileResponse as FSFileResponse
 
             if isinstance(fs_response, FSFileResponse):
                 return fs_response.to_starlette()
             if hasattr(fs_response, "_starlette_passthrough"):
-                return fs_response._starlette_passthrough
+                sr = fs_response._starlette_passthrough
+                for name, value in fs_response.headers.items():
+                    sr.headers[name] = value
+                return sr
             return fs_response.to_starlette()
 
         finally:

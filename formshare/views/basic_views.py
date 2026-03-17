@@ -111,6 +111,7 @@ class ErrorView(ExceptionView):
         login_data = policy.authenticated_userid(self.request)
         if login_data is not None:
             login_data = literal_eval(login_data)
+            login_data = literal_eval(login_data["login"])
             if login_data["group"] == "mainApp":
                 user = login_data["login"]
 
@@ -119,6 +120,7 @@ class ErrorView(ExceptionView):
             login_data = policy.authenticated_userid(self.request)
             if login_data is not None:
                 login_data = literal_eval(login_data)
+                login_data = literal_eval(login_data["login"])
                 if login_data["group"] == "collaborators":
                     user = login_data["login"]
 
@@ -127,6 +129,7 @@ class ErrorView(ExceptionView):
             login_data = policy.authenticated_userid(self.request)
             if login_data is not None:
                 login_data = literal_eval(login_data)
+                login_data = literal_eval(login_data["login"])
                 if login_data["group"] == "partners":
                     user = login_data["login"]
 
@@ -156,6 +159,7 @@ class LoginView(PublicView):
             login_data = policy.authenticated_userid(self.request)
             if login_data is not None:
                 login_data = literal_eval(login_data)
+                login_data = literal_eval(login_data["login"])
                 if login_data["group"] == "mainApp":
                     current_user = get_user_data(login_data["login"], self.request)
                     if current_user is not None:
@@ -401,6 +405,7 @@ class AssistantLoginView(PublicView):
             login_data = policy.authenticated_userid(self.request)
             if login_data is not None:
                 login_data = literal_eval(login_data)
+                login_data = literal_eval(login_data["login"])
                 if login_data["group"] == "collaborators":
                     project_assistant = get_project_from_assistant(
                         self.request, user_id, project_id, login_data["login"]
@@ -485,6 +490,7 @@ class PartnerLoginView(PublicView):
             login_data = policy.authenticated_userid(self.request)
             if login_data is not None:
                 login_data = literal_eval(login_data)
+                login_data = literal_eval(login_data["login"])
                 if login_data["group"] == "partners":
                     current_partner = get_partner_data(
                         self.request, login_data["login"]
@@ -558,6 +564,7 @@ def log_out_view(request):
     login_data = policy.authenticated_userid(request)
     if login_data is not None:
         login_data = literal_eval(login_data)
+        login_data = literal_eval(login_data["login"])
         if login_data["group"] == "mainApp":
             current_user = login_data["login"]
             continue_logout = True

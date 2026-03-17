@@ -96,9 +96,12 @@ class ChangeMyPartnerPassword(PartnerView):
                                         self.partnerID,
                                         partner_data["partner_password"],
                                     )
-                                next_page = self.request.route_url("partner_logout")
-                                return HTTPFound(next_page)
+                                    next_page = self.request.route_url("partner_logout")
+                                    return HTTPFound(next_page)
                             else:
+                                print(
+                                    "*****************Cannot change the password*****************"
+                                )
                                 self.add_error(
                                     self._("Unable to change the password: ") + message
                                 )
@@ -106,9 +109,13 @@ class ChangeMyPartnerPassword(PartnerView):
                                     next_page, headers={"FS_error": "true"}
                                 )
                         else:
+                            print(
+                                "******************Plugin returned continue_change = False"
+                            )
                             self.add_error(error_message)
                             return HTTPFound(next_page, headers={"FS_error": "true"})
                     else:
+                        print("******************Old password in incorrect")
                         self.add_error(self._("The old password is not correct"))
                         return HTTPFound(next_page, headers={"FS_error": "true"})
                 else:

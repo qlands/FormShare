@@ -1047,6 +1047,9 @@ def t_e_s_t_partners(test_object):
         },
         status=302,
     )
+    print("**************Back in Test")
+    print(res.headers)
+    print("**************Back in Test")
     assert "FS_error" not in res.headers
 
     # Change password with get goes to 404

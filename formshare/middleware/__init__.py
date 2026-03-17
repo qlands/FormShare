@@ -333,6 +333,10 @@ class FormShareRequest:
         return str(self._request.url.path)
 
     @property
+    def user_agent(self) -> str:
+        return self._request.headers.get("user-agent", "")
+
+    @property
     def referer(self) -> str:
         """HTTP Referer header (also available as .referrer)."""
         return self._request.headers.get("referer", "")
@@ -482,7 +486,15 @@ class FormShareRequest:
     # ==================================================================
 
     def encget(self, key: str, default=None):
-        """Read an environment variable (used by test harness)."""
+        """Read a value from the WSGI environ (test harness) or os.environ.
+
+        Under Pyramid the test harness passed values via webtest's
+        extra_environ dict which became request.environ.  Under FastAPI/a2wsgi
+        that same dict is stored in the ASGI scope as ``wsgi_environ``.
+        """
+        wsgi_environ = self._request.scope.get("wsgi_environ", {})
+        if key in wsgi_environ:
+            return wsgi_environ[key]
         return os.environ.get(key, default)
 
     # ==================================================================

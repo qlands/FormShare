@@ -261,6 +261,9 @@ class ODKView(object):
         self.user_id = user_id
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         testing_calls = self.request.encget("FS_for_testing", default="false")
+        print("*******************8888")
+        print(testing_calls)
+        print("*******************8888")
         if "Authorization" in self.request.headers or testing_calls == "true":
             if testing_calls == "false":  # pragma: no cover
                 if self.request.headers["Authorization"].find("Basic ") == -1:
@@ -297,6 +300,7 @@ class ODKView(object):
                             + '"',
                         )
                     ]
+                    print("99---------------------Returning 401")
                     response = Response(status=401, headerlist=headers)
                     return response
             else:
@@ -316,6 +320,7 @@ class ODKView(object):
                         + '"',
                     )
                 ]
+                print("55---------------------Returning 401")
                 reponse = Response(status=401, headerlist=headers)
                 return reponse
             else:
@@ -1480,6 +1485,7 @@ class PartnerView(object):
                 )
 
         process_dict = self.process_view()
+        print("*****************Partner class returns*************")
         if not self.returnRawViewResult:
             self.resultDict.update(process_dict)
             if self.request.matched_route is not None:
@@ -1489,6 +1495,7 @@ class PartnerView(object):
                     )
             return self.resultDict
         else:
+            print("**********************Last in partner class")
             return process_dict
 
     def process_view(self):

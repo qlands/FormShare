@@ -280,6 +280,7 @@ class ODKXMLForm(ODKView):
 
 class ODKManifest(ODKView):
     def process_view(self):
+        print("***************** I am in process_view")
         form_id = self.request.matchdict["formid"]
         project_code = self.request.matchdict["projcode"]
         user_id = self.request.matchdict["userid"]
@@ -307,10 +308,15 @@ class ODKManifest(ODKView):
                                     )
                                 )
                             else:
+                                print("***************** Assistant is not authorized")
                                 return self.ask_for_credentials()
                         else:
+                            print(
+                                "***************** Assistant is not active does not have form"
+                            )
                             return self.ask_for_credentials()
                     else:
+                        print("***************** Assistant is not active")
                         return self.ask_for_credentials()
                 else:
                     return self.create_xmll_response(

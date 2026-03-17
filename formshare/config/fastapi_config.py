@@ -73,10 +73,28 @@ class FormShareConfig:
     # Jinja2 / templates
     # ------------------------------------------------------------------
 
-    def add_jinja2_search_path(self, path: str, name: str = ".jinja2"):
-        """Append *path* to the Jinja2 search path list."""
-        if path not in self.template_paths:
-            self.template_paths.append(path)
+    def add_jinja2_search_path(
+        self,
+        searchpath: str = None,
+        path: str = None,
+        name: str = ".jinja2",
+        prepend: bool = False,
+        **kwargs,
+    ):
+        """Append *searchpath* (or *path*) to the Jinja2 search path list.
+
+        Accepts both Pyramid's ``searchpath`` keyword and our own ``path``
+        positional argument for backwards compatibility.
+        """
+        actual_path = searchpath or path
+        if not actual_path:
+            return
+        if prepend:
+            if actual_path not in self.template_paths:
+                self.template_paths.insert(0, actual_path)
+        else:
+            if actual_path not in self.template_paths:
+                self.template_paths.append(actual_path)
 
     def get_jinja2_environment(self):
         """No-op shim (Pyramid returns the environment; we handle it later)."""

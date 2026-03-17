@@ -7,14 +7,12 @@ import uuid
 from subprocess import Popen, PIPE, check_call, CalledProcessError
 
 import formshare.plugins as plugins
-import transaction
 from celery.utils.log import get_task_logger
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.models import (
     get_engine,
     get_session_factory,
-    get_tm_session,
     Odkform,
     Formacces,
     Formgrpacces,
@@ -481,28 +479,33 @@ def internal_create_mysql_repository(
     engine = get_engine(settings)
     session_factory = get_session_factory(engine)
 
-    with transaction.manager:
-        db_session = get_tm_session(session_factory, transaction.manager)
-        configure_mappers()
-        initialize_schema()
-        form_data = {
-            "form_schema": schema,
-            "form_pkey": primary_key,
-            "form_createxmlfile": create_xml_file,
-            "form_insertxmlfile": insert_xml_file,
-            "form_hasdictionary": 1,
-        }
-        update_form(db_session, project_id, form, form_data)
-        if not discard_testing_data:
-            assistant_uuid = get_one_assistant(db_session, project_id, form)
-            geo_point_variables = get_geopoint_variables(db_session, project_id, form)
-        update_dictionary_tables(
-            db_session,
-            project_id,
-            form,
-            survey_data_columns,
-            create_xml_file,
-        )
+    db_session = session_factory()
+    try:
+        with db_session.begin():
+            configure_mappers()
+            initialize_schema()
+            form_data = {
+                "form_schema": schema,
+                "form_pkey": primary_key,
+                "form_createxmlfile": create_xml_file,
+                "form_insertxmlfile": insert_xml_file,
+                "form_hasdictionary": 1,
+            }
+            update_form(db_session, project_id, form, form_data)
+            if not discard_testing_data:
+                assistant_uuid = get_one_assistant(db_session, project_id, form)
+                geo_point_variables = get_geopoint_variables(
+                    db_session, project_id, form
+                )
+            update_dictionary_tables(
+                db_session,
+                project_id,
+                form,
+                survey_data_columns,
+                create_xml_file,
+            )
+    finally:
+        db_session.close()
     engine.dispose()
     delete_dataset_from_index(settings, project_id, form)
     if discard_testing_data:

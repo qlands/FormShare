@@ -143,7 +143,7 @@ def register_user(request, user_data):
         .filter(User.user_email == mapped_data["user_email"])
         .first()
     )
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     if res is None:
         new_user = User(**mapped_data)
         try:
@@ -218,7 +218,7 @@ def get_query_password(request, user_id):
 
 
 def set_query_user(request, user_id, query_user, query_encrypted_password):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(User).filter(User.user_id == user_id).update(
             {
@@ -379,7 +379,7 @@ def get_user_id_with_email(request, email, active_only=True):
 
 def update_my_profile(request, user, profile_data):
     mapped_data = map_to_schema(User, profile_data)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(mapped_data)
         request.dbsession.flush()
@@ -392,7 +392,7 @@ def update_my_profile(request, user, profile_data):
 
 def update_profile(request, user, profile_data):
     mapped_data = map_to_schema(User, profile_data)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(mapped_data)
         if "roles" in profile_data.keys():
@@ -444,7 +444,7 @@ def update_last_login(request, user):
     #     connection.invalidate()
     #     engine.dispose()
     #     return False, str(e)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(
             {"user_llogin": datetime.datetime.now()}
@@ -473,7 +473,7 @@ def get_user_by_api_key(request, api_key, api_secret, with_stats=True):
 
 
 def update_password(request, user, password):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(
             {"user_password": password}
@@ -487,7 +487,7 @@ def update_password(request, user, password):
 
 
 def update_api_key(request, user, api_key, api_secret):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(
             {

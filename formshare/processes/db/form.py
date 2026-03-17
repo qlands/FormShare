@@ -181,7 +181,7 @@ def delete_case_lookup_table(request, project):
     :param project: Project ID
     :return:
     """
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(CaseLookUp).filter(
             CaseLookUp.project_id == project
@@ -354,7 +354,7 @@ def update_case_lookup_field_alias(request, project, case_field, case_alias):
     :param case_alias: New alias
     :return: True or False
     """
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(CaseLookUp).filter(
             CaseLookUp.project_id == project
@@ -379,7 +379,7 @@ def remove_case_lookup_field(request, project, case_field):
     :param case_field: Case field
     :return: True or False
     """
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(CaseLookUp).filter(
             CaseLookUp.project_id == project
@@ -402,7 +402,7 @@ def add_case_lookup_field(request, project, case_field):
         "field_editable": 1,
     }
     new_field = CaseLookUp(**new_field_dict)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_field)
         request.dbsession.flush()
@@ -442,7 +442,7 @@ def get_case_lookup_fields(request, project, case_id_field, case_label_field):
             "field_editable": 0,
         }
         label_field = CaseLookUp(**label_field_dict)
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         try:
             request.dbsession.add(name_field)
             request.dbsession.add(label_field)
@@ -1261,7 +1261,7 @@ def is_form_blocked(request, project, form):
 
 
 def block_forms_with_schema(request, schema):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Odkform).filter(Odkform.form_schema == schema).update(
             {"form_blocked": 1}
@@ -1394,7 +1394,7 @@ def copy_assistants(request, project_id, parent_form, new_form):
         .all()
     )
     assistants = map_from_schema(res)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     add_error = False
     error_message = ""
     for an_assistant in assistants:
@@ -1422,7 +1422,7 @@ def copy_assistants(request, project_id, parent_form, new_form):
 def add_new_form(request, form_data):
     mapped_data = map_to_schema(Odkform, form_data)
     new_form = Odkform(**mapped_data)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_form)
         request.dbsession.flush()
@@ -1461,7 +1461,7 @@ def form_version_exists(request, project, form, version):
 
 
 def update_form_color_by_database(request, database, hex_color):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Odkform).filter(Odkform.form_schema == database).update(
             {"form_hexcolor": hex_color}
@@ -1495,7 +1495,7 @@ def delete_form_by_database(request, database):
             }
         )
     log.warning("END BIG DATABASE DELETE")
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Odkform).filter(Odkform.form_schema == database).update(
             {"parent_project": None, "parent_form": None}
@@ -1514,7 +1514,7 @@ def delete_form_by_database(request, database):
 
 def update_form_directory(request, project, form, directory):  # pragma: no cover
     # This function has no coverage because it should not happen. Cannot be covered by unitTest
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
             Odkform.form_id == form
@@ -1530,7 +1530,7 @@ def update_form_directory(request, project, form, directory):  # pragma: no cove
 
 
 def update_media_lastgen(request, project, form, file_name, last_generated_on):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(MediaFile).filter(
             MediaFile.project_id == project
@@ -1562,7 +1562,7 @@ def update_form(request, project, form, form_data):
         .one()
     )
     if blocked[0] == 0:
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
             Odkform.form_id == form
         ).update(mapped_data)
@@ -1603,7 +1603,7 @@ def delete_form(request, project, form):
     )
     if blocked[0] == 0:
         this_form_schema = get_form_schema(request, project, form)
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         if this_form_schema is not None:
             if form_has_parent(request, project, form):
                 deleted = delete_form_by_database(request, this_form_schema)
@@ -1654,7 +1654,7 @@ def set_form_status(request, project, form, status):
         .one()
     )
     if blocked[0] == 0:
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
             Odkform.form_id == form
         ).update({"form_accsub": status})
@@ -1726,7 +1726,7 @@ def add_file_to_form(
                 file_mimetype=content_type,
                 file_realtimecsv=link_to_realtime_csv,
             )
-            save_point = request.tm.savepoint()
+            save_point = request.dbsession.begin_nested()
             try:
                 request.dbsession.add(new_file)
                 request.dbsession.flush()
@@ -1742,7 +1742,7 @@ def add_file_to_form(
             if not overwrite:
                 return False, _("The file {} already exist").format(file_name)
             else:
-                save_point = request.tm.savepoint()
+                save_point = request.dbsession.begin_nested()
                 try:
                     request.dbsession.query(MediaFile).filter(
                         MediaFile.project_id == project
@@ -1774,7 +1774,7 @@ def remove_file_from_form(request, project, form, file_name):
         .one()
     )
     if blocked[0] == 0:
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         try:
             request.dbsession.query(MediaFile).filter(
                 MediaFile.project_id == project
@@ -1818,7 +1818,7 @@ def add_assistant_to_form(request, project, form, privilege_data):
         .one()
     )
     if blocked[0] == 0:
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         try:
             privilege_data["access_date"] = datetime.datetime.now()
             privilege_data["form_project"] = project
@@ -1940,7 +1940,7 @@ def update_assistant_privileges(request, project, form, assistant_uuid, privileg
         .one()
     )
     if blocked[0] == 0:
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         try:
             mapped_data = map_to_schema(Formacces, privilege_data)
             request.dbsession.query(Formacces).filter(
@@ -1972,7 +1972,7 @@ def remove_assistant_from_form(request, project, form, assistant_uuid):
         .one()
     )
     if blocked[0] == 0:
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         try:
             request.dbsession.query(Formacces).filter(
                 Formacces.coll_uuid == assistant_uuid
@@ -2003,7 +2003,7 @@ def add_group_to_form(request, project, form, group, can_submit, can_clean):
         .one()
     )
     if blocked[0] == 0:
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         try:
             new_access = Formgrpacces(
                 project_id=project,
@@ -2057,7 +2057,7 @@ def update_group_privileges(request, project, form, group, can_submit, can_clean
         .one()
     )
     if blocked[0] == 0:
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         try:
             request.dbsession.query(Formgrpacces).filter(
                 Formgrpacces.project_id == project
@@ -2090,7 +2090,7 @@ def remove_group_from_form(request, project, form, group):
         .one()
     )
     if blocked[0] == 0:
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         try:
             request.dbsession.query(Formgrpacces).filter(
                 Formgrpacces.project_id == project

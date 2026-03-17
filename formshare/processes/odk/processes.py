@@ -541,7 +541,7 @@ def get_assistant_permissions_on_a_form(
 
 # This update the stage information so he can come back
 def update_form_repository_info(request, project, form, data):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Form).filter(Form.project_id == project).filter(
             Form.form_id == form
@@ -602,7 +602,7 @@ def get_form_data(project, form, request):
 
 
 def checkout_submission(request, project, form, submission, assistant_uuid):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 2})
@@ -628,7 +628,7 @@ def checkout_submission(request, project, form, submission, assistant_uuid):
 
 
 def cancel_checkout(request, project, form, submission, assistant_uuid):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -658,7 +658,7 @@ def cancel_checkout(request, project, form, submission, assistant_uuid):
 
 
 def cancel_revision(request, project, form, submission, assistant_uuid, revision):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -689,7 +689,7 @@ def cancel_revision(request, project, form, submission, assistant_uuid, revision
 
 
 def fix_revision(request, project, form, submission, assistant_uuid, revision):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 0})
@@ -718,7 +718,7 @@ def fix_revision(request, project, form, submission, assistant_uuid, revision):
 
 
 def fix_submission(request, project, form, submission, assistant_uuid):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 0})
@@ -744,7 +744,7 @@ def fix_submission(request, project, form, submission, assistant_uuid):
 
 
 def fail_revision(request, project, form, submission, assistant_uuid, revision):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -775,7 +775,7 @@ def fail_revision(request, project, form, submission, assistant_uuid, revision):
 
 
 def disregard_revision(request, project, form, submission, assistant_uuid, notes):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 4})
@@ -806,7 +806,7 @@ def disregard_revision(request, project, form, submission, assistant_uuid, notes
 def cancel_disregard_revision(
     request, project, form, submission, assistant_uuid, notes
 ):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})

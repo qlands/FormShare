@@ -30,7 +30,7 @@ def save_consent(request, ip, functional, analytical, marketing, action):
         .filter(CookieConsent.consent_ip == ip)
         .first()
     )
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         if existing is None:
             new_consent = CookieConsent(

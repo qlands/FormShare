@@ -1502,7 +1502,7 @@ def delete_submission(
         return False, message
 
     # Remove the submission from the repository
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
 
     sql = "SET @odktools_current_user = '" + user + "'"
     request.dbsession.execute(sql)

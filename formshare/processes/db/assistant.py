@@ -368,7 +368,7 @@ def get_assistant_by_api_key(request, api_key):
 
 
 def delete_assistant(request, assistant_uuid):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Collaborator).filter(
             Collaborator.coll_uuid == assistant_uuid
@@ -427,7 +427,7 @@ def add_assistant(request, user, project, assistant_data, flush=True, check_exis
     mapped_data["coll_password"] = encode_data(request, mapped_data["coll_password"])
     new_assistant = Collaborator(**mapped_data)
     if flush:
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
     else:
         save_point = None
     try:
@@ -460,7 +460,7 @@ def modify_assistant(request, assistant_uuid, assistant_data):
         )
     _ = request.translate
     mapped_data = map_to_schema(Collaborator, assistant_data)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Collaborator).filter(
             Collaborator.coll_uuid == assistant_uuid
@@ -475,7 +475,7 @@ def modify_assistant(request, assistant_uuid, assistant_data):
 
 def change_assistant_password(request, assistant_uuid, password):
     encrypted_password = encode_data(request, password)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Collaborator).filter(
             Collaborator.coll_uuid == assistant_uuid

@@ -79,7 +79,7 @@ def register_partner(request, partner_data):
     partner_data.pop("partner_password2", None)
     mapped_data = map_to_schema(Partner, partner_data)
     new_partner = Partner(**mapped_data)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_partner)
         request.dbsession.flush()
@@ -125,7 +125,7 @@ def partner_email_exists(request, partner_id, email):
 
 def update_partner(request, partner_id, partner_data):
     mapped_data = map_to_schema(Partner, partner_data)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Partner).filter(
             Partner.partner_id == partner_id
@@ -139,7 +139,7 @@ def update_partner(request, partner_id, partner_data):
 
 
 def update_partner_password(request, partner_id, password):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Partner).filter(
             Partner.partner_id == partner_id
@@ -155,7 +155,7 @@ def update_partner_password(request, partner_id, password):
 
 
 def delete_partner(request, partner_id):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Partner).filter(
             Partner.partner_id == partner_id
@@ -172,7 +172,7 @@ def add_partner_to_project(request, link_data):
     _ = request.translate
     mapped_data = map_to_schema(PartnerProject, link_data)
     new_link = PartnerProject(**mapped_data)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_link)
         request.dbsession.flush()
@@ -208,7 +208,7 @@ def get_project_partners(request, project_id):
 
 def update_partner_options(request, project_id, partner_id, partner_data):
     mapped_data = map_to_schema(PartnerProject, partner_data)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(PartnerProject).filter(
             PartnerProject.project_id == project_id
@@ -226,7 +226,7 @@ def update_partner_options(request, project_id, partner_id, partner_data):
 
 
 def remove_partner_from_project(request, project_id, partner_id):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(PartnerProject).filter(
             PartnerProject.project_id == project_id
@@ -259,7 +259,7 @@ def add_partner_to_form(request, link_data):
     _ = request.translate
     mapped_data = map_to_schema(PartnerForm, link_data)
     new_link = PartnerForm(**mapped_data)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_link)
         request.dbsession.flush()
@@ -289,7 +289,7 @@ def add_partner_to_form(request, link_data):
 
 def update_partner_form_options(request, project_id, form_id, partner_id, partner_data):
     mapped_data = map_to_schema(PartnerForm, partner_data)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(PartnerForm).filter(
             PartnerForm.project_id == project_id
@@ -311,7 +311,7 @@ def update_partner_form_options(request, project_id, form_id, partner_id, partne
 
 
 def remove_partner_from_form(request, project_id, form_id, partner_id):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(PartnerForm).filter(
             PartnerForm.project_id == project_id

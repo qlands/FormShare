@@ -1207,7 +1207,7 @@ def get_active_project(request, user):
         if res is not None:
             mapped_data = map_from_schema(res)
             if mapped_data["access_type"] == 1:
-                save_point = request.tm.savepoint()
+                save_point = request.dbsession.begin_nested()
                 try:
                     request.dbsession.query(Userproject).filter(
                         Userproject.project_id == mapped_data["project_id"]
@@ -1231,7 +1231,7 @@ def get_active_project(request, user):
                     .first()
                 )
                 if res is not None:
-                    save_point = request.tm.savepoint()
+                    save_point = request.dbsession.begin_nested()
                     try:
                         request.dbsession.query(Userproject).filter(
                             Userproject.project_id == mapped_data["project_id"]
@@ -1270,7 +1270,7 @@ def add_project(request, user, project_data):
 
         mapped_data = map_to_schema(Project, project_data)
         new_project = Project(**mapped_data)
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         try:
             request.dbsession.add(new_project)
 
@@ -1315,7 +1315,7 @@ def modify_project(request, project, project_data):
     if project_data.get("project_code", None) is not None:
         project_data.pop("project_code")
     mapped_data = map_to_schema(Project, project_data)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Project).filter(Project.project_id == project).update(
             mapped_data
@@ -1330,7 +1330,7 @@ def modify_project(request, project, project_data):
 
 def delete_project(request, user, project):
     _ = request.translate
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Project).filter(Project.project_id == project).delete()
         res = (
@@ -1369,7 +1369,7 @@ def delete_project(request, user, project):
 
 
 def set_project_as_active(request, user, project):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Userproject).filter(Userproject.user_id == user).update(
             {"project_active": 0}
@@ -1401,7 +1401,7 @@ def add_file_to_project(request, project, file_name, overwrite=False):
             file_name=file_name,
             file_udate=datetime.datetime.now(),
         )
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         try:
             request.dbsession.add(new_file)
             request.dbsession.flush()
@@ -1431,7 +1431,7 @@ def get_project_files(request, project):
 
 
 def remove_file_from_project(request, project, file_name):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(ProjectFile).filter(
             ProjectFile.project_id == project

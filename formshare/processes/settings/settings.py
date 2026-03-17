@@ -18,7 +18,7 @@ def store_settings(request, key, value):
         return False, str(e)
     new_settings = Settings(settings_key=key, settings_value=value)
     _ = request.translate
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_settings)
         request.dbsession.flush()
@@ -40,7 +40,7 @@ def update_settings(request, key, value):
         json.dumps(value)
     except Exception as e:
         return False, str(e)
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Settings).filter(Settings.settings_key == key).update(
             {"settings_value": value}
@@ -52,7 +52,7 @@ def update_settings(request, key, value):
 
 
 def delete_settings(request, key):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Settings).filter(Settings.settings_key == key).delete()
         request.dbsession.flush()

@@ -29,7 +29,7 @@ def add_json_log(
         .filter(Jsonlog.log_id == submission)
         .first()
     )
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         if res is None:
             new_json_log = Jsonlog(
@@ -71,7 +71,7 @@ def add_json_log(
 
 
 def update_json_status(request, project, form, submission, status):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
             Jsonlog.form_id == form, Jsonlog.log_id == submission
@@ -104,7 +104,7 @@ def add_json_history(
         log_commit=sequence,
         log_notes=notes,
     )
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()

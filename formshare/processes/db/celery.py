@@ -15,7 +15,7 @@ def cancel_task(request, user, task_id):
             datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
         ),
     )
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_cancelled_task)
         request.dbsession.flush()

@@ -73,7 +73,7 @@ def get_group_data(request, project, group):
 
 
 def delete_group(request, project, group):
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Collgroup).filter(
             Collgroup.project_id == project
@@ -111,7 +111,7 @@ def add_group(request, project, group_data):
     if res is None:
         mapped_data["group_desc"] = group_desc
         new_group = Collgroup(**mapped_data)
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         try:
             request.dbsession.add(new_group)
             request.dbsession.flush()
@@ -149,7 +149,7 @@ def modify_group(request, project, group, group_data):
         .first()
     )
     if res is None:
-        save_point = request.tm.savepoint()
+        save_point = request.dbsession.begin_nested()
         try:
             mapped_data["group_desc"] = group_desc
             request.dbsession.query(Collgroup).filter(
@@ -181,7 +181,7 @@ def add_assistant_to_group(
         coll_uuid=assistant_uuid,
         join_date=datetime.datetime.now(),
     )
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_member)
         request.dbsession.flush()
@@ -206,7 +206,7 @@ def add_assistant_to_group(
 
 def remove_assistant_from_group(request, project, group, assistant_uuid):
     _ = request.translate
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Collingroup).filter(
             Collingroup.project_id == project

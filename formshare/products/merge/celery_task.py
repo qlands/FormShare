@@ -8,14 +8,12 @@ import traceback
 import uuid
 from subprocess import Popen, PIPE, check_call, CalledProcessError
 
-import transaction
 from celery.utils.log import get_task_logger
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.models import (
     get_engine,
     get_session_factory,
-    get_tm_session,
     Odkform,
     map_to_schema,
     initialize_schema,
@@ -835,8 +833,8 @@ def internal_merge_into_repository(
     session_factory = get_session_factory(engine)
     critical_part = False
     form_with_changes = []
-    with transaction.manager:
-        db_session = get_tm_session(session_factory, transaction.manager)
+    db_session = session_factory()
+    try:
         configure_mappers()
         initialize_schema()
 
@@ -845,7 +843,7 @@ def internal_merge_into_repository(
             {"form_blocked": 1}
         )
         update_form(db_session, project_id, a_form_id, {"form_blocked": 1})
-        transaction.commit()
+        db_session.commit()
         time.sleep(5)  # Sleep for 5 seconds just to allow any pending updates to finish
         try:
             make_database_changes(
@@ -906,7 +904,7 @@ def internal_merge_into_repository(
                 "form_hasdictionary": 1,
             }
             update_form(db_session, project_id, a_form_id, form_data)
-            transaction.commit()
+            db_session.commit()
             if not discard_testing_data:
                 log.info("Storing testing data")
                 send_task_status_to_form(settings, task_id, _("Storing testing data"))
@@ -922,7 +920,7 @@ def internal_merge_into_repository(
                 c_create_xml_file,
                 survey_data_columns,
             )
-            transaction.commit()
+            db_session.commit()
             critical_part = False
         except Exception as e:
             if critical_part:
@@ -1005,12 +1003,13 @@ def internal_merge_into_repository(
                     Odkform.form_schema == b_schema_name
                 ).update({"form_blocked": 0})
                 update_form(db_session, project_id, a_form_id, {"form_blocked": 0})
-            transaction.commit()
-            engine.dispose()
+            db_session.commit()
             raise MergeDataBaseError(str(e))
+    finally:
+        db_session.close()
+        engine.dispose()
     # Delete the dataset index
     try:
-        engine.dispose()
         delete_dataset_from_index(settings, project_id, a_form_id)
         if discard_testing_data:
             # Remove any test submissions if any

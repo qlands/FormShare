@@ -335,7 +335,7 @@ def update_dictionary_field_sensitive(
     :param protection: New type of protection
     :return: True or False
     """
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         update_dict = {"field_sensitive": sensitive}
         if sensitive == 1:
@@ -375,7 +375,7 @@ def update_dictionary_field_desc(request, project, form, table, field, new_metad
     :param new_metadata: New metadata
     :return: True or False
     """
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         mapped_data = map_to_schema(DictField, new_metadata)
         request.dbsession.query(DictField).filter(
@@ -410,7 +410,7 @@ def update_dictionary_table_desc(request, project, form, table, description):
     :param description: New description
     :return: True or False
     """
-    save_point = request.tm.savepoint()
+    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(DictTable).filter(
             DictTable.project_id == project
@@ -633,7 +633,7 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                         new_table_dict["parent_form"] = form
                         new_table_dict["parent_table"] = parent.get("name")
                     new_table = DictTable(**new_table_dict)
-                    save_point = request.tm.savepoint()
+                    save_point = request.dbsession.begin_nested()
                     try:
                         request.dbsession.add(new_table)
                         error_in_fields = False
@@ -697,7 +697,7 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                         return False
                 else:
                     error_in_fields = False
-                    save_point = request.tm.savepoint()
+                    save_point = request.dbsession.begin_nested()
                     for field in table.getchildren():
                         if field.tag == "field":
                             res = (

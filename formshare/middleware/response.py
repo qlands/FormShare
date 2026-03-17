@@ -106,7 +106,9 @@ class Response:
         return r
 
     def __repr__(self):
-        return f"<Response status={self._status_code} content_type={self.content_type!r}>"
+        return (
+            f"<Response status={self._status_code} content_type={self.content_type!r}>"
+        )
 
 
 class FileResponse:
@@ -118,7 +120,14 @@ class FileResponse:
         return FileResponse("/path/to/file.zip", content_type="application/zip")
     """
 
-    def __init__(self, path, request=None, cache_max_age=None, content_type=None, content_encoding=None):
+    def __init__(
+        self,
+        path,
+        request=None,
+        cache_max_age=None,
+        content_type=None,
+        content_encoding=None,
+    ):
         self.path = path
         self.cache_max_age = cache_max_age
         self.content_type = content_type or _guess_content_type(path)
@@ -129,6 +138,10 @@ class FileResponse:
     @property
     def status_code(self):
         return self._status_code
+
+    @status_code.setter
+    def status_code(self, value):
+        self._status_code = int(value)
 
     def to_starlette(self):
         from starlette.responses import FileResponse as StarletteFileResponse

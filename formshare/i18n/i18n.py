@@ -1,41 +1,13 @@
-import os
-import sys
+"""
+formshare.i18n.i18n
+~~~~~~~~~~~~~~~~~~~~
 
-import formshare.plugins as p
-from babel.support import Translations
-from pyramid.i18n import get_localizer
-from pyramid.threadlocal import get_current_request
+Pyramid event handlers kept for backwards compatibility.
 
+FormShare 3.0 uses formshare.middleware.i18n directly via FormShareRequest,
+so these handlers are never wired to Pyramid events anymore.  The module is
+preserved so any external code that imports it continues to work.
+"""
 
-def add_renderer_globals(event):
-    request = event.get("request")
-    if request is None:
-        request = get_current_request()
-    event["_"] = request.translate
-    event["localizer"] = request.localizer
-
-
-def add_localizer(event):
-    request = event.request
-    localizer = get_localizer(request)
-    module = sys.modules["formshare"]
-    formshare_locale_path = os.path.join(os.path.dirname(module.__file__), "locale")
-    list_of_desired_locales = [request.locale_name]
-    translations = Translations.load(
-        formshare_locale_path, list_of_desired_locales, "formshare"
-    )
-    for plugin in p.PluginImplementations(p.ITranslation):
-        plugin_translation_directory = plugin.get_translation_directory()
-        plugin_translation_domain = plugin.get_translation_domain()
-        translations_plugin = Translations.load(
-            plugin_translation_directory,
-            list_of_desired_locales,
-            plugin_translation_domain,
-        )
-        translations.merge(translations_plugin)
-
-    def auto_translate(string):
-        return translations.gettext(string)
-
-    request.localizer = localizer
-    request.translate = auto_translate
+# Translations are now handled by formshare.middleware.i18n.build_translator()
+# which is called per-request in FormShareRequest.translate.

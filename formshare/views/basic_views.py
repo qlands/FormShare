@@ -35,7 +35,7 @@ from formshare.views.classes import PublicView, ExceptionView
 from formshare.middleware.httpexceptions import HTTPFound
 from formshare.middleware.httpexceptions import HTTPNotFound
 from formshare.middleware.response import Response
-from pyramid.security import remember
+from formshare.middleware.auth import get_policy
 from formshare.middleware.session import check_csrf_token
 from formshare.processes.db.utility import get_db_connection
 import base64
@@ -227,8 +227,8 @@ class LoginView(PublicView):
                         break  # Only one plugging will be called to extend after_login
                     if continue_login:
                         update_last_login(self.request, user.login)
-                        headers = remember(
-                            self.request, str(login_data), policies=["main"]
+                        headers = get_policy("main", self.request).remember(
+                            self.request, str(login_data)
                         )
                         next_page = self.request.params.get(
                             "next"
@@ -441,8 +441,8 @@ class AssistantLoginView(PublicView):
                             continue_login = False
                         break  # Only one plugging will be called to extend after_collaborator_login
                     if continue_login:
-                        headers = remember(
-                            self.request, str(login_data), policies=["assistant"]
+                        headers = get_policy("assistant", self.request).remember(
+                            self.request, str(login_data)
                         )
                         self.returnRawViewResult = True
                         return HTTPFound(location=next_page, headers=headers)
@@ -515,8 +515,8 @@ class PartnerLoginView(PublicView):
                             continue_login = False
                         break  # Only one plugging will be called to extend after_partner_login
                     if continue_login:
-                        headers = remember(
-                            self.request, str(login_data), policies=["partner"]
+                        headers = get_policy("partner", self.request).remember(
+                            self.request, str(login_data)
                         )
                         self.returnRawViewResult = True
                         return HTTPFound(location=next_page, headers=headers)
@@ -776,11 +776,9 @@ class RegisterView(PublicView):
                                                 "login": data["user_id"],
                                                 "group": "mainApp",
                                             }
-                                            headers = remember(
-                                                self.request,
-                                                str(login_data),
-                                                policies=["main"],
-                                            )
+                                            headers = get_policy(
+                                                "main", self.request
+                                            ).remember(self.request, str(login_data))
                                             self.returnRawViewResult = True
                                             return HTTPFound(
                                                 location=self.request.route_url(

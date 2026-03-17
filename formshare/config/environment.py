@@ -3,7 +3,6 @@ import os
 import formshare.plugins as p
 import formshare.plugins.helpers as helpers
 import formshare.resources as r
-import pyramid_session_multi
 from formshare.config.api_routes import load_api_version_1_routes
 from formshare.config.jinja_extensions import (
     initialize,
@@ -16,9 +15,6 @@ from formshare.config.routes import load_routes
 from formshare.models import add_column_to_schema, add_modules_to_schema
 from formshare.products import add_product
 from formshare.products.formshare_products import register_products
-from pyramid.csrf import SessionCSRFStoragePolicy
-from pyramid.session import SignedCookieSessionFactory
-from pyramid_session_redis import session_factory_from_settings
 
 main_policy_array = []
 
@@ -77,42 +73,10 @@ def load_environment(settings, config, apppath, policy_array):
     for policy in policy_array:
         main_policy_array.append(policy)
 
-    # Add the session factory to the config
-    session_factory = session_factory_from_settings(settings)
-    config.set_session_factory(session_factory)
-
-    # Adds a secondary session for not critical cookies that will not expire
-    config.include("pyramid_session_multi")
-    secondary_session_factory = SignedCookieSessionFactory(
-        settings["auth.secondary.secret"],
-        cookie_name=settings["auth.secondary.cookie"],
-        timeout=None,
-    )
-    pyramid_session_multi.register_session_factory(
-        config, "secondary_session", secondary_session_factory
-    )
-
-    config.set_csrf_storage_policy(SessionCSRFStoragePolicy())
-    # config.set_default_csrf_options(require_csrf=True)
-
-    # Add render subscribers for internationalization
-    # config.add_translation_dirs("formshare:locale")
-    config.add_subscriber(
-        "formshare.i18n.i18n.add_renderer_globals", "pyramid.events.BeforeRender"
-    )
-    config.add_subscriber(
-        "formshare.i18n.i18n.add_localizer", "pyramid.events.NewRequest"
-    )
-
-    # Register Jinja2
-    config.registry.settings["jinja2.extensions"] = [
-        "jinja2.ext.i18n",
-        "jinja2.ext.do",
-        ExtendThis,
-        CSSResourceExtension,
-        JSResourceExtension,
-    ]
-    config.include("pyramid_jinja2")
+    # Session, CSRF, and i18n event subscribers are handled by the
+    # FormShare 3.0 middleware layer (FormShareRequest / FormShareSession).
+    # config.set_session_factory / add_subscriber calls are no-ops on
+    # FormShareConfig and are intentionally omitted here.
 
     # Add url_for_static to the request so plugins can use static resources
     config.add_request_method(__url_for_static, "url_for_static")

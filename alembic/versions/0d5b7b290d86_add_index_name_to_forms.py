@@ -14,7 +14,8 @@ from alembic import context
 from alembic import op
 from formshare.models.formshare import Odkform, Project, Userproject
 from formshare.processes.elasticsearch.repository_index import create_connection
-from pyramid.paster import get_appsettings, setup_logging
+import logging
+from formshare.app import load_settings_from_ini
 from sqlalchemy.orm.session import Session
 from requests.auth import HTTPBasicAuth
 
@@ -36,8 +37,8 @@ def upgrade():
         )
         exit(1)
 
-    setup_logging(config_uri)
-    settings = get_appsettings(config_uri, "formshare")
+    logging.basicConfig(level=logging.INFO)
+    settings = load_settings_from_ini(config_uri)
 
     es_host = settings.get("elasticsearch.repository.host", "localhost")
     es_port = settings.get("elasticsearch.repository.port", 9200)

@@ -15,7 +15,8 @@ from formshare.processes.elasticsearch.repository_index import (
     create_connection,
     get_all_datasets_with_gps,
 )
-from pyramid.paster import get_appsettings, setup_logging
+import logging
+from formshare.app import load_settings_from_ini
 from sqlalchemy.orm.session import Session
 
 # revision identifiers, used by Alembic.
@@ -36,8 +37,8 @@ def upgrade():
         )
         exit(1)
 
-    setup_logging(config_uri)
-    settings = get_appsettings(config_uri, "formshare")
+    logging.basicConfig(level=logging.INFO)
+    settings = load_settings_from_ini(config_uri)
     es_connection = create_connection(settings)
     if es_connection is None:
         print("Cannot connect to ElasticSearch")

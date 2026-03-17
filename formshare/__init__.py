@@ -1,107 +1,51 @@
-import os
-import sys
+"""
+formshare
+~~~~~~~~~
 
-if (
-    os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "false"
-    and os.environ.get("FORMSHARE_RUN_FROM_CELERY", "false") == "false"
-):
-    if sys.version_info[0] == 3 and sys.version_info[1] >= 6:  # pragma: no cover
-        import gevent.monkey
+FormShare 3.0 – FastAPI-based application.
 
-        gevent.monkey.patch_all()
+The old Pyramid entry point (gevent monkey-patching, AuthTktAuthenticationPolicy,
+Configurator) has been replaced by formshare.app.create_app().
 
+This module is kept as a thin shim so that any external code that calls
+``formshare.main()`` (e.g. paste.app_factory consumers) continues to work
+during the transition period.
+"""
 
-from pyramid.config import Configurator
-import os
-from configparser import ConfigParser, NoOptionError
-from pyramid.authentication import AuthTktAuthenticationPolicy
-from pyramid.authorization import ACLAuthorizationPolicy
-from pyramid_authstack import AuthenticationStackPolicy
-from formshare.config.environment import load_environment
-from formshare.config.config_indexes import configure_indexes
-import formshare.plugins as p
+from formshare.app import create_app, load_settings_from_ini
 
 
 def main(global_config, **settings):
+    """PasteDeploy-style entry point.
+
+    Delegates to the FastAPI app factory.  The returned object is an ASGI
+    application (not WSGI), so it must be served with an ASGI server such as
+    Uvicorn instead of Gunicorn+Gevent.
+    """
+    import os
+
     apppath = os.path.dirname(os.path.abspath(__file__))
-    if global_config is not None:  # pragma: no cover
-        config = ConfigParser()
-        config.read(global_config["__file__"])
-        host = config.get("server:main", "host")
+    settings.setdefault("apppath", apppath)
+
+    if global_config is not None:
+        from configparser import ConfigParser, NoOptionError
+
+        cfg = ConfigParser()
+        cfg.read(global_config["__file__"])
+
         try:
-            threads = config.get("app:formshare", "odk.threads")
+            settings["server:main:host"] = cfg.get("server:main", "host")
+        except Exception:
+            settings.setdefault("server:main:host", "0.0.0.0")
+        try:
+            settings["server:main:port"] = cfg.get("server:main", "port")
+        except Exception:
+            settings.setdefault("server:main:port", "6543")
+        try:
+            settings["server:threads"] = cfg.get("app:formshare", "odk.threads")
         except NoOptionError:
-            threads = "1"
-        port = config.get("server:main", "port")
-        composite_section = dict(config.items("composite:main"))
-        composite_section.pop("use")
-        settings["apppath"] = apppath
-        settings["server:threads"] = threads
-        settings["server:main:host"] = host
-        settings["server:main:port"] = port
-        settings["server:main:root"] = list(composite_section.keys())[0]
+            settings.setdefault("server:threads", "1")
+
         settings["global:config:file"] = global_config["__file__"]
 
-    # Load all connected plugins
-    plugin_list = settings.get("formshare.plugins", "").split()
-    plugin_list.reverse()
-    print(
-        "FormShare will execute the following plugins in this order: {}".format(
-            ",".join(plugin_list)
-        )
-    )
-    settings["active_plugins"] = plugin_list
-    p.load_all(settings)
-
-    """This function returns a Pyramid WSGI application."""
-    auth_policy = AuthenticationStackPolicy()
-    policy_array = []
-
-    main_policy = AuthTktAuthenticationPolicy(
-        settings["auth.main.secret"],
-        timeout=settings.get("auth.main.cookie.timeout", None),
-        cookie_name=settings["auth.main.cookie"],
-    )
-    auth_policy.add_policy("main", main_policy)
-    policy_array.append({"name": "main", "policy": main_policy})
-
-    assistant_policy = AuthTktAuthenticationPolicy(
-        settings["auth.assistant.secret"],
-        timeout=settings.get("auth.assistant.cookie.timeout", None),
-        cookie_name=settings["auth.assistant.cookie"],
-    )
-    auth_policy.add_policy("assistant", assistant_policy)
-    policy_array.append({"name": "assistant", "policy": assistant_policy})
-
-    partner_policy = AuthTktAuthenticationPolicy(
-        settings["auth.partner.secret"],
-        timeout=settings.get("auth.partner.cookie.timeout", None),
-        cookie_name=settings["auth.partner.cookie"],
-    )
-    auth_policy.add_policy("partner", partner_policy)
-    policy_array.append({"name": "partner", "policy": partner_policy})
-
-    # Load any change in the configuration done by connected plugins
-    policy_used = ["main", "assistant", "partner"]
-    for plugin in p.PluginImplementations(p.IAuthenticationPolicy):
-        policy_class, policy_name = plugin.create_policy(settings)
-        if policy_name not in policy_used:
-            auth_policy.add_policy(policy_name, policy_class)
-            policy_array.append({"name": policy_name, "policy": policy_class})
-            policy_used.append(policy_name)
-        else:
-            print("Policy name {} already in use".format(policy_name))
-
-    # authn_policy = AuthTktAuthenticationPolicy(settings['auth.secret'], cookie_name='formshare_auth_tkt')
-    authz_policy = ACLAuthorizationPolicy()
-    config = Configurator(
-        settings=settings,
-        authentication_policy=auth_policy,
-        authorization_policy=authz_policy,
-    )
-
-    config.include(".models")
-    # Load and configure the host application
-    configure_indexes(settings)
-    wsgi_app = load_environment(settings, config, apppath, policy_array)
-    return wsgi_app
+    return create_app(settings=settings)

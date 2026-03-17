@@ -11,7 +11,8 @@ import time
 import requests
 from alembic import context
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
-from pyramid.paster import get_appsettings, setup_logging
+import logging
+from formshare.app import load_settings_from_ini
 from requests.auth import HTTPBasicAuth
 
 # revision identifiers, used by Alembic.
@@ -39,8 +40,8 @@ def upgrade():
         )
         exit(1)
 
-    setup_logging(config_uri)
-    settings = get_appsettings(config_uri, "formshare")
+    logging.basicConfig(level=logging.INFO)
+    settings = load_settings_from_ini(config_uri)
 
     es_host = settings.get("elasticsearch.user.host", "localhost")
     es_port = settings.get("elasticsearch.user.port", 9200)

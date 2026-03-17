@@ -76,7 +76,9 @@ def build_translator(locale_name: str) -> Callable[[str], str]:
             formshare_locale_path, [locale_name], "formshare"
         )
     except Exception as e:
-        log.warning("Could not load FormShare translations for '%s': %s", locale_name, e)
+        log.warning(
+            "Could not load FormShare translations for '%s': %s", locale_name, e
+        )
         translations = Translations()  # identity translator
 
     # -- Merge plugin translations --

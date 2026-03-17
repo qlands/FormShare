@@ -6,12 +6,11 @@ import os
 import shutil
 import uuid
 
-import transaction
+from formshare.app import load_settings_from_ini
 from formshare.config.encdecdata import encode_data_with_key, decode_data_with_key
 from formshare.models import User, Collaborator, Partner
-from formshare.models import get_engine, get_session_factory, get_tm_session
+from formshare.models import get_engine, get_session_factory
 from formshare.models.meta import Base
-from pyramid.paster import get_appsettings
 
 
 class EmptyPassword(Exception):
@@ -36,7 +35,7 @@ def main(raw_args=None):
 
     formshare_ini_file_path = os.path.abspath(args.ini_path)
 
-    settings = get_appsettings(formshare_ini_file_path, "formshare")
+    settings = load_settings_from_ini(formshare_ini_file_path)
 
     config = configparser.ConfigParser()
     config.read(formshare_ini_file_path)
@@ -45,10 +44,10 @@ def main(raw_args=None):
     Base.metadata.create_all(engine)
 
     session_factory = get_session_factory(engine)
+    dbsession = session_factory()
     error = 0
-    with transaction.manager:
-        dbsession = get_tm_session(session_factory, transaction.manager)
-        try:
+    try:
+        with dbsession.begin():
             # Update users password
             users = dbsession.query(User).all()
             for a_user in users:
@@ -106,9 +105,11 @@ def main(raw_args=None):
                 dbsession.query(Partner).filter(
                     Partner.partner_id == a_partner.partner_id
                 ).update({"partner_password": new_password})
-        except Exception as e:
-            logging.error(str(e))
-            error = 1
+    except Exception as e:
+        logging.error(str(e))
+        error = 1
+    finally:
+        dbsession.close()
     engine.dispose()
     if error == 0:
         sequence = str(uuid.uuid4())

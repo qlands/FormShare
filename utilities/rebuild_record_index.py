@@ -11,7 +11,8 @@ from formshare.processes.elasticsearch.record_index import (
     create_record_index,
     add_record,
 )
-from pyramid.paster import get_appsettings, setup_logging
+import logging
+from formshare.app import load_settings_from_ini
 
 
 def main():
@@ -19,8 +20,8 @@ def main():
     parser.add_argument("ini_path", help="Path to ini file")
     args = parser.parse_args()
     config_uri = args.ini_path
-    setup_logging(config_uri)
-    settings = get_appsettings(config_uri, "formshare")
+    logging.basicConfig(level=logging.INFO)
+    settings = load_settings_from_ini(config_uri)
 
     engine = get_engine(settings)
     Base.metadata.create_all(engine)

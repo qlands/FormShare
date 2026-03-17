@@ -1,7 +1,7 @@
-from pyramid.view import notfound_view_config
+from formshare.views.classes import PublicView
 
 
-@notfound_view_config(renderer="../templates/404.jinja2")
-def notfound_view(request):  # pragma: no cover
-    request.response.status = 404
-    return {}
+class NotFoundView(PublicView):  # pragma: no cover
+    def process_view(self):
+        self.request.response.status = 404
+        return {}

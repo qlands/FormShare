@@ -18,7 +18,8 @@ from formshare.processes.elasticsearch.record_index import (
     index_exists,
     create_record_index,
 )
-from pyramid.paster import get_appsettings
+import logging
+from formshare.app import load_settings_from_ini
 from sqlalchemy.orm.session import Session
 from requests.auth import HTTPBasicAuth
 
@@ -60,7 +61,7 @@ def upgrade():
             "The parameter 'formshare.ini.file' must point to the full path of the FormShare ini file"
         )
         exit(1)
-    settings = get_appsettings(config_uri, "formshare")
+    settings = load_settings_from_ini(config_uri)
 
     es_host = settings.get("elasticsearch.records.host", "localhost")
     es_port = settings.get("elasticsearch.records.port", 9200)

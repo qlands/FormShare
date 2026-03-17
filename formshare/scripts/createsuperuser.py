@@ -5,17 +5,18 @@ import secrets
 import time
 import uuid
 
+import logging
+
 import requests
-import transaction
 import validators
 from elasticfeeds.activity import Actor, Object, Activity
+from formshare.app import load_settings_from_ini
 from formshare.config.elasticfeeds import configure_manager
 from formshare.config.encdecdata import encode_data_with_key
 from formshare.models import User
-from formshare.models import get_engine, get_session_factory, get_tm_session
+from formshare.models import get_engine, get_session_factory
 from formshare.models.meta import Base
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
-from pyramid.paster import get_appsettings, setup_logging
 from requests.auth import HTTPBasicAuth
 
 
@@ -48,8 +49,8 @@ def main(raw_args=None):
         print("Invalid email")
         return 1
 
-    setup_logging(config_uri)
-    settings = get_appsettings(config_uri, "formshare")
+    logging.basicConfig(level=logging.INFO)
+    settings = load_settings_from_ini(config_uri)
 
     es_host = settings.get("elasticsearch.repository.host", "localhost")
     es_port = settings.get("elasticsearch.repository.port", 9200)
@@ -78,10 +79,10 @@ def main(raw_args=None):
     Base.metadata.create_all(engine)
 
     session_factory = get_session_factory(engine)
-
-    with transaction.manager:
-        dbsession = get_tm_session(session_factory, transaction.manager)
-        try:
+    dbsession = session_factory()
+    error = 0
+    try:
+        with dbsession.begin():
             if (
                 dbsession.query(User).filter(User.user_id == args.user_id).first()
                 is None
@@ -139,7 +140,6 @@ def main(raw_args=None):
                     )
                     print("ID: {}.".format(args.user_id))
                     print("Email: {}".format(args.user_email))
-                    error = 0
                 else:
                     print(
                         "An user with email '{}' already exists".format(args.user_email)
@@ -148,8 +148,10 @@ def main(raw_args=None):
             else:
                 print("An user with id '{}' already exists".format(args.user_id))
                 error = 1
-        except Exception as e:
-            print(str(e))
-            error = 1
+    except Exception as e:
+        print(str(e))
+        error = 1
+    finally:
+        dbsession.close()
     engine.dispose()
     return error

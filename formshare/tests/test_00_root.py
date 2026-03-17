@@ -118,9 +118,11 @@ class FunctionalTests(unittest.TestCase):
 
         app = main(None, **server_config)
         from webtest import TestApp
+        from a2wsgi import ASGIMiddleware
 
+        # FastAPI is ASGI; wrap with ASGIMiddleware so webtest (WSGI) can drive it
         self.test_object = SimpleNamespace()
-        self.test_object.testapp = TestApp(app)
+        self.test_object.testapp = TestApp(ASGIMiddleware(app))
         self.test_object.root = self
         self.test_object.randonLogin = ""
         self.test_object.randonLoginPartner = ""

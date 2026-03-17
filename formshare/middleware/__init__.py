@@ -131,9 +131,9 @@ class FormShareRequest:
         policies: list,
         helpers,
         locale_name: str,
-        form_data,           # _PostData or empty _PostData
-        json_body_data,      # parsed JSON dict/list or None
-        body_bytes: bytes,   # raw body
+        form_data,  # _PostData or empty _PostData
+        json_body_data,  # parsed JSON dict/list or None
+        body_bytes: bytes,  # raw body
     ):
         self._request = starlette_request
         self._db_session = db_session
@@ -148,6 +148,7 @@ class FormShareRequest:
         self._response_callbacks = []
 
         from formshare.middleware.response import MutableResponse
+
         self._mutable_response = MutableResponse()
 
     # ------------------------------------------------------------------
@@ -180,6 +181,7 @@ class FormShareRequest:
                 body_bytes = await starlette_request.body()
                 if body_bytes:
                     import json
+
                     json_body_data = json.loads(body_bytes)
             elif (
                 "application/x-www-form-urlencoded" in content_type
@@ -195,6 +197,7 @@ class FormShareRequest:
 
         # -- Locale --
         from formshare.middleware.i18n import get_locale_name
+
         locale_name = get_locale_name(starlette_request)
 
         return cls(
@@ -223,6 +226,7 @@ class FormShareRequest:
     def tm(self):
         """Transaction manager shim (replaces pyramid_tm)."""
         from formshare.middleware.tm import TransactionManager
+
         return TransactionManager(self._db_session)
 
     # ==================================================================
@@ -264,6 +268,7 @@ class FormShareRequest:
         full = self.route_url(route_name, *elements, **kw)
         # Strip scheme + host
         from urllib.parse import urlparse
+
         parsed = urlparse(full)
         path = parsed.path
         if parsed.query:
@@ -357,6 +362,7 @@ class FormShareRequest:
     @cached_property
     def session(self):
         from formshare.middleware.session import FormShareSession
+
         return FormShareSession(self._session_data)
 
     # ==================================================================
@@ -366,6 +372,7 @@ class FormShareRequest:
     @cached_property
     def registry(self):
         from formshare.middleware.settings import _Registry
+
         return _Registry(self._settings)
 
     # ==================================================================
@@ -396,6 +403,7 @@ class FormShareRequest:
     def translate(self):
         """Callable:  _ = request.translate;  _("Hello") -> "Hola" """
         from formshare.middleware.i18n import build_translator
+
         return build_translator(self._locale_name)
 
     # ==================================================================
@@ -432,6 +440,7 @@ class FormShareRequest:
     def activeResources(self):
         """Per-request CSS/JS resource tracker."""
         from formshare.config.environment import RequestResources
+
         return RequestResources(self)
 
     # ==================================================================

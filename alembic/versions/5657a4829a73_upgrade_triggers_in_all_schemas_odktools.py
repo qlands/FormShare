@@ -14,7 +14,8 @@ from alembic import context
 from alembic import op
 from formshare.models.formshare import Odkform
 from lxml import etree
-from pyramid.paster import get_appsettings, setup_logging
+import logging
+from formshare.app import load_settings_from_ini
 from sqlalchemy.orm.session import Session
 
 # revision identifiers, used by Alembic.
@@ -35,8 +36,8 @@ def upgrade():
         )
         exit(1)
 
-    setup_logging(config_uri)
-    settings = get_appsettings(config_uri, "formshare")
+    logging.basicConfig(level=logging.INFO)
+    settings = load_settings_from_ini(config_uri)
     # ### end Alembic commands ###
     session = Session(bind=op.get_bind())
     forms = (
@@ -165,8 +166,8 @@ def downgrade():
         )
         exit(1)
 
-    setup_logging(config_uri)
-    settings = get_appsettings(config_uri, "formshare")
+    logging.basicConfig(level=logging.INFO)
+    settings = load_settings_from_ini(config_uri)
     # ### end Alembic commands ###
     session = Session(bind=op.get_bind())
     forms = (

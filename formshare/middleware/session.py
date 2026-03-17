@@ -132,6 +132,7 @@ class FormShareSession:
     def get_csrf_token(self) -> str:
         """Return the session CSRF token, generating one if absent."""
         import secrets
+
         if self._CSRF_KEY not in self._data:
             self._data[self._CSRF_KEY] = secrets.token_urlsafe(32)
         return self._data[self._CSRF_KEY]
@@ -139,6 +140,7 @@ class FormShareSession:
     def new_csrf_token(self) -> str:
         """Force-generate a new CSRF token and store it."""
         import secrets
+
         token = secrets.token_urlsafe(32)
         self._data[self._CSRF_KEY] = token
         return token
@@ -170,6 +172,7 @@ def check_csrf_token(request, token="csrf_token", header="X-CSRF-Token", raises=
     if supplied != expected:
         if raises:
             from formshare.middleware.httpexceptions import HTTPBadRequest
+
             raise HTTPBadRequest("CSRF token mismatch")
         return False
     return True

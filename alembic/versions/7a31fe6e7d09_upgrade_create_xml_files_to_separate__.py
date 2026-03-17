@@ -12,7 +12,8 @@ from pathlib import Path
 
 from alembic import context
 from lxml import etree
-from pyramid.paster import get_appsettings, setup_logging
+import logging
+from formshare.app import load_settings_from_ini
 
 # revision identifiers, used by Alembic.
 revision = "7a31fe6e7d09"
@@ -32,8 +33,8 @@ def upgrade():
         )
         exit(1)
 
-    setup_logging(config_uri)
-    settings = get_appsettings(config_uri, "formshare")
+    logging.basicConfig(level=logging.INFO)
+    settings = load_settings_from_ini(config_uri)
     repository_directory = settings.get("repository.path", "")
     if repository_directory == "":
         print("Cannot find the repository path.")
@@ -125,8 +126,8 @@ def downgrade():
         )
         exit(1)
 
-    setup_logging(config_uri)
-    settings = get_appsettings(config_uri, "formshare")
+    logging.basicConfig(level=logging.INFO)
+    settings = load_settings_from_ini(config_uri)
     repository_directory = settings.get("repository.path", "")
     if repository_directory == "":
         print("Cannot find the respository path.")

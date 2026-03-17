@@ -180,6 +180,7 @@ def build_policies(settings: dict) -> list:
 
     Call this once at application startup and store the result in app state.
     """
+
     def _timeout(key):
         val = settings.get(key)
         if val is None:

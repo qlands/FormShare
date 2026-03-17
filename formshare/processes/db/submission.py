@@ -43,13 +43,12 @@ def add_submission(
         md5sum=md5sum,
         original_md5sum=original_md5sum,
     )
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_submission)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(str(e))
         return False, str(e)
 
@@ -74,12 +73,11 @@ def add_submission_same_as(
         md5sum=md5sum,
         sameas=same_as,
     )
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_submission)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(str(e))
         return False, str(e)

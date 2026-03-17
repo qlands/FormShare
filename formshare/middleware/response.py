@@ -30,9 +30,10 @@ class Response:
         self,
         body=None,
         status=200,
+        headerlist=None,
+        app_iter=None,
         content_type="text/html",
         charset="UTF-8",
-        headerlist=None,
         text=None,
     ):
         self.body = body if body is not None else b""
@@ -42,7 +43,10 @@ class Response:
         self.headers = {}
         if headerlist:
             for name, value in headerlist:
-                self.headers[name] = value
+                if name.lower() == "content-type":
+                    self.content_type = value
+                else:
+                    self.headers[name] = value
         if text is not None:
             self.text = text
 

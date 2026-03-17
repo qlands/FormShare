@@ -143,7 +143,6 @@ def register_user(request, user_data):
         .filter(User.user_email == mapped_data["user_email"])
         .first()
     )
-    save_point = request.dbsession.begin_nested()
     if res is None:
         new_user = User(**mapped_data)
         try:
@@ -158,14 +157,14 @@ def register_user(request, user_data):
                 new_role = UserRoles(**role_data)
                 request.dbsession.add(new_role)
 
-            request.dbsession.flush()
+            request.dbsession.commit()
             return True, ""
         except IntegrityError:
-            save_point.rollback()
+            request.dbsession.rollback()
             log.error("Duplicated user {}".format(mapped_data["user_id"]))
             return False, _("Username is already taken")
         except Exception as e:
-            save_point.rollback()
+            request.dbsession.rollback()
             log.error(
                 "Error {} when inserting user {}".format(str(e), mapped_data["user_id"])
             )
@@ -218,7 +217,6 @@ def get_query_password(request, user_id):
 
 
 def set_query_user(request, user_id, query_user, query_encrypted_password):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(User).filter(User.user_id == user_id).update(
             {
@@ -226,10 +224,10 @@ def set_query_user(request, user_id, query_user, query_encrypted_password):
                 "user_query_password": query_encrypted_password,
             }
         )
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when setting query user details for user {}".format(
                 str(e), user_id
@@ -379,20 +377,18 @@ def get_user_id_with_email(request, email, active_only=True):
 
 def update_my_profile(request, user, profile_data):
     mapped_data = map_to_schema(User, profile_data)
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(mapped_data)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} when updating user {}".format(str(e), user))
         return False, str(e)
 
 
 def update_profile(request, user, profile_data):
     mapped_data = map_to_schema(User, profile_data)
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(mapped_data)
         if "roles" in profile_data.keys():
@@ -407,11 +403,10 @@ def update_profile(request, user, profile_data):
                 }
                 new_role = UserRoles(**role_data)
                 request.dbsession.add(new_role)
-
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} when updating user {}".format(str(e), user))
         return False, str(e)
 
@@ -444,14 +439,13 @@ def update_last_login(request, user):
     #     connection.invalidate()
     #     engine.dispose()
     #     return False, str(e)
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(
             {"user_llogin": datetime.datetime.now()}
         )
-        request.dbsession.flush()
+        request.dbsession.commit()
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} when updating last login for user {}".format(str(e), user))
 
 
@@ -473,21 +467,19 @@ def get_user_by_api_key(request, api_key, api_secret, with_stats=True):
 
 
 def update_password(request, user, password):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(
             {"user_password": password}
         )
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} when changing password for user {}".format(str(e), user))
         return False, str(e)
 
 
 def update_api_key(request, user, api_key, api_secret):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(
             {
@@ -496,10 +488,10 @@ def update_api_key(request, user, api_key, api_secret):
                 "user_apitoken": "invalid_" + secrets.token_hex(16) + "_invalid",
             }
         )
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} when changing password for user {}".format(str(e), user))
         return False, str(e)
 

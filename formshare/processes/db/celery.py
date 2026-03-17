@@ -15,13 +15,12 @@ def cancel_task(request, user, task_id):
             datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
         ),
     )
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_cancelled_task)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         return False, str(e)
 
 

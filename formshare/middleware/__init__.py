@@ -67,9 +67,25 @@ class _PostData:
         return self._data.get(key, default)
 
     def keys(self):
-        return self._data.keys()
+        # Return unique keys only (same as WebOb MultiDict.keys())
+        seen = set()
+        result = []
+        for k in (
+            self._data.multi_items()
+            if hasattr(self._data, "multi_items")
+            else self._data.items()
+        ):
+            if k[0] not in seen:
+                seen.add(k[0])
+                result.append(k[0])
+        return result
 
     def items(self):
+        # Return ALL (key, value) pairs including duplicates — matches WebOb
+        # MultiDict.items() behaviour, which variable_decode depends on to
+        # collect multiple values for the same field (e.g. <select multiple>).
+        if hasattr(self._data, "multi_items"):
+            return self._data.multi_items()
         return self._data.items()
 
     def getall(self, key):
@@ -168,7 +184,9 @@ class FormShareRequest:
         settings = app_state["settings"]
         policies = app_state["policies"]
         helpers = app_state.get("helpers")
-        session_data = app_state.get("session", {})
+        # starlette_request.session is the live dict managed by SessionMiddleware;
+        # mutations to it are automatically persisted at the end of the request.
+        session_data = starlette_request.session
 
         # -- Pre-read body --
         form_data = _PostData({})
@@ -187,9 +205,9 @@ class FormShareRequest:
                 "application/x-www-form-urlencoded" in content_type
                 or "multipart/form-data" in content_type
             ):
-                raw_form = await starlette_request.form()
+                body_bytes = await starlette_request.body()  # cache raw bytes first
+                raw_form = await starlette_request.form()  # reuses _body cache
                 form_data = _PostData(raw_form)
-                body_bytes = await starlette_request.body()
             else:
                 body_bytes = await starlette_request.body()
         except Exception as e:
@@ -313,6 +331,15 @@ class FormShareRequest:
     @property
     def path(self) -> str:
         return str(self._request.url.path)
+
+    @property
+    def referer(self) -> str:
+        """HTTP Referer header (also available as .referrer)."""
+        return self._request.headers.get("referer", "")
+
+    @property
+    def referrer(self) -> str:
+        return self.referer
 
     @property
     def cookies(self) -> dict:

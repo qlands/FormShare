@@ -92,6 +92,7 @@ requires = [
     "python-dateutil",
     "python-docx",
     "python-editor",
+    "python-multipart",
     "python-slugify",
     "pytz",
     "PyUtilib",

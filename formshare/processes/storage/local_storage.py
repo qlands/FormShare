@@ -101,22 +101,31 @@ def get_stream(request, bucket_id, file_name):
 
 
 def response_stream(stream, file_name, response, unique_filename=None):
+    from starlette.responses import StreamingResponse
+
     content_type, content_enc = mimetypes.guess_type(file_name)
     if content_type is None:
         content_type = "application/binary"
-    response.headers["Content-Type"] = content_type
-    response.cache_control.no_cache = True
-    response.cache_control.no_store = True
-    if unique_filename is None:
-        response.content_disposition = 'attachment; filename="' + file_name + '"'
-    else:
-        response.content_disposition = 'attachment; filename="' + unique_filename + '"'
+
+    download_name = unique_filename if unique_filename is not None else file_name
+
     stream.seek(0, 2)
     file_size = stream.tell()
     stream.seek(0)
-    response.app_iter = FileIter(stream, _BLOCK_SIZE)
-    response.content_length = file_size
-    return response
+
+    headers = {
+        "Content-Disposition": 'attachment; filename="{}"'.format(download_name),
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "Content-Length": str(file_size),
+    }
+
+    return StreamingResponse(
+        FileIter(stream, _BLOCK_SIZE),
+        media_type=content_type,
+        headers=headers,
+    )
 
 
 class FileIter(object):
@@ -133,13 +142,11 @@ class FileIter(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         val = self.file.read(self.block_size)
         if not val:
             raise StopIteration
         return val
-
-    __next__ = next  # py3
 
     def close(self):
         self.file.close()

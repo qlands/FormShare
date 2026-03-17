@@ -650,6 +650,7 @@ class PrivateView(object):
         if login_data is not None:
             login_data = literal_eval(login_data)
             if login_data["group"] == "mainApp":
+                login_data = literal_eval(login_data["login"])
                 self.user = get_user_data(login_data["login"], self.request)
                 if self.user is None:
                     raise HTTPFound(location=next_page)
@@ -671,6 +672,7 @@ class PrivateView(object):
             login_data = policy.authenticated_userid(self.request)
             if login_data is not None:
                 login_data = literal_eval(login_data)
+                login_data = literal_eval(login_data["login"])
                 current_login = login_data["login"]
                 if validators.email(current_login):
                     current_login = get_user_id_with_email(
@@ -787,7 +789,7 @@ class PrivateView(object):
             self.request, self.user.login
         )
         self.user_timezone = get_user_timezone(self.request, self.user.login)
-        # update_last_login(self.request, self.user.login)
+        update_last_login(self.request, self.user.login)
         if not continue_processing:
             return plugin_view_result
         self.viewResult = self.process_view()
@@ -1154,15 +1156,23 @@ class AssistantView(object):
                 )
             if login_data is not None:
                 login_data = literal_eval(login_data)
+                login_data = literal_eval(login_data["login"])
                 if login_data["group"] == "collaborators":
                     self.project_assistant = get_project_from_assistant(
-                        self.request, self.userID, self.projectID, login_data["login"]
+                        self.request,
+                        self.userID,
+                        self.projectID,
+                        login_data["login"],
                     )
                     self.assistant = get_assistant_data(
-                        self.project_assistant, login_data["login"], self.request
+                        self.project_assistant,
+                        login_data["login"],
+                        self.request,
                     )
                     self.assistantUUID = get_assistant_uuid(
-                        self.request, self.project_assistant, login_data["login"]
+                        self.request,
+                        self.project_assistant,
+                        login_data["login"],
                     )
                     if self.assistant is None:
                         return HTTPFound(next_page)
@@ -1173,6 +1183,7 @@ class AssistantView(object):
                 login_data = policy.authenticated_userid(self.request)
                 if login_data is not None:
                     login_data = literal_eval(login_data)
+                    login_data = literal_eval(login_data["login"])
                     if login_data["group"] == "mainApp":
                         project_tenant = get_project_tenant(
                             self.request, self.projectID
@@ -1405,6 +1416,7 @@ class PartnerView(object):
         login_data = policy.authenticated_userid(self.request)
         if login_data is not None:
             login_data = literal_eval(login_data)
+            login_data = literal_eval(login_data["login"])
             if login_data["group"] == "partners":
                 self.partner = get_partner_data(self.request, login_data["login"])
                 if self.partner is None:

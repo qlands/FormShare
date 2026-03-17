@@ -79,17 +79,16 @@ def register_partner(request, partner_data):
     partner_data.pop("partner_password2", None)
     mapped_data = map_to_schema(Partner, partner_data)
     new_partner = Partner(**mapped_data)
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_partner)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except IntegrityError:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Duplicated partner {}".format(mapped_data["partner_email"]))
         return False, _("Partner email is already taken")
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when inserting partner {}".format(
                 str(e), mapped_data["partner_email"]
@@ -125,29 +124,27 @@ def partner_email_exists(request, partner_id, email):
 
 def update_partner(request, partner_id, partner_data):
     mapped_data = map_to_schema(Partner, partner_data)
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Partner).filter(
             Partner.partner_id == partner_id
         ).update(mapped_data)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
         log.error("Error {} when updating partner {}".format(str(e), partner_id))
-        save_point.rollback()
+        request.dbsession.rollback()
         return False, str(e)
 
 
 def update_partner_password(request, partner_id, password):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Partner).filter(
             Partner.partner_id == partner_id
         ).update({"partner_password": password})
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when changing password for partner {}".format(str(e), partner_id)
         )
@@ -155,15 +152,14 @@ def update_partner_password(request, partner_id, password):
 
 
 def delete_partner(request, partner_id):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Partner).filter(
             Partner.partner_id == partner_id
         ).delete()
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} when updating partner {}".format(str(e), partner_id))
         return False, str(e)
 
@@ -172,13 +168,12 @@ def add_partner_to_project(request, link_data):
     _ = request.translate
     mapped_data = map_to_schema(PartnerProject, link_data)
     new_link = PartnerProject(**mapped_data)
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_link)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except IntegrityError:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Duplicated partner {} for project {}".format(
                 mapped_data["partner_id"], mapped_data["project_id"]
@@ -186,7 +181,7 @@ def add_partner_to_project(request, link_data):
         )
         return False, _("The partner is already linked to this project")
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when inserting partner {} to project {}".format(
                 str(e), mapped_data["partner_id"], mapped_data["project_id"]
@@ -208,15 +203,14 @@ def get_project_partners(request, project_id):
 
 def update_partner_options(request, project_id, partner_id, partner_data):
     mapped_data = map_to_schema(PartnerProject, partner_data)
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(PartnerProject).filter(
             PartnerProject.project_id == project_id
         ).filter(PartnerProject.partner_id == partner_id).update(mapped_data)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when updating partner {} in project {}".format(
                 str(e), partner_id, project_id
@@ -226,15 +220,14 @@ def update_partner_options(request, project_id, partner_id, partner_data):
 
 
 def remove_partner_from_project(request, project_id, partner_id):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(PartnerProject).filter(
             PartnerProject.project_id == project_id
         ).filter(PartnerProject.partner_id == partner_id).delete()
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when removing the partner partner {} from {}".format(
                 str(e), partner_id, project_id
@@ -259,13 +252,12 @@ def add_partner_to_form(request, link_data):
     _ = request.translate
     mapped_data = map_to_schema(PartnerForm, link_data)
     new_link = PartnerForm(**mapped_data)
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_link)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except IntegrityError:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Duplicated partner {} for form {} in project {}".format(
                 mapped_data["partner_id"],
@@ -275,7 +267,7 @@ def add_partner_to_form(request, link_data):
         )
         return False, _("The partner is already linked to this form")
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when inserting partner {} to form {} in project {}".format(
                 str(e),
@@ -289,7 +281,6 @@ def add_partner_to_form(request, link_data):
 
 def update_partner_form_options(request, project_id, form_id, partner_id, partner_data):
     mapped_data = map_to_schema(PartnerForm, partner_data)
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(PartnerForm).filter(
             PartnerForm.project_id == project_id
@@ -298,10 +289,10 @@ def update_partner_form_options(request, project_id, form_id, partner_id, partne
         ).update(
             mapped_data
         )
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when updating partner {} in form {} of project {}".format(
                 str(e), partner_id, form_id, project_id
@@ -311,17 +302,16 @@ def update_partner_form_options(request, project_id, form_id, partner_id, partne
 
 
 def remove_partner_from_form(request, project_id, form_id, partner_id):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(PartnerForm).filter(
             PartnerForm.project_id == project_id
         ).filter(PartnerForm.form_id == form_id).filter(
             PartnerForm.partner_id == partner_id
         ).delete()
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when removing the partner partner {} from form {} of project {}".format(
                 str(e), partner_id, form_id, project_id

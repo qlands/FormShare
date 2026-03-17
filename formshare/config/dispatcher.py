@@ -128,6 +128,10 @@ def make_endpoint(view_class, renderer, db_session_factory, jinja_env, app_state
             return fs_response.to_starlette()
 
         finally:
+            # Roll back any uncommitted state (e.g. from reads that autobegin'd
+            # a transaction). Each write in process functions commits immediately,
+            # so this is a no-op for successful writes.
+            _rollback(db_session)
             try:
                 db_session.close()
             except Exception:
@@ -178,6 +182,7 @@ def make_error_endpoint(view_class, renderer, db_session_factory, jinja_env, app
             fs_response = _result_to_fs_response(
                 result, renderer, jinja_env, fs_request
             )
+
             from formshare.middleware.response import FileResponse as FSFileResponse
 
             if isinstance(fs_response, FSFileResponse):
@@ -187,6 +192,7 @@ def make_error_endpoint(view_class, renderer, db_session_factory, jinja_env, app
             return fs_response.to_starlette()
 
         finally:
+            _rollback(db_session)
             try:
                 db_session.close()
             except Exception:
@@ -199,6 +205,13 @@ def make_error_endpoint(view_class, renderer, db_session_factory, jinja_env, app
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
+
+def _rollback(db_session):
+    try:
+        db_session.rollback()
+    except Exception:
+        pass
 
 
 def _run_view(view_class, fs_request):

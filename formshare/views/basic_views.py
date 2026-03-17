@@ -227,9 +227,13 @@ class LoginView(PublicView):
                         break  # Only one plugging will be called to extend after_login
                     if continue_login:
                         update_last_login(self.request, user.login)
-                        headers = get_policy("main", self.request).remember(
+                        headers = get_policy(self.request, "main").remember(
                             self.request, str(login_data)
                         )
+                        print("***************999")
+                        print("Login correct, lets go the the dashboard")
+                        print(headers)
+                        print("***************999")
                         next_page = self.request.params.get(
                             "next"
                         ) or self.request.route_url("dashboard", userid=user.login)
@@ -441,7 +445,7 @@ class AssistantLoginView(PublicView):
                             continue_login = False
                         break  # Only one plugging will be called to extend after_collaborator_login
                     if continue_login:
-                        headers = get_policy("assistant", self.request).remember(
+                        headers = get_policy(self.request, "assistant").remember(
                             self.request, str(login_data)
                         )
                         self.returnRawViewResult = True
@@ -515,7 +519,7 @@ class PartnerLoginView(PublicView):
                             continue_login = False
                         break  # Only one plugging will be called to extend after_partner_login
                     if continue_login:
-                        headers = get_policy("partner", self.request).remember(
+                        headers = get_policy(self.request, "partner").remember(
                             self.request, str(login_data)
                         )
                         self.returnRawViewResult = True
@@ -777,7 +781,7 @@ class RegisterView(PublicView):
                                                 "group": "mainApp",
                                             }
                                             headers = get_policy(
-                                                "main", self.request
+                                                self.request, "main"
                                             ).remember(self.request, str(login_data))
                                             self.returnRawViewResult = True
                                             return HTTPFound(

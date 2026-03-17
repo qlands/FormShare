@@ -29,7 +29,6 @@ def add_json_log(
         .filter(Jsonlog.log_id == submission)
         .first()
     )
-    save_point = request.dbsession.begin_nested()
     try:
         if res is None:
             new_json_log = Jsonlog(
@@ -44,7 +43,7 @@ def add_json_log(
                 command_executed=command_executed,
             )
             request.dbsession.add(new_json_log)
-            request.dbsession.flush()
+            request.dbsession.commit()
             return True, ""
         else:
             # This might not happen. Left here just in case
@@ -62,23 +61,22 @@ def add_json_log(
                     "command_executed": command_executed,
                 }
             )
-            request.dbsession.flush()
+            request.dbsession.commit()
             return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.debug(str(e))
         return False, str(e)
 
 
 def update_json_status(request, project, form, submission, status):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
             Jsonlog.form_id == form, Jsonlog.log_id == submission
         ).update({"status": status})
-        request.dbsession.flush()
+        request.dbsession.commit()
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.debug(str(e))
         return False, str(e)
 
@@ -104,12 +102,11 @@ def add_json_history(
         log_commit=sequence,
         log_notes=notes,
     )
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_record)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.debug(str(e))
         return True, str(e)

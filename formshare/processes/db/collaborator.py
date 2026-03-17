@@ -49,7 +49,6 @@ def get_project_collaborators(request, project, current_user, retrieve_max=0):
 
 
 def remove_collaborator_from_project(request, project, collaborator):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Userproject).filter(
             Userproject.project_id == project
@@ -77,9 +76,9 @@ def remove_collaborator_from_project(request, project, collaborator):
                 ).filter(Userproject.project_id == last_project_id).update(
                     {"project_active": 1}
                 )
-        request.dbsession.flush()
+        request.dbsession.commit()
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} while removing collaborator {} from project {}".format(
                 str(e), collaborator, project
@@ -91,15 +90,14 @@ def remove_collaborator_from_project(request, project, collaborator):
 
 
 def set_collaborator_role(request, project, collaborator, role):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Userproject).filter(
             Userproject.project_id == project
         ).filter(Userproject.user_id == collaborator).update({"access_type": role})
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} while changing role to collaborator {} in project {}".format(
                 str(e), collaborator, project
@@ -139,16 +137,15 @@ def add_collaborator_to_project(request, project, collaborator, access_type=4):
         project_accepted=project_accepted,
         project_accepted_date=project_accepted_date,
     )
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_collaborator)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except IntegrityError:
-        save_point.rollback()
+        request.dbsession.rollback()
         return False, _("The collaborator is already part of this project")
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} while adding collaborator {} in project {}".format(
                 str(e), collaborator, project
@@ -161,7 +158,6 @@ def accept_collaboration(request, user, project):  # pragma: no cover
     # This function is not covered because accepting a collaboration
     # requires a SMTP server and cannot be tested during pytest
     _ = request.translate
-    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Userproject).filter(Userproject.user_id == user).update(
         {"project_active": 0}
     )
@@ -175,10 +171,10 @@ def accept_collaboration(request, user, project):  # pragma: no cover
         }
     )
     try:
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} while accepting collaboration for user {} in project {}".format(
                 str(e), user, project
@@ -191,15 +187,14 @@ def decline_collaboration(request, user, project):  # pragma: no cover
     # This function is not covered because accepting a collaboration
     # requires a SMTP server and cannot be tested during pytest
     _ = request.translate
-    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Userproject).filter(Userproject.user_id == user).filter(
         Userproject.project_id == project
     ).filter(Userproject.project_accepted == 0).delete()
     try:
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} while declining collaboration for user {} in project {}".format(
                 str(e), user, project

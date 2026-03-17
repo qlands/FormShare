@@ -368,15 +368,14 @@ def get_assistant_by_api_key(request, api_key):
 
 
 def delete_assistant(request, assistant_uuid):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Collaborator).filter(
             Collaborator.coll_uuid == assistant_uuid
         ).delete()
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} while removing assistant {}".format(str(e), assistant_uuid))
         return False, str(e)
 
@@ -426,22 +425,18 @@ def add_assistant(request, user, project, assistant_data, flush=True, check_exis
     mapped_data["coll_apisecret"] = encode_data(request, secrets.token_hex(16))
     mapped_data["coll_password"] = encode_data(request, mapped_data["coll_password"])
     new_assistant = Collaborator(**mapped_data)
-    if flush:
-        save_point = request.dbsession.begin_nested()
-    else:
-        save_point = None
     try:
         request.dbsession.add(new_assistant)
         if flush:
-            request.dbsession.flush()
+            request.dbsession.commit()
         return True, ""
     except IntegrityError:
         if flush:
-            save_point.rollback()
+            request.dbsession.rollback()
         return False, _("The assistant is already part of this project")
     except Exception as e:
         if flush:
-            save_point.rollback()
+            request.dbsession.rollback()
         log.error(
             "Error {} while adding assistant {} in project {}".format(
                 str(e), assistant_data["coll_name"], project
@@ -460,30 +455,28 @@ def modify_assistant(request, assistant_uuid, assistant_data):
         )
     _ = request.translate
     mapped_data = map_to_schema(Collaborator, assistant_data)
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Collaborator).filter(
             Collaborator.coll_uuid == assistant_uuid
         ).update(mapped_data)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} while adding assistant {}.".format(str(e), assistant_uuid))
         return False, str(e)
 
 
 def change_assistant_password(request, assistant_uuid, password):
     encrypted_password = encode_data(request, password)
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Collaborator).filter(
             Collaborator.coll_uuid == assistant_uuid
         ).update({"coll_password": encrypted_password})
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} while changing password for assistant {}".format(
                 str(e),

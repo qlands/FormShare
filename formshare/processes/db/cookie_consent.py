@@ -30,7 +30,6 @@ def save_consent(request, ip, functional, analytical, marketing, action):
         .filter(CookieConsent.consent_ip == ip)
         .first()
     )
-    save_point = request.dbsession.begin_nested()
     try:
         if existing is None:
             new_consent = CookieConsent(
@@ -62,11 +61,11 @@ def save_consent(request, ip, functional, analytical, marketing, action):
             log_marketing=marketing,
         )
         request.dbsession.add(log_entry)
-        request.dbsession.flush()
+        request.dbsession.commit()
     except Exception as e:
         log.error(
             "Unable to store cookie information for IP {}. Error:\n{}".format(
                 ip, str(e)
             )
         )
-        save_point.rollback()
+        request.dbsession.rollback()

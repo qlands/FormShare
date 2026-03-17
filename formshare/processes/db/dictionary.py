@@ -335,7 +335,6 @@ def update_dictionary_field_sensitive(
     :param protection: New type of protection
     :return: True or False
     """
-    save_point = request.dbsession.begin_nested()
     try:
         update_dict = {"field_sensitive": sensitive}
         if sensitive == 1:
@@ -351,7 +350,7 @@ def update_dictionary_field_sensitive(
         ).update(
             update_dict
         )
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True
     except Exception as e:
         log.error(
@@ -360,7 +359,7 @@ def update_dictionary_field_sensitive(
                 str(e), field, table, form, project
             )
         )
-        save_point.rollback()
+        request.dbsession.rollback()
         return False
 
 
@@ -375,7 +374,6 @@ def update_dictionary_field_desc(request, project, form, table, field, new_metad
     :param new_metadata: New metadata
     :return: True or False
     """
-    save_point = request.dbsession.begin_nested()
     try:
         mapped_data = map_to_schema(DictField, new_metadata)
         request.dbsession.query(DictField).filter(
@@ -387,7 +385,7 @@ def update_dictionary_field_desc(request, project, form, table, field, new_metad
         ).update(
             mapped_data
         )
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True
     except Exception as e:
         log.error(
@@ -396,7 +394,7 @@ def update_dictionary_field_desc(request, project, form, table, field, new_metad
                 str(e), field, table, form, project
             )
         )
-        save_point.rollback()
+        request.dbsession.rollback()
         return False
 
 
@@ -410,7 +408,6 @@ def update_dictionary_table_desc(request, project, form, table, description):
     :param description: New description
     :return: True or False
     """
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(DictTable).filter(
             DictTable.project_id == project
@@ -419,14 +416,14 @@ def update_dictionary_table_desc(request, project, form, table, description):
         ).update(
             {"table_desc": description}
         )
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True
     except Exception as e:
         log.error(
             "Error {} while updating description "
             "for table {} in form {} of project {}".format(str(e), table, form, project)
         )
-        save_point.rollback()
+        request.dbsession.rollback()
         return False
 
 
@@ -633,7 +630,6 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                         new_table_dict["parent_form"] = form
                         new_table_dict["parent_table"] = parent.get("name")
                     new_table = DictTable(**new_table_dict)
-                    save_point = request.dbsession.begin_nested()
                     try:
                         request.dbsession.add(new_table)
                         error_in_fields = False
@@ -653,7 +649,7 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                                     try:
                                         request.dbsession.add(new_field)
                                     except IntegrityError:
-                                        save_point.rollback()
+                                        request.dbsession.rollback()
                                         log.error(
                                             "Duplicated field {} in table {} in project {} form {}".format(
                                                 field.get("name"),
@@ -664,7 +660,7 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                                         )
                                         error_in_fields = True
                                     except Exception as e:
-                                        save_point.rollback()
+                                        request.dbsession.rollback()
                                         log.error(
                                             "Error adding field {} in table {} in project {} form {}. Error: {}".format(
                                                 field.get("name"),
@@ -676,11 +672,11 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                                         )
                                         error_in_fields = True
                         if not error_in_fields:
-                            request.dbsession.flush()
+                            request.dbsession.commit()
                         else:
                             return False
                     except IntegrityError:
-                        save_point.rollback()
+                        request.dbsession.rollback()
                         log.error(
                             "Duplicated table {} in project {} form {}".format(
                                 table.get("name"), project, form
@@ -688,7 +684,7 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                         )
                         return False
                     except Exception as e:
-                        save_point.rollback()
+                        request.dbsession.rollback()
                         log.error(
                             "Error adding table {} in project {} form {}. Error: {}".format(
                                 table.get("name"), project, form, str(e)
@@ -697,7 +693,6 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                         return False
                 else:
                     error_in_fields = False
-                    save_point = request.dbsession.begin_nested()
                     for field in table.getchildren():
                         if field.tag == "field":
                             res = (
@@ -714,7 +709,7 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                                 try:
                                     request.dbsession.add(new_field)
                                 except IntegrityError:
-                                    save_point.rollback()
+                                    request.dbsession.rollback()
                                     log.error(
                                         "Duplicated field {} in table {} in project {} form {}".format(
                                             field.get("name"),
@@ -725,7 +720,7 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                                     )
                                     error_in_fields = True
                                 except Exception as e:
-                                    save_point.rollback()
+                                    request.dbsession.rollback()
                                     log.error(
                                         "Error adding field {} in table {} in project {} form {}. Error: {}".format(
                                             field.get("name"),
@@ -738,9 +733,9 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                                     error_in_fields = True
                     if not error_in_fields:
                         try:
-                            request.dbsession.flush()
+                            request.dbsession.commit()
                         except Exception as e:
-                            save_point.rollback()
+                            request.dbsession.rollback()
                             log.error(
                                 "Eroror {} inserting fileds in table {} in project {} form {}".format(
                                     str(e),

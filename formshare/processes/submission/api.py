@@ -1500,16 +1500,15 @@ def delete_submission(
         return False, message
 
     # Remove the submission from the repository
-    save_point = request.dbsession.begin_nested()
 
     sql = "SET @odktools_current_user = '" + user + "'"
     request.dbsession.execute(sql)
     try:
         sql = "DELETE FROM " + schema + ".maintable WHERE rowuuid = '" + row_uuid + "'"
         request.dbsession.execute(sql)
-        request.dbsession.flush()
+        request.dbsession.commit()
     except IntegrityError:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Cannot delete submission {}".format(row_uuid))
         if move_to_logs:
             return False, _(

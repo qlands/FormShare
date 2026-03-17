@@ -1207,19 +1207,18 @@ def get_active_project(request, user):
         if res is not None:
             mapped_data = map_from_schema(res)
             if mapped_data["access_type"] == 1:
-                save_point = request.dbsession.begin_nested()
                 try:
                     request.dbsession.query(Userproject).filter(
                         Userproject.project_id == mapped_data["project_id"]
                     ).filter(Userproject.user_id == user).update({"project_active": 1})
-                    request.dbsession.flush()
+                    request.dbsession.commit()
                 except Exception as e:
                     log.error(
                         "Unable to activate project {} for user {}. Error: {}".format(
                             mapped_data["project_id"], user, str(e)
                         )
                     )
-                    save_point.rollback()
+                    request.dbsession.rollback()
 
                 mapped_data["owner"] = user
                 return mapped_data
@@ -1231,14 +1230,13 @@ def get_active_project(request, user):
                     .first()
                 )
                 if res is not None:
-                    save_point = request.dbsession.begin_nested()
                     try:
                         request.dbsession.query(Userproject).filter(
                             Userproject.project_id == mapped_data["project_id"]
                         ).filter(Userproject.user_id == user).update(
                             {"project_active": 1}
                         )
-                        request.dbsession.flush()
+                        request.dbsession.commit()
                     except Exception as e:
                         log.error(
                             "Unable to activate project {} for user {}. Error: {}".format(
@@ -1270,7 +1268,6 @@ def add_project(request, user, project_data):
 
         mapped_data = map_to_schema(Project, project_data)
         new_project = Project(**mapped_data)
-        save_point = request.dbsession.begin_nested()
         try:
             request.dbsession.add(new_project)
 
@@ -1288,14 +1285,14 @@ def add_project(request, user, project_data):
                 project_accepted_date=project_data["project_cdate"],
             )
             request.dbsession.add(new_access)
-            request.dbsession.flush()
+            request.dbsession.commit()
             return True, project_data["project_id"]
         except IntegrityError:
-            save_point.rollback()
+            request.dbsession.rollback()
             log.error("Duplicated project {}".format(mapped_data["project_id"]))
             return False, _("The project already exist or the access to it exist")
         except Exception as e:
-            save_point.rollback()
+            request.dbsession.rollback()
             log.error(
                 "Error {} while inserting project {}".format(
                     str(e), mapped_data["project_id"]
@@ -1315,14 +1312,13 @@ def modify_project(request, project, project_data):
     if project_data.get("project_code", None) is not None:
         project_data.pop("project_code")
     mapped_data = map_to_schema(Project, project_data)
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Project).filter(Project.project_id == project).update(
             mapped_data
         )
-        request.dbsession.flush()
+        request.dbsession.commit()
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} while updating project {}".format(str(e), project))
         return False, str(e)
     return True, ""
@@ -1330,7 +1326,6 @@ def modify_project(request, project, project_data):
 
 def delete_project(request, user, project):
     _ = request.translate
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Project).filter(Project.project_id == project).delete()
         res = (
@@ -1353,23 +1348,22 @@ def delete_project(request, user, project):
                 ).filter(Userproject.project_id == new_active_project).update(
                     {"project_active": 1}
                 )
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except IntegrityError as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} while deleting project {}".format(str(e), project))
         return (
             False,
             _("If this project has forms, first you need to delete such forms"),
         )
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} while deleting project {}".format(str(e), project))
         return False, str(e)
 
 
 def set_project_as_active(request, user, project):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Userproject).filter(Userproject.user_id == user).update(
             {"project_active": 0}
@@ -1377,9 +1371,9 @@ def set_project_as_active(request, user, project):
         request.dbsession.query(Userproject).filter(Userproject.user_id == user).filter(
             Userproject.project_id == project
         ).update({"project_active": 1})
-        request.dbsession.flush()
+        request.dbsession.commit()
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} while setting project {} as active".format(str(e), project))
         return False, str(e)
     return True, ""
@@ -1401,12 +1395,11 @@ def add_file_to_project(request, project, file_name, overwrite=False):
             file_name=file_name,
             file_udate=datetime.datetime.now(),
         )
-        save_point = request.dbsession.begin_nested()
         try:
             request.dbsession.add(new_file)
-            request.dbsession.flush()
+            request.dbsession.commit()
         except Exception as e:
-            save_point.rollback()
+            request.dbsession.rollback()
             log.error(
                 "Error {} while adding file {} in project {}".format(
                     str(e), file_name, project
@@ -1431,15 +1424,14 @@ def get_project_files(request, project):
 
 
 def remove_file_from_project(request, project, file_name):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(ProjectFile).filter(
             ProjectFile.project_id == project
         ).filter(ProjectFile.file_name == file_name).delete()
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} while removing file {} in project {}".format(
                 str(e), file_name, project

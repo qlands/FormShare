@@ -541,19 +541,18 @@ def get_assistant_permissions_on_a_form(
 
 # This update the stage information so he can come back
 def update_form_repository_info(request, project, form, data):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Form).filter(Form.project_id == project).filter(
             Form.form_id == form
         ).update(data)
-        request.dbsession.flush()
+        request.dbsession.commit()
     except Exception as e:
         log.error(
             "Unable to update repository info for form {} in project {}. Error: {}".format(
                 form, project, str(e)
             )
         )
-        save_point.rollback()
+        request.dbsession.rollback()
 
 
 def get_form_data(project, form, request):
@@ -602,7 +601,6 @@ def get_form_data(project, form, request):
 
 
 def checkout_submission(request, project, form, submission, assistant_uuid):
-    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 2})
@@ -619,16 +617,15 @@ def checkout_submission(request, project, form, submission, assistant_uuid):
     )
     try:
         request.dbsession.add(new_record)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} when checking out submission {}".format(str(e), submission))
         raise e
 
 
 def cancel_checkout(request, project, form, submission, assistant_uuid):
-    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -645,10 +642,10 @@ def cancel_checkout(request, project, form, submission, assistant_uuid):
     )
     try:
         request.dbsession.add(new_record)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when canceling checkout for submission {}".format(
                 str(e), submission
@@ -658,7 +655,6 @@ def cancel_checkout(request, project, form, submission, assistant_uuid):
 
 
 def cancel_revision(request, project, form, submission, assistant_uuid, revision):
-    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -676,10 +672,10 @@ def cancel_revision(request, project, form, submission, assistant_uuid, revision
     )
     try:
         request.dbsession.add(new_record)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when canceling revision for submission {}".format(
                 str(e), submission
@@ -689,7 +685,6 @@ def cancel_revision(request, project, form, submission, assistant_uuid, revision
 
 
 def fix_revision(request, project, form, submission, assistant_uuid, revision):
-    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 0})
@@ -707,10 +702,10 @@ def fix_revision(request, project, form, submission, assistant_uuid, revision):
     )
     try:
         request.dbsession.add(new_record)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when fixing revision for submission {}".format(str(e), submission)
         )
@@ -718,7 +713,6 @@ def fix_revision(request, project, form, submission, assistant_uuid, revision):
 
 
 def fix_submission(request, project, form, submission, assistant_uuid):
-    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 0})
@@ -735,16 +729,15 @@ def fix_submission(request, project, form, submission, assistant_uuid):
     )
     try:
         request.dbsession.add(new_record)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error("Error {} when fixing submission {}".format(str(e), submission))
         raise e
 
 
 def fail_revision(request, project, form, submission, assistant_uuid, revision):
-    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -762,10 +755,10 @@ def fail_revision(request, project, form, submission, assistant_uuid, revision):
     )
     try:
         request.dbsession.add(new_record)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when failing revision for submission {}".format(
                 str(e), submission
@@ -775,7 +768,6 @@ def fail_revision(request, project, form, submission, assistant_uuid, revision):
 
 
 def disregard_revision(request, project, form, submission, assistant_uuid, notes):
-    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 4})
@@ -793,10 +785,10 @@ def disregard_revision(request, project, form, submission, assistant_uuid, notes
     )
     try:
         request.dbsession.add(new_record)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when disregarding for submission {}".format(str(e), submission)
         )
@@ -806,7 +798,6 @@ def disregard_revision(request, project, form, submission, assistant_uuid, notes
 def cancel_disregard_revision(
     request, project, form, submission, assistant_uuid, notes
 ):
-    save_point = request.dbsession.begin_nested()
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -824,10 +815,10 @@ def cancel_disregard_revision(
     )
     try:
         request.dbsession.add(new_record)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} when cancelling a disregard for submission {}".format(
                 str(e), submission

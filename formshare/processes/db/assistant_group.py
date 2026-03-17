@@ -73,15 +73,14 @@ def get_group_data(request, project, group):
 
 
 def delete_group(request, project, group):
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Collgroup).filter(
             Collgroup.project_id == project
         ).filter(Collgroup.group_id == group).delete()
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} while removing group {} from project {}".format(
                 str(e), group, project
@@ -111,13 +110,12 @@ def add_group(request, project, group_data):
     if res is None:
         mapped_data["group_desc"] = group_desc
         new_group = Collgroup(**mapped_data)
-        save_point = request.dbsession.begin_nested()
         try:
             request.dbsession.add(new_group)
-            request.dbsession.flush()
+            request.dbsession.commit()
             return True, ""
         except IntegrityError:
-            save_point.rollback()
+            request.dbsession.rollback()
             log.error(
                 "The group code {} already exists in project {}".format(
                     group_id, project
@@ -125,7 +123,7 @@ def add_group(request, project, group_data):
             )
             return False, _("The group is already part of this project")
         except Exception as e:
-            save_point.rollback()
+            request.dbsession.rollback()
             log.error(
                 "Error {} while adding group {} in project {}".format(
                     str(e), group_data["group_desc"], project
@@ -149,16 +147,15 @@ def modify_group(request, project, group, group_data):
         .first()
     )
     if res is None:
-        save_point = request.dbsession.begin_nested()
         try:
             mapped_data["group_desc"] = group_desc
             request.dbsession.query(Collgroup).filter(
                 Collgroup.project_id == project
             ).filter(Collgroup.group_id == group).update(mapped_data)
-            request.dbsession.flush()
+            request.dbsession.commit()
             return True, ""
         except Exception as e:
-            save_point.rollback()
+            request.dbsession.rollback()
             log.error(
                 "Error {} while editing collaborator {} in project {}".format(
                     str(e), group_data["group_desc"], project
@@ -181,13 +178,12 @@ def add_assistant_to_group(
         coll_uuid=assistant_uuid,
         join_date=datetime.datetime.now(),
     )
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.add(new_member)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except IntegrityError:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "The group member {} already exists in group {} of project {}".format(
                 assistant, group, project
@@ -195,7 +191,7 @@ def add_assistant_to_group(
         )
         return False, _("The member is already part of this group")
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} while adding member {} in group {} of project {}".format(
                 str(e), assistant, group, project
@@ -206,17 +202,16 @@ def add_assistant_to_group(
 
 def remove_assistant_from_group(request, project, group, assistant_uuid):
     _ = request.translate
-    save_point = request.dbsession.begin_nested()
     try:
         request.dbsession.query(Collingroup).filter(
             Collingroup.project_id == project
         ).filter(Collingroup.group_id == group).filter(
             Collingroup.coll_uuid == assistant_uuid
         ).delete()
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except IntegrityError:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Cannot remove member {} from group {} of project {}".format(
                 assistant_uuid, group, project
@@ -224,7 +219,7 @@ def remove_assistant_from_group(request, project, group, assistant_uuid):
         )
         return False, _("Cannot remove the member")
     except Exception as e:
-        save_point.rollback()
+        request.dbsession.rollback()
         log.error(
             "Error {} while removing member {} in group {} of project {}".format(
                 str(e), assistant, group, project

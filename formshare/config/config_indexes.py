@@ -25,7 +25,7 @@ def configure_indexes(settings):
     es_scheme = settings.get("elasticsearch.user.scheme", "http")
 
     ready = False
-    print("Waiting for ES to be ready")
+    log.error("Waiting for ES to be ready")
     while not ready:
         resp = requests.get(
             "{}://{}:{}/_cluster/health".format(es_scheme, es_host, es_port),
@@ -36,7 +36,7 @@ def configure_indexes(settings):
             ready = True
         else:
             time.sleep(30)
-    print("ES is ready")
+    log.error("ES is ready")
 
     resp = requests.get(
         "{}://{}:{}/".format(es_scheme, es_host, es_port),

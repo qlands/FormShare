@@ -64,7 +64,6 @@ def add_submission(
                 )
             )
     except Exception as e:
-        print("!!!!!!!!!!!AAAAA!!!!!!!!!!!!!!")
         raise e
         # return False, str(e)
     return True, ""
@@ -113,7 +112,6 @@ def add_json_log(
                 )
             )
     except Exception as e:
-        print("!!!!!!OOOHHHNOOO!!!!!!!")
         raise e
         # return False, str(e)
     return True, ""

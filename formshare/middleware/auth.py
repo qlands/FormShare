@@ -35,7 +35,9 @@ The payload is a JSON object:  {"login": "<userid>", "group": "<group>"}
 import json
 import logging
 from typing import Optional
+from formshare.processes.logging.loggerclass import SecretLogger
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 try:

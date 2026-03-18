@@ -23,7 +23,6 @@ from formshare.processes.db.user import update_password
 from formshare.processes.elasticsearch.user_index import get_user_index_manager
 from formshare.views.classes import PrivateView
 from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound
-import base64
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")

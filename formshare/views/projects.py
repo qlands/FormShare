@@ -39,11 +39,9 @@ from formshare.processes.db import (
     get_extended_project_details,
     get_user_projects,
     get_forms_number,
-    get_all_project_forms,
 )
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
-    delete_dataset_index_by_project,
     get_number_of_datasets_with_gps_in_project,
 )
 from formshare.processes.storage import (

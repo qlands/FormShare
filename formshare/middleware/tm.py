@@ -26,7 +26,9 @@ All of that continues to work through this shim.
 """
 
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

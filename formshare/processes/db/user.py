@@ -14,10 +14,8 @@ from formshare.models import (
     TimeZone,
     Tenant,
 )
-from sqlalchemy import create_engine
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.pool import NullPool
 
 __all__ = [
     "register_user",

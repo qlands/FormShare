@@ -31,10 +31,12 @@ Usage in views (unchanged from Pyramid):
 """
 
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 from functools import cached_property
 from urllib.parse import urlencode
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

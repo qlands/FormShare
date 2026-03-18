@@ -38,7 +38,6 @@ from formshare.middleware.response import Response
 from formshare.middleware.auth import get_policy
 from formshare.middleware.session import check_csrf_token
 from formshare.processes.db.utility import get_db_connection
-import base64
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -234,10 +233,6 @@ class LoginView(PublicView):
                         headers = get_policy(self.request, "main").remember(
                             self.request, str(login_data)
                         )
-                        print("***************999")
-                        print("Login correct, lets go the the dashboard")
-                        print(headers)
-                        print("***************999")
                         next_page = self.request.params.get(
                             "next"
                         ) or self.request.route_url("dashboard", userid=user.login)
@@ -676,7 +671,7 @@ class RegisterView(PublicView):
                         == "True"
                     ):
                         data["user_id"] = new_user_id()
-                        print("User ID is: {}".format(data["user_id"]))
+                        # print("User ID is: {}".format(data["user_id"]))
 
                     if re.match(r"^[A-Za-z0-9._]+$", data["user_id"]):
                         if data["user_password"] == data["user_password2"]:

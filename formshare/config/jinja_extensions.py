@@ -1,7 +1,6 @@
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 import os
-import re
 
 import formshare.resources as r
 from jinja2 import Environment

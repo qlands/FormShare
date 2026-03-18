@@ -23,9 +23,10 @@ import logging
 import os
 import sys
 from typing import Callable
-
+from formshare.processes.logging.loggerclass import SecretLogger
 from babel.support import Translations
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 # Module-level cache: (locale_name) -> merged Translations object.

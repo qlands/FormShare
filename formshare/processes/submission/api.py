@@ -363,7 +363,7 @@ def flatten_json_2(request, temp_directory, input_file):
     if p.returncode == 0:
         return output_file
     else:
-        print(stderr)
+        log.error(stderr)
     return None
 
 
@@ -1388,10 +1388,10 @@ def update_multiselect_data(
     try:
         session = Session(bind=engine)
         session.execute("SET @odktools_current_user = '" + user + "'")
-        print(parent_sql)
-        print(delete_sql)
-        for an_insert in insert_array:
-            print(an_insert)
+        # print(parent_sql)
+        # print(delete_sql)
+        # for an_insert in insert_array:
+        #    print(an_insert)
         session.execute(parent_sql)
         session.execute(delete_sql)
         for an_insert in insert_array:

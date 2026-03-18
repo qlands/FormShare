@@ -26,7 +26,7 @@ import asyncio
 import functools
 import logging
 from concurrent.futures import ThreadPoolExecutor
-
+from formshare.processes.logging.loggerclass import SecretLogger
 from starlette.requests import Request
 from starlette.responses import (
     HTMLResponse,
@@ -35,6 +35,7 @@ from starlette.responses import (
     Response as StarletteResponse,
 )
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 # Shared thread pool for all sync views.

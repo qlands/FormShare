@@ -168,7 +168,7 @@ def update_lookup_from_csv(
                 file_name, str(e)
             )
         )
-        print(traceback.format_exc())
+        log.error(traceback.format_exc())
         return False, str(e)
 
 

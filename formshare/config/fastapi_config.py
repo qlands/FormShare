@@ -24,7 +24,9 @@ config.registry         _RegistryAdapter wrapping settings
 
 import importlib
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

@@ -39,6 +39,9 @@ from formshare.views.classes import PartnerView
 from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound
 from formshare.middleware.response import FileResponse
 
+logging.setLoggerClass(SecretLogger)
+log = logging.getLogger("formshare")
+
 
 class PartnerForms(PartnerView):
     def process_view(self):
@@ -96,15 +99,9 @@ class ChangeMyPartnerPassword(PartnerView):
                                         self.partnerID,
                                         partner_data["partner_password"],
                                     )
-                                print(
-                                    "--------------Passsword has been updated----------- Login out"
-                                )
                                 next_page = self.request.route_url("partner_logout")
                                 return HTTPFound(next_page)
                             else:
-                                print(
-                                    "*****************Cannot change the password*****************"
-                                )
                                 self.add_error(
                                     self._("Unable to change the password: ") + message
                                 )
@@ -112,13 +109,9 @@ class ChangeMyPartnerPassword(PartnerView):
                                     next_page, headers={"FS_error": "true"}
                                 )
                         else:
-                            print(
-                                "******************Plugin returned continue_change = False"
-                            )
                             self.add_error(error_message)
                             return HTTPFound(next_page, headers={"FS_error": "true"})
                     else:
-                        print("******************Old password in incorrect")
                         self.add_error(self._("The old password is not correct"))
                         return HTTPFound(next_page, headers={"FS_error": "true"})
                 else:
@@ -231,7 +224,7 @@ class PartnerFormDetails(PartnerView):
         try:
             feed_manager.add_activity_feed(activity)
         except Exception as e:
-            logging.error(
+            log.error(
                 "Error: {} while registering "
                 "activity for partner {} to form {}".format(
                     str(e), self.partner.email, project_id + "|" + form_id
@@ -546,7 +539,7 @@ class PartnerDownloadPrivateProduct(PartnerView):
                 try:
                     feed_manager.add_activity_feed(activity)
                 except Exception as e:
-                    logging.error(
+                    log.error(
                         "Error: {} while registering "
                         "activity for partner {} to form {}".format(
                             str(e), self.partner.email, project_id + "|" + form_id

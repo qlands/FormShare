@@ -2,7 +2,7 @@
 [![Codecov](https://codecov.io/github/qlands/FormShare/branch/master-2.0/graph/badge.svg)](https://app.codecov.io/gh/qlands/FormShare/commits?page=1)
 [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 
-FormShare 2
+FormShare<sup>®</sup>
 =========
 
 The future of FormHub
@@ -11,17 +11,13 @@ Centralize data – Decentralize knowledge<sup>TM</sup>
 
 About
 -----
-FormShare 2 is an advanced data management platform for [Open Data Kit (ODK)](https://getodk.org/). FormShare 2 is inspired by the excellent [FormHub](<http://github.com/SEL-Columbia/formhub>) platform developed by the Sustainable Engineering Lab at Columbia University. After I forked [OnaData](https://github.com/onaio/onadata) (a fork of FormHub) back in 2016 it was clear that the code needed a lot to bring it to the main ideas that I had: 1) Integrate it with [ODK Tools](https://github.com/qlands/odktools), 2) provide a proper MySQL repository to centralize the data and, 3) use latest software technologies to decentralize the management.
+FormShare is an advanced data management platform for [Open Data Kit (ODK)](https://getodk.org/). FormShare is inspired by the excellent [FormHub](<http://github.com/SEL-Columbia/formhub>) platform developed by the Sustainable Engineering Lab at Columbia University. After I forked [OnaData](https://github.com/onaio/onadata) (a fork of FormHub) back in 2016 it was clear that the code needed a lot to bring it to a complete data management platform.
 
-FormShare was created because:
+FormShare been written from scratch (migrating structures, ideas, principles, and logic) using Python 3, [FastAPI](https://github.com/fastapi/fastapi), MySQL, [Elasticsearch](https://www.elastic.co/Elasticsearch/), and [PyUtilib](https://github.com/qlands/pyutilib) to deliver a complete and extensible data management solution for ODK Data collection.
 
-* I want to provide an open-source and **free** platform to private and public organizations to help them manage their data when using ODK.
-* ODK Aggregate, in my personal opinion, is badly designed, buggy, and not interoperable. ODK Central, though is an enormous improvement to Aggregate, does not parse arbitrary schemata into database tables which makes data cleaning very cumbersome (e. g., cleaning data through Enketo).
-* Forks based on FormHub suffer from the same ills of their father: Django (poor asynchronous controllers, limited ORM extensibility, limited scalability on cloud infrastructure), no proper repository, rudimentary data cleaning, no auditing, little interoperability, poor or none extensibility... among many others.
+FormShare community server is available at [https://formshare.org](https://formshare.org) for students and very small organizations. FormShare SaaS is available at https://www.qlands.com/plans
 
-FormShare 2 has been written from scratch (migrating structures, ideas, principles, and logic) using Python 3, [Pyramid](https://trypyramid.com/), MySQL, [Elasticsearch](https://www.elastic.co/Elasticsearch/), and [PyUtilib](https://github.com/PyUtilib/pyutilib) to deliver a complete and extensible data management solution for ODK Data collection.
-
-FormShare **is for organizations** to install it in their server or cloud service to serve ODK XForms and collect and manage the submissions. FormShare is also available as a service at [https://formshare.org](https://formshare.org) for those organizations that lack the capacity or resources to run their installation.
+For more information visit at [www.qlands.com](https://www.qlands.com/)
 
 ## Features
 
@@ -111,8 +107,6 @@ The current stable release is 2.50.0 and it is available [here](https://github.c
 The database signature for stable 2.50.0 is b3711f9c82a0
 
 The Docker image for stable 2.50.0 is 20260218
-
-Requires ODKTools [2.18](https://github.com/qlands/odktools/tree/stable-2.18)
 
 **Never upgrade FormShare from one Docker image to another without checking the "Upgrading information" section below.**
 
@@ -505,6 +499,6 @@ The translation files (.po) are available at formshare/locale/[language-code]/LC
 
 ## License
 
-FormShare is released under the terms of the GNU Affero General Public License. 
+FormShare is released under the terms of [QLands Open Source License.](./LICENSE.txt) 
 
 The plug-in mechanism since it is based on PyUtilib is covered by a [BSD type of license](https://github.com/PyUtilib/pyutilib/blob/master/LICENSE.txt).

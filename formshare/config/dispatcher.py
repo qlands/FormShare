@@ -120,7 +120,9 @@ def make_endpoint(view_class, renderer, db_session_factory, jinja_env, app_state
                 from formshare.middleware.response import FileResponse as FSFileResponse
 
                 if isinstance(fs_response, FSFileResponse):
-                    return fs_response.to_starlette()
+                    sr = fs_response.to_starlette()
+                    fs_request.response.apply_cookies(sr)
+                    return sr
 
                 # Starlette passthrough case – flush any accumulated headers into it
                 if hasattr(fs_response, "_starlette_passthrough"):
@@ -129,7 +131,9 @@ def make_endpoint(view_class, renderer, db_session_factory, jinja_env, app_state
                         sr.headers[name] = value
                     return sr
 
-                return fs_response.to_starlette()
+                sr = fs_response.to_starlette()
+                fs_request.response.apply_cookies(sr)
+                return sr
             except Exception:
                 log.exception(
                     "Exception in response pipeline for view %s",

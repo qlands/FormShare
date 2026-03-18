@@ -186,6 +186,7 @@ class MutableResponse:
         self.body = b""
         self.content_type = "text/html"
         self.charset = "UTF-8"
+        self._cookies: list = []  # list of (name, kwargs) tuples
 
     @property
     def status(self):
@@ -206,12 +207,27 @@ class MutableResponse:
     def status_code(self, value):
         self._status_code = int(value)
 
+    def set_cookie(self, name: str, value: str = "", **kwargs):
+        """Queue a Set-Cookie header to be applied to the final response.
+
+        Accepted kwargs match Starlette's Response.set_cookie signature:
+        max_age, expires, path, domain, secure, httponly, samesite.
+        """
+        self._cookies.append((name, value, kwargs))
+
+    def apply_cookies(self, starlette_response):
+        """Apply any queued Set-Cookie headers to *starlette_response*."""
+        for cookie_name, cookie_value, cookie_kwargs in self._cookies:
+            starlette_response.set_cookie(cookie_name, cookie_value, **cookie_kwargs)
+        return starlette_response
+
     def apply_to_starlette(self, starlette_response):
-        """Merge any mutations from this object into *starlette_response*."""
+        """Merge headers, status, and cookies into *starlette_response*."""
         for name, value in self.headers.items():
             starlette_response.headers[name] = value
         if self._status_code != 200:
             starlette_response.status_code = self._status_code
+        self.apply_cookies(starlette_response)
         return starlette_response
 
 

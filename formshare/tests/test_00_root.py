@@ -79,6 +79,9 @@ from .steps.utility_functions import t_e_s_t_utility_functions
 from .steps.geoJSON import t_e_s_t_geo_json
 from .steps.data_columns import t_e_s_t_data_columns
 from .steps.select_from_csv import t_e_s_t_select_from_csv
+from .steps.cookie_consent import t_e_s_t_cookie_consent
+from .steps.products import t_e_s_t_products
+from .steps.users_management import t_e_s_t_users_management
 
 """
 This testing module test all routes. It launch start the server and test all the routes and processes
@@ -161,6 +164,8 @@ class FunctionalTests(unittest.TestCase):
 
         print("Testing root")
         t_e_s_t_root(self.test_object)
+        print("Testing cookie consent")
+        t_e_s_t_cookie_consent(self.test_object)
         print("Testing login")
         t_e_s_t_login(self.test_object)
         print("Test dashboard")
@@ -222,6 +227,8 @@ class FunctionalTests(unittest.TestCase):
         t_e_s_t_audit(self.test_object)
         print("Testing repository tasks")
         t_e_s_t_repository_tasks(self.test_object)
+        print("Testing products publish/unpublish/delete")
+        t_e_s_t_products(self.test_object)
         print("Testing collaborator access")
         t_e_s_t_collaborator_access(self.test_object)
         print("Testing helpers")
@@ -272,6 +279,8 @@ class FunctionalTests(unittest.TestCase):
         t_e_s_t_api(self.test_object)
         print("Testing plugin functions")
         t_e_s_t_plugin_utility_functions(self.test_object)
+        print("Testing users management")
+        t_e_s_t_users_management(self.test_object)
         print("Testing Collaborator access to project 1")
         t_e_s_t_collaborator_projects(self.test_object)
         print("Testing Collaborator access to project 2")

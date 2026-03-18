@@ -1,6 +1,0 @@
--Error while pushing submission /home/cquiros/data/projects2017/personal/software/FormShare/formshare/tests/resources/forms/complex_form/for_import/xml/submission_a/ to URL http://localhost:5900/user/b9edcf6e3db2/project/test001/push. Error 
-
-HTTPConnectionPool(host='localhost', port=5900): Max retries exceeded with url: /user/b9edcf6e3db2/project/test001/push (Caused by NewConnectionError("HTTPConnection(host='localhost', port=5900): Failed to establish a new connection: [Errno 111] Connection refused"))
-
-
--The directory /home/cquiros/data/projects2017/personal/software/FormShare/formshare/tests/resources/forms/complex_form/for_import/xml/submission_b/ does not have any submission files or it does not have an xml data file

@@ -121,6 +121,28 @@ class _MatchedRoute:
 
 
 # ---------------------------------------------------------------------------
+# _SessionMultiProxy  (pyramid_session_multi drop-in)
+# ---------------------------------------------------------------------------
+
+
+class _SessionMultiProxy:
+    """Allows request.session_multi["secondary_session"] to return a persistent
+    sub-dict backed by the main session store.
+
+    Only "secondary_session" is supported (matches pyramid_session_multi usage).
+    """
+
+    _KEY_MAP = {"secondary_session": "_secondary"}
+
+    def __init__(self, session_data: dict):
+        self._data = session_data
+
+    def __getitem__(self, name: str) -> dict:
+        key = self._KEY_MAP.get(name, f"_multi_{name}")
+        return self._data.setdefault(key, {})
+
+
+# ---------------------------------------------------------------------------
 # FormShareRequest
 # ---------------------------------------------------------------------------
 
@@ -356,6 +378,10 @@ class FormShareRequest:
         return None
 
     @property
+    def remote_addr(self):
+        return self.client_addr
+
+    @property
     def body(self) -> bytes:
         """Pre-read raw request body."""
         return self._body_bytes
@@ -508,6 +534,11 @@ class FormShareRequest:
         cookies.  Here we store it as a sub-key in the main session.
         """
         return self._session_data.setdefault("_secondary", {})
+
+    @property
+    def session_multi(self):
+        """Drop-in for pyramid_session_multi: request.session_multi["secondary_session"]."""
+        return _SessionMultiProxy(self._session_data)
 
     # ==================================================================
     # Repr

@@ -104,11 +104,14 @@ def make_endpoint(view_class, renderer, db_session_factory, jinja_env, app_state
                     result, renderer, jinja_env, fs_request
                 )
 
-                # Merge any header/status mutations the view made via request.response
-                for name, value in fs_request.response.headers.items():
-                    fs_response.headers[name] = value
-                if fs_request.response.status_code != 200:
-                    fs_response.status_code = fs_request.response.status_code
+                # Merge any header/status mutations the view made via request.response,
+                # but only for rendered responses — NOT for HTTPException passthroughs
+                # (redirects, 404s raised by the view, etc.) which are self-contained.
+                if not hasattr(fs_response, "_starlette_passthrough"):
+                    for name, value in fs_request.response.headers.items():
+                        fs_response.headers[name] = value
+                    if fs_request.response.status_code != 200:
+                        fs_response.status_code = fs_request.response.status_code
 
                 # Run response callbacks on the FSResponse
                 fs_request.run_response_callbacks(fs_response)
@@ -335,6 +338,16 @@ def _http_exc_to_starlette(exc):
             url=headers.get("Location", "/"),
             status_code=status,
             headers=headers,
+        )
+
+    # If the exception carries a pre-built body (e.g. from return_error()),
+    # use it directly instead of building a generic JSON envelope.
+    if getattr(exc, "body", None) is not None:
+        return StarletteResponse(
+            content=exc.body,
+            status_code=status,
+            headers=headers,
+            media_type=getattr(exc, "content_type", None) or "application/octet-stream",
         )
 
     return JSONResponse(

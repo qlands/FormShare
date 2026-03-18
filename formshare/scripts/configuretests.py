@@ -101,9 +101,7 @@ def main(raw_args=None):
         os.path.abspath(args.ini_path), "port", "localhost", "server:main"
     )
 
-    composite_section = get_section(args.ini_path, "composite:main")
-    composite_section.pop("use")
-    server_main_root = list(composite_section.keys())[0]
+    server_main_root = "/"
 
     context = {
         "mysql_host": mysql_host,

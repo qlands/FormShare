@@ -96,8 +96,11 @@ class ChangeMyPartnerPassword(PartnerView):
                                         self.partnerID,
                                         partner_data["partner_password"],
                                     )
-                                    next_page = self.request.route_url("partner_logout")
-                                    return HTTPFound(next_page)
+                                print(
+                                    "--------------Passsword has been updated----------- Login out"
+                                )
+                                next_page = self.request.route_url("partner_logout")
+                                return HTTPFound(next_page)
                             else:
                                 print(
                                     "*****************Cannot change the password*****************"

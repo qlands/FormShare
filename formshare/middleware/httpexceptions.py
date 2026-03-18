@@ -21,9 +21,13 @@ class HTTPException(Exception):
     status_code: int = 500
     title: str = "HTTP Exception"
 
-    def __init__(self, detail=None, headers=None):
+    def __init__(
+        self, detail=None, headers=None, body=None, content_type=None, **kwargs
+    ):
         self.detail = detail
         self.headers = dict(headers) if headers else {}
+        self.body = body
+        self.content_type = content_type
         super().__init__(detail)
 
 

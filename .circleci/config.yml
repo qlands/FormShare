@@ -76,8 +76,8 @@ jobs:
     steps:
       - checkout
 
-      - run: | # We will just build master-2.0 branch
-          if [ "$CIRCLE_BRANCH" != "master-2.0" ]; then
+      - run: | # We will just build master-2.0 or master-3.0 branches
+          if [ "$CIRCLE_BRANCH" != "master-2.0" ] && [ "$CIRCLE_BRANCH" != "master-3.0" ]; then
             exit 1
           fi
 
@@ -184,7 +184,7 @@ jobs:
             /home/circleci/.local/bin/configure_tests ./development.ini .
             /home/circleci/.local/bin/alembic upgrade head
 
-            pip install -e git+https://github.com/qlands/formshare_test_plugin.git@main#egg=formshare_test_plugin --user
+            pip install -e git+https://github.com/qlands/formshare_test_plugin.git@main-3.0#egg=formshare_test_plugin --user
 
       - run:
           name: Test code is well formatted

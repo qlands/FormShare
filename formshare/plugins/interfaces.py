@@ -1819,13 +1819,31 @@ class ISubmissionStorage(Interface):
     Allows to hook into the processing of submissions
     """
 
-    def process_submission(self, config, submission_id):
+    def process_submission(
+        self,
+        config,
+        submission_id,
+        user,
+        project,
+        xform_id,
+        assistant_uuid,
+        form_directory,
+        form_schema,
+        form_xmlfile,
+    ):
         """
         Called by FormShare before the submission is processed by FormShare.
         At this point the submission has been stored in [repository]/odk/submissions/<submission_id>
         This process then can process the submission in a different way
         :param config: FormShare config object`
         :param submission_id: submission id
+        :param user: user who submitted the submission
+        :param project: project who submitted the submission
+        :param xform_id: xform id
+        :param assistant_uuid: assistant uuid
+        :param form_directory: directory where the submission is stored
+        :param form_schema: schema of the ODK Form
+        :param form_xmlfile: xml file of the ODK Form
             :return: True if processed SO FormShare WILL NOT PROCESS IT or False so FormShare WILL PROCESS IT
         """
 

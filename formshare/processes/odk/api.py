@@ -4454,7 +4454,15 @@ def store_submission(request, user, project, assistant_uuid):
                                 plugins.ISubmissionStorage
                             ):
                                 processed = a_plugin.process_submission(
-                                    request.registry.settings, unique_id
+                                    request.registry.settings,
+                                    unique_id,
+                                    user,
+                                    project,
+                                    xform_id,
+                                    assistant_uuid,
+                                    form_data["form_directory"],
+                                    form_data["form_schema"],
+                                    form_data["form_xmlfile"],
                                 )
                                 if processed:
                                     return True, 201

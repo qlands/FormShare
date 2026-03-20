@@ -53,6 +53,7 @@ __all__ = [
     "IAuthenticationPolicy",
     "IRoles",
     "IDeleteSubmission",
+    "ISubmissionStorage",
 ]
 
 
@@ -1810,6 +1811,22 @@ class IEnvironment(Interface):  # pragma: no cover
         Called by FormShare after the environment is configured
         :param config: FormShare config object
         :param settings: Settings object from the INI file
+        """
+
+
+class ISubmissionStorage(Interface):
+    """
+    Allows to hook into the processing of submissions
+    """
+
+    def process_submission(self, config, submission_id):
+        """
+        Called by FormShare before the submission is processed by FormShare.
+        At this point the submission has been stored in [repository]/odk/submissions/<submission_id>
+        This process then can process the submission in a different way
+        :param config: FormShare config object`
+        :param submission_id: submission id
+            :return: True if processed SO FormShare WILL NOT PROCESS IT or False so FormShare WILL PROCESS IT
         """
 
 

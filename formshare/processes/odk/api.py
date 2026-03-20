@@ -4449,6 +4449,16 @@ def store_submission(request, user, project, assistant_uuid):
                         if assistant_has_form(
                             request, user, project, xform_id, assistant_uuid
                         ) or project_has_crowdsourcing(request, project):
+
+                            for a_plugin in plugins.PluginImplementations(
+                                plugins.ISubmissionStorage
+                            ):
+                                processed = a_plugin.process_submission(
+                                    request.registry.settings, unique_id
+                                )
+                                if processed:
+                                    return True, 201
+
                             media_path = os.path.join(
                                 odk_dir,
                                 *[

@@ -4450,6 +4450,7 @@ def store_submission(request, user, project, assistant_uuid):
                             request, user, project, xform_id, assistant_uuid
                         ) or project_has_crowdsourcing(request, project):
 
+                            continue_processing = True
                             for a_plugin in plugins.PluginImplementations(
                                 plugins.ISubmissionStorage
                             ):
@@ -4465,7 +4466,15 @@ def store_submission(request, user, project, assistant_uuid):
                                     form_data["form_xmlfile"],
                                 )
                                 if processed:
-                                    return True, 201
+                                    continue_processing = False
+                                    break
+                            if not continue_processing:
+                                print(
+                                    "Submission {} has been processed by a plugin".format(
+                                        unique_id
+                                    )
+                                )
+                                return True, 201
 
                             media_path = os.path.join(
                                 odk_dir,

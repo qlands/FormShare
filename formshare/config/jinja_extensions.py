@@ -8,7 +8,7 @@ from jinja2 import FileSystemLoader
 from jinja2 import ext, nodes
 from webhelpers2.html import literal
 
-jinjaEnv = Environment()
+jinjaEnv = Environment(autoescape=True)
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 

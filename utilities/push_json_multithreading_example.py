@@ -23,10 +23,12 @@ path_to_submissions = /home/me/submissions/*/
 
 """
 
-path_to_submissions = "/home/cquiros/data/projects2017/personal/software/FormShare_million/submissions/part_20/*/"
-# path_to_submissions = '/home/cquiros/data/projects2017/personal/software/FormShare_million/submissions/test/*/'
-url_to_project = "http://127.0.0.1:5900/user/qlands/project/two_million"
-assistant_to_use = "qlands"
+# path_to_submissions = "/home/cquiros/data/projects2017/personal/software/FormShare_million/submissions/part_1/*/"
+path_to_submissions = (
+    "/home/cquiros/data/projects2017/personal/software/FormShare_million/one/*/"
+)
+url_to_project = "http://192.168.0.12:5900/user/6MT4sq9zRJfNopvE/project/million"
+assistant_to_use = "cquiros"
 assistant_password = "123"
 
 

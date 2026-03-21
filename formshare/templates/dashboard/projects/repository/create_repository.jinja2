@@ -59,10 +59,10 @@
                                             <input type="hidden" name="choices_data_columns" value="{{ choices_data_columns }}">
                                             <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
                                             <input type="hidden" name="start_stage2">
-                                            <input type="hidden" name="languages_string", value="{{ languages_string }}">
-                                            <input type="hidden" name="form_pkey", value="{{ primary_key }}">
+                                            <input type="hidden" name="languages_string" value="{{ languages_string }}">
+                                            <input type="hidden" name="form_pkey" value="{{ primary_key }}">
                                             {% if discard_testing_data %}
-                                                <input type="hidden" name="discard_testing_data", value="">
+                                                <input type="hidden" name="discard_testing_data" value="">
                                             {% endif %}
                                             <div class="form-group">
                                                 <label>{{ _('Primary language') }}</label>

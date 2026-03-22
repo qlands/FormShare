@@ -330,7 +330,7 @@
                         maxZoom: 18,
                         zoomOffset: -1,
                         id: 'mapbox/streets-v11',
-                        accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
+                        accessToken: '{{ request.registry.settings.get("mapbox.access_token", "") }}'
                     }).addTo(mymap);
 
                     var element = document.getElementById('mapbox');

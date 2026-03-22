@@ -85,7 +85,7 @@ jobs:
           key: requirements-{{ .Branch }}-{{ .Environment.CIRCLE_JOB }}-{{ checksum "requirements.txt" }}
 
       - run:
-          name: Run Redis + Mosquitto
+          name: Run Redis
           command: |
             sudo chown -R redis /etc/redis
             sudo chgrp -R redis /etc/redis
@@ -93,8 +93,7 @@ jobs:
             sudo chgrp -R redis /var/log/redis
             sudo chown -R redis /var/lib/redis
             sudo chgrp -R redis /var/lib/redis
-            sudo /etc/init.d/redis-server start
-            sudo service mosquitto start
+            sudo /etc/init.d/redis-server start            
             tail -f /dev/null
           background: true
 

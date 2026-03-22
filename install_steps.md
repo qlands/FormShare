@@ -38,8 +38,6 @@ sudo add-apt-repository universe
 sudo add-apt-repository multiverse
 sudo apt-get install -y wget
 
-sudo add-apt-repository ppa:mosquitto-dev/mosquitto-ppa -y
-
 sudo wget https://dev.mysql.com/get/mysql-apt-config_0.8.24-1_all.deb
 sudo dpkg -i ./mysql-apt-config_0.8.24-1_all.deb
 
@@ -101,9 +99,9 @@ Result:
 
 ```sh
 # if Ubuntu 22.04
-sudo apt-get install -y mysql-server build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano mysql-shell openjdk-17-jre-headless mysql-shell
+sudo apt-get install -y mysql-server build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go curl nano mysql-shell openjdk-17-jre-headless mysql-shell
 # if Ubuntu 20.04
-sudo sudo apt-get install -y mysql-server build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto nano mysql-shell
+sudo sudo apt-get install -y mysql-server build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go nano mysql-shell
 ```
 
 ### Update MySQL root password

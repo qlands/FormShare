@@ -10,8 +10,6 @@ RUN apt-get install -y wget
 
 RUN add-apt-repository ppa:deadsnakes/ppa
 
-RUN add-apt-repository ppa:mosquitto-dev/mosquitto-ppa -y
-
 RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.36-1_all.deb
 RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC dpkg -i ./mysql-apt-config_0.8.36-1_all.deb
 
@@ -19,7 +17,7 @@ RUN apt-get update
 
 RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y python3.13 python3.13-venv python3.13-dev
 
-RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano mysql-shell openjdk-17-jre-headless csvkit
+RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go curl nano mysql-shell openjdk-17-jre-headless csvkit
 
 RUN npm install -g diff2html
 RUN npm install -g diff2html-cli@5.2.1

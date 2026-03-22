@@ -238,6 +238,17 @@ def create_app(settings: dict | None = None, ini_path: str | None = None):
     _register_routes(route_list)
     _register_routes(api_route_list)
 
+    # -- SSE task-stream endpoint (raw async, bypasses make_endpoint) --
+    from formshare.views.task_stream import make_task_stream_endpoint
+
+    fastapi_app.add_api_route(
+        "/task_stream/{task_id}",
+        make_task_stream_endpoint(app_state),
+        methods=["GET"],
+        name="task_stream",
+        include_in_schema=False,
+    )
+
     # -- Error handlers --
     from starlette.requests import Request
     from starlette.responses import JSONResponse as _JSONResponse

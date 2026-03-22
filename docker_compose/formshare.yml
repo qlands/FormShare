@@ -48,7 +48,6 @@ services:
       - ${FS_DATA_DIR:-/opt/formshare}/config:/opt/formshare_config
       - ${FS_DATA_DIR:-/opt/formshare}/plugins:/opt/formshare_plugins
       - ${FS_DATA_DIR:-/opt/formshare}/formshare_odata_webapps:/opt/formshare_odata_webapps
-      - ${FS_DATA_DIR:-/opt/formshare}/mosquitto:/etc/mosquitto/conf.d/
 
     ports:
       - "${FORMSHARE_PORT:-5900}:5900"

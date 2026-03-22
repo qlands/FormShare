@@ -96,10 +96,7 @@ class CeleryRequest(Request):  # pragma: no cover
         send_timeout_error(task_id)
         engine = create_engine(get_ini_value("sqlalchemy.url"), poolclass=NullPool)
         settings = {
-            "mosquitto.host": get_ini_value("mosquitto.host"),
-            "mosquitto.port": get_ini_value("mosquitto.port"),
-            "mosquitto.user": get_ini_value("mosquitto.user"),
-            "mosquitto.password": get_ini_value("mosquitto.password"),
+            "celery.broker": get_ini_value("celery.broker"),
         }
         connection = engine.connect()
         if soft:
@@ -134,10 +131,7 @@ class CeleryTask(AbortableTask):  # pragma: no cover
     def on_success(self, retval, task_id, args, kwargs):
         engine = create_engine(get_ini_value("sqlalchemy.url"), poolclass=NullPool)
         settings = {
-            "mosquitto.host": get_ini_value("mosquitto.host"),
-            "mosquitto.port": get_ini_value("mosquitto.port"),
-            "mosquitto.user": get_ini_value("mosquitto.user"),
-            "mosquitto.password": get_ini_value("mosquitto.password"),
+            "celery.broker": get_ini_value("celery.broker"),
         }
         connection = engine.connect()
         try:
@@ -177,10 +171,7 @@ class CeleryTask(AbortableTask):  # pragma: no cover
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         engine = create_engine(get_ini_value("sqlalchemy.url"), poolclass=NullPool)
         settings = {
-            "mosquitto.host": get_ini_value("mosquitto.host"),
-            "mosquitto.port": get_ini_value("mosquitto.port"),
-            "mosquitto.user": get_ini_value("mosquitto.user"),
-            "mosquitto.password": get_ini_value("mosquitto.password"),
+            "celery.broker": get_ini_value("celery.broker"),
         }
         connection = engine.connect()
         trace_back = einfo.traceback

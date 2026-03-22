@@ -1,29 +1,22 @@
 {% for product in products %}
     {% for output in product.outputs %}
         {% if output.status == -1 %}
-            {% set task_id = output.celery_taskid | replace("-","_") %}
-            client{{ task_id }} = new Paho.MQTT.Client("{{ request.domain }}", Number(9001), "clientId");
-            client{{ task_id }}.onMessageArrived = onMessageArrived{{ task_id }};
-            {% if request.host_port != "443" %}
-                client{{ task_id }}.connect({onSuccess:onConnect{{ task_id }}, userName : "formshare_client", password : "read_only"});
-            {% else %}
-                client{{ task_id }}.connect({onSuccess:onConnect{{ task_id }}, userName : "formshare_client", password : "read_only", useSSL : true});
-            {% endif %}
-            function onConnect{{ task_id }}() {
-                client{{ task_id }}.subscribe("formshare/tasks/{{ output.celery_taskid }}");
-            }
-            function onMessageArrived{{ task_id }}(message) {
-                if ((message.payloadString === "success") || (message.payloadString === "failure"))
-                {
-                    $('#feed_element_{{ output.celery_taskid }}').load('{{ request.url }} #feed_element_{{ output.celery_taskid }}',function(){
-                      product_buttons()
-                    });
-                }
-                else
-                {
-                    $("#sse_{{ output.celery_taskid }}").text(message.payloadString);
-                }
-            }
+            (function (celeryId) {
+                var evtSource = new EventSource("/task_stream/" + celeryId);
+                evtSource.onmessage = function (e) {
+                    if (e.data === "success" || e.data === "failure") {
+                        evtSource.close();
+                        $('#feed_element_' + celeryId).load('{{ request.url }} #feed_element_' + celeryId, function(){
+                            product_buttons()
+                        });
+                    } else {
+                        $("#sse_" + celeryId).text(e.data);
+                    }
+                };
+                evtSource.onerror = function () {
+                    evtSource.close();
+                };
+            })("{{ output.celery_taskid }}");
         {% endif %}
     {% endfor %}
 {% endfor %}

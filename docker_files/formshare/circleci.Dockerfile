@@ -8,8 +8,6 @@ RUN sudo add-apt-repository multiverse
 
 RUN sudo apt-get install -y wget
 
-RUN sudo add-apt-repository ppa:mosquitto-dev/mosquitto-ppa -y
-
 WORKDIR /opt
 RUN sudo mkdir mysql_config
 WORKDIR /opt/mysql_config
@@ -19,7 +17,7 @@ WORKDIR /home/circleci/project
 
 RUN sudo apt-get update
 
-RUN sudo DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano mysql-shell openjdk-17-jre-headless csvkit
+RUN sudo DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go curl nano mysql-shell openjdk-17-jre-headless csvkit
 
 # BEGIN IMAGE CUSTOMIZATIONS
 
@@ -37,10 +35,6 @@ RUN sudo npm install -g diff2html-cli@5.2.1
 RUN sudo npm install -g json2csv@5.0.7
 
 COPY ./docker_files/timezone/mysql_tzinfo_to_sql /usr/bin
-COPY ./docker_files/mosquitto/mosquitto.conf /etc/mosquitto/conf.d/
-COPY ./docker_files/mosquitto/websocket.conf /etc/mosquitto/conf.d/
-COPY ./docker_files/mosquitto/access.acl /etc/mosquitto/conf.d/
-COPY ./docker_files/mosquitto/users.mqt /etc/mosquitto/conf.d/
 
 WORKDIR /opt
 RUN sudo mkdir other_deps

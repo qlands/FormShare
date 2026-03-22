@@ -9,7 +9,6 @@ sudo mkdir -p /opt/formshare_community/repository
 sudo mkdir -p /opt/formshare_community/config
 sudo mkdir -p /opt/formshare_community/mysql
 sudo mkdir -p /opt/formshare_community/plugins
-sudo mkdir -p /opt/formshare_community/mosquitto
 sudo mkdir -p /opt/formshare_community/elasticsearch/certs
 sudo mkdir -p /opt/formshare_community/elasticsearch/esdata
 sudo mkdir -p /opt/formshare_community/elasticsearch/esdata2

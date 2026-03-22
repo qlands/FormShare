@@ -142,7 +142,6 @@ mkdir /opt/formshare/repository
 mkdir /opt/formshare/config
 mkdir /opt/formshare/mysql
 mkdir /opt/formshare/plugins
-mkdir /opt/formshare/mosquitto
 mkdir /opt/formshare/formshare_odata_webapps
 mkdir /opt/formshare/elasticsearch
 mkdir /opt/formshare/elasticsearch/esdata
@@ -371,17 +370,7 @@ In the FormShare service under the ports section add the following line after po
 - 9001:9001
 ```
 
-Create a local directory for the Mosquitto configuration files
-
-```sh
-mkdir /opt/formshare/mosquitto
-```
-
 In the FormShare service under the volumes section add the following volume: 
-
-```yaml
-- /opt/formshare/mosquitto:/etc/mosquitto/conf.d/
-```
 
 Note for AWS: Inbound and outbound communication to port 9001 must be allowed for FormShare to support client-server communication.
 

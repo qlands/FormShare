@@ -47,6 +47,7 @@ from lxml import etree
 from pandas import read_csv
 from sqlalchemy import create_engine
 from sqlalchemy import exc
+from sqlalchemy import text as sqlalchemy_text
 from sqlalchemy.orm.session import Session
 from sqlalchemy.pool import NullPool
 from webhelpers2.html import literal
@@ -1771,10 +1772,27 @@ def delete_all_submission(request, user, project, form, deleted_by):
         paths = ["forms", form_directory, "submissions", "maps"]
         os.makedirs(os.path.join(odk_dir, *paths))
 
-        sql = "SET @odktools_current_user = '" + user + "'"
-        request.dbsession.execute(sql)
-        sql = "DELETE FROM " + schema + ".maintable"
-        request.dbsession.execute(sql)
+        # TRUNCATE is orders of magnitude faster than DELETE for large tables
+        # because it deallocates pages directly instead of deleting row by row.
+        # Child tables are handled automatically by truncating the whole schema.
+        # FOREIGN_KEY_CHECKS is disabled so we can truncate in any order without
+        # having to resolve the parent→child hierarchy. It is session-scoped so
+        # it does not affect other connections.
+        # Lookup tables (lkp*) are excluded — they hold form definition data
+        # populated at deploy time and must not be cleared with submissions.
+        request.dbsession.execute(sqlalchemy_text("SET FOREIGN_KEY_CHECKS = 0"))
+        tables = request.dbsession.execute(
+            sqlalchemy_text("SHOW TABLES FROM `{}`".format(schema))
+        ).fetchall()
+        for (table_name,) in tables:
+            if not table_name.startswith("lkp"):
+                request.dbsession.execute(
+                    sqlalchemy_text(
+                        "TRUNCATE TABLE `{}`.`{}`".format(schema, table_name)
+                    )
+                )
+        request.dbsession.execute(sqlalchemy_text("SET FOREIGN_KEY_CHECKS = 1"))
+        request.dbsession.commit()
 
         log.info(
             "ZapSubmissions: User {} has deleted all submissions in form {} for project {} on {}".format(

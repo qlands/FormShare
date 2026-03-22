@@ -96,8 +96,14 @@ def add_static_view(
     else:
         static_path = relative_path
     if os.path.exists(static_path):
-        introspector = config.introspector
-        if introspector.get("static views", view_name, None) is None:
+        if hasattr(config, "introspector"):
+            # Pyramid Configurator: guard against duplicate registration
+            if config.introspector.get("static views", view_name, None) is None:
+                config.add_static_view(
+                    view_name, static_path, cache_max_age=cache_max_age
+                )
+        else:
+            # FormShareConfig (FastAPI): deduplication is handled inside add_static_view
             config.add_static_view(view_name, static_path, cache_max_age=cache_max_age)
     else:
         raise Exception("Static path {} does not exists".format(relative_path))

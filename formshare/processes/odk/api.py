@@ -4199,6 +4199,39 @@ def store_json_submission(request, user, project, assistant_uuid):
                         if assistant_has_form(
                             request, user, project, xform_id, assistant_uuid
                         ) or project_has_crowdsourcing(request, project):
+
+                            continue_processing = True
+                            for a_plugin in plugins.PluginImplementations(
+                                plugins.ISubmissionStorage
+                            ):
+                                processed = a_plugin.process_submission(
+                                    request.registry.settings,
+                                    unique_id,
+                                    user,
+                                    project,
+                                    xform_id,
+                                    assistant_uuid,
+                                    form_data["form_directory"],
+                                    form_data["form_schema"],
+                                    form_data["form_xmlfile"],
+                                )
+                                if processed:
+                                    continue_processing = False
+                                    break
+                            if not continue_processing:
+                                log.error(
+                                    "Submission {} has been processed by a plugin".format(
+                                        unique_id
+                                    )
+                                )
+                                return True, 201
+
+                            log.error(
+                                "Submission {} has will be processed by FormShare".format(
+                                    unique_id
+                                )
+                            )
+
                             media_path = os.path.join(
                                 odk_dir,
                                 *[
@@ -4469,12 +4502,18 @@ def store_submission(request, user, project, assistant_uuid):
                                     continue_processing = False
                                     break
                             if not continue_processing:
-                                print(
+                                log.error(
                                     "Submission {} has been processed by a plugin".format(
                                         unique_id
                                     )
                                 )
                                 return True, 201
+
+                            log.error(
+                                "Submission {} has will be processed by FormShare".format(
+                                    unique_id
+                                )
+                            )
 
                             media_path = os.path.join(
                                 odk_dir,

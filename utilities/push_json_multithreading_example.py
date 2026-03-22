@@ -1,6 +1,7 @@
 import datetime
 import glob
 import os
+import time
 from multiprocessing import Process
 from multiprocessing import Value
 import numpy as np
@@ -23,10 +24,10 @@ path_to_submissions = /home/me/submissions/*/
 
 """
 
-# path_to_submissions = "/home/cquiros/data/projects2017/personal/software/FormShare_million/submissions/part_1/*/"
-path_to_submissions = (
-    "/home/cquiros/data/projects2017/personal/software/FormShare_million/one/*/"
-)
+path_to_submissions = "/home/cquiros/data/projects2017/personal/software/FormShare_million/submissions/part_1/*/"
+# path_to_submissions = (
+#      "/home/cquiros/data/projects2017/personal/software/FormShare_million/one/*/"
+# )
 url_to_project = "http://192.168.0.12:5900/user/6MT4sq9zRJfNopvE/project/million"
 assistant_to_use = "cquiros"
 assistant_password = "123"
@@ -42,17 +43,36 @@ def process_directories(directories, counter):
             files[file_name] = open(a_file, "rb")
         if files:
             print("Sending: {}".format(a_directory))
-            r = requests.post(
-                url_to_project + "/push_json",
-                auth=HTTPDigestAuth(assistant_to_use, assistant_password),
-                files=files,
-            )
-            if r.status_code != 201:
-                print("{}-{}".format(r.status_code, a_directory))
-                with counter.get_lock():
-                    counter.value += 1
-                with open("./errors/{}.error".format(file_name), "w") as fp:
-                    pass
+            max_attempts = 5
+            for attempt in range(max_attempts):
+                # Re-open files on retry (they were exhausted by the previous attempt)
+                if attempt > 0:
+                    files = {}
+                    for a_file in files_array:
+                        file_name = os.path.basename(a_file)
+                        files[file_name] = open(a_file, "rb")
+                r = requests.post(
+                    url_to_project + "/push_json",
+                    auth=HTTPDigestAuth(assistant_to_use, assistant_password),
+                    files=files,
+                )
+                if r.status_code == 201:
+                    break
+                if r.status_code == 503 and attempt < max_attempts - 1:
+                    wait = 2**attempt  # 1 s, 2 s, 4 s, 8 s
+                    print(
+                        "503 on {} — retrying in {} s (attempt {}/{})".format(
+                            a_directory, wait, attempt + 1, max_attempts
+                        )
+                    )
+                    time.sleep(wait)
+                else:
+                    print("{}-{}".format(r.status_code, a_directory))
+                    with counter.get_lock():
+                        counter.value += 1
+                    with open("./errors/{}.error".format(file_name), "w") as fp:
+                        pass
+                    break
             for a_file in files_array:
                 file_name = os.path.basename(a_file)
                 files[file_name].close()
@@ -70,7 +90,7 @@ start_time = datetime.datetime.now()
 if not os.path.exists("./errors"):
     os.makedirs("./errors")
 
-number_of_threads = 40
+number_of_threads = 100
 directory_list = glob.glob(path_to_submissions)
 arrays = np.array_split(np.array(directory_list), number_of_threads)
 counter = Value("i", 0)

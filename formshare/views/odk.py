@@ -1,3 +1,6 @@
+import logging
+
+from sqlalchemy.exc import OperationalError as SAOperationalError
 from webob.exc import HTTPNotFound
 
 from formshare.processes.db import (
@@ -18,6 +21,8 @@ from formshare.processes.odk.api import (
 from formshare.processes.db.assistant import get_odk_assistant_uuid
 from formshare.views.classes import ODKView
 from formshare.middleware.response import Response
+
+log = logging.getLogger("formshare")
 
 
 class ODKFormList(ODKView):
@@ -108,6 +113,13 @@ class ODKPushData(ODKView):
 
 class ODKPushJSONData(ODKView):
     def process_view(self):
+        try:
+            return self._process_view_impl()
+        except SAOperationalError:
+            log.error("Database connection error in ODKPushJSONData — returning 503")
+            return Response(status=503)
+
+    def _process_view_impl(self):
         project_code = self.request.matchdict["projcode"]
         user_id = self.request.matchdict["userid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)

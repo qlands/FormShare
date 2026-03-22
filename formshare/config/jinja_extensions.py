@@ -4,7 +4,7 @@ import os
 
 import formshare.resources as r
 from jinja2 import Environment
-from jinja2 import FileSystemLoader
+from jinja2 import FileSystemLoader, TemplateNotFound as JinjaTemplateNotFound
 from jinja2 import ext, nodes
 from webhelpers2.html import literal
 
@@ -13,8 +13,33 @@ logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 
+class _AbsoluteAwareLoader(FileSystemLoader):
+    """FileSystemLoader extended to load templates given as absolute paths.
+
+    Jinja2's standard FileSystemLoader always joins the template name with
+    its search paths, so absolute paths (produced by ExtendThis.parse()) are
+    never found.  When the template name is an absolute path to an existing
+    file we read it directly; otherwise we fall back to normal behaviour.
+    """
+
+    def get_source(self, environment, template):
+        if os.path.isabs(template) and os.path.isfile(template):
+            with open(template, encoding="utf-8") as f:
+                source = f.read()
+            mtime = os.path.getmtime(template)
+
+            def uptodate():
+                try:
+                    return os.path.getmtime(template) == mtime
+                except OSError:
+                    return False
+
+            return source, template, uptodate
+        return super().get_source(environment, template)
+
+
 def initialize(path_to_templates):
-    jinjaEnv.loader = FileSystemLoader(path_to_templates)
+    jinjaEnv.loader = _AbsoluteAwareLoader(path_to_templates)
     jinjaEnv.add_extension(ext.i18n)
     jinjaEnv.add_extension(JSResourceExtension)
     jinjaEnv.add_extension(CSSResourceExtension)

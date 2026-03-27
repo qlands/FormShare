@@ -40,6 +40,17 @@
             span.select2-container {
                 z-index:10050;
             }
+            @keyframes fs-skeleton-shimmer {
+                0%   { background-position: -400px 0; }
+                100% { background-position:  400px 0; }
+            }
+            .fs-skeleton {
+                background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+                background-size: 800px 100%;
+                animation: fs-skeleton-shimmer 1.4s infinite linear;
+                border-radius: 10px;
+                display: inline-block;
+            }
         </style>
     {% else %}
         {% block form_css_other %}
@@ -258,10 +269,19 @@
                 new ClipboardJS('.clipboard');
                 let xform_update_started = false;
 
+                function fsSkeletonIbox() {
+                    return '<div class="ibox"><div class="ibox-content"><ul class="tag-list" style="padding:0">'
+                        + '<li><a class="fs-skeleton" style="width:90px;height:22px;">&nbsp;</a></li>'
+                        + '<li><a class="fs-skeleton" style="width:120px;height:22px;">&nbsp;</a></li>'
+                        + '<li><a class="fs-skeleton" style="width:70px;height:22px;">&nbsp;</a></li>'
+                        + '</ul></div></div>';
+                }
+
                 document.addEventListener("formshare:files-updated", function() {
                     $("#busy").hide();
-                    htmx.ajax('GET', window.location.pathname + '?partial=formdetails_files', {target: '#formdetails_files_container', swap: 'innerHTML'});
                     $('#upload_file').modal('hide');
+                    document.getElementById('formdetails_files_container').innerHTML = fsSkeletonIbox();
+                    htmx.ajax('GET', window.location.pathname + '?partial=formdetails_files', {target: '#formdetails_files_container', swap: 'innerHTML'});
                 });
 
                 document.addEventListener("formshare:assistants-updated", function() {
@@ -270,6 +290,7 @@
                     $('#coll_can_clean').prop('checked', false);
                     $('#add_assistant').modal('hide');
                     $('#edit_assistant').modal('hide');
+                    document.getElementById('formdetails_assistants_container').innerHTML = fsSkeletonIbox();
                     htmx.ajax('GET', window.location.pathname + '?partial=formdetails_assistants', {target: '#formdetails_assistants_container', swap: 'innerHTML'});
                 });
 
@@ -278,6 +299,7 @@
                     $('#add_group input[type="checkbox"]').prop('checked', false);
                     $('#add_group').modal('hide');
                     $('#edit_group').modal('hide');
+                    document.getElementById('formdetails_groups_container').innerHTML = fsSkeletonIbox();
                     htmx.ajax('GET', window.location.pathname + '?partial=formdetails_groups', {target: '#formdetails_groups_container', swap: 'innerHTML'});
                 });
 

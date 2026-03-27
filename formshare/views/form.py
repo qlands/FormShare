@@ -2428,6 +2428,7 @@ class AddAssistant(PrivateView):
             raise HTTPNotFound
 
         if self.request.method == "POST":
+            is_htmx = self.request.headers.get("HX-Request") == "true"
             assistant_data = self.get_post_dict()
             if assistant_data.get("coll_id", "") != "":
                 parts = assistant_data["coll_id"].split("|")
@@ -2447,7 +2448,13 @@ class AddAssistant(PrivateView):
                     assistant_data["coll_can_submit"] == 0
                     and assistant_data["coll_can_clean"] == 0
                 ):
-                    self.add_error("An assistant needs to have a privilege")
+                    msg = self._("An assistant needs to have a privilege")
+                    if is_htmx:
+                        self.trigger_client_event(
+                            "formshare:notify", {"type": "error", "message": msg}
+                        )
+                        return self.request.response
+                    self.add_error(msg)
                     next_page = self.request.route_url(
                         "form_details",
                         userid=user_id,
@@ -2490,7 +2497,11 @@ class AddAssistant(PrivateView):
                                     assistant_data["coll_uuid"],
                                     assistant_data,
                                 )
-
+                            if is_htmx:
+                                self.trigger_client_event(
+                                    "formshare:assistants-updated"
+                                )
+                                return self.request.response
                             self.request.session.flash(
                                 self._("The assistant was added successfully")
                             )
@@ -2502,6 +2513,12 @@ class AddAssistant(PrivateView):
                             )
                             return HTTPFound(location=next_page)
                         else:
+                            if is_htmx:
+                                self.trigger_client_event(
+                                    "formshare:notify",
+                                    {"type": "error", "message": message},
+                                )
+                                return self.request.response
                             self.add_error(message)
                             next_page = self.request.route_url(
                                 "form_details",
@@ -2513,6 +2530,12 @@ class AddAssistant(PrivateView):
                                 location=next_page, headers={"FS_error": "true"}
                             )
                     else:
+                        if is_htmx:
+                            self.trigger_client_event(
+                                "formshare:notify",
+                                {"type": "error", "message": error_message},
+                            )
+                            return self.request.response
                         next_page = self.request.route_url(
                             "form_details",
                             userid=user_id,
@@ -2524,7 +2547,13 @@ class AddAssistant(PrivateView):
                         )
 
                 else:
-                    self.add_error("Error in submitted assistant")
+                    msg = self._("Error in submitted assistant")
+                    if is_htmx:
+                        self.trigger_client_event(
+                            "formshare:notify", {"type": "error", "message": msg}
+                        )
+                        return self.request.response
+                    self.add_error(msg)
                     next_page = self.request.route_url(
                         "form_details",
                         userid=user_id,
@@ -2533,7 +2562,13 @@ class AddAssistant(PrivateView):
                     )
                     return HTTPFound(location=next_page, headers={"FS_error": "true"})
             else:
-                self.add_error("The assistant cannot be empty")
+                msg = self._("The assistant cannot be empty")
+                if is_htmx:
+                    self.trigger_client_event(
+                        "formshare:notify", {"type": "error", "message": msg}
+                    )
+                    return self.request.response
+                self.add_error(msg)
                 next_page = self.request.route_url(
                     "form_details",
                     userid=user_id,
@@ -2575,6 +2610,8 @@ class EditAssistant(PrivateView):
         if form_data is None:
             raise HTTPNotFound
 
+        is_htmx = self.request.headers.get("HX-Request") == "true"
+
         if self.request.method == "POST":
             assistant_data = self.get_post_dict()
 
@@ -2592,6 +2629,15 @@ class EditAssistant(PrivateView):
                 assistant_data["coll_can_submit"] == 0
                 and assistant_data["coll_can_clean"] == 0
             ):
+                if is_htmx:
+                    self.trigger_client_event(
+                        "formshare:notify",
+                        {
+                            "type": "error",
+                            "message": self._("An assistant needs to have a privilege"),
+                        },
+                    )
+                    return {}
                 self.add_error("An assistant needs to have a privilege")
                 next_page = self.request.route_url(
                     "form_details",
@@ -2639,6 +2685,9 @@ class EditAssistant(PrivateView):
                             assistant_data,
                         )
 
+                    if is_htmx:
+                        self.trigger_client_event("formshare:assistants-updated")
+                        return {}
                     self.request.session.flash(
                         self._("The information was changed successfully")
                     )
@@ -2650,6 +2699,12 @@ class EditAssistant(PrivateView):
                     )
                     return HTTPFound(location=next_page)
                 else:
+                    if is_htmx:
+                        self.trigger_client_event(
+                            "formshare:notify",
+                            {"type": "error", "message": message},
+                        )
+                        return {}
                     self.add_error(message)
                     next_page = self.request.route_url(
                         "form_details",
@@ -2659,6 +2714,12 @@ class EditAssistant(PrivateView):
                     )
                     return HTTPFound(location=next_page, headers={"FS_error": "true"})
             else:
+                if is_htmx:
+                    self.trigger_client_event(
+                        "formshare:notify",
+                        {"type": "error", "message": error_message},
+                    )
+                    return {}
                 next_page = self.request.route_url(
                     "form_details",
                     userid=user_id,
@@ -2700,6 +2761,7 @@ class RemoveAssistant(PrivateView):
             raise HTTPNotFound
 
         if self.request.method == "POST":
+            is_htmx = self.request.headers.get("HX-Request") == "true"
             continue_remove = True
             for plugin in p.PluginImplementations(p.IFormAccess):
                 (
@@ -2713,6 +2775,12 @@ class RemoveAssistant(PrivateView):
                     assistant_uuid,
                 )
                 if not continue_remove:
+                    if is_htmx:
+                        self.trigger_client_event(
+                            "formshare:notify",
+                            {"type": "error", "message": error_message},
+                        )
+                        return self.request.response
                     self.add_error(error_message)
                 break  # Only one plugging will be called to extend before_revoking_access
             if continue_remove:
@@ -2731,6 +2799,9 @@ class RemoveAssistant(PrivateView):
                             form_id,
                             assistant_uuid,
                         )
+                    if is_htmx:
+                        self.trigger_client_event("formshare:assistants-updated")
+                        return self.request.response
                     self.request.session.flash(
                         self._("The assistant was removed successfully")
                     )
@@ -2742,6 +2813,11 @@ class RemoveAssistant(PrivateView):
                     )
                     return HTTPFound(location=next_page)
                 else:
+                    if is_htmx:
+                        self.trigger_client_event(
+                            "formshare:notify", {"type": "error", "message": message}
+                        )
+                        return self.request.response
                     self.add_error(message)
                     next_page = self.request.route_url(
                         "form_details",
@@ -2790,6 +2866,8 @@ class AddGroupToForm(PrivateView):
         if form_data is None:
             raise HTTPNotFound
 
+        is_htmx = self.request.headers.get("HX-Request") == "true"
+
         if self.request.method == "POST":
             assistant_data = self.get_post_dict()
             if "group_id" in assistant_data.keys():
@@ -2805,6 +2883,17 @@ class AddGroupToForm(PrivateView):
                         can_clean = 0
 
                     if can_clean == 0 and can_submit == 0:
+                        if is_htmx:
+                            self.trigger_client_event(
+                                "formshare:notify",
+                                {
+                                    "type": "error",
+                                    "message": self._(
+                                        "A group cannot have empty privileges"
+                                    ),
+                                },
+                            )
+                            return {}
                         self.add_error("A group cannot have empty privileges")
                         next_page = self.request.route_url(
                             "form_details",
@@ -2825,6 +2914,9 @@ class AddGroupToForm(PrivateView):
                         can_clean,
                     )
                     if added:
+                        if is_htmx:
+                            self.trigger_client_event("formshare:groups-updated")
+                            return {}
                         self.request.session.flash(
                             self._("The group was added successfully")
                         )
@@ -2836,6 +2928,12 @@ class AddGroupToForm(PrivateView):
                         )
                         return HTTPFound(location=next_page)
                     else:
+                        if is_htmx:
+                            self.trigger_client_event(
+                                "formshare:notify",
+                                {"type": "error", "message": message},
+                            )
+                            return {}
                         self.add_error(message)
                         next_page = self.request.route_url(
                             "form_details",
@@ -2847,6 +2945,15 @@ class AddGroupToForm(PrivateView):
                             location=next_page, headers={"FS_error": "true"}
                         )
                 else:
+                    if is_htmx:
+                        self.trigger_client_event(
+                            "formshare:notify",
+                            {
+                                "type": "error",
+                                "message": self._("The group cannot be empty"),
+                            },
+                        )
+                        return {}
                     self.add_error("The group cannot be empty")
                     next_page = self.request.route_url(
                         "form_details",
@@ -2856,6 +2963,15 @@ class AddGroupToForm(PrivateView):
                     )
                     return HTTPFound(location=next_page, headers={"FS_error": "true"})
             else:
+                if is_htmx:
+                    self.trigger_client_event(
+                        "formshare:notify",
+                        {
+                            "type": "error",
+                            "message": self._("The group cannot be empty"),
+                        },
+                    )
+                    return {}
                 self.add_error("The group cannot be empty")
                 next_page = self.request.route_url(
                     "form_details",
@@ -2898,6 +3014,8 @@ class EditFormGroup(PrivateView):
         if form_data is None:
             raise HTTPNotFound
 
+        is_htmx = self.request.headers.get("HX-Request") == "true"
+
         if self.request.method == "POST":
             assistant_data = self.get_post_dict()
             if "group_can_submit" in assistant_data.keys():
@@ -2911,6 +3029,15 @@ class EditFormGroup(PrivateView):
                 can_clean = 0
 
             if can_clean == 0 and can_submit == 0:
+                if is_htmx:
+                    self.trigger_client_event(
+                        "formshare:notify",
+                        {
+                            "type": "error",
+                            "message": self._("A group cannot have empty privileges"),
+                        },
+                    )
+                    return {}
                 self.add_error("A group cannot have empty privileges")
                 next_page = self.request.route_url(
                     "form_details",
@@ -2924,6 +3051,9 @@ class EditFormGroup(PrivateView):
                 self.request, project_id, form_id, group_id, can_submit, can_clean
             )
             if updated:
+                if is_htmx:
+                    self.trigger_client_event("formshare:groups-updated")
+                    return {}
                 self.request.session.flash(self._("The role was changed successfully"))
                 next_page = self.request.route_url(
                     "form_details",
@@ -2933,6 +3063,12 @@ class EditFormGroup(PrivateView):
                 )
                 return HTTPFound(location=next_page)
             else:
+                if is_htmx:
+                    self.trigger_client_event(
+                        "formshare:notify",
+                        {"type": "error", "message": message},
+                    )
+                    return {}
                 self.add_error(message)
                 next_page = self.request.route_url(
                     "form_details",
@@ -2975,10 +3111,14 @@ class RemoveGroupForm(PrivateView):
             raise HTTPNotFound
 
         if self.request.method == "POST":
+            is_htmx = self.request.headers.get("HX-Request") == "true"
             removed, message = remove_group_from_form(
                 self.request, project_id, form_id, group_id
             )
             if removed:
+                if is_htmx:
+                    self.trigger_client_event("formshare:groups-updated")
+                    return self.request.response
                 self.request.session.flash(self._("The group was removed successfully"))
                 next_page = self.request.route_url(
                     "form_details",
@@ -2988,6 +3128,11 @@ class RemoveGroupForm(PrivateView):
                 )
                 return HTTPFound(location=next_page)
             else:
+                if is_htmx:
+                    self.trigger_client_event(
+                        "formshare:notify", {"type": "error", "message": message}
+                    )
+                    return self.request.response
                 self.add_error(message)
                 next_page = self.request.route_url(
                     "form_details",

@@ -2022,6 +2022,7 @@ class AddFileToForm(PrivateView):
             files = self.request.POST.getall("filetoupload")
             form_data = self.get_post_dict()
             self.returnRawViewResult = True
+            is_htmx = self.request.headers.get("HX-Request") == "true"
 
             next_page = self.request.route_url(
                 "form_details", userid=user_id, projcode=project_code, formid=form_id
@@ -2228,6 +2229,9 @@ class AddFileToForm(PrivateView):
                             )
                         )
             if not error:
+                if is_htmx:
+                    self.trigger_client_event("formshare:files-updated")
+                    return self.request.response
                 if len(files) == 1:
                     self.request.session.flash(
                         self._("The file was uploaded successfully")
@@ -2238,6 +2242,12 @@ class AddFileToForm(PrivateView):
                     )
                 return HTTPFound(location=next_page)
             else:
+                if is_htmx:
+                    msg = messages[0] if messages else self._("Upload failed")
+                    self.trigger_client_event(
+                        "formshare:notify", {"type": "error", "message": msg}
+                    )
+                    return self.request.response
                 for a_message in messages:
                     self.add_error(a_message)
                 next_page = self.request.route_url(
@@ -2285,15 +2295,21 @@ class RemoveFileFromForm(PrivateView):
 
         if self.request.method == "POST":
             self.returnRawViewResult = True
+            is_htmx = self.request.headers.get("HX-Request") == "true"
+
             if form_data["form_reqfiles"] is not None:
                 if form_data["form_schema"] is not None:
                     required_files = form_data["form_reqfiles"].split(",")
                     if file_name in required_files:
-                        self.add_error(
-                            self._(
-                                "You cannot remove this file because it is required by the repository"
-                            )
+                        msg = self._(
+                            "You cannot remove this file because it is required by the repository"
                         )
+                        if is_htmx:
+                            self.trigger_client_event(
+                                "formshare:notify", {"type": "error", "message": msg}
+                            )
+                            return self.request.response
+                        self.add_error(msg)
                         next_page = self.request.route_url(
                             "form_details",
                             userid=user_id,
@@ -2314,7 +2330,6 @@ class RemoveFileFromForm(PrivateView):
                 bucket_id = project_id + form_id
                 bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
                 delete_stream(self.request, bucket_id, file_name)
-                self.request.session.flash(self._("The files was removed successfully"))
                 if form_data["form_reqfiles"] is not None:
                     required_files = form_data["form_reqfiles"].split(",")
                     if file_name in required_files and form_data["form_schema"] is None:
@@ -2327,8 +2342,17 @@ class RemoveFileFromForm(PrivateView):
                             form_update_data["form_mergetask"] = None
                         update_form(self.request, project_id, form_id, form_update_data)
 
+                if is_htmx:
+                    self.trigger_client_event("formshare:files-updated")
+                    return self.request.response
+                self.request.session.flash(self._("The file was removed successfully"))
                 return HTTPFound(location=next_page)
             else:
+                if is_htmx:
+                    self.trigger_client_event(
+                        "formshare:notify", {"type": "error", "message": message}
+                    )
+                    return self.request.response
                 self.add_error(message)
                 next_page = self.request.route_url(
                     "form_details",

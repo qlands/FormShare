@@ -44,6 +44,8 @@ def initialize(path_to_templates):
     jinjaEnv.add_extension(JSResourceExtension)
     jinjaEnv.add_extension(CSSResourceExtension)
     jinjaEnv.add_extension(ExtendThis)
+    jinjaEnv.add_extension(PartialStartExtension)
+    jinjaEnv.add_extension(PartialEndExtension)
 
 
 def render_resource(
@@ -217,3 +219,54 @@ class CSSResourceExtension(BaseExtension):  # pragma: no cover
         assert len(args) == 3
         assert len(kwargs) == 0
         return render_resource(args[0], args[1], "CSS", args[2])
+
+
+class PartialStartExtension(ext.Extension):  # pragma: no cover
+    """Renders an HTML comment that marks the start of a named partial section.
+
+    Usage in templates::
+
+        {% partial_start 'my_section' %}
+        ... content ...
+        {% partial_end 'my_section' %}
+
+    When a request is made with ``?partial=my_section`` the server renders the
+    full page but returns only the content between the markers.
+
+    ``nodes.MarkSafeIfAutoescape`` is required because ``jinjaEnv`` is created
+    with ``autoescape=True``; without it the ``<`` and ``>`` in the HTML
+    comment markers would be entity-encoded.
+    """
+
+    tags = ["partial_start"]
+
+    def parse(self, parser):
+        lineno = next(parser.stream).lineno
+        name = parser.parse_expression()
+        inner = nodes.Add(
+            nodes.Add(nodes.Const("<!-- Partial-start: "), name, lineno=lineno),
+            nodes.Const(" -->"),
+            lineno=lineno,
+        )
+        safe = nodes.MarkSafeIfAutoescape(inner, lineno=lineno)
+        return nodes.Output([safe], lineno=lineno)
+
+
+class PartialEndExtension(ext.Extension):  # pragma: no cover
+    """Renders an HTML comment that marks the end of a named partial section.
+
+    See ``PartialStartExtension`` for usage and the autoescape note.
+    """
+
+    tags = ["partial_end"]
+
+    def parse(self, parser):
+        lineno = next(parser.stream).lineno
+        name = parser.parse_expression()
+        inner = nodes.Add(
+            nodes.Add(nodes.Const("<!-- Partial-end: "), name, lineno=lineno),
+            nodes.Const(" -->"),
+            lineno=lineno,
+        )
+        safe = nodes.MarkSafeIfAutoescape(inner, lineno=lineno)
+        return nodes.Output([safe], lineno=lineno)

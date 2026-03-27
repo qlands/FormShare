@@ -63,6 +63,34 @@ logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 
+def partial_callback(request, response):
+    """Extract a named partial section from the rendered HTML.
+
+    When the request includes ``?partial=<name>`` the full page is rendered
+    normally but only the HTML between::
+
+        <!-- Partial-start: <name> -->
+        <!-- Partial-end: <name> -->
+
+    is returned to the browser.  HTMX then swaps that fragment into the target
+    element without a full page reload.
+    """
+    partial_name = request.GET.get("partial")
+    if partial_name and response.content_type == "text/html":
+        html = response.body.decode()
+        start_marker = "<!-- Partial-start: {} -->".format(partial_name)
+        end_marker = "<!-- Partial-end: {} -->".format(partial_name)
+        i = html.find(start_marker)
+        j = html.find(end_marker)
+        if i != -1 and j != -1:
+            response.body = html[i + len(start_marker) : j].strip().encode()
+        else:
+            log.warning(
+                "Partial '%s' requested but markers not found in response.",
+                partial_name,
+            )
+
+
 def resource_callback(request, response):
     """
     This function moves all script code in a html to an ephemeral js file.
@@ -502,8 +530,12 @@ def remove_keys(obj, insecure_keys):
 
 class PrivateView(object):
     def __init__(self, request):
+        # JS extraction is skipped for partial requests — the fragment has no
+        # <body> tag so the ephemeral file injection would silently fail anyway.
         if request.registry.settings.get("secure.javascript", "false") == "true":
-            request.add_response_callback(resource_callback)
+            if not request.GET.get("partial"):
+                request.add_response_callback(resource_callback)
+        request.add_response_callback(partial_callback)
         self.request = request
         self.user = None
         self._ = self.request.translate
@@ -594,6 +626,33 @@ class PrivateView(object):
     def add_warning_message(self, message):
         self.request.session.flash("{}|warning".format(message))
         self.warning_messages.append(message)
+
+    def trigger_client_event(self, event_name, detail=None):
+        """Set the HTMX ``HX-Trigger`` response header to fire a DOM event.
+
+        The browser listens for the event with::
+
+            document.addEventListener("formshare:notify", function(e) { ... });
+
+        Multiple calls accumulate into a single JSON object so all queued
+        events fire together after the response is received.
+
+        Parameters
+        ----------
+        event_name : str
+            Custom DOM event name, e.g. ``"formshare:notify"``.
+        detail :
+            JSON-serialisable value attached as ``event.detail``.  Defaults
+            to ``True`` (a plain flag trigger with no payload).
+        """
+        import json as _json
+
+        if detail is None:
+            detail = True
+        raw = self.request.response.headers.get("HX-Trigger")
+        data = _json.loads(raw) if raw else {}
+        data[event_name] = detail
+        self.request.response.headers["HX-Trigger"] = _json.dumps(data)
 
     def get_policy(self, policy_name):
         policies = self.request.policies()

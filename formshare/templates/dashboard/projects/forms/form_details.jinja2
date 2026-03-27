@@ -107,7 +107,9 @@
                                 {% endif %}
                             {% endblock form_tabs_with_repository %}
                         {% endif %}
-                        {% include 'dashboard/projects/forms/snippets/files_tab.jinja2' %}
+                        <div id="formdetails_files_container">
+                            {% include 'dashboard/projects/forms/snippets/files_tab.jinja2' %}
+                        </div>
                         {% include 'dashboard/projects/forms/snippets/assistants_tab.jinja2' %}
                         {% include 'dashboard/projects/forms/snippets/groups_tab.jinja2' %}
                         {% if request.registry.settings['allow.partner.access'] == "True" %}
@@ -218,6 +220,7 @@
 {% endblock mainsection %}
 
 {% block scripts %}
+    <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
     {{ super() }}
     {% block form_extra_imports %}
 
@@ -250,16 +253,17 @@
                 {% endif %}
 
                 new ClipboardJS('.clipboard');
-                let upload_started = false;
                 let xform_update_started = false;
-                $('#form_upload_file_form').submit(function() {
-                    $(this).find("button[type='submit']").prop('disabled',true);
-                    upload_started = true;
+
+                document.addEventListener("formshare:files-updated", function() {
+                    $("#busy").hide();
+                    htmx.ajax('GET', window.location.pathname + '?partial=formdetails_files', {target: '#formdetails_files_container', swap: 'innerHTML'});
+                    $('#upload_file').modal('hide');
                 });
 
-                $('#upload_file').on('hidden.bs.modal', function () {
-                    if (upload_started)
-                        location.reload();
+                document.addEventListener("formshare:notify", function(e) {
+                    $("#busy").hide();
+                    swal({title: e.detail.type, text: e.detail.message, type: e.detail.type});
                 });
 
                 $('#form_update_form').submit(function() {
@@ -635,37 +639,66 @@
                     {% endif %}
 
                     {% if projectDetails.access_type < 4 %}
-                        $(".file-item").on("taphold", function()
-                        {
-                            var action_url = $( this ).attr('urn');
-                            swal({
-                                    title: "{{ _('Are you sure?') }}",
-                                    type: "warning",
-                                    showCancelButton: true,
-                                    confirmButtonColor: "#DD6B55",
-                                    confirmButtonText: "{{ _('Yes, remove it!') }}",
-                                    cancelButtonText: "{{ _('Oops!, cancel!') }}",
-                                    closeOnConfirm: true,
-                                    closeOnCancel: true },
-                                function (isConfirm) {
-                                    if (isConfirm) {
-                                        var form = document.createElement('form');
-                                        form.setAttribute('method', 'post');
-                                        form.setAttribute('action', action_url);
-                                        form.style.display = 'hidden';
+                        (function() {
+                            var _holdTimer = null;
+                            var _holdStartX = 0;
+                            var _holdStartY = 0;
+                            var HOLD_DURATION = 600;
+                            var MOVE_THRESHOLD = 10;
 
-                                        var i = document.createElement("input"); //input element, text
-                                        i.setAttribute('type',"text");
-                                        i.setAttribute('name',"csrf_token");
-                                        i.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                                        form.appendChild(i);
+                            function clearHold() {
+                                clearTimeout(_holdTimer);
+                                _holdTimer = null;
+                            }
 
-                                        document.body.appendChild(form);
-                                        $("#busy").show();
-                                        form.submit();
-                                    }
-                                });
-                        });
+                            // Event delegation on document so the handler survives
+                            // partial DOM refreshes without needing to rebind.
+                            document.addEventListener('pointerdown', function(e) {
+                                var target = e.target.closest('.file-item');
+                                if (!target) return;
+                                _holdStartX = e.clientX;
+                                _holdStartY = e.clientY;
+                                _holdTimer = setTimeout(function() {
+                                    _holdTimer = null;
+                                    var removeUrl = target.getAttribute('urn');
+                                    swal({
+                                            title: "{{ _('Are you sure?') }}",
+                                            type: "warning",
+                                            showCancelButton: true,
+                                            confirmButtonColor: "#DD6B55",
+                                            confirmButtonText: "{{ _('Yes, remove it!') }}",
+                                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                                            closeOnConfirm: true,
+                                            closeOnCancel: true },
+                                        function(isConfirm) {
+                                            if (isConfirm) {
+                                                htmx.ajax('POST', removeUrl, {
+                                                    target: '#formdetails_files_container',
+                                                    swap: 'none',
+                                                    values: {'csrf_token': '{{ request.session.get_csrf_token() }}'}
+                                                });
+                                            }
+                                        });
+                                }, HOLD_DURATION);
+                            });
+
+                            document.addEventListener('pointermove', function(e) {
+                                if (!_holdTimer) return;
+                                if (Math.abs(e.clientX - _holdStartX) > MOVE_THRESHOLD ||
+                                    Math.abs(e.clientY - _holdStartY) > MOVE_THRESHOLD) {
+                                    clearHold();
+                                }
+                            });
+
+                            document.addEventListener('pointerup', clearHold);
+                            document.addEventListener('pointercancel', clearHold);
+
+                            // Suppress the long-press context menu on mobile so it
+                            // doesn't compete with our hold handler.
+                            document.addEventListener('contextmenu', function(e) {
+                                if (e.target.closest('.file-item')) e.preventDefault();
+                            });
+                        })();
                     {% endif %}
 
                     $('#edit_assistant_details').click(function () {

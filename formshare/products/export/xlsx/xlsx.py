@@ -7,6 +7,7 @@ from formshare.processes.db.form import (
 from formshare.products import register_product_instance
 from formshare.processes.db.products import product_max_number
 from formshare.products.export.xlsx.celery_task import build_xlsx
+import formshare.plugins as p
 
 
 def generate_public_xlsx_file(
@@ -34,8 +35,9 @@ def generate_public_xlsx_file(
 
     create_xml_file = get_form_xml_create_file(request, project, form)
 
-    task = build_xlsx.apply_async(
-        (
+    task = None
+    for plugin in p.PluginImplementations(p.IExportGenerator):
+        task = plugin.excel_export(
             settings,
             odk_dir,
             form_schema,
@@ -47,9 +49,27 @@ def generate_public_xlsx_file(
             options,
             include_multiselect,
             include_lookups,
-        ),
-        queue="FormShare",
-    )
+        )
+        if task is not None:
+            break
+
+    if task is None:
+        task = build_xlsx.apply_async(
+            (
+                settings,
+                odk_dir,
+                form_schema,
+                create_xml_file,
+                request.registry.settings["auth.opaque"],
+                xlsx_file,
+                True,
+                request.locale_name,
+                options,
+                include_multiselect,
+                include_lookups,
+            ),
+            queue="FormShare",
+        )
     register_product_instance(
         request,
         user,
@@ -90,8 +110,9 @@ def generate_private_xlsx_file(
 
     create_xml_file = get_form_xml_create_file(request, project, form)
 
-    task = build_xlsx.apply_async(
-        (
+    task = None
+    for plugin in p.PluginImplementations(p.IExportGenerator):
+        task = plugin.excel_export(
             settings,
             odk_dir,
             form_schema,
@@ -103,9 +124,28 @@ def generate_private_xlsx_file(
             options,
             include_multiselect,
             include_lookups,
-        ),
-        queue="FormShare",
-    )
+        )
+        if task is not None:
+            break
+
+    if task is None:
+        task = build_xlsx.apply_async(
+            (
+                settings,
+                odk_dir,
+                form_schema,
+                create_xml_file,
+                request.registry.settings["auth.opaque"],
+                xlsx_file,
+                False,
+                request.locale_name,
+                options,
+                include_multiselect,
+                include_lookups,
+            ),
+            queue="FormShare",
+        )
+
     register_product_instance(
         request,
         user,

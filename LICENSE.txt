@@ -1,5 +1,5 @@
 
-QLANDS COMMUNITY LICENSE (QCL) v1.1
+QLANDS COMMUNITY OPEN-SOURCE LICENSE (QCOSL) v1.1
 
 Copyright (c) QLands Software Inc.
 
@@ -65,14 +65,14 @@ This restriction applies whether or not:
 Prohibited activities include but are not limited to:
 
 • Operating a hosted instance of the Software for third parties
-• Providing managed hosting services based on the Software
+• Providing managed hosting services based on the Software with public Sign up / Registration
 • Offering Software functionality through a web service or API
 • Packaging the Software as a platform or SaaS product
 • Operating a public instance intended for external users
 
 The restriction applies regardless of whether users are charged for access.
 
-Internal use within a single Organization is permitted.
+Internal use within an Organization is permitted as long as there is no public Sign up / Registration.
 
 --------------------------------------------------------------------
 4. PERMITTED USES
@@ -80,8 +80,8 @@ Internal use within a single Organization is permitted.
 
 The following uses are permitted under this License:
 
-• Internal deployment within an Organization
-• Academic and research use
+• Internal deployment within an Organization without public Sign up / Registration
+• Academic and research use without public Sign up / Registration
 • Non‑commercial experimentation or development
 • Contributions of modifications back to the Software
 • Distribution of the Software in source or binary form under this License

@@ -1,5 +1,4 @@
 import gettext
-import multiprocessing
 import os
 import time
 import uuid
@@ -13,7 +12,7 @@ from formshare.processes.email.send_async_email import send_async_email
 from formshare.processes.sse.messaging import send_task_status_to_form
 from formshare.products.block import (
     get_redis_client,
-    global_export_lock,
+    export_lock,
     LockAcquisitionError,
 )
 
@@ -69,14 +68,10 @@ def internal_build_xlsx(
     uid = str(uuid.uuid4())
 
     paths = ["tmp", uid]
-    temp_dir = os.path.join(odk_dir, *paths)
+    temp_dir = str(os.path.join(odk_dir, *paths))
     os.makedirs(temp_dir)
 
-    num_workers = (
-        multiprocessing.cpu_count() - int(settings.get("server:threads", "1")) - 1
-    )
-    if num_workers <= 0:
-        num_workers = 1
+    num_workers = int(settings.get("export.workers", "2"))
 
     xlsx_file_tmp = xlsx_file + ".tmp"
 
@@ -236,12 +231,9 @@ def build_xlsx(
 ):
     task_id = build_xlsx.request.id
     redis_client = get_redis_client(settings)
-    # Only one export is permitted at time. The others have to wait. Otherwise, the exports can overwhelm MySQL
     send_task_status_to_form(settings, task_id, "Scheduling")
     try:
-        with global_export_lock(
-            task_id, redis_client, lock_key="export-lock", timeout=60, expire=660
-        ):
+        with export_lock(task_id, redis_client, form_schema):
             send_task_status_to_form(settings, task_id, "Creating Excel file")
             internal_build_xlsx(
                 settings,
@@ -257,10 +249,9 @@ def build_xlsx(
                 include_lookups,
             )
     except LockAcquisitionError as e:
-        # Retry if we couldn't acquire the lock (e.g., another task running)
-        self.retry(exc=e, countdown=60)
+        redis_client.close()
+        self.retry(exc=e, countdown=30, max_retries=10)
     except Exception as e:
         redis_client.close()
-        # Let the task fail if export logic raises an error
         raise e
     redis_client.close()

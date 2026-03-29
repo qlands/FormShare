@@ -54,6 +54,7 @@ __all__ = [
     "IRoles",
     "IDeleteSubmission",
     "ISubmissionStorage",
+    "IExportGenerator",
 ]
 
 
@@ -972,7 +973,7 @@ class IImportExternalData(Interface):  # pragma: no cover
         :param assistant_uuid: Assistant UUID importing the data
         :param temp_dir: Path to the files to be imported
         :param project_code: Project code
-        :param geopoint_variable: Which variable should be used to pull the geo location
+        :param geopoint_variables: Which variable should be used to pull the geo location
         :param import_type: Type of import > 2
         :param post_data: Data from the import page
         :param ignore_xform: Whether to ignore the ignore_xform ID while importing
@@ -2057,6 +2058,107 @@ class IExport(Interface):  # pragma: no cover
         :return: Must return a HTTP 302 redirect (A Pyramid HTTPFound)
         """
         raise NotImplementedError("do_export must be implemented in subclasses")
+
+
+class IExportGenerator(Interface):  # pragma: no cover
+    """
+    Allows to hook into the processes that generates the FormShare exports to Excel, CSV, JSON, KML, and Media
+    so plugins can replace them with faster and better exports
+    """
+
+    def excel_export(
+        self,
+        settings,
+        odk_dir,
+        form_schema,
+        create_xml_file,
+        encryption_key,
+        xlsx_file,
+        protect_sensitive,
+        locale,
+        options,
+        include_multiselect,
+        include_lookups,
+    ):
+        """Called by FormShare so plugins can replace the Excel export
+        :param settings: Settings object
+        :param odk_dir: Path to the ODK directory
+        :param form_schema: FormShare schema
+        :param create_xml_file: Create XML file
+        :param encryption_key: Encryption key
+        :param xlsx_file: Excel file name
+        :param protect_sensitive: Protect sensitive
+        :param locale: Locale
+        :param options: Options to the export
+        :param include_multiselect: Include multiselect
+        :param include_lookups: Include lookups
+        :return: Celery Task ID or None. If None then FormShare will export it"""
+
+        raise NotImplementedError("excel_export must be implemented in subclasses")
+
+    def csv_export(
+        self,
+        settings,
+        odk_dir,
+        form_schema,
+        form_id,
+        create_xml,
+        encryption_key,
+        zip_file,
+        protect_sensitive,
+        locale,
+        options,
+        include_multiselect,
+        include_lookups,
+    ):
+        """Called by FormShare so plugins can replace the Excel export
+        :param settings: Settings object
+        :param odk_dir: Path to the ODK directory
+        :param form_schema: FormShare schema
+        :param form_id: Form ID
+        :param create_xml: Create XML file
+        :param encryption_key: Encryption key
+        :param zip_file: Excel file name
+        :param protect_sensitive: Protect sensitive
+        :param locale: Locale
+        :param options: Options to the export
+        :param include_multiselect: Include multiselect
+        :param include_lookups: Include lookups
+        :return: Celery Task ID or None. If None then FormShare will export it"""
+
+        raise NotImplementedError("csv_export must be implemented in subclasses")
+
+    def json_export(
+        self,
+        settings,
+        odk_dir,
+        form_schema,
+        form_id,
+        create_xml,
+        encryption_key,
+        zip_file,
+        protect_sensitive,
+        locale,
+        options,
+        include_multiselect,
+        include_lookups,
+    ):
+        """Called by FormShare so plugins can replace the Excel export
+        :param settings: Settings object
+        :param odk_dir: Path to the ODK directory
+        :param form_schema: FormShare schema
+        :param form_id: Form ID
+        :param create_xml: Create XML file
+        :param encryption_key: Encryption key
+        :param zip_file: Zip file name
+        :param protect_sensitive: Protect sensitive
+        :param locale: Locale
+        :param options: Options to the export
+        :param include_multiselect: Include multiselect
+        :param include_lookups: Include lookups
+        :return: Celery Task ID or None. If None then FormShare will export it"""
+
+        raise NotImplementedError("csv_export must be implemented in subclasses")
 
 
 class ICollaborator(Interface):  # pragma: no cover

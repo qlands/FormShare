@@ -7,6 +7,7 @@ from formshare.processes.db.form import (
 from formshare.products import register_product_instance
 from formshare.products.export.zip_csv.celery_task import build_zip_csv
 from formshare.processes.db.products import product_max_number
+import formshare.plugins as p
 
 
 def generate_public_zip_csv_file(
@@ -34,8 +35,9 @@ def generate_public_zip_csv_file(
 
     create_xml_file = get_form_xml_create_file(request, project, form)
 
-    task = build_zip_csv.apply_async(
-        (
+    task = None
+    for plugin in p.PluginImplementations(p.IExportGenerator):
+        task = plugin.csv_export(
             settings,
             odk_dir,
             form_schema,
@@ -48,9 +50,29 @@ def generate_public_zip_csv_file(
             options,
             include_multiselect,
             include_lookups,
-        ),
-        queue="FormShare",
-    )
+        )
+        if task is not None:
+            break
+
+    if task is None:
+        task = build_zip_csv.apply_async(
+            (
+                settings,
+                odk_dir,
+                form_schema,
+                form,
+                create_xml_file,
+                request.registry.settings["auth.opaque"],
+                zip_file,
+                True,
+                request.locale_name,
+                options,
+                include_multiselect,
+                include_lookups,
+            ),
+            queue="FormShare",
+        )
+
     register_product_instance(
         request,
         user,
@@ -91,8 +113,9 @@ def generate_private_zip_csv_file(
 
     create_xml_file = get_form_xml_create_file(request, project, form)
 
-    task = build_zip_csv.apply_async(
-        (
+    task = None
+    for plugin in p.PluginImplementations(p.IExportGenerator):
+        task = plugin.csv_export(
             settings,
             odk_dir,
             form_schema,
@@ -105,9 +128,29 @@ def generate_private_zip_csv_file(
             options,
             include_multiselect,
             include_lookups,
-        ),
-        queue="FormShare",
-    )
+        )
+        if task is not None:
+            break
+
+    if task is None:
+        task = build_zip_csv.apply_async(
+            (
+                settings,
+                odk_dir,
+                form_schema,
+                form,
+                create_xml_file,
+                request.registry.settings["auth.opaque"],
+                zip_file,
+                False,
+                request.locale_name,
+                options,
+                include_multiselect,
+                include_lookups,
+            ),
+            queue="FormShare",
+        )
+
     register_product_instance(
         request,
         user,

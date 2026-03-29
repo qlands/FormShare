@@ -1,6 +1,5 @@
 import gettext
 import glob
-import multiprocessing
 import os
 import time
 import uuid
@@ -13,7 +12,7 @@ from formshare.config.celery_class import CeleryTask
 from formshare.processes.email.send_async_email import send_async_email
 from formshare.products.block import (
     get_redis_client,
-    global_export_lock,
+    export_lock,
     LockAcquisitionError,
 )
 from formshare.processes.sse.messaging import send_task_status_to_form
@@ -66,27 +65,23 @@ def internal_build_zip_json(
     odk_tools_dir = settings["odktools.path"]
 
     paths = [odk_tools_dir, "utilities", "MySQLToJSON", "mysqltojson"]
-    mysql_to_xlsx = os.path.join(odk_dir, *paths)
+    mysql_to_json = os.path.join(odk_dir, *paths)
 
     uid = str(uuid.uuid4())
 
     paths = ["tmp", uid]
-    temp_dir = os.path.join(odk_dir, *paths)
+    temp_dir = str(os.path.join(odk_dir, *paths))
     os.makedirs(temp_dir)
 
     uid = str(uuid.uuid4())
     paths = ["tmp", uid]
-    output_path = os.path.join(odk_dir, *paths)
+    output_path = str(os.path.join(odk_dir, *paths))
     os.makedirs(output_path)
 
-    num_workers = (
-        multiprocessing.cpu_count() - int(settings.get("server:threads", "1")) - 1
-    )
-    if num_workers <= 0:
-        num_workers = 1
+    num_workers = int(settings.get("export.workers", "2"))
 
     args = [
-        mysql_to_xlsx,
+        mysql_to_json,
         "-H " + mysql_host,
         "-P " + mysql_port,
         "-u " + mysql_user,
@@ -169,12 +164,9 @@ def build_zip_json(
 ):
     task_id = build_zip_json.request.id
     redis_client = get_redis_client(settings)
-    # Only one export is permitted at time. The others have to wait. Otherwise, the exports can overwhelm MySQL
     send_task_status_to_form(settings, task_id, "Scheduling")
     try:
-        with global_export_lock(
-            task_id, redis_client, lock_key="export-lock", timeout=60, expire=660
-        ):
+        with export_lock(task_id, redis_client, form_schema):
             send_task_status_to_form(settings, task_id, "Creating Zip JSON file")
             internal_build_zip_json(
                 settings,
@@ -191,10 +183,9 @@ def build_zip_json(
                 include_lookups,
             )
     except LockAcquisitionError as e:
-        # Retry if we couldn't acquire the lock (e.g., another task running)
-        self.retry(exc=e, countdown=60)
+        redis_client.close()
+        self.retry(exc=e, countdown=30, max_retries=10)
     except Exception as e:
         redis_client.close()
-        # Let the task fail if export logic raises an error
         raise e
     redis_client.close()

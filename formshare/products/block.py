@@ -44,17 +44,26 @@ class LockAcquisitionError(Exception):
 
 
 @contextmanager
-def export_lock(task_id, redis_client, form_schema, expire=EXPORT_LOCK_EXPIRE):
+def export_lock(
+    task_id,
+    redis_client,
+    form_schema,
+    expire=EXPORT_LOCK_EXPIRE,
+    form_timeout=60,
+    form_poll_interval=5,
+):
     """
     Two-level export lock:
 
       1. Per-form mutex  — only one export per form at a time (prevents the
                            same form being exported twice simultaneously).
+                           Polls up to `form_timeout` seconds before giving up,
+                           so a running export can finish without the caller
+                           needing to rely on Celery's retry mechanism.
       2. Global semaphore — at most MAX_CONCURRENT_EXPORTS platform-wide
                             (protects MySQL from concurrent full-table scans).
-
-    Fails immediately if either level cannot be acquired. The Celery task
-    should use self.retry(countdown=N) to re-queue without blocking a worker.
+                            Fails immediately; the Celery task should use
+                            self.retry(countdown=N) to re-queue.
 
     Both locks self-expire after `expire` seconds so a crashed worker cannot
     permanently block other tasks.
@@ -66,14 +75,29 @@ def export_lock(task_id, redis_client, form_schema, expire=EXPORT_LOCK_EXPIRE):
     sem_acquired = False
 
     try:
-        # 1. Per-form mutex — fail fast, no busy-wait
-        if not redis_client.set(form_key, token, nx=True, ex=expire):
-            raise LockAcquisitionError(
-                "Task {}: an export is already running for form {}".format(
-                    task_id, form_schema
+        # 1. Per-form mutex — poll until timeout before giving up.
+        # Same-form exports are a "wait your turn" situation; the previous
+        # export will finish and release the lock within the timeout window.
+        deadline = time.time() + form_timeout
+        while True:
+            if redis_client.set(form_key, token, nx=True, ex=expire):
+                form_acquired = True
+                break
+            remaining = deadline - time.time()
+            if remaining <= 0:
+                raise LockAcquisitionError(
+                    "Task {}: timed out waiting for form {} export lock "
+                    "after {} seconds".format(task_id, form_schema, form_timeout)
                 )
+            log.info(
+                "Task %s: form %s is already being exported, retrying in %ds "
+                "(%.0fs remaining)",
+                task_id,
+                form_schema,
+                form_poll_interval,
+                remaining,
             )
-        form_acquired = True
+            time.sleep(min(form_poll_interval, remaining))
 
         # 2. Global semaphore — atomic via Lua to avoid TOCTOU race
         now = time.time()

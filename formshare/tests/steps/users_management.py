@@ -1,3 +1,4 @@
+import time
 import uuid
 
 
@@ -109,6 +110,8 @@ def t_e_s_t_users_management(test_object):
         status=302,
     )
     assert "FS_error" not in res.headers
+
+    time.sleep(30)
 
     # Add user fails: email already exists
     res = test_object.testapp.post(

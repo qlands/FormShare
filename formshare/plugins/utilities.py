@@ -20,6 +20,7 @@ from formshare.processes.settings.settings import (
     get_settings,
 )
 from formshare.views.classes import (
+    AsyncView,
     PublicView,
     PrivateView,
     ProjectsView,
@@ -45,6 +46,7 @@ __all__ = [
     "FormShareProjectsView",
     "FormShareAssistantView",
     "FormShareSettings",
+    "FormShareAsyncView",
     "FormShareFormEditorView",
     "FormShareFormAdminView",
     "add_field_to_form_access_schema",
@@ -308,6 +310,41 @@ class FormShareFormAdminView(
             self.request, project_id
         )
         self.classResult["formDetails"] = self.form_details
+
+
+class FormShareAsyncView(
+    AsyncView
+):  # pragma: no cover - Tested by loading testing plugins but not Covered
+    """
+    A view class for plugins which require a native async FastAPI endpoint.
+
+    Unlike FormSharePrivateView (sync, runs in a thread pool), this class
+    runs directly on the async event loop.  Suitable for SSE streaming,
+    long-polling, or any endpoint that benefits from async I/O.
+
+    Subclasses override ``async def process_view(self, request)`` and must
+    return a Starlette ``Response``.
+
+    Class attributes:
+        methods      -- HTTP methods accepted (default ["GET"])
+        requireAuth  -- check auth before process_view (default True)
+
+    Path parameters are available via ``request.path_params["name"]``.
+    Settings are available via ``self.settings``.
+    The authenticated user login is ``self.user`` (set when requireAuth=True).
+
+    Example::
+
+        class MyStreamView(FormShareAsyncView):
+            methods = ["GET"]
+
+            async def process_view(self, request):
+                task_id = request.path_params["task_id"]
+                return StreamingResponse(my_generator(), media_type="text/event-stream")
+    """
+
+    async def process_view(self, request):
+        raise NotImplementedError("process_view must be implemented in subclasses")
 
 
 class FormShareSettings(

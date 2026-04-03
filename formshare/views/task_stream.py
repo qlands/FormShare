@@ -2,9 +2,7 @@
 formshare.views.task_stream
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Raw async SSE endpoint for streaming Celery task status updates to the
-browser.  Bypasses the make_endpoint dispatcher (which is sync-only) and
-is registered directly on the FastAPI app.
+SSE endpoint for streaming Celery task status updates to the browser.
 
 Usage
 -----
@@ -29,39 +27,22 @@ import asyncio
 import logging
 
 import redis.asyncio as aioredis
-from starlette.requests import Request
-from starlette.responses import Response, StreamingResponse
+from starlette.responses import StreamingResponse
+
+from formshare.views.classes import AsyncView
 
 log = logging.getLogger("formshare")
 
 _TERMINAL_STATUSES = frozenset({"success", "failure"})
 
 
-def make_task_stream_endpoint(app_state: dict):
-    """Return an async FastAPI endpoint function.
+class TaskStreamView(AsyncView):
+    methods = ["GET"]
+    requireAuth = True
 
-    Parameters
-    ----------
-    app_state:
-        The same app_state dict built in formshare.app.create_app().
-        Must contain ``"policies"`` (list of auth policy dicts) and
-        ``"settings"`` (the flat settings dict).
-    """
-    policies = app_state["policies"]
-    settings = app_state["settings"]
-    redis_url = settings.get("celery.broker", "redis://localhost:6379/0")
-
-    def _get_login(request: Request):
-        """Return the authenticated login string, or None."""
-        for entry in policies:
-            if entry["name"] == "main":
-                return entry["policy"].authenticated_userid(request)
-        return None
-
-    async def task_stream(request: Request, task_id: str):
-        if _get_login(request) is None:
-            return Response(status_code=401)
-
+    async def process_view(self, request):
+        task_id = request.path_params["task_id"]
+        redis_url = self.settings.get("celery.broker", "redis://localhost:6379/0")
         channel = "formshare:tasks:{}".format(task_id)
 
         async def event_generator():
@@ -106,5 +87,3 @@ def make_task_stream_endpoint(app_state: dict):
                 "X-Accel-Buffering": "no",  # disable nginx buffering
             },
         )
-
-    return task_stream

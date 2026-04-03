@@ -180,11 +180,13 @@ def create_app(settings: dict | None = None, ini_path: str | None = None):
     from starlette.middleware.sessions import SessionMiddleware
 
     from formshare.config.dispatcher import (
+        make_async_endpoint,
         make_endpoint,
         make_error_endpoint,
     )
     from formshare.config.routes import route_list
     from formshare.config.api_routes import api_route_list
+    from formshare.views.classes import AsyncView
 
     fastapi_app = FastAPI(title="FormShare", docs_url=None, redoc_url=None)
 
@@ -218,36 +220,29 @@ def create_app(settings: dict | None = None, ini_path: str | None = None):
             path = route["path"]
             name = route["name"]
 
-            # Convert Pyramid-style path params  {userid}  →  FastAPI  {userid}
-            # (they use the same syntax, so no conversion is needed)
+            # AsyncView subclasses are native async endpoints — bypass the
+            # sync make_endpoint dispatcher entirely.
+            if isinstance(view_class, type) and issubclass(view_class, AsyncView):
+                endpoint = make_async_endpoint(view_class, app_state)
+                methods = view_class.methods
+            else:
+                endpoint = make_endpoint(
+                    view_class, renderer, db_session_factory, jinjaEnv, app_state
+                )
+                # Register for all methods — the view itself decides based
+                # on request.method.
+                methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"]
 
-            endpoint = make_endpoint(
-                view_class, renderer, db_session_factory, jinjaEnv, app_state
-            )
-
-            # Register for both GET and POST (FormShare views typically handle
-            # both; the view itself decides based on request.method).
             fastapi_app.add_api_route(
                 path,
                 endpoint,
-                methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"],
+                methods=methods,
                 name=name,
                 include_in_schema=False,
             )
 
     _register_routes(route_list)
     _register_routes(api_route_list)
-
-    # -- SSE task-stream endpoint (raw async, bypasses make_endpoint) --
-    from formshare.views.task_stream import make_task_stream_endpoint
-
-    fastapi_app.add_api_route(
-        "/task_stream/{task_id}",
-        make_task_stream_endpoint(app_state),
-        methods=["GET"],
-        name="task_stream",
-        include_in_schema=False,
-    )
 
     # -- Error handlers --
     from starlette.requests import Request

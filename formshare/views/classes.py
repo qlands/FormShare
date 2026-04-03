@@ -403,6 +403,72 @@ class ExceptionView(object):
         self.errors.append(error)
 
 
+class AsyncView:
+    """Base class for native async FastAPI endpoints.
+
+    Unlike PublicView/PrivateView (which are sync and run in a thread pool),
+    AsyncView subclasses are truly async and run directly on the event loop.
+    This makes them suitable for streaming responses (SSE, long-polling),
+    WebSocket-like patterns, or any endpoint that benefits from async I/O.
+
+    Subclasses override ``async def process_view(self, request)`` and return
+    a Starlette ``Response`` (e.g. ``StreamingResponse``, ``JSONResponse``).
+
+    Path parameters are available via ``request.path_params["name"]``.
+
+    Class attributes
+    ----------------
+    methods : list[str]
+        HTTP methods this endpoint accepts.  Default ``["GET"]``.
+    requireAuth : bool
+        If True (default), unauthenticated requests receive a 401 before
+        ``process_view`` is called.
+
+    Example (plugin)
+    ----------------
+    ::
+
+        from formshare.plugins.utilities import FormShareAsyncView, add_route
+
+        class MySSEView(FormShareAsyncView):
+            async def process_view(self, request):
+                task_id = request.path_params["task_id"]
+                ...
+                return StreamingResponse(generator(), media_type="text/event-stream")
+
+        # In IRoutes.after_mapping:
+        routes.append(add_route("my_sse", "/my_sse/{task_id}", MySSEView, None))
+    """
+
+    methods = ["GET"]
+    requireAuth = True
+
+    def __init__(self, app_state):
+        self.settings = app_state["settings"]
+        self.policies = app_state["policies"]
+        self.user = None
+
+    def get_authenticated_user(self, request):
+        """Return the authenticated user login string, or None."""
+        for entry in self.policies:
+            if entry["name"] == "main":
+                return entry["policy"].authenticated_userid(request)
+        return None
+
+    async def __call__(self, request):
+        if self.requireAuth:
+            login = self.get_authenticated_user(request)
+            if login is None:
+                from starlette.responses import Response
+
+                return Response(status_code=401)
+            self.user = login
+        return await self.process_view(request)
+
+    async def process_view(self, request):
+        raise NotImplementedError("process_view must be implemented in subclasses")
+
+
 class PublicView(object):
     """
     This is the most basic public view. Used for 404 and 500. But then used for others more advanced classes

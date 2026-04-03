@@ -54,6 +54,22 @@ def _get_executor() -> ThreadPoolExecutor:
 # ---------------------------------------------------------------------------
 
 
+def make_async_endpoint(view_class, app_state):
+    """Return an async FastAPI endpoint for an ``AsyncView`` subclass.
+
+    The endpoint is truly async — no thread pool, no FormShareRequest, no
+    SQLAlchemy session.  The view receives the raw Starlette ``Request`` and
+    must return a Starlette ``Response``.
+    """
+
+    async def endpoint(request: Request):
+        view = view_class(app_state)
+        return await view(request)
+
+    endpoint.__name__ = view_class.__name__ + "_async_endpoint"
+    return endpoint
+
+
 def make_endpoint(view_class, renderer, db_session_factory, jinja_env, app_state):
     """Return an async FastAPI endpoint for *view_class*.
 

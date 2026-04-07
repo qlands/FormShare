@@ -25,6 +25,8 @@ from formshare.processes.db import (
     form_file_exists,
     get_all_assistants,
     add_assistant_to_form,
+    count_form_assistants,
+    count_form_groups,
     get_form_assistants,
     get_form_assistants_through_groups,
     update_assistant_privileges,
@@ -2022,7 +2024,6 @@ class AddFileToForm(PrivateView):
             files = self.request.POST.getall("filetoupload")
             form_data = self.get_post_dict()
             self.returnRawViewResult = True
-            is_htmx = self.request.headers.get("HX-Request") == "true"
 
             next_page = self.request.route_url(
                 "form_details", userid=user_id, projcode=project_code, formid=form_id
@@ -2229,9 +2230,6 @@ class AddFileToForm(PrivateView):
                             )
                         )
             if not error:
-                if is_htmx:
-                    self.trigger_client_event("formshare:files-updated")
-                    return self.request.response
                 if len(files) == 1:
                     self.request.session.flash(
                         self._("The file was uploaded successfully")
@@ -2242,12 +2240,6 @@ class AddFileToForm(PrivateView):
                     )
                 return HTTPFound(location=next_page)
             else:
-                if is_htmx:
-                    msg = messages[0] if messages else self._("Upload failed")
-                    self.trigger_client_event(
-                        "formshare:notify", {"type": "error", "message": msg}
-                    )
-                    return self.request.response
                 for a_message in messages:
                     self.add_error(a_message)
                 next_page = self.request.route_url(
@@ -2295,21 +2287,16 @@ class RemoveFileFromForm(PrivateView):
 
         if self.request.method == "POST":
             self.returnRawViewResult = True
-            is_htmx = self.request.headers.get("HX-Request") == "true"
 
             if form_data["form_reqfiles"] is not None:
                 if form_data["form_schema"] is not None:
                     required_files = form_data["form_reqfiles"].split(",")
                     if file_name in required_files:
-                        msg = self._(
-                            "You cannot remove this file because it is required by the repository"
-                        )
-                        if is_htmx:
-                            self.trigger_client_event(
-                                "formshare:notify", {"type": "error", "message": msg}
+                        self.add_error(
+                            self._(
+                                "You cannot remove this file because it is required by the repository"
                             )
-                            return self.request.response
-                        self.add_error(msg)
+                        )
                         next_page = self.request.route_url(
                             "form_details",
                             userid=user_id,
@@ -2342,17 +2329,9 @@ class RemoveFileFromForm(PrivateView):
                             form_update_data["form_mergetask"] = None
                         update_form(self.request, project_id, form_id, form_update_data)
 
-                if is_htmx:
-                    self.trigger_client_event("formshare:files-updated")
-                    return self.request.response
                 self.request.session.flash(self._("The file was removed successfully"))
                 return HTTPFound(location=next_page)
             else:
-                if is_htmx:
-                    self.trigger_client_event(
-                        "formshare:notify", {"type": "error", "message": message}
-                    )
-                    return self.request.response
                 self.add_error(message)
                 next_page = self.request.route_url(
                     "form_details",
@@ -2498,9 +2477,17 @@ class AddAssistant(PrivateView):
                                     assistant_data,
                                 )
                             if is_htmx:
-                                self.trigger_client_event(
-                                    "formshare:assistants-updated"
+                                assistant_count = count_form_assistants(
+                                    self.request, project_id, form_id
                                 )
+                                if assistant_count == 1:
+                                    self.trigger_client_event(
+                                        "formshare:full-reload"
+                                    )
+                                else:
+                                    self.trigger_client_event(
+                                        "formshare:assistants-updated"
+                                    )
                                 return self.request.response
                             self.request.session.flash(
                                 self._("The assistant was added successfully")
@@ -2800,7 +2787,13 @@ class RemoveAssistant(PrivateView):
                             assistant_uuid,
                         )
                     if is_htmx:
-                        self.trigger_client_event("formshare:assistants-updated")
+                        assistant_count = count_form_assistants(
+                            self.request, project_id, form_id
+                        )
+                        if assistant_count == 0:
+                            self.trigger_client_event("formshare:full-reload")
+                        else:
+                            self.trigger_client_event("formshare:assistants-updated")
                         return self.request.response
                     self.request.session.flash(
                         self._("The assistant was removed successfully")
@@ -2915,7 +2908,13 @@ class AddGroupToForm(PrivateView):
                     )
                     if added:
                         if is_htmx:
-                            self.trigger_client_event("formshare:groups-updated")
+                            group_count = count_form_groups(
+                                self.request, project_id, form_id
+                            )
+                            if group_count == 1:
+                                self.trigger_client_event("formshare:full-reload")
+                            else:
+                                self.trigger_client_event("formshare:groups-updated")
                             return {}
                         self.request.session.flash(
                             self._("The group was added successfully")
@@ -3117,7 +3116,13 @@ class RemoveGroupForm(PrivateView):
             )
             if removed:
                 if is_htmx:
-                    self.trigger_client_event("formshare:groups-updated")
+                    group_count = count_form_groups(
+                        self.request, project_id, form_id
+                    )
+                    if group_count == 0:
+                        self.trigger_client_event("formshare:full-reload")
+                    else:
+                        self.trigger_client_event("formshare:groups-updated")
                     return self.request.response
                 self.request.session.flash(self._("The group was removed successfully"))
                 next_page = self.request.route_url(

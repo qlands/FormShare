@@ -114,6 +114,8 @@ __all__ = [
     "update_media_lastgen",
     "block_forms_with_schema",
     "copy_assistants",
+    "count_form_assistants",
+    "count_form_groups",
 ]
 
 logging.setLoggerClass(SecretLogger)
@@ -1789,6 +1791,24 @@ def form_file_exists(request, project, form, file_name):
         return True
     else:
         return False
+
+
+def count_form_assistants(request, project, form):
+    return (
+        request.dbsession.query(Formacces)
+        .filter(Formacces.form_project == project)
+        .filter(Formacces.form_id == form)
+        .count()
+    )
+
+
+def count_form_groups(request, project, form):
+    return (
+        request.dbsession.query(Formgrpacces)
+        .filter(Formgrpacces.form_project == project)
+        .filter(Formgrpacces.form_id == form)
+        .count()
+    )
 
 
 def add_assistant_to_form(request, project, form, privilege_data):

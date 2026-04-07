@@ -57,7 +57,6 @@ class TokenView(object):
                         if current_secret.decode() == api_secret:
                             token = secrets.token_hex(16)
                             token_expires_on = datetime.now() + relativedelta(hours=+24)
-                            save_point = self.request.tm.savepoint()
                             try:
                                 self.request.dbsession.query(User).filter(
                                     User.user_apikey == api_key
@@ -67,13 +66,13 @@ class TokenView(object):
                                         "user_apitoken_expires_on": token_expires_on,
                                     }
                                 )
-                                self.request.dbsession.flush()
+                                self.request.dbsession.commit()
                             except Exception as e:
                                 log.error(
                                     "Unable to set token for user {}. Error {}",
                                     format(api_key, str(e)),
                                 )
-                                save_point.rollback()
+                                self.request.dbsession.rollback()
 
                             # send_token_email(self.request, res.user_email, token_expires_on)
                             response = Response(

@@ -277,13 +277,6 @@
                         + '</ul></div></div>';
                 }
 
-                document.addEventListener("formshare:files-updated", function() {
-                    $("#busy").hide();
-                    $('#upload_file').modal('hide');
-                    document.getElementById('formdetails_files_container').innerHTML = fsSkeletonIbox();
-                    htmx.ajax('GET', window.location.pathname + '?partial=formdetails_files', {target: '#formdetails_files_container', swap: 'innerHTML'});
-                });
-
                 document.addEventListener("formshare:assistants-updated", function() {
                     $("#busy").hide();
                     $('#coll_can_submit').prop('checked', false);
@@ -301,6 +294,10 @@
                     $('#edit_group').modal('hide');
                     document.getElementById('formdetails_groups_container').innerHTML = fsSkeletonIbox();
                     htmx.ajax('GET', window.location.pathname + '?partial=formdetails_groups', {target: '#formdetails_groups_container', swap: 'innerHTML'});
+                });
+
+                document.addEventListener("formshare:full-reload", function() {
+                    location.reload();
                 });
 
                 document.addEventListener("formshare:notify", function(e) {
@@ -714,11 +711,16 @@
                                             closeOnCancel: true },
                                         function(isConfirm) {
                                             if (isConfirm) {
-                                                htmx.ajax('POST', removeUrl, {
-                                                    target: '#formdetails_files_container',
-                                                    swap: 'none',
-                                                    values: {'csrf_token': '{{ request.session.get_csrf_token() }}'}
-                                                });
+                                                var form = document.createElement('form');
+                                                form.method = 'POST';
+                                                form.action = removeUrl;
+                                                var csrf = document.createElement('input');
+                                                csrf.type = 'hidden';
+                                                csrf.name = 'csrf_token';
+                                                csrf.value = '{{ request.session.get_csrf_token() }}';
+                                                form.appendChild(csrf);
+                                                document.body.appendChild(form);
+                                                form.submit();
                                             }
                                         });
                                 }, HOLD_DURATION);

@@ -614,7 +614,6 @@ class UploadAssistantsCSV(PrivateView):
             if not error:
                 all_in = []
                 messages = []
-                save_point = self.request.tm.savepoint()
                 for an_assistant in assistants:
                     an_assistant["coll_uuid"] = str(uuid.uuid4())
                     an_assistant["coll_tenant"] = self.user.tenant
@@ -659,13 +658,13 @@ class UploadAssistantsCSV(PrivateView):
                             all_in.append(True)
                             messages.append("")
                 try:
-                    self.request.dbsession.flush()
+                    self.request.dbsession.commit()
                 except IntegrityError:
-                    save_point.rollback()
+                    self.request.dbsession.rollback()
                     error = True
                     message = self._("Your file has assistants with duplicated ids.")
                 except Exception as e:
-                    save_point.rollback()
+                    self.request.dbsession.rollback()
                     error = True
                     log.error(
                         "Error {} while adding assistants from CSV in project {}".format(

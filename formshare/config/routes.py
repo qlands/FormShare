@@ -238,7 +238,9 @@ def load_routes(config, settings):
     # FormShare routes
     routes.append(add_route("home", "/", HomeView, "landing/index.jinja2"))
     routes.append(add_route("health", "/health", HealthView, "json"))
-    routes.append(add_route("task_stream", "/task_stream/{task_id}", TaskStreamView, None))
+    routes.append(
+        add_route("task_stream", "/task_stream/{task_id}", TaskStreamView, None)
+    )
     routes.append(
         add_route(
             "cookie_consent_save", "/cookie/consent", SaveCookieConsentView, "json"

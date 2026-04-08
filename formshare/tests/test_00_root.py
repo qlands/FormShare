@@ -25,7 +25,6 @@ from .steps.collaborator_projects_4 import t_e_s_t_collaborator_projects_4
 from .steps.collaborators import t_e_s_t_collaborators
 from .steps.color_hash_hex import t_e_s_t_color_hash_hex
 from .steps.configure_alembic import t_e_s_t_configure_alembic
-from .steps.configure_fluent import t_e_s_t_configure_fluent
 from .steps.configure_mysql import t_e_s_t_configure_mysql
 from .steps.configure_t_e_s_t_s import t_e_s_t_configure_t_e_s_t_s
 from .steps.create_super_user import t_e_s_t_create_super_user
@@ -33,7 +32,6 @@ from .steps.crowdsourcing import t_e_s_t_crowdsourcing
 from .steps.dashboard import t_e_s_t_dashboard
 from .steps.delete_active_project import t_e_s_t_delete_active_project
 from .steps.delete_form_with_repository import t_e_s_t_delete_form_with_repository
-from .steps.disable_ssl import t_e_s_t_disable_ssl
 from .steps.error_pages import t_e_s_t_error_pages
 from .steps.external_select import t_e_s_t_external_select
 from .steps.five_collaborators import t_e_s_t_five_collaborators

@@ -1,5 +1,5 @@
-[![CircleCI](https://circleci.com/gh/qlands/FormShare/tree/master-2.0.svg?style=shield)](https://circleci.com/gh/qlands/FormShare)
-[![Codecov](https://codecov.io/github/qlands/FormShare/branch/master-2.0/graph/badge.svg)](https://app.codecov.io/gh/qlands/FormShare/commits?page=1)
+[![CircleCI](https://circleci.com/gh/qlands/FormShare/tree/master-3.0.svg?style=shield)](https://circleci.com/gh/qlands/FormShare)
+[![Codecov](https://codecov.io/github/qlands/FormShare/branch/master-3.0/graph/badge.svg)](https://app.codecov.io/gh/qlands/FormShare/commits?page=1)
 [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 
 FormShare<sup>®</sup>
@@ -102,17 +102,17 @@ ScreenShot
 
 Releases
 ------------
-The current stable release is 2.50.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.50.0) 
+The current stable release is 3.0.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.50.0) 
 
-The database signature for stable 2.50.0 is b3711f9c82a0
+The database signature for stable 3.0.0 is 6e8f0f158657
 
-The Docker image for stable 2.50.0 is 20260218
+The Docker image for stable 3.0.0 is 20260408
 
 **Never upgrade FormShare from one Docker image to another without checking the "Upgrading information" section below.**
 
 Installation
 ------------
-Please read the [installation guide](install_steps.md) if you want to install FormShare manually. However, we encourage you to use the Docker Compose file available in the docker_compose directory. This will help you later on in backing FormShare or move it to another server.
+Install FormShare using the Docker Compose files available in the docker_compose directory. 
 
 The below is a common recipe for running FormShare using docker:
 
@@ -126,90 +126,61 @@ sudo apt-get -y upgrade
 # Install docker-compose
 sudo apt-get install -y docker-compose
 
-# Get the Docker Compose file
+# Get the Docker Compose files
 cd /opt
-sudo mkdir formshare_docker_compose_20260218
-cd formshare_docker_compose_20260218
-sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.50.0/docker_compose/docker-compose.yml
+sudo mkdir formshare_community
+cd formshare_community
+sudo wget https://raw.githubusercontent.com/qlands/FormShare/refs/heads/stable-3.0.0/docker_compose/servers.yml
+sugo wget https://raw.githubusercontent.com/qlands/FormShare/refs/heads/master-3.0/docker_compose/formshare.yml
+sudo wget https://raw.githubusercontent.com/qlands/FormShare/refs/heads/master-3.0/docker_compose/env.example
 
 # Make the directory structure for FormShare
-sudo mkdir /opt/formshare
-whoami=$(whoami)
-sudo chown $whoami /opt/formshare
-mkdir /opt/formshare/celery
-mkdir /opt/formshare/log
-mkdir /opt/formshare/repository
-mkdir /opt/formshare/config
-mkdir /opt/formshare/mysql
-mkdir /opt/formshare/plugins
-mkdir /opt/formshare/formshare_odata_webapps
-mkdir /opt/formshare/elasticsearch
-mkdir /opt/formshare/elasticsearch/esdata
-mkdir /opt/formshare/elasticsearch/esdata2
-sudo chmod -R g+w /opt/formshare
+sudo mkdir -p /opt/formshare_community/celery
+sudo mkdir -p /opt/formshare_community/log
+sudo mkdir -p /opt/formshare_community/repository
+sudo mkdir -p /opt/formshare_community/config
+sudo mkdir -p /opt/formshare_community/mysql
+sudo mkdir -p /opt/formshare_community/plugins
+sudo mkdir -p /opt/formshare_community/elasticsearch/certs
+sudo mkdir -p /opt/formshare_community/elasticsearch/esdata
+sudo mkdir -p /opt/formshare_community/elasticsearch/esdata2
+sudo chmod -R g+w /opt/formshare_community
 
-# Set enough memory for Elasticsearch
+# Install docker-compose and give it enough memory
 sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
-# Download all the required Docker Images
-cd /opt/formshare_docker_compose_20260218
-sudo docker-compose pull
+# Create a .env file using the example
+mv .env.example .env
 
-# Edit the docker-compose.yml file to set the MySQL root and FormShare admin passwords
-sudo nano /opt/formshare_docker_compose_20260218/docker-compose.yml
-# Press Alt+Shit+3 to show the line numbers in Nano
+# Edit .env file to change:
+# -The mysql security credentials:
+MYSQL_USER_NAME=root
+MYSQL_ROOT_PASSWORD=change_me_mysql_root
+MYSQL_USER_PASSWORD=change_me_mysql_root
 
-Edit line 10: Change the root password from "my_secure_password" to your password
-Edit line 67: Change the root password from "my_secure_password" to the same password of line 10
-Edit line 68: Change the admin user name (optional)
-Edit line 69: Change the admin email address
-Edit line 70: Change the admin user password from "my_secure_password" to your password
-Edit line 75: Change the IP address for the IP address of the machine running the Docker service
+#- The Elasticsearch security credentials:
+ELASTIC_PASSWORD=change_me_elastic
 
-# Save the file with Ctlr+o Enter . Exit with Ctrl+x
+#-The admin credentials:
+FORMSHARE_ADMIN_USER=admin
+FORMSHARE_ADMIN_EMAIL=admin@myserver.com
+FORMSHARE_ADMIN_PASSWORD=change_me_admin
 
+#Start MySQL and Elasticsearch
+docker compose --env-file .env -f servers.yml up -d
+
+#Start FormShare
+docker compose --env-file .env -f formshare.yml up -d
+
+Docker will pull the necessary images and run FormShare. After all images are pulled and
+all services run, you will be able to access FormShare at http://localhost:5900/.
+From there you can poxy pass it using Apache.
+
+# RDS Notes:
 # In AWS if you use MySQL >= 8 in a RDS service you need to add the following permissions to your RDS root user:
 # GRANT SESSION_VARIABLES_ADMIN ON *.* TO 'my_RDS_root_user'@'%';
 # GRANT SYSTEM_VARIABLES_ADMIN ON *.* TO 'my_RDS_root_user'@'%';
-
-# Install Apache Server
-sudo apt-get install -y apache2
-
-# Enable proxy for Apache
-sudo ln -s /etc/apache2/mods-available/proxy.conf /etc/apache2/mods-enabled/
-sudo ln -s /etc/apache2/mods-available/proxy.load /etc/apache2/mods-enabled/
-sudo ln -s /etc/apache2/mods-available/proxy_http.load /etc/apache2/mods-enabled/
-
-# Edit the apache configuration to proxy pass FormShare 
-sudo nano /etc/apache2/sites-enabled/000-default.conf
-# Add the following lines after line 28
-        ProxyRequests Off
-        ProxyPreserveHost On
-   
-        ProxyPass           /formshare    http://127.0.0.1:5900/formshare
-        ProxyPassReverse    /formshare    http://127.0.0.1:5900/formshare
-  
-        <Proxy *>
-           allow from all
-        </Proxy>
-        ProxyTimeout 120
-           
-# Save the file with Ctlr+o Enter . Exit with Ctrl+x
-# Stop the Apache server
-sudo service apache2 stop
-# Start the Apache server
-sudo service apache2 start
-
-# Start the FormShare containers. The first time you start the container FormShare will construct the database and apply all updates. This will take about 5 minutes.
-# Subsequent start will take about 2 minutes. You can check the status with "sudo docker stats". 
-# FormShare will be ready for usage when the container reaches more than 500 kB of MEM USAGE
-# This is the only two commands you need to start FormShare after a server restart
-cd /opt/formshare_docker_compose_20260218
-sudo docker-compose up -d
-
-# Browse to FormShare
-http://[this server IP address]/formshare
 ```
 
 ## Install plug-ins while using Docker (images > 20200306)

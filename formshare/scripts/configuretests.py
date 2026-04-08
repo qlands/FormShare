@@ -123,6 +123,10 @@ def main(raw_args=None):
         "server_main_port": server_main_port,
         "server_main_root": server_main_root,
         "global_config_file": global_config_file,
+        "elasticsearch_user_name": os.getenv("ELASTIC_USER", "elastic"),
+        "elasticsearch_user_password": os.getenv(
+            "ELASTIC_PASSWORD", "change_me_elastic"
+        ),
     }
 
     rendered_template = template_environment.get_template("test_config.jinja2").render(

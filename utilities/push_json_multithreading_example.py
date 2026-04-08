@@ -85,7 +85,7 @@ start_time = datetime.datetime.now()
 # You can increase the number of threads to [number-of-cores]
 # However, the FormShare installation receiving the submissions must be running
 # with the same or higher number of threads as you are sending.
-# See https://docs.gunicorn.org/en/latest/settings.html#threads
+
 
 if not os.path.exists("./errors"):
     os.makedirs("./errors")

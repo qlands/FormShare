@@ -43,5 +43,5 @@ docker compose --env-file .env -f servers.yml up -d
 docker compose --env-file .env -f formshare.yml up -d
 
 Docker will pull the necessary images and run FormShare. After all images are pulled and
-all services run, you will be able to access FormShare at http://localhost:5900/formshare.
+all services run, you will be able to access FormShare at http://localhost:5900/
 From there you can poxy pass it using Apache.

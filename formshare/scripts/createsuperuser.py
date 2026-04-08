@@ -1,10 +1,9 @@
 import argparse
 import datetime
-import getpass
 import secrets
 import time
 import uuid
-
+import os
 import logging
 
 import requests
@@ -23,28 +22,15 @@ from requests.auth import HTTPBasicAuth
 def main(raw_args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("ini_path", help="Path to ini file")
-    parser.add_argument("--user_id", required=True, help="Superuser ID")
-    parser.add_argument("--user_email", required=True, help="Superuser Email")
-    parser.add_argument(
-        "--user_password", default="", help="Superuser password. Prompt if it is empty"
-    )
-    args = parser.parse_args(raw_args)
+    args2 = parser.parse_args(raw_args)
 
-    config_uri = args.ini_path
+    config_uri = args2.ini_path
 
-    if args.user_password == "":
-        pass1 = getpass.getpass("User password:")
-        pass2 = getpass.getpass("Confirm the password:")
-        if pass1 == "":
-            print("The password cannot be empty")
-            return 1
-        if pass1 != pass2:
-            print("The password and its confirmation are not the same")
-            return 1
-    else:
-        pass1 = args.user_password
+    user_password = os.getenv("FORMSHARE_ADMIN_PASSWORD", "change_me_admin")
+    user_email = os.getenv("FORMSHARE_ADMIN_EMAIL", "admin@myserver.com")
+    user_id = os.getenv("FORMSHARE_ADMIN_USER", "admin")
 
-    email_valid = validators.email(args.user_email)
+    email_valid = validators.email(user_email)
     if not email_valid:
         print("Invalid email")
         return 1
@@ -73,7 +59,7 @@ def main(raw_args=None):
             time.sleep(30)
     print("ES is ready")
 
-    enc_pass = encode_data_with_key(pass1, settings["aes.key"].encode())
+    enc_pass = encode_data_with_key(user_password, settings["aes.key"].encode())
 
     engine = get_engine(settings)
     Base.metadata.create_all(engine)
@@ -83,21 +69,16 @@ def main(raw_args=None):
     error = 0
     try:
         with dbsession.begin():
-            if (
-                dbsession.query(User).filter(User.user_id == args.user_id).first()
-                is None
-            ):
+            if dbsession.query(User).filter(User.user_id == user_id).first() is None:
                 if (
-                    dbsession.query(User)
-                    .filter(User.user_email == args.user_email)
-                    .first()
+                    dbsession.query(User).filter(User.user_email == user_email).first()
                     is None
                 ):
                     api_key = str(uuid.uuid4())
                     api_secret = secrets.token_hex(16)
                     new_user = User(
-                        user_id=args.user_id,
-                        user_email=args.user_email,
+                        user_id=user_id,
+                        user_email=user_email,
                         user_password=enc_pass,
                         user_apikey=api_key,
                         user_apisecret=api_secret,
@@ -111,17 +92,17 @@ def main(raw_args=None):
                     feed_manager = configure_manager(settings)
                     # The user follows himself
                     try:
-                        feed_manager.follow(args.user_id, args.user_id)
+                        feed_manager.follow(user_id, user_id)
                     except Exception as e:
                         print(
                             "User {} was in FormShare at some point. Error: {}".format(
-                                args.user_id, str(e)
+                                user_id, str(e)
                             )
                         )
 
                     user_details = {
-                        "user_id": args.user_id,
-                        "user_email": args.user_email,
+                        "user_id": user_id,
+                        "user_email": user_email,
                         "user_name": "FormShare Administrator",
                         "tenant_id": "main",
                     }
@@ -138,15 +119,13 @@ def main(raw_args=None):
                     print(
                         "The super user has been added with the following information:"
                     )
-                    print("ID: {}.".format(args.user_id))
-                    print("Email: {}".format(args.user_email))
+                    print("ID: {}.".format(user_id))
+                    print("Email: {}".format(user_email))
                 else:
-                    print(
-                        "An user with email '{}' already exists".format(args.user_email)
-                    )
+                    print("An user with email '{}' already exists".format(user_email))
                     error = 1
             else:
-                print("An user with id '{}' already exists".format(args.user_id))
+                print("An user with id '{}' already exists".format(user_id))
                 error = 1
     except Exception as e:
         print(str(e))

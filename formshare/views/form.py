@@ -2481,9 +2481,7 @@ class AddAssistant(PrivateView):
                                     self.request, project_id, form_id
                                 )
                                 if assistant_count == 1:
-                                    self.trigger_client_event(
-                                        "formshare:full-reload"
-                                    )
+                                    self.trigger_client_event("formshare:full-reload")
                                 else:
                                     self.trigger_client_event(
                                         "formshare:assistants-updated"
@@ -3116,9 +3114,7 @@ class RemoveGroupForm(PrivateView):
             )
             if removed:
                 if is_htmx:
-                    group_count = count_form_groups(
-                        self.request, project_id, form_id
-                    )
+                    group_count = count_form_groups(self.request, project_id, form_id)
                     if group_count == 0:
                         self.trigger_client_event("formshare:full-reload")
                     else:

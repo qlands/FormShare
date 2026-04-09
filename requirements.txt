@@ -28,7 +28,7 @@ click-plugins==1.1.1.2
 click-repl==0.3.0
 cookiecutter==2.6.0
 coverage==7.12.0
-cryptography==46.0.5
+cryptography==46.0.7
 decorator==5.2.1
 defusedxml==0.7.1
 Deprecated==1.3.1
@@ -94,7 +94,7 @@ pycparser==2.23
 pycryptodome==3.23.0
 pydantic==2.12.5
 pydantic_core==2.41.5
-Pygments==2.19.2
+Pygments==2.20.0
 pyparsing==3.2.5
 pypng==0.20220715.0
 pytest==9.0.1
@@ -112,7 +112,7 @@ PyYAML==6.0.3
 qrcode==8.2
 redis==7.1.0
 regex==2025.11.3
-requests==2.32.5
+requests==2.33.0
 rich==14.2.0
 roman-numerals-py==3.1.0
 scipy==1.16.3

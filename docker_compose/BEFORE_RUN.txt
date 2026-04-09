@@ -37,10 +37,10 @@ FORMSHARE_ADMIN_EMAIL: admin@myserver.com
 FORMSHARE_ADMIN_PASSWORD: change_me_admin
 
 5) Start MySQL and Elasticsearch
-docker compose --env-file .env -f servers.yml up -d
+sudo docker compose -p formshare-servers --env-file .env -f servers.yml up -d
 
 6) Start FormShare
-docker compose --env-file .env -f formshare.yml up -d
+sudo docker compose -p formshare-app --env-file .env -f formshare.yml up -d
 
 Docker will pull the necessary images and run FormShare. After all images are pulled and
 all services run, you will be able to access FormShare at http://localhost:5900/

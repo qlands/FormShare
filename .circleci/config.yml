@@ -7,6 +7,16 @@ jobs:
         environment:
           - ELASTIC_USER=elastic
           - ELASTIC_PASSWORD=RxlCXBATIkd8meZ97XH8z
+          - MYSQL_HOST_NAME=127.0.0.1
+          - MYSQL_HOST_PORT=3306
+          - MYSQL_USER_NAME=root
+          - MYSQL_USER_PASSWORD=circleci
+          - ODKTOOLS_PATH=/opt/odktools
+          - ELASTIC_SEARCH_HOST=localhost
+          - ELASTIC_SEARCH_PORT=9200
+          - FORMSHARE_HOST=localhost
+          - FORMSHARE_PORT=5900
+          - FORWARDED_ALLOW_IP=*
 
       # ---------------------------------------------------------
       # Elasticsearch 9.2.1
@@ -154,20 +164,7 @@ jobs:
             mysql_tzinfo_to_sql /usr/share/zoneinfo | \
               mysql -h 127.0.0.1 -u root --password=circleci mysql
 
-            python3 create_config.py --daemon --capture_output \
-              --mysql_host 127.0.0.1 \
-              --mysql_user_name root \
-              --mysql_user_password circleci \
-              --repository_path /opt/formshare_repository \
-              --odktools_path /opt/odktools \
-              --elastic_search_host localhost \
-              --elastic_search_port 9200 \
-              --formshare_host localhost \
-              --formshare_port 5900 \
-              --forwarded_allow_ip localhost \
-              --pid_file /opt/formshare_gunicorn/formshare.pid \
-              --error_log_file /opt/formshare_log/error_log \
-              /opt/formshare_config/development.ini
+            python3 create_config.py /opt/formshare_config/development.ini
 
             ln -s /opt/formshare_config/development.ini ./development.ini
 

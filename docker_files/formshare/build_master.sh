@@ -1,1 +1,1 @@
-sudo docker build --no-cache --rm -t qlands/formshare2_community:master -f ./master.Dockerfile .
+sudo docker build --rm -t qlands/formshare2_community:master -f ./master.Dockerfile .

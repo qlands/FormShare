@@ -34,6 +34,8 @@ services:
       # Use 0.0.0.0 in-container; publish with ports below.
       FORMSHARE_HOST: ${FORMSHARE_HOST:-0.0.0.0}
       FORMSHARE_PORT: ${FORMSHARE_PORT:-5900}
+      FORMSHARE_ROOT_PATH: ${FORMSHARE_ROOT_PATH:-/}
+      FORMSHARE_NUM_WORKERS: ${FORMSHARE_NUM_WORKERS:-1}
       # If you run behind a reverse proxy, set this to the proxy network/CIDR.
       FORWARDED_ALLOW_IP: ${FORWARDED_ALLOW_IP:-*}
 

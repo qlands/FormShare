@@ -130,8 +130,8 @@ sudo apt-get install -y docker-compose
 cd /opt
 sudo mkdir formshare_community
 cd formshare_community
-sudo wget https://raw.githubusercontent.com/qlands/FormShare/refs/heads/stable-3.0.0/docker_compose/servers.yml
-sugo wget https://raw.githubusercontent.com/qlands/FormShare/refs/heads/master-3.0/docker_compose/formshare.yml
+sudo wget https://raw.githubusercontent.com/qlands/FormShare/refs/heads/master-3.0/docker_compose/servers.yml
+sudo wget https://raw.githubusercontent.com/qlands/FormShare/refs/heads/master-3.0/docker_compose/formshare.yml
 sudo wget https://raw.githubusercontent.com/qlands/FormShare/refs/heads/master-3.0/docker_compose/env.example
 
 # Make the directory structure for FormShare
@@ -151,7 +151,7 @@ sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
 # Create a .env file using the example
-mv .env.example .env
+sudo mv env.example .env
 
 # Edit .env file to change:
 # -The mysql security credentials:
@@ -168,7 +168,7 @@ FORMSHARE_ADMIN_EMAIL=admin@myserver.com
 FORMSHARE_ADMIN_PASSWORD=change_me_admin
 
 #Start MySQL and Elasticsearch
-docker compose --env-file .env -f servers.yml up -d
+sudo docker compose --env-file .env -f servers.yml up -d
 
 #Start FormShare
 docker compose --env-file .env -f formshare.yml up -d

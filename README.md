@@ -5,17 +5,15 @@
 FormShare<sup>®</sup>
 =========
 
-The future of FormHub
-
 Centralize data – Decentralize knowledge<sup>TM</sup>
 
 About
 -----
-FormShare is an advanced data management platform for [Open Data Kit (ODK)](https://getodk.org/). FormShare is inspired by the excellent [FormHub](<http://github.com/SEL-Columbia/formhub>) platform developed by the Sustainable Engineering Lab at Columbia University. After I forked [OnaData](https://github.com/onaio/onadata) (a fork of FormHub) back in 2016 it was clear that the code needed a lot to bring it to a complete data management platform.
+FormShare is an advanced data management platform for [Open Data Kit (ODK)](https://getodk.org/). FormShare is inspired by the excellent [FormHub](<http://github.com/SEL-Columbia/formhub>) platform developed by the Sustainable Engineering Lab at Columbia University. After we forked [OnaData](https://github.com/onaio/onadata) (a fork of FormHub) back in 2016 it was clear that the code needed a lot to bring it to a complete data management platform.
 
-FormShare been written from scratch (migrating structures, ideas, principles, and logic) using Python 3, [FastAPI](https://github.com/fastapi/fastapi), MySQL, [Elasticsearch](https://www.elastic.co/Elasticsearch/), and [PyUtilib](https://github.com/qlands/pyutilib) to deliver a complete and extensible data management solution for ODK Data collection.
+FormShare has been written from scratch (reimplementing ideas, principles, and logic) using Python 3, [FastAPI](https://github.com/fastapi/fastapi), MySQL, [Elasticsearch](https://www.elastic.co/Elasticsearch/), and [PyUtilib](https://github.com/qlands/pyutilib) to deliver a complete and extensible data management solution for ODK Data collection.
 
-FormShare community server is available at [https://formshare.org](https://formshare.org) for students and very small organizations. FormShare SaaS is available at https://www.qlands.com/plans
+FormShare Community Server is available at [https://formshare.org](https://formshare.org) for students and very small organizations. FormShare SaaS is available at https://www.qlands.com/plans
 
 For more information visit at [www.qlands.com](https://www.qlands.com/)
 
@@ -70,7 +68,7 @@ FormShare can produce dates and times in the following time zones:
 - Filtering submissions by submission metadata (e.g., date and time received on server).
 - Data cleaning API integration with R, STATA, or SPSS.
 
-- Data dictionary with personal information protection.
+- Data dictionary with personal information protection (PII filtering).
 
 ### Product management
 
@@ -81,12 +79,12 @@ FormShare can produce dates and times in the following time zones:
 
 ### Performance, concurrency, and parallelism
 
-Though FormShare with the default settings can handle a load that would fit most organizations, it can be configured to handle any load. FormShare has been tested, using [JMeter](https://jmeter.apache.org/), under extreme traffic (1000 parallel submissions ) in an eight years old laptop with 16 GB of RAM and an [i7-4712HQ](https://www.intel.com/content/www/us/en/products/sku/78932/intel-core-i74712hq-processor-6m-cache-up-to-3-30-ghz/specifications.html).
+Though FormShare with the default settings can handle a load that would fit most organizations, it can be configured to handle any load. FormShare has been tested, using [JMeter](https://jmeter.apache.org/), under extreme traffic (100 parallel submissions loading 50,000 submissions).
 
 - Each submission is transactional. This means that a submission is either processed completely or thoroughly discarded for ODK Collect to re-send it.
-- Under extreme traffic,  FormShare can store a complex survey like [RHoMIS](https://www.rhomis.org/) at 18 submissions per second with zero failures.
+- Under extreme traffic,  FormShare can store 50,000 submissions of a complex survey like [RHoMIS](https://www.rhomis.org/) in 11 minutes. This is around 75 submissions per second or storing one full RHoMIS survey relationally, query-able and indexed in 0.0132 seconds.
 - Data exports support concurrent processing. A survey like RHoMIS with 100,000 submissions and millions of rows would take less than a minute to export to JSON or CSV.
-- The performance of the user interface or the data cleaning interface is not affected by the number of submissions.
+- The performance of the user interface or the data cleaning interface is not affected by the number of submissions. With FormShare you can have 1,000,000 submissions with GPS points and it will not delay that user interface. 
 
 ### Extensibility and others
 
@@ -102,11 +100,11 @@ ScreenShot
 
 Releases
 ------------
-The current stable release is 3.0.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.50.0) 
+The current stable release is 3.0.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-3.0.0) 
 
 The database signature for stable 3.0.0 is 6e8f0f158657
 
-The Docker image for stable 3.0.0 is 20260408
+The Docker image for stable 3.0.0 is 20260409
 
 **Never upgrade FormShare from one Docker image to another without checking the "Upgrading information" section below.**
 
@@ -168,14 +166,13 @@ FORMSHARE_ADMIN_EMAIL=admin@myserver.com
 FORMSHARE_ADMIN_PASSWORD=change_me_admin
 
 #Start MySQL and Elasticsearch
-sudo docker compose --env-file .env -f servers.yml up -d
+sudo docker-compose --env-file .env -f servers.yml up -d
 
 #Start FormShare
-docker compose --env-file .env -f formshare.yml up -d
+sudo docker-compose --env-file .env -f formshare.yml up -d
 
-Docker will pull the necessary images and run FormShare. After all images are pulled and
-all services run, you will be able to access FormShare at http://localhost:5900/.
-From there you can poxy pass it using Apache.
+#Docker will pull the necessary images and run FormShare. After all images are pulled and
+#all services run, you will be able to access FormShare at http://localhost:5900/.
 
 # RDS Notes:
 # In AWS if you use MySQL >= 8 in a RDS service you need to add the following permissions to your RDS root user:
@@ -191,22 +188,22 @@ All plug-ins must be deployed in the directory /opt/formshare/plugins which is a
 # Grab the container ID running FormShare
 sudo docker stats
 # Get into the container
-sudo docker exec -it [formshare_container_id] /bin/bash
+sudo docker exec -it formshare_app /bin/bash
 # Activate the environment
 source /opt/formshare_env/bin/activate
 # Go to the plugins directory
 cd /opt/formshare_plugins
 # For each plugin run develop
-python setup.py develop
+pip install -e .
 # For each plugin compile the language catalogs
 python setup.py compile_catalog
 # Stop FormShare
-cd /opt/formshare_gunicorn
+cd /opt/formshare_uvicorn
 pkill -F ./formshare.pid
 # Edit the file /opt/formshare/config/development.ini and enable the plug-ins
 sudo nano /opt/formshare/config/development.ini
 # Start FormShare
-cd /opt/formshare_gunicorn
+cd /opt/formshare_unicorn
 ./run_server.sh
 # Exit the docker container
 ```
@@ -331,20 +328,6 @@ fses20211019n01:
 
 Note that the container names have no special characters and the way Nodes are discovered change in ES 7.14.X
 
-### Important Note: Upgrading to Docker images >= 20210805
-
-Docker images >= 20210801 (from stable 2.8.5) use WebSockets for client-server communication. To upgrade FormShare beyond 20210801 you need to update the docker-compose.yml to expose port 9001. 
-
-In the FormShare service under the ports section add the following line after port 5900:
-
-```yaml
-- 9001:9001
-```
-
-In the FormShare service under the volumes section add the following volume: 
-
-Note for AWS: Inbound and outbound communication to port 9001 must be allowed for FormShare to support client-server communication.
-
 ### Important Note: Elasticsearch - Migration 1 - Upgrading Docker images < **20210411** (stable 2.8.0) to images >= **20210411**
 
 Docker images >= 20210411 (from stable 2.8.0) use and check for Elasticsearch version 6.8.14. To upgrade FormShare beyond 20210411 you need to update the docker-compose.yml to use the Docker image 6.8.14 of Elasticsearch **for all the nodes of Elasticsearch that you have**.
@@ -355,28 +338,16 @@ image: docker.elastic.co/Elasticsearch/Elasticsearch:6.8.14
 
 ### Upgrading steps
 
-Please read the [upgrade guide](upgrade_steps.md) if you have FormShare installed from the source code. If you use Docker then things are easier:
-
 ```sh
 # Make a backup of your installation. See the section "Backup FormShare"
 
 # Edit the file /opt/formshare/config/development.ini and disable all plug-ins
 sudo nano /opt/formshare/config/development.ini
 
-# Copy the current docker compose file to a new one. For example, [current_docker_image] could be 20210724 and [new_docker_image] will be 20210805
-cd /opt
-sudo cp -R formshare_docker_compose_[current_docker_image] formshare_docker_compose_[new_docker_image]
+# Edit the .env file 
+# Change the FORMSHARE_IMAGE to the lastest image of FormShare Community
 
-# Edit the /opt/formshare_docker_compose_[new_docker_image]/docker-compose.yml and change all the references of [current_docker_image] to [new_docker_image]. For example change all 20210724 for 20210805
-# If you are upgrading from Docker images <= 20210411 to images > 20210411 then you need to also update the Docker image of Elasticsearch to 6.8.14
-sudo /opt/formshare_docker_compose_[new_docker_image]/docker-compose.yml
-
-# Remove the old Docker Network.
-sudo docker network rm docker[current_docker_image]_fsnet
-
-# Start the new version of FormShare. All required updates in the database will be done automatically.
-cd /opt/formshare_docker_compose_XXXXXXXX
-sudo docker-compose up
+# Start the Docker container again
 
 # If you have plug-ins then you need to build them and enable them again. See the section "Install plug-ins while using Docker"
 
@@ -384,7 +355,7 @@ sudo docker-compose up
 
 
 
-## How to make your FormShare installation inaccessible, inconsistent, and/or broken.
+## How to make your FormShare installation inaccessible, inconsistent, or broken.
 
 FormShare uses MySQL, Elasticsearch, and a file repository. **All of them are synchronized**, thus the following list of things may make your FormShare installation inaccessible, inconsistent and/or broken:
 
@@ -435,7 +406,7 @@ What can you do through extension plug-ins? Some ideas:
 - Collect data using USSD or IVR services with the same ODK form and store the data in the same repository no matter the source.
 - Implement longitudinal surveys where the data of a form is pulled to populate the options of another form.
 
-You basically can extend FormShare to fit your needs. We are working on proper documentation for this.
+You basically can extend FormShare to fit your needs.
 
 Some examples of plug-ins are:
 

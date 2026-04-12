@@ -6,12 +6,14 @@
     edit the FORMSHARE_INI_FILE so it points to the new path
 """
 
-from celery import Celery
 import configparser
-from pkg_resources import iter_entry_points
 import logging
-import formshare.plugins as p
 import os
+
+from importlib.metadata import entry_points
+
+import formshare.plugins as p
+from celery import Celery
 
 log = logging.getLogger(__name__)
 
@@ -41,8 +43,8 @@ def get_tasks():
             celery_plugins = get_ini_value(CELERY_PLUGINS_ENTRY_POINT_GROUP, "")
             plugins = get_ini_value(PLUGINS_ENTRY_POINT_GROUP, "").split()
         else:
-            celery_plugins = get_ini_value(CELERY_TESTING_PLUGINS_ENTRY_POINT_GROUP, "")
-            plugins = []
+            celery_plugins = get_ini_value(CELERY_PLUGINS_ENTRY_POINT_GROUP, "")
+            plugins = get_ini_value(PLUGINS_ENTRY_POINT_GROUP, "").split()
         if celery_plugins:
             plugin_list = celery_plugins.split()
             plugin_list.reverse()
@@ -52,19 +54,24 @@ def get_tasks():
             plugin_list = plugins
             plugin_list.reverse()
             print("Looking for tasks in the following plugins: {}".format(",".join(plugin_list)))
-        for plugin in plugins:
-            if isinstance(plugin, str):
-                iterator = iter_entry_points(group=TASKS_ENTRY_POINT_GROUP, name=plugin)
-                entry_point = next(iterator, None)
-                if entry_point:
-                    tasks.append(entry_point.module_name)
+        # Build a set of distribution names for enabled plugins
+        enabled_dists = set()
+        for ep in entry_points(group=PLUGINS_ENTRY_POINT_GROUP):
+            if ep.name in plugins:
+                enabled_dists.add(ep.dist.name)
+
+        # Only load tasks from those distributions
+        for ep in entry_points(group=TASKS_ENTRY_POINT_GROUP):
+            if ep.dist and ep.dist.name in enabled_dists:
+                module_name = ep.value.split(":")[0]
+                if module_name not in tasks:
+                    tasks.append(module_name)
     return tasks
 
 
 celeryApp = Celery(
-    get_ini_value("celery.taskname"),
+    "some",
     broker=get_ini_value("celery.broker"),
     backend=get_ini_value("celery.backend"),
     include=get_tasks(),
 )
-

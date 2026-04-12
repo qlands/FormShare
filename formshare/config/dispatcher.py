@@ -350,7 +350,15 @@ def _render_jinja2_to_fs(context: dict, template_name: str, jinja_env, fs_reques
 
 
 def _http_exc_to_starlette(exc):
-    """Convert a ``formshare.middleware.httpexceptions.HTTPException`` to Starlette."""
+    """Convert a ``formshare.middleware.httpexceptions.HTTPException`` to Starlette.
+
+    For error status codes (4xx, 5xx) that are NOT redirects and carry no
+    pre-built body, re-raise as a Starlette HTTPException so that FastAPI's
+    registered exception handlers (404 → NotFoundView, 403 → ForbiddenView,
+    etc.) can render the proper Jinja2 error page.
+    """
+    from starlette.exceptions import HTTPException as StarletteHTTPException
+
     status = exc.status_code
     headers = dict(exc.headers or {})
 
@@ -371,8 +379,9 @@ def _http_exc_to_starlette(exc):
             media_type=getattr(exc, "content_type", None) or "application/octet-stream",
         )
 
-    return JSONResponse(
-        content={"error": getattr(exc, "title", "Error"), "detail": exc.detail},
+    # Re-raise as a Starlette HTTPException so FastAPI's exception handlers
+    # (registered in app.py) can render the Jinja2 error template.
+    raise StarletteHTTPException(
         status_code=status,
-        headers=headers,
+        detail=exc.detail,
     )

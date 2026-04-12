@@ -124,8 +124,14 @@ class FormShareConfig:
         pass
 
     def add_view(self, view, **kwargs):
-        """No-op: views are paired with routes via route_list."""
-        pass
+        """No-op for regular views (paired with routes via route_list).
+
+        Exception views with ``context=`` are routed to add_view_for_exception.
+        """
+        context = kwargs.get("context")
+        if context is not None:
+            self.add_view_for_exception(view, context, **kwargs)
+            return
 
     # ------------------------------------------------------------------
     # Error / exception views

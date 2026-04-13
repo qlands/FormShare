@@ -134,15 +134,18 @@ class ErrorView(ExceptionView):
 
         if user is None:
             user = "Unknown - {}".format(self.request.client_addr)
+        error_tb = (
+            getattr(self.request, "error_traceback", None) or "No traceback available"
+        )
         log.error(
             "Server Error in URL {}.\nAccount: {}\nError: \n{}".format(
-                self.request.url, user, traceback.format_exc()
+                self.request.url, user, error_tb
             )
         )
         send_error_to_technical_team(
             self.request,
             "Server Error in URL {}.\nAccount: {}\nError: \n{}".format(
-                self.request.url, user, traceback.format_exc()
+                self.request.url, user, error_tb
             ),
         )
         self.request.response.status = 500

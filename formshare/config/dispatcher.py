@@ -196,6 +196,14 @@ def make_error_endpoint(view_class, renderer, db_session_factory, jinja_env, app
             fs_request = await FormShareRequest.from_starlette(
                 request, db_session, app_state
             )
+
+            # Pass the exception traceback to the error view so it can
+            # log/email it.  Set on the FormShareRequest so the view
+            # can access it via self.request.error_traceback.
+            error_tb = getattr(request.state, "error_traceback", None)
+            if error_tb:
+                fs_request.error_traceback = error_tb
+
             loop = asyncio.get_event_loop()
             try:
                 result = await loop.run_in_executor(

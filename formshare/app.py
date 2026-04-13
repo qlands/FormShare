@@ -277,6 +277,11 @@ def create_app(settings: dict | None = None, ini_path: str | None = None):
 
         @fastapi_app.exception_handler(Exception)
         async def server_error_handler(request: Request, exc):
+            import traceback as _tb
+
+            request.state.error_traceback = "".join(
+                _tb.format_exception(type(exc), exc, exc.__traceback__)
+            )
             return await _500(request, exc)
 
     # Note: IEnvironment.after_environment_load() was already called inside

@@ -14,7 +14,6 @@ from sqlalchemy import (
     Index,
     text,
     Unicode,
-    PrimaryKeyConstraint,
 )
 from sqlalchemy.dialects.mysql import MEDIUMTEXT, BIGINT
 from sqlalchemy.ext import mutable

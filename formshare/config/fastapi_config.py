@@ -128,7 +128,7 @@ class FormShareConfig:
 
         Exception views with ``context=`` are routed to add_view_for_exception.
         """
-        context = kwargs.get("context")
+        context = kwargs.pop("context", None)
         if context is not None:
             self.add_view_for_exception(view, context, **kwargs)
             return

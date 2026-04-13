@@ -13,6 +13,7 @@ import traceback
 import formshare.plugins as p
 import formshare.plugins as plugins
 import pandas as pd
+import time
 from formshare.processes.db import (
     get_project_id_from_name,
     get_form_details,
@@ -849,6 +850,7 @@ class FormDetails(PrivateView):
         return created, error_string
 
     def process_view(self):
+        start_time = time.perf_counter()
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
@@ -1073,7 +1075,7 @@ class FormDetails(PrivateView):
                     self.request, user_id, project_id, form_id, form_choices_columns
                 )
 
-            return {
+            res = {
                 "projectDetails": project_details,
                 "formid": form_id,
                 "formDetails": form_data,
@@ -1101,6 +1103,12 @@ class FormDetails(PrivateView):
                 "form_choices_columns": form_choices_columns,
                 "form_invalid_columns": form_invalid_columns,
             }
+            end_time = time.perf_counter()
+            elapsed_time = end_time - start_time
+            log.info(
+                f'Form Details for form "{form_id}" in project {project_id} elapsed: {elapsed_time:.6f} seconds'
+            )
+            return res
         else:
             raise HTTPNotFound
 

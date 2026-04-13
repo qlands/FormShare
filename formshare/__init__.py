@@ -46,6 +46,13 @@ def main(global_config, **settings):
         except NoOptionError:
             settings.setdefault("server:threads", "1")
 
+        try:
+            plugins = cfg.get("app:formshare", "formshare.plugins")
+            plugins = plugins.split(" ")
+            settings["active_plugins"] = plugins
+        except NoOptionError:
+            settings.setdefault("active_plugins", [])
+
         settings["global:config:file"] = global_config["__file__"]
 
     return create_app(settings=settings)

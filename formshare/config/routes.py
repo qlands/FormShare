@@ -1665,11 +1665,7 @@ def load_routes(config, settings):
     config.add_notfound_view(NotFoundView, renderer="generic/404.jinja2")
     config.add_forbidden_view(ForbiddenView, renderer="generic/403.jinja2")
 
-    if (
-        log.level == logging.WARN
-        or os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "true"
-    ):
-        config.add_view(ErrorView, context=Exception, renderer="generic/500.jinja2")
+    config.add_view(ErrorView, context=Exception, renderer="generic/500.jinja2")
 
     # Call connected plugins to add any routes after FormShare
     for plugin in p.PluginImplementations(p.IRoutes):

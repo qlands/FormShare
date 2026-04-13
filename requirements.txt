@@ -83,7 +83,7 @@ Pairtree==0.8.1
 pandas==2.3.3
 pathspec==1.0.4
 pdfminer.six==20251230
-pillow==12.1.1
+pillow==12.2.0
 platformdirs==4.5.0
 pluggy==1.6.0
 poyo==0.5.0

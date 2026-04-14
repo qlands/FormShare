@@ -97,7 +97,7 @@ pydantic_core==2.41.5
 Pygments==2.20.0
 pyparsing==3.2.5
 pypng==0.20220715.0
-pytest==9.0.1
+pytest==9.0.3
 pytest-cov==7.0.0
 python-dateutil==2.9.0.post0
 python-docx==1.2.0

@@ -55,11 +55,11 @@ __all__ = [
     "IDeleteSubmission",
     "ISubmissionStorage",
     "IExportGenerator",
+    "IFileStorage",
 ]
 
 
 from inspect import isclass
-from typing import Any
 from pyutilib.component.core import Interface as _pca_Interface
 
 
@@ -2308,3 +2308,43 @@ class IRoles(Interface):
         This function must return an array of roles like [{"role_id": "can_action", "role_name": "Description"}]
         """
         raise NotImplementedError("get_roles must be implemented in subclasses")
+
+
+class IFileStorage(Interface):
+    """
+    Plugin into the storage of files for projects and forms
+    """
+
+    def on_storing_file(
+        self, request, storage_object, bucket_id, file_name, file_buffer
+    ):
+        """Called by FormShare so plugins can add new roles.
+        :param request: ``pyramid.request`` object
+        :param bucket_id: The bucket ID
+        :param storage_object: Storage object
+        :param file_name: The file name
+        :param file_buffer: The file buffer
+        :return None
+        """
+        raise NotImplementedError("on_storing_file must be implemented in subclasses")
+
+    def on_removing_file(self, request, storage_object, bucket_id, file_name):
+        """Called by FormShare so plugins can add new roles.
+        :param request: ``pyramid.request`` object
+        :param bucket_id: The bucket
+        :param storage_object: Storage object
+        :param file_name: The file name
+        :return None
+        """
+        raise NotImplementedError("on_removing_file must be implemented in subclasses")
+
+    def on_removing_bucket(self, request, storage_object, bucket_id):
+        """Called by FormShare so plugins can add new roles.
+        :param request: ``pyramid.request`` object
+        :param bucket_id: The bucket
+        :param storage_object: Storage object
+        :return None
+        """
+        raise NotImplementedError(
+            "on_removing_bucket must be implemented in subclasses"
+        )

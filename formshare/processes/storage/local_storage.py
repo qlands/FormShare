@@ -1,5 +1,6 @@
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
+import formshare.plugins as plugins
 import mimetypes
 import os
 import uuid
@@ -53,12 +54,18 @@ def store_file(request, bucket_id, file_name, file_buffer):
         storage_object.claim_bucket(bucket_id)
     except BucketExists:
         pass
+    for a_plugin in plugins.PluginImplementations(plugins.IFileStorage):
+        a_plugin.on_storing_file(
+            request, storage_object, bucket_id, file_name, file_buffer
+        )
     storage_object.put_stream(bucket_id, file_name, file_buffer)
 
 
 def delete_stream(request, bucket_id, file_name):
     storage_object = get_storage_object(request)
     try:
+        for a_plugin in plugins.PluginImplementations(plugins.IFileStorage):
+            a_plugin.on_removing_file(request, storage_object, bucket_id, file_name)
         storage_object.del_stream(bucket_id, file_name)
         return True
     except FileNotFoundException:
@@ -79,6 +86,8 @@ def delete_bucket(
             shorty_length=shorty_length,
             hashing_type=hashing_type,
         )
+        for a_plugin in plugins.PluginImplementations(plugins.IFileStorage):
+            a_plugin.on_removing_bucket(request, storage_object, bucket_id)
         storage_object.delete_object(bucket_id)
     except ObjectNotFoundException:
         return

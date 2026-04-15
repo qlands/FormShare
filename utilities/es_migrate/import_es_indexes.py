@@ -5,10 +5,12 @@ Import ndjson files into Elasticsearch.
 Run this against the NEW ES 9.2.1 cluster after it is started.
 
 Usage:
-    python import_es_indexes.py [ES_HOST] [INPUT_DIR]
+    python import_es_indexes.py [ES_HOST] [ES_USER] [ES_PASSWORD] [INPUT_DIR]
 
-    ES_HOST   — Elasticsearch URL (default: http://localhost:9200)
-    INPUT_DIR — directory containing ndjson + mapping files (default: ./es_export)
+    ES_HOST     — Elasticsearch URL (default: http://localhost:9200)
+    ES_USER     — username for basic auth (optional)
+    ES_PASSWORD — password for basic auth (optional)
+    INPUT_DIR   — directory containing ndjson + mapping files (default: ./es_export)
 
 Expects files produced by export_es_indexes.py:
     <index_name>.ndjson         — bulk-API-ready document data
@@ -22,7 +24,9 @@ import sys
 from elasticsearch import Elasticsearch
 
 ES_HOST = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:9200"
-INPUT_DIR = sys.argv[2] if len(sys.argv) > 2 else "./es_export"
+ES_USER = sys.argv[2] if len(sys.argv) > 2 else None
+ES_PASSWORD = sys.argv[3] if len(sys.argv) > 3 else None
+INPUT_DIR = sys.argv[4] if len(sys.argv) > 4 else "./es_export"
 
 # Number of action+source line pairs per bulk request (2500 docs)
 BATCH_SIZE = 5000
@@ -55,7 +59,10 @@ def clean_mapping(mapping):
 
 
 def main():
-    es = Elasticsearch(ES_HOST)
+    kwargs = {}
+    if ES_USER and ES_PASSWORD:
+        kwargs["basic_auth"] = (ES_USER, ES_PASSWORD)
+    es = Elasticsearch(ES_HOST, **kwargs)
 
     info = es.info()
     print("Connected to ES {} at {}".format(info["version"]["number"], ES_HOST))

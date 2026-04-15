@@ -917,6 +917,7 @@ class PrivateView(object):
         update_last_login(self.request, self.user.login)
         if not continue_processing:
             return plugin_view_result
+        self.request.user = self.user
         self.viewResult = self.process_view()
 
         if not self.returnRawViewResult:

@@ -1,5 +1,6 @@
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
+import formshare.plugins as plugins
 import smtplib
 from email.mime.text import MIMEText
 from email.utils import formatdate
@@ -147,6 +148,19 @@ class CeleryTask(AbortableTask):  # pragma: no cover
                         file_size, task_id
                     )
                     connection.execute(sql)
+                    try:
+                        for a_plugin in plugins.PluginImplementations(
+                            plugins.ICeleryTask
+                        ):
+                            a_plugin.on_product_created(
+                                settings, task_id, product[0], file_size
+                            )
+                    except Exception as e:
+                        log.error(
+                            "Plugin error {} processing on_product_created for task {}".format(
+                                str(e), task_id
+                            )
+                        )
                 else:
                     log.error(
                         "Product file {} for task {} does not exist".format(
@@ -167,6 +181,15 @@ class CeleryTask(AbortableTask):  # pragma: no cover
         send_task_status_to_form(settings, task_id, "success")
         connection.invalidate()
         engine.dispose()
+        try:
+            for a_plugin in plugins.PluginImplementations(plugins.ICeleryTask):
+                a_plugin.on_success(settings, task_id)
+        except Exception as e:
+            log.error(
+                "Plugin error {} processing on_success for task {}".format(
+                    str(e), task_id
+                )
+            )
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         engine = create_engine(get_ini_value("sqlalchemy.url"), poolclass=NullPool)
@@ -191,6 +214,15 @@ class CeleryTask(AbortableTask):  # pragma: no cover
         send_task_status_to_form(settings, task_id, "failure")
         connection.invalidate()
         engine.dispose()
+        try:
+            for a_plugin in plugins.PluginImplementations(plugins.ICeleryTask):
+                a_plugin.on_failure(settings, task_id)
+        except Exception as e:
+            log.error(
+                "Plugin error {} processing on_failure for task {}".format(
+                    str(e), task_id
+                )
+            )
 
     def apply_async(
         self,

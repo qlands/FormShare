@@ -56,6 +56,7 @@ __all__ = [
     "ISubmissionStorage",
     "IExportGenerator",
     "IFileStorage",
+    "ICeleryTask",
 ]
 
 
@@ -2318,7 +2319,7 @@ class IFileStorage(Interface):
     def on_storing_file(
         self, request, storage_object, bucket_id, file_name, file_buffer
     ):
-        """Called by FormShare so plugins can add new roles.
+        """Called by FormShare so plugins can perform actions when adding a file.
         :param request: ``pyramid.request`` object
         :param bucket_id: The bucket ID
         :param storage_object: Storage object
@@ -2329,7 +2330,7 @@ class IFileStorage(Interface):
         raise NotImplementedError("on_storing_file must be implemented in subclasses")
 
     def on_removing_file(self, request, storage_object, bucket_id, file_name):
-        """Called by FormShare so plugins can add new roles.
+        """Called by FormShare so plugins can perform actions when removing a file.
         :param request: ``pyramid.request`` object
         :param bucket_id: The bucket
         :param storage_object: Storage object
@@ -2339,7 +2340,7 @@ class IFileStorage(Interface):
         raise NotImplementedError("on_removing_file must be implemented in subclasses")
 
     def on_removing_bucket(self, request, storage_object, bucket_id):
-        """Called by FormShare so plugins can add new roles.
+        """Called by FormShare so plugins can perform actions when removing a bucket.
         :param request: ``pyramid.request`` object
         :param bucket_id: The bucket
         :param storage_object: Storage object
@@ -2348,3 +2349,32 @@ class IFileStorage(Interface):
         raise NotImplementedError(
             "on_removing_bucket must be implemented in subclasses"
         )
+
+
+class ICeleryTask(Interface):
+    """
+    Plugin into FormShare's Celery Class, so plugins can react when a task finishes
+    """
+
+    def on_success(self, settings, task_id):
+        """Called by FormShare so plugins can perform actions when a task successfully finishes
+        :param settings: Pyramid settings
+        :param task_id: Task ID
+        :return None
+        """
+
+    def on_product_created(self, settings, task_id, product_id, product_size):
+        """Called by FormShare so plugins can perform actions when a product has been created
+        :param settings: Pyramid settings
+        :param task_id: Task ID
+        :param product_id: Product ID
+        :param product_size: Product size in bytes
+        :return None
+        """
+
+    def on_failure(self, settings, task_id):
+        """Called by FormShare so plugins can perform actions when a task finishes with failure
+        :param settings: Pyramid settings
+        :param task_id: Task ID
+        :return None
+        """

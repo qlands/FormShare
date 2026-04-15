@@ -102,7 +102,7 @@ pytest-cov==7.0.0
 python-dateutil==2.9.0.post0
 python-docx==1.2.0
 python-editor==1.0.4
-python-multipart==0.0.22
+python-multipart==0.0.26
 python-slugify==8.0.4
 pytokens==0.4.1
 pytz==2025.2

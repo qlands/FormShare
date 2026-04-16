@@ -260,9 +260,16 @@ class DeleteProduct(PrivateView):
 
         if self.request.method == "POST":
             if output_exists(self.request, project_id, form_id, product_id, output_id):
-                deleted, message = delete_product(
-                    self.request, project_id, form_id, product_id, output_id
-                )
+
+                continue_delete = True
+                message = ""
+                # Load connected plugins and check if they modify the download process
+                for plugin in p.PluginImplementations(p.IProduct):
+                    continue_delete, message = plugin.before_deleting_product(
+                        self.request, project_id, form_id, product_id, output_id
+                    )
+                    if not continue_delete:
+                        break
                 next_page = self.request.route_url(
                     "form_details",
                     userid=user_id,
@@ -270,15 +277,28 @@ class DeleteProduct(PrivateView):
                     formid=form_id,
                     _query={"tab": "task", "product": product_id},
                 )
-                if deleted:
-                    self.request.session.flash(
-                        self._("The product was deleted successfully")
+                if continue_delete:
+                    deleted, message = delete_product(
+                        self.request, project_id, form_id, product_id, output_id
                     )
-                    return HTTPFound(location=next_page)
+                    if deleted:
+                        for plugin in p.PluginImplementations(p.IProduct):
+                            plugin.after_deleting_product(
+                                self.request, project_id, form_id, product_id, output_id
+                            )
+                        self.request.session.flash(
+                            self._("The product was deleted successfully")
+                        )
+                        return HTTPFound(location=next_page)
+                    else:
+                        self.request.session.flash(
+                            self._("Unable to delete the product") + "|error"
+                        )
+                        return HTTPFound(
+                            location=next_page, headers={"FS_error": "true"}
+                        )
                 else:
-                    self.request.session.flash(
-                        self._("Unable to delete the product") + "|error"
-                    )
+                    self.request.session.flash(message + "|error")
                     return HTTPFound(location=next_page, headers={"FS_error": "true"})
             else:
                 raise HTTPNotFound

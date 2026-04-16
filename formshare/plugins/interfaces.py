@@ -938,6 +938,33 @@ class IProduct(Interface):  # pragma: no cover
             "before_download_public_product must be implemented in subclasses"
         )
 
+    def before_deleting_product(self, request, project, form, product, output):
+        """
+        Called by FormShare so plugins can react before a product gets deleted.
+        :param request: FastAPI request object
+        :param project: Project ID
+        :param form: Form ID
+        :param product: Product ID
+        :param output: Output ID
+        : return True,"" if the product should be deleted or False,message if the product should not be deleted
+        """
+        raise NotImplementedError(
+            "before_deleting_product must be implemented in subclasses"
+        )
+
+    def after_deleting_product(self, request, project, form, product, output):
+        """
+        Called by FormShare so plugins can react after a product gets deleted.
+        :param request: FastAPI request object
+        :param project: Project ID
+        :param form: Form ID
+        :param product: Product ID
+        :param output: Output ID
+        """
+        raise NotImplementedError(
+            "after_deleting_product must be implemented in subclasses"
+        )
+
 
 class IImportExternalData(Interface):  # pragma: no cover
     """

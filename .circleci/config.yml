@@ -167,8 +167,7 @@ jobs:
             python3 create_config.py /opt/formshare_config/development.ini
 
             ln -s /opt/formshare_config/development.ini ./development.ini
-
-            python3 ./download_nltk_packages.py
+            
             python3 configure_celery.py ./development.ini
             python3 configure_flatten.py
             echo "Running install"

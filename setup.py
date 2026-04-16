@@ -64,7 +64,6 @@ requires = [
     "mypy-extensions",
     "mysql-connector-python",
     "mysqlclient",
-    "nltk",
     "nose",
     "numpy",
     "ofs",

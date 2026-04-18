@@ -68,67 +68,69 @@
                                                 </div>
                                             {% endblock marker_info_data %}
                                         </div>
-                                        {% if mediaFiles|length > 0 %}
-                                            <div id="tab_submission_media" class="tab-pane" style="max-height: 425px">
-                                                {% block marker_info_media_tab %}
-                                                    {% if hasImages %}
-                                                        {% block marker_info_image_box %}
-                                                            <div class="ibox ">
-                                                                <div class="ibox-title">
-                                                                    {% block marker_info_image_title %}
-                                                                        <h5>{{ _('Images') }}</h5>
-                                                                    {% endblock marker_info_image_title %}
-                                                                </div>
-                                                                <div class="ibox-content">
-                                                                    {% block marker_info_image_content %}
-                                                                        <div class="lightBoxGallery">
-                                                                            {% for a_file in mediaFiles %}
-                                                                                {% if a_file.image %}
-                                                                                    <a href="{{ request.route_url('get_submission_media_file', userid=userid,projcode=projcode,formid=formid,submissionid=submissionid,filename=a_file.file) }}" data-gallery=""><img src="{{ request.route_url('get_submission_media_file', userid=userid,projcode=projcode,formid=formid,submissionid=submissionid,filename=a_file.file,_query={'thumbnail':'True'}) }}"></a>
-                                                                                {% endif %}
-                                                                            {% endfor %}
+                                        {% block marker_media %}
+                                            {% if mediaFiles|length > 0 %}
+                                                <div id="tab_submission_media" class="tab-pane" style="max-height: 425px">
+                                                    {% block marker_info_media_tab %}
+                                                        {% if hasImages %}
+                                                            {% block marker_info_image_box %}
+                                                                <div class="ibox ">
+                                                                    <div class="ibox-title">
+                                                                        {% block marker_info_image_title %}
+                                                                            <h5>{{ _('Images') }}</h5>
+                                                                        {% endblock marker_info_image_title %}
+                                                                    </div>
+                                                                    <div class="ibox-content">
+                                                                        {% block marker_info_image_content %}
+                                                                            <div class="lightBoxGallery">
+                                                                                {% for a_file in mediaFiles %}
+                                                                                    {% if a_file.image %}
+                                                                                        <a href="{{ request.route_url('get_submission_media_file', userid=userid,projcode=projcode,formid=formid,submissionid=submissionid,filename=a_file.file) }}" data-gallery=""><img src="{{ request.route_url('get_submission_media_file', userid=userid,projcode=projcode,formid=formid,submissionid=submissionid,filename=a_file.file,_query={'thumbnail':'True'}) }}"></a>
+                                                                                    {% endif %}
+                                                                                {% endfor %}
 
-                                                                            <!-- The Gallery as lightbox dialog, should be a child element of the document body -->
-                                                                            <div id="blueimp-gallery" class="blueimp-gallery">
-                                                                                <div class="slides"></div>
-                                                                                <h3 class="title"></h3>
-                                                                                <a class="prev">‹</a>
-                                                                                <a class="next">›</a>
-                                                                                <a class="close">×</a>
-                                                                                <a class="play-pause"></a>
-                                                                                <ol class="indicator"></ol>
+                                                                                <!-- The Gallery as lightbox dialog, should be a child element of the document body -->
+                                                                                <div id="blueimp-gallery" class="blueimp-gallery">
+                                                                                    <div class="slides"></div>
+                                                                                    <h3 class="title"></h3>
+                                                                                    <a class="prev">‹</a>
+                                                                                    <a class="next">›</a>
+                                                                                    <a class="close">×</a>
+                                                                                    <a class="play-pause"></a>
+                                                                                    <ol class="indicator"></ol>
+                                                                                </div>
                                                                             </div>
-                                                                        </div>
-                                                                    {% endblock marker_info_image_content %}
+                                                                        {% endblock marker_info_image_content %}
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        {% endblock marker_info_image_box %}
-                                                    {% endif %}
-                                                    {% if hasOtherMedia %}
-                                                        {% block marker_info_other_media_box %}
-                                                            <div class="ibox ">
-                                                                <div class="ibox-title">
-                                                                    {% block marker_info_other_media_title %}
-                                                                        <h5>{{ _('Other media') }}</h5>
-                                                                    {% endblock marker_info_other_media_title %}
+                                                            {% endblock marker_info_image_box %}
+                                                        {% endif %}
+                                                        {% if hasOtherMedia %}
+                                                            {% block marker_info_other_media_box %}
+                                                                <div class="ibox ">
+                                                                    <div class="ibox-title">
+                                                                        {% block marker_info_other_media_title %}
+                                                                            <h5>{{ _('Other media') }}</h5>
+                                                                        {% endblock marker_info_other_media_title %}
+                                                                    </div>
+                                                                    <div class="ibox-content">
+                                                                        {% block marker_info_other_media_content %}
+                                                                            <ul class="tag-list" style="padding: 0">
+                                                                                {% for a_file in mediaFiles %}
+                                                                                    {% if a_file.image == false %}
+                                                                                        <li><a href="{{ request.route_url('get_submission_media_file', userid=userid,projcode=projcode,formid=formid,submissionid=submissionid,filename=a_file.file) }}"> {{ a_file.file }}</a></li>
+                                                                                    {% endif %}
+                                                                                {% endfor %}
+                                                                            </ul>
+                                                                        {% endblock marker_info_other_media_content %}
+                                                                    </div>
                                                                 </div>
-                                                                <div class="ibox-content">
-                                                                    {% block marker_info_other_media_content %}
-                                                                        <ul class="tag-list" style="padding: 0">
-                                                                            {% for a_file in mediaFiles %}
-                                                                                {% if a_file.image == false %}
-                                                                                    <li><a href="{{ request.route_url('get_submission_media_file', userid=userid,projcode=projcode,formid=formid,submissionid=submissionid,filename=a_file.file) }}"> {{ a_file.file }}</a></li>
-                                                                                {% endif %}
-                                                                            {% endfor %}
-                                                                        </ul>
-                                                                    {% endblock marker_info_other_media_content %}
-                                                                </div>
-                                                            </div>
-                                                        {% endblock marker_info_other_media_box %}
-                                                    {% endif %}
-                                                {% endblock marker_info_media_tab %}
-                                            </div>
-                                        {% endif %}
+                                                            {% endblock marker_info_other_media_box %}
+                                                        {% endif %}
+                                                    {% endblock marker_info_media_tab %}
+                                                </div>
+                                            {% endif %}
+                                        {% endblock marker_media %}
                                     {% endblock marker_info_content %}
                                 </div>
                             </div>

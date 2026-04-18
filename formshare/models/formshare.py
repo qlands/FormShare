@@ -14,6 +14,7 @@ from sqlalchemy import (
     Index,
     text,
     Unicode,
+    DECIMAL,
 )
 from sqlalchemy.dialects.mysql import MEDIUMTEXT, BIGINT
 from sqlalchemy.ext import mutable
@@ -109,6 +110,11 @@ class User(Base):
     user_password_reset_key = Column(Unicode(64))
     user_password_reset_token = Column(Unicode(64))
     user_password_reset_expires_on = Column(DateTime)
+    user_max_projects = Column(INTEGER, server_default=text("'1'"))
+    user_kb_used = Column(DECIMAL(14, 3), server_default=text("'0'"))
+    user_in_files_kb_used = Column(DECIMAL(14, 3), server_default=text("'0'"))
+    user_in_files_last_event = Column(DateTime)
+    user_in_files_last_read = Column(DateTime)
 
     user_timezone = Column(
         ForeignKey("timezone.timezone_code", ondelete="RESTRICT"),
@@ -153,8 +159,10 @@ class Project(Base):
     project_cdate = Column(DateTime)
     project_public = Column(INTEGER)
     project_archived = Column(INTEGER, server_default=text("'0'"))
+    project_archiving = Column(INTEGER, server_default=text("'0'"))
     project_archived_by = Column(Unicode(120))
     project_archived_date = Column(DateTime)
+    project_restoring = Column(INTEGER, server_default=text("'0'"))
     project_unarchived_by = Column(Unicode(120))
     project_unarchived_date = Column(DateTime)
     project_image = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))

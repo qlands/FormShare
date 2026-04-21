@@ -63,7 +63,7 @@ joblib==1.5.2
 kombu==5.5.4
 legacy-cgi==2.6.4
 linecache2==1.0.0
-lxml==6.0.2
+lxml==6.1.0
 markdown-it-py==4.0.0
 MarkupSafe==3.0.3
 mdurl==0.1.2

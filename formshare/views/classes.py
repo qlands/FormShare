@@ -1359,7 +1359,7 @@ class AssistantView(object):
                                     )
                                 )
                                 raise HTTPNotFound()
-            self.resultDict["activeAssistant"] = self.assistant
+        self.resultDict["activeAssistant"] = self.assistant
         self.assistantID = self.assistant.login
         self.resultDict["assistant_id"] = self.assistantID
         self.resultDict["assistant_uuid"] = self.assistantUUID

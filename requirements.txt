@@ -146,7 +146,7 @@ typing_extensions==4.15.0
 tzdata==2025.2
 unicodecsv==0.14.1
 unittest2==1.1.0
-urllib3==2.6.3
+urllib3==2.7.0
 uvicorn==0.42.0
 validators==0.35.0
 vine==5.1.0

@@ -71,6 +71,8 @@ class Tenant(Base):
     tenant_cdate = Column(DateTime)
     tenant_active = Column(INTEGER, server_default=text("'0'"))
     tenant_main = Column(INTEGER, server_default=text("'0'"))
+    fa_query_user = Column(Unicode(64))
+    fa_query_password = Column(Unicode(256))
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 

@@ -146,6 +146,7 @@ def register_user(request, user_data):
         try:
             request.dbsession.add(new_user)
 
+            user_data["roles"] = list(dict.fromkeys(user_data["roles"]))
             for a_role in user_data["roles"]:
                 role_data = {
                     "user_id": mapped_data["user_id"],

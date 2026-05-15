@@ -63,7 +63,7 @@ joblib==1.5.2
 kombu==5.5.4
 legacy-cgi==2.6.4
 linecache2==1.0.0
-lxml==6.0.2
+lxml==6.1.0
 markdown-it-py==4.0.0
 MarkupSafe==3.0.3
 mdurl==0.1.2
@@ -101,7 +101,7 @@ pytest-cov==7.0.0
 python-dateutil==2.9.0.post0
 python-docx==1.2.0
 python-editor==1.0.4
-python-multipart==0.0.26
+python-multipart==0.0.27
 python-slugify==8.0.4
 pytokens==0.4.1
 pytz==2025.2
@@ -146,7 +146,7 @@ typing_extensions==4.15.0
 tzdata==2025.2
 unicodecsv==0.14.1
 unittest2==1.1.0
-urllib3==2.6.3
+urllib3==2.7.0
 uvicorn==0.42.0
 validators==0.35.0
 vine==5.1.0

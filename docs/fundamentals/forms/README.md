@@ -190,14 +190,14 @@ Once FormShare finalizes creating the repository it will show the "Form details"
 ![](../../.gitbook/assets/form\_details\_with\_repo\_captions.png)
 
 1. **With repository**: The form now appears with a repository.
-2. **In database**: Submissions are now stored in a database. You can start cleaning the data using the [Web Interface ](../../data-management/for-designers/figma-integration/the-web-interface.md)or through [API](../../data-management/for-designers/figma-integration/api-data-cleaning.md).
-3. **With error**:  Submissions that don't enter the database go to the [error log](../../data-management/for-designers/submissions-with-errors.md).
-4. **Log entries**: The process of cleaning submissions with errors generate traceability records in the [error log](../../data-management/for-designers/submissions-with-errors.md). You can review them at any time.
+2. **In database**: Submissions are now stored in a database. You can start cleaning the data using the [Web Interface ](../../data-management/cleaning/in-a-repository/web-interface.md)or through [API](../../data-management/cleaning/in-a-repository/api.md).
+3. **With error**:  Submissions that don't enter the database go to the [error log](../../data-management/cleaning/submissions-with-errors.md).
+4. **Log entries**: The process of cleaning submissions with errors generate traceability records in the [error log](../../data-management/cleaning/submissions-with-errors.md). You can review them at any time.
 5. **Merge new version**: It is normal to have new versions of a form even after substantial testing. A new version of a form will store the submissions in the same repository of its previous version. **This means that you WILL NOT have two different sets of data that then you would need to join**. This is covered in more detail in the section "[Merging subversions of a form](../repositories/merging-subversions-of-a-form.md)".
-6. **Anonymize fields**: You can mark fields as sensitive across all tables. Fields marked as sensitive will not appear in [public products](../../data-management/data-products/private-vs-public-products.md). This is covered in the section "[The data dictionary](../../use-cases/for-support/)".
-7. **Manage submissions**: This feature allows you to delete submissions or move a submission from the database into the log entries. This is covered in more detail in the section "[Working with submissions](../../data-management/for-designers/working-with-submissions.md)".
+6. **Anonymize fields**: You can mark fields as sensitive across all tables. Fields marked as sensitive will not appear in [public products](../../data-management/data-products/private-vs-public-products.md). This is covered in the section "[The data dictionary](../../data-management/data-dictionary/)".
+7. **Manage submissions**: This feature allows you to delete submissions or move a submission from the database into the log entries. This is covered in more detail in the section "[Working with submissions](../../data-management/cleaning/working-with-submissions.md)".
 8. **Import external data**: FormShare allows you to import data from FormShare 1.0 (JSON), ODK Central (XML), and third-party platforms in JSON format. This is covered in more detail in the section "[Import external data](../submissions/import-external-data.md)"
-9. **The audit log**: FormShare logs any change in the data regardless of the method used (e.g., Web interface, API, etc). This is covered in more detail in the section "[The audit log](../../data-management/for-designers/figma-integration/the-audit-log.md)".
+9. **The audit log**: FormShare logs any change in the data regardless of the method used (e.g., Web interface, API, etc). This is covered in more detail in the section "[The audit log](../../data-management/cleaning/in-a-repository/audit-log.md)".
 10. **Export data**: Now that the form has a repository, it is possible to export the data in different formats like Excel, and JSON. This is covered in more detail in the section "[Data products](../../data-management/data-products/)".
 
 ## Edit the metadata of a form

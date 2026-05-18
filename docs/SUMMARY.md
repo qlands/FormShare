@@ -30,29 +30,24 @@
 
 ## Data management
 
-* [Data curation](use-cases/for-designers/README.md)
-  * [Cleaning data in a repository](data-management/for-designers/figma-integration/README.md)
-    * [The web interface](data-management/for-designers/figma-integration/the-web-interface.md)
-    * [API Data cleaning](data-management/for-designers/figma-integration/api-data-cleaning.md)
-    * [The audit log](data-management/for-designers/figma-integration/the-audit-log.md)
-  * [Submissions with errors](data-management/for-designers/submissions-with-errors.md)
-  * [Working with submissions](data-management/for-designers/working-with-submissions.md)
-* [Longitudinal data collection](use-cases/for-engineers/README.md)
-  * [Case creator forms](use-cases/for-engineers/github-integration.md)
-  * [The real-time CSV file](data-management/for-engineers/the-real-time-csv-file.md)
-  * [Follow-up forms](data-management/for-engineers/follow-up-forms.md)
-  * [Activating / de-activating a case](data-management/for-engineers/activating-de-activating-a-case.md)
-* [The data dictionary](use-cases/for-support/README.md)
-  * [Marking fields as sensitive](use-cases/for-support/intercom-integration.md)
+* [Data curation](data-management/cleaning/README.md)
+  * [Cleaning data in a repository](data-management/cleaning/in-a-repository/README.md)
+    * [The web interface](data-management/cleaning/in-a-repository/web-interface.md)
+    * [API data cleaning](data-management/cleaning/in-a-repository/api.md)
+    * [The audit log](data-management/cleaning/in-a-repository/audit-log.md)
+  * [Submissions with errors](data-management/cleaning/submissions-with-errors.md)
+  * [Working with submissions](data-management/cleaning/working-with-submissions.md)
+* [Longitudinal data collection](data-management/longitudinal/README.md)
+  * [Case creator forms](data-management/longitudinal/case-creator-forms.md)
+  * [The real-time CSV file](data-management/longitudinal/real-time-csv.md)
+  * [Follow-up forms](data-management/longitudinal/follow-up-forms.md)
+  * [Activating / de-activating a case](data-management/longitudinal/activate-deactivate-case.md)
+* [The data dictionary](data-management/data-dictionary/README.md)
+  * [Marking fields as sensitive](data-management/data-dictionary/marking-sensitive-fields.md)
 * [Data products](data-management/data-products/README.md)
   * [Private vs public products](data-management/data-products/private-vs-public-products.md)
   * [Flat CSV (One CSV file)](data-management/data-products/flat-csv-one-csv-file.md)
 
 ## Technical pages
 
-* [Settings](technical-pages/keyboard-shortcuts.md)
-
-## Plugins
-
-* [What are plugins?](plugins/what-are-plugins.md)
-* [Enketo plugin](plugins/enketo-plugin.md)
+* [Settings](technical-pages/settings.md)

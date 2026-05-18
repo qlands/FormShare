@@ -30,7 +30,7 @@ To add a project you will need to provide the following information:
 * Icon: In ODK Collect each project can have **one** icon/emoji for easy identification.
 * Time zone: This should be the time zone where submissions happen.&#x20;
 * Abstract: Type here any other information regarding your project
-* Use a case/longitudinal workflow (optional): Check this option if the forms within this project and their submissions will be related to cases. You can read more about this in the section "[Longitudinal data collection](../use-cases/for-engineers/)"
+* Use a case/longitudinal workflow (optional): Check this option if the forms within this project and their submissions will be related to cases. You can read more about this in the section "[Longitudinal data collection](../data-management/longitudinal/)"
 * Requires authentication to accept data (optional): By default, data collectors require to enter their credentials to submit data. Uncheck this option to have public/crowdsourcing submissions.
 
 Click on the "Add project button" to add the project. If there are problems with any of the fields, FormShare will tell you the problem and enable you to correct it. When the fields are filled in correctly, FormShare will create your project and take you to the "[Project Details](projects.md#project-details)" page to upload your first form.
@@ -56,7 +56,7 @@ The project details page shows different elements that a project has. Here you c
 13. **Project partners**: You can link any number of [partners](partners.md) to a project. When you link a partner to a project they can access any data of any form inside the project. You can also link partners to individual forms to allow more limited access.
 
 {% hint style="info" %}
-Note on Partners: Partners access is a feature that is not present by default in a FormShare installation. See the "[Partner settings](../technical-pages/keyboard-shortcuts.md#partners)" for information about how to activate this feature.
+Note on Partners: Partners access is a feature that is not present by default in a FormShare installation. See the "[Partner settings](../technical-pages/settings.md#partners)" for information about how to activate this feature.
 {% endhint %}
 
 ## Edit a project

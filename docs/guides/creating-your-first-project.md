@@ -22,7 +22,7 @@ To add a project you will need to provide the following information:
 * Icon: In ODK Collect each project can have **one** icon/emoji for easy identification.
 * Time zone: This should be the time zone where submissions happen.&#x20;
 * Abstract: Type here any other information regarding your project
-* Use a case/longitudinal workflow (optional): Check this option if the forms within this project and their submissions will be related to cases. You can read more about this in the section "[Longitudinal data collection](../use-cases/for-engineers/)"
+* Use a case/longitudinal workflow (optional): Check this option if the forms within this project and their submissions will be related to cases. You can read more about this in the section "[Longitudinal data collection](../data-management/longitudinal/)"
 * Requires authentication to accept data (optional): By default, data collectors require to enter their credentials to submit data. Uncheck this option to have public/crowdsourcing submissions.
 
 Click on the "Add project button" to add the project. If there are problems with any of the fields, FormShare will tell you the problem and enable you to correct it. When the fields are filled in correctly, FormShare will create your project and take you to the "Project Details" page to upload your first form. Other information related to projects is covered in the "[Project](../fundamentals/projects.md)" section.

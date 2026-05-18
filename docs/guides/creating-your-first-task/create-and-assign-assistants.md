@@ -4,12 +4,12 @@ After uploading a new form, FormShare will take you to the form details page.
 
 ![](../../.gitbook/assets/form\_details\_01\_captions.png)
 
-1\. Testing stage: Every form that you upload to FormShare is stored first in a **testing stage**. This means that FormShare hasn't created a [repository for it](../../fundamentals/repositories/how-does-formshare-stores-my-data.md). The testing stage allows you to test your form and easily update it with fixed versions without the need of [merging data into a repository](../../data-management/for-designers/working-with-submissions.md).
+1\. Testing stage: Every form that you upload to FormShare is stored first in a **testing stage**. This means that FormShare hasn't created a [repository for it](../../fundamentals/repositories/how-does-formshare-stores-my-data.md). The testing stage allows you to test your form and easily update it with fixed versions without the need of [merging data into a repository](../../data-management/cleaning/working-with-submissions.md).
 
 {% hint style="warning" %}
 Important Note: <mark style="color:red;">**Submissions received to a form in the testing stage are considered test data**</mark>. This means that any <mark style="color:red;">**submissions will be discarded**</mark> every time that you upload a new version of the form.
 
-This behavior **is not the same** when your form has a repository. The section "[Working with submissions](../../data-management/for-designers/working-with-submissions.md)" discusses how to perform updates to a form with a repository.
+This behavior **is not the same** when your form has a repository. The section "[Working with submissions](../../data-management/cleaning/working-with-submissions.md)" discusses how to perform updates to a form with a repository.
 {% endhint %}
 
 2\. Active: A form can be "active" or "inactive". An active form can receive submissions. You can change the status of a form by editing it.

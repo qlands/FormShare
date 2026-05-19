@@ -46,7 +46,7 @@ FormEncode==2.1.1
 future==1.0.0
 greenlet==3.2.4
 gunicorn==23.0.0
-idna==3.11
+idna==3.15
 imagesize==1.4.1
 importlib_resources==6.5.2
 inflect==7.5.0

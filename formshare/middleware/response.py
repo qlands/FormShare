@@ -73,6 +73,17 @@ class Response:
     def status_code(self, value):
         self._status_code = int(value)
 
+    @property
+    def content_disposition(self):
+        return self.headers.get("Content-Disposition")
+
+    @content_disposition.setter
+    def content_disposition(self, value):
+        if value is None:
+            self.headers.pop("Content-Disposition", None)
+        else:
+            self.headers["Content-Disposition"] = value
+
     # ------------------------------------------------------------------
     # text / body duality (Pyramid allows setting either)
     # ------------------------------------------------------------------
@@ -147,6 +158,17 @@ class FileResponse:
     def status_code(self, value):
         self._status_code = int(value)
 
+    @property
+    def content_disposition(self):
+        return self.headers.get("Content-Disposition")
+
+    @content_disposition.setter
+    def content_disposition(self, value):
+        if value is None:
+            self.headers.pop("Content-Disposition", None)
+        else:
+            self.headers["Content-Disposition"] = value
+
     def to_starlette(self):
         from starlette.responses import FileResponse as StarletteFileResponse
 
@@ -206,6 +228,17 @@ class MutableResponse:
     @status_code.setter
     def status_code(self, value):
         self._status_code = int(value)
+
+    @property
+    def content_disposition(self):
+        return self.headers.get("Content-Disposition")
+
+    @content_disposition.setter
+    def content_disposition(self, value):
+        if value is None:
+            self.headers.pop("Content-Disposition", None)
+        else:
+            self.headers["Content-Disposition"] = value
 
     def set_cookie(self, name: str, value: str = "", **kwargs):
         """Queue a Set-Cookie header to be applied to the final response.

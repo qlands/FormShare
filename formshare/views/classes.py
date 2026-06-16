@@ -1035,20 +1035,27 @@ class PrivateView(object):
             return dct
         else:
             try:
-                return self.request.json_body
+                json_body = self.request.json_body
             except json.JSONDecodeError:
-                dct = variable_decode(self.request.POST)
-                for key, value in dct.items():
-                    if isinstance(value, str):
-                        dct[key] = value.strip()
-                if self.token_required:
-                    if "token" not in dct.keys():
-                        raise HTTPNotFound()
-                    token_data = self.get_data_from_token(dct["token"])
-                    if token_data is None:
-                        raise HTTPNotFound()
-                    self.token_data = token_data
-                return dct
+                json_body = None
+            if json_body is not None:
+                return json_body
+            # Multipart or form-encoded body (e.g. file uploads): json_body is
+            # None because the request is not application/json. Fall back to
+            # decoding request.POST so API (Bearer-token) callers can perform
+            # multipart uploads the same way session/browser requests do.
+            dct = variable_decode(self.request.POST)
+            for key, value in dct.items():
+                if isinstance(value, str):
+                    dct[key] = value.strip()
+            if self.token_required:
+                if "token" not in dct.keys():
+                    raise HTTPNotFound()
+                token_data = self.get_data_from_token(dct["token"])
+                if token_data is None:
+                    raise HTTPNotFound()
+                self.token_data = token_data
+            return dct
 
     def reload_user_details(self):
         self.classResult["userDetails"] = get_user_details(self.request, self.userID)

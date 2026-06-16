@@ -212,6 +212,37 @@ def create_app(settings: dict | None = None, ini_path: str | None = None):
         else:
             log.warning("Static view %r skipped – directory not found: %s", name, path)
 
+    # -- Dev convenience: revalidate static assets (opt-in) --
+    # FastAPI's StaticFiles sends ETag/Last-Modified but NO Cache-Control,
+    # so browsers heuristically cache JS/CSS and a normal reload can serve a
+    # stale copy after the file changed — forcing a hard refresh during
+    # development (e.g. editing a plugin's JS). When
+    # `formshare.static_no_cache` is truthy, attach `Cache-Control: no-cache`
+    # to responses under the mounted static paths so the browser always
+    # revalidates (cheap 304s) and picks up edits on a plain reload after a
+    # restart. OFF by default — production keeps normal caching.
+    if str(settings.get("formshare.static_no_cache", "false")).strip().lower() in (
+        "true",
+        "1",
+        "yes",
+        "on",
+    ):
+        _static_prefixes = tuple(
+            "/" + sv["name"] + "/" for sv in fs_config.static_views
+        )
+
+        @fastapi_app.middleware("http")
+        async def _revalidate_static_assets(request, call_next):
+            response = await call_next(request)
+            if _static_prefixes and request.url.path.startswith(_static_prefixes):
+                response.headers["Cache-Control"] = "no-cache"
+            return response
+
+        log.info(
+            "formshare.static_no_cache enabled: revalidating %d static mount(s)",
+            len(_static_prefixes),
+        )
+
     # -- Register all collected routes --
     def _register_routes(rlist):
         for route in rlist:

@@ -171,6 +171,8 @@ setup(
             "modify_config = formshare.scripts.modifyconfig:main",
             "configure_tests = formshare.scripts.configuretests:main",
             "update_aes_key = formshare.scripts.updateaeskey:main",
+            "export_elasticsearch = formshare.scripts.exportelasticsearch:main",
+            "import_elasticsearch = formshare.scripts.importelasticsearch:main",
         ],
     },
 )

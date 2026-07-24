@@ -1,0 +1,16 @@
+# Requirements for the FormShare ElasticSearch EXPORT script
+#   formshare/scripts/exportelasticsearch.py
+#
+# Install this in the environment that connects to the OLD ElasticSearch
+# 7.14.x server (the FormShare 2.x stack). 7.17.12 is the last 7.x client
+# release and is fully compatible with any 7.x server; it matches the pin in
+# FormShare's stable-2.44.0 branch.
+#
+# Use a dedicated virtualenv so it does not clash with the 9.x client:
+#
+#   python3 -m venv venv-es7
+#   ./venv-es7/bin/pip install -r formshare/scripts/export_requirements.txt
+#   ./venv-es7/bin/python formshare/scripts/exportelasticsearch.py \
+#       --host OLD_HOST --port 9200 --output ./es_dump
+#
+elasticsearch==7.17.12

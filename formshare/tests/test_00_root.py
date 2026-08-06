@@ -48,8 +48,17 @@ from .steps.form_merge_mimic import t_e_s_t_form_merge_mimic
 from .steps.form_merge_mimic_2 import t_e_s_t_form_merge_mimic_2
 from .steps.form_merge_mimic_3 import t_e_s_t_form_merge_mimic_3
 from .steps.form_merge_start import t_e_s_t_form_merge_start
-from .steps.forms import t_e_s_t_forms
-from .steps.group_assistant import t_e_s_t_group_assistant
+
+if os.environ.get("USE_RSTOOLS", "false") == "false":
+    from .steps.old.forms import t_e_s_t_forms
+else:
+    from .steps.forms import t_e_s_t_forms
+
+if os.environ.get("USE_RSTOOLS", "false") == "false":
+    from .steps.old.group_assistant import t_e_s_t_group_assistant
+else:
+    from .steps.group_assistant import t_e_s_t_group_assistant
+
 from .steps.helpers import t_e_s_t_helpers
 from .steps.import_data import t_e_s_t_import_data
 from .steps.json_logs import t_e_s_t_json_logs
@@ -60,7 +69,12 @@ from .steps.login import t_e_s_t_login
 from .steps.modify_config import t_e_s_t_modify_config
 from .steps.multilanguage_odk import t_e_s_t_multilanguage_odk
 from .steps.odk import t_e_s_t_odk
-from .steps.one_user_assistant import t_e_s_t_one_user_assistant
+
+if os.environ.get("USE_RSTOOLS", "false") == "false":
+    from .steps.old.one_user_assistant import t_e_s_t_one_user_assistant
+else:
+    from .steps.one_user_assistant import t_e_s_t_one_user_assistant
+
 from .steps.partners import t_e_s_t_partners
 from .steps.plugin_utility_functions import t_e_s_t_plugin_utility_functions
 from .steps.profile import t_e_s_t_profile

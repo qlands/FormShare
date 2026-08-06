@@ -27,6 +27,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.pid
 MANIFEST
 .idea/
 tmp/

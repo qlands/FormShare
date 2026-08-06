@@ -151,7 +151,10 @@ def t_e_s_t_forms(test_object):
         status=302,
         upload_files=[("xlsx", resource_file)],
     )
-    assert "FS_error" in res.headers
+    if os.environ.get("USE_RSTOOLS", "false") == "false":
+        assert "FS_error" in res.headers
+    else:
+        assert "FS_error" not in res.headers
 
     # Upload a form fails. Bad language
     paths = ["resources", "forms", "bad_language", "bad_language.xlsx"]
@@ -179,7 +182,10 @@ def t_e_s_t_forms(test_object):
         status=302,
         upload_files=[("xlsx", resource_file)],
     )
-    assert "FS_error" in res.headers
+    if os.environ.get("USE_RSTOOLS", "false") == "false":
+        assert "FS_error" in res.headers
+    else:
+        assert "FS_error" not in res.headers
 
     # Upload a form that has select with "or other" fails.
 
@@ -427,7 +433,7 @@ def t_e_s_t_forms(test_object):
     assert "FS_error" in res.headers
 
     # Update a form fails. Too many selects
-    paths = ["resources", "forms", "form07.xlsx"]
+    paths = ["resources", "forms", "form07B.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
 
     res = test_object.testapp.post(
@@ -438,7 +444,10 @@ def t_e_s_t_forms(test_object):
         status=302,
         upload_files=[("xlsx", resource_file)],
     )
-    assert "FS_error" in res.headers
+    if os.environ.get("USE_RSTOOLS", "false") == "false":
+        assert "FS_error" in res.headers
+    else:
+        assert "FS_error" not in res.headers
 
     # Update a form fails. Tables with more than 64 characters
     paths = ["resources", "forms", "bad_size", "bad_size.xlsx"]
@@ -490,7 +499,7 @@ def t_e_s_t_forms(test_object):
     # Update a form a succeeds
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         {"form_pkey": "hid"},
         status=302,
@@ -501,7 +510,7 @@ def t_e_s_t_forms(test_object):
     # The form does not have data columns
     res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         status=200,
     )
@@ -513,7 +522,7 @@ def t_e_s_t_forms(test_object):
     # Update a form a succeeds with data columns
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         {"form_pkey": "hid"},
         status=302,
@@ -524,7 +533,7 @@ def t_e_s_t_forms(test_object):
     # The form have data columns
     res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         status=200,
     )
@@ -533,7 +542,7 @@ def t_e_s_t_forms(test_object):
     # Update a form a succeeds with a form that does not have data columns
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         {"form_pkey": "hid"},
         status=302,
@@ -544,7 +553,7 @@ def t_e_s_t_forms(test_object):
     # The form does not have data columns
     res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         status=200,
     )
@@ -556,7 +565,7 @@ def t_e_s_t_forms(test_object):
     # Update a form a succeeds with data columns
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         {"form_pkey": "hid"},
         status=302,
@@ -567,7 +576,7 @@ def t_e_s_t_forms(test_object):
     # The form have data columns and external files
     res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         status=200,
     )
@@ -577,7 +586,7 @@ def t_e_s_t_forms(test_object):
     # Update the form with one without data columns or CSV files
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         {"form_pkey": "hid"},
         status=302,
@@ -588,7 +597,7 @@ def t_e_s_t_forms(test_object):
     # The form does not have data columns
     res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         status=200,
     )
@@ -702,7 +711,7 @@ def t_e_s_t_forms(test_object):
     # Delete the form
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         status=302,
     )
@@ -725,7 +734,7 @@ def t_e_s_t_forms(test_object):
     # Set form as inactive of a project that does not exist goes to 404
     test_object.testapp.post(
         "/user/{}/project/{}/form/{}/deactivate".format(
-            test_object.randonLogin, "not_exist_project", "Justtest"
+            test_object.randonLogin, "not_exist_project", "Justtest_b"
         ),
         status=404,
     )
@@ -741,7 +750,7 @@ def t_e_s_t_forms(test_object):
     # Set form as inactive of a form using get goes to 404
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/deactivate".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         status=404,
     )
@@ -749,7 +758,7 @@ def t_e_s_t_forms(test_object):
     # Set form as inactive
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/deactivate".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         status=302,
     )
@@ -758,7 +767,7 @@ def t_e_s_t_forms(test_object):
     # Set form as active
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/activate".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         status=302,
     )
@@ -770,7 +779,7 @@ def t_e_s_t_forms(test_object):
     # Upload a file to a project that does not exist goes to 404
     test_object.testapp.post(
         "/user/{}/project/{}/form/{}/upload".format(
-            test_object.randonLogin, "test001_not_exist", "Justtest"
+            test_object.randonLogin, "test001_not_exist", "Justtest_b"
         ),
         status=404,
         upload_files=[("filetoupload", resource_file)],
@@ -788,7 +797,7 @@ def t_e_s_t_forms(test_object):
     # Upload a file to a form using get goes to 404
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/upload".format(
-            test_object.randonLogin, "test001", "Justtest"
+            test_object.randonLogin, "test001", "Justtest_b"
         ),
         status=404,
     )

@@ -1,0 +1,15 @@
+-Error 404 while pushing submission /home/cquiros/data/projects2017/personal/software/FormShare/formshare/tests/resources/forms/complex_form/for_import/xml/submission_a/ to URL http://localhost:80/user/1c42de087853/project/test001/push. Error 
+
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>404 Not Found</title>
+</head><body>
+<h1>Not Found</h1>
+<p>The requested URL was not found on this server.</p>
+<hr>
+<address>Apache/2.4.63 (Ubuntu) Server at localhost Port 80</address>
+</body></html>
+
+
+
+-The directory /home/cquiros/data/projects2017/personal/software/FormShare/formshare/tests/resources/forms/complex_form/for_import/xml/submission_b/ does not have any submission files or it does not have an xml data file

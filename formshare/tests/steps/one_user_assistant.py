@@ -84,7 +84,7 @@ def t_e_s_t_one_user_assistant(test_object):
     # Add an assistant to a form succeeds
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/assistants/add".format(
-            random_login, "test001", "Justtest"
+            random_login, "test001", "Justtest_b"
         ),
         {
             "coll_id": "{}|{}|{}".format(project_id, "assistant001", assistant001_uuid),
@@ -147,7 +147,7 @@ def t_e_s_t_one_user_assistant(test_object):
     # Add an assistant of project 2 to a form succeeds
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/assistants/add".format(
-            random_login, "test001", "Justtest"
+            random_login, "test001", "Justtest_b"
         ),
         {
             "coll_id": "{}|{}|{}".format(project_id, "assistant002", assistant002_uuid),

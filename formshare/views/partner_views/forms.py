@@ -442,6 +442,14 @@ class GetPartnerMediaFile(PartnerView):
                 ):
                     raise HTTPNotFound
 
+        for plugin in p.PluginImplementations(p.IMediaStorage):
+            resp = plugin.open_submission_media(
+                self.request, project_id, form_id, submission_id, file_name, thumbnail
+            )
+            if resp is not None:
+                self.returnRawViewResult = True
+                return resp
+
         file = get_submission_media_file(
             self.request, project_id, form_id, submission_id, file_name, thumbnail
         )

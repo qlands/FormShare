@@ -19,6 +19,8 @@ __all__ = [
     "register_product_instance",
     "product_found",
     "get_products",
+    "set_products",
+    "remove_product",
     "stop_task",
     "get_product",
     "create_product",
@@ -94,6 +96,18 @@ def register_product_instance(
 
 def get_products():
     return list(_PRODUCTS)
+
+
+def set_products(products):
+    """Replace the registered product list (used by IProduct.update_products)."""
+    global _PRODUCTS
+    _PRODUCTS = list(products)
+
+
+def remove_product(code):
+    """Remove a registered product type by code (no-op if absent)."""
+    global _PRODUCTS
+    _PRODUCTS = [pr for pr in _PRODUCTS if pr["code"] != code]
 
 
 def stop_task(request, user, project, form, task):

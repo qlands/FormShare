@@ -69,9 +69,7 @@ def read_ini_settings(ini_path):
     parser.read(ini_path)
     section = "app:formshare"
     if not parser.has_section(section):
-        section = next(
-            (s for s in parser.sections() if s.startswith("app:")), None
-        )
+        section = next((s for s in parser.sections() if s.startswith("app:")), None)
     if section is None:
         return {}
     return dict(parser.items(section))
@@ -84,7 +82,7 @@ def resolve_connection(args, settings):
     def ini(key, default=None):
         return settings.get("elasticsearch.{}.{}".format(group, key), default)
 
-    use_ssl = (ini("use_ssl", "False") == "True")
+    use_ssl = ini("use_ssl", "False") == "True"
     scheme_default = settings.get(
         "elasticsearch.user.scheme", "https" if use_ssl else "http"
     )
@@ -115,8 +113,9 @@ def resolve_connection(args, settings):
     }
 
 
-def build_client(conn, request_timeout=800, max_retries=10, verify_certs=True,
-                 ca_certs=None):
+def build_client(
+    conn, request_timeout=800, max_retries=10, verify_certs=True, ca_certs=None
+):
     """Build an Elasticsearch client that works on both 7.x and 9.x clients."""
     import elasticsearch
     from elasticsearch import Elasticsearch
@@ -126,7 +125,9 @@ def build_client(conn, request_timeout=800, max_retries=10, verify_certs=True,
         major = version[0]
     else:
         try:
-            major = int(str(getattr(elasticsearch, "__versionstr__", "8")).split(".")[0])
+            major = int(
+                str(getattr(elasticsearch, "__versionstr__", "8")).split(".")[0]
+            )
         except (ValueError, AttributeError):
             major = 8
 
@@ -187,8 +188,11 @@ def create_index_from_sidecar(client, index_name, ndjson_path, replicas=None):
     """Create ``index_name`` from its mapping sidecar. Returns True if created."""
     side = sidecar_path(ndjson_path)
     if not os.path.exists(side):
-        print("    no mapping sidecar found ({}); relying on dynamic mapping".format(
-            os.path.basename(side)))
+        print(
+            "    no mapping sidecar found ({}); relying on dynamic mapping".format(
+                os.path.basename(side)
+            )
+        )
         return False
     with open(side, "r", encoding="utf-8") as handle:
         mapping_doc = json.load(handle)
@@ -238,8 +242,9 @@ def iter_bulk_actions(ndjson_path, target_index):
             yield doc
 
 
-def load_file(client, ndjson_path, target_index, chunk_size, limit=None,
-              progress_every=10000):
+def load_file(
+    client, ndjson_path, target_index, chunk_size, limit=None, progress_every=10000
+):
     """Bulk-load one NDJSON file. Returns (ok_count, fail_count, errors)."""
     from elasticsearch import helpers
 
@@ -282,7 +287,8 @@ def parse_rename(values):
     for value in values or []:
         if "=" not in value:
             raise argparse.ArgumentTypeError(
-                "--rename expects old=new, got: {}".format(value))
+                "--rename expects old=new, got: {}".format(value)
+            )
         old, new = value.split("=", 1)
         mapping[old] = new
     return mapping
@@ -293,7 +299,9 @@ def main(raw_args=None):
         description="Import FormShare ElasticSearch indices from NDJSON.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--ini", help="FormShare ini file to read connection defaults from")
+    parser.add_argument(
+        "--ini", help="FormShare ini file to read connection defaults from"
+    )
     parser.add_argument(
         "--ini-group",
         default="user",
@@ -305,30 +313,64 @@ def main(raw_args=None):
     parser.add_argument("--scheme", choices=["http", "https"], help="Connection scheme")
     parser.add_argument("--user", help="Basic-auth user (omit for no auth)")
     parser.add_argument("--password", help="Basic-auth password")
-    parser.add_argument("--url-prefix", dest="url_prefix", help="URL prefix/path of the cluster")
-    parser.add_argument("--no-verify-certs", dest="verify_certs", action="store_false",
-                        help="Do not verify TLS certs (https only)")
-    parser.add_argument("--ca-certs", dest="ca_certs", help="Path to a CA bundle (https only)")
-    parser.add_argument("-i", "--input", default="es_dump",
-                        help="Directory holding the dump (default: ./es_dump)")
-    parser.add_argument("--file", dest="files", action="append",
-                        help="Specific .ndjson file to load (repeatable). Overrides --input scan")
-    parser.add_argument("--index", dest="force_index",
-                        help="Force every loaded document into this index name")
-    parser.add_argument("--rename", action="append",
-                        help="Remap an index name as old=new (repeatable)")
-    parser.add_argument("--chunk-size", type=int, default=500,
-                        help="Documents per bulk request (default: 500)")
-    parser.add_argument("--replicas", type=int,
-                        help="Override number_of_replicas when creating indices")
-    parser.add_argument("--no-create", dest="create", action="store_false",
-                        help="Do not create missing indices (rely on dynamic mapping)")
-    parser.add_argument("--recreate", action="store_true",
-                        help="DELETE each target index before loading (destructive)")
-    parser.add_argument("--refresh", action="store_true",
-                        help="Refresh each index after loading it")
-    parser.add_argument("--limit", type=int,
-                        help="Stop after N documents per file (for testing)")
+    parser.add_argument(
+        "--url-prefix", dest="url_prefix", help="URL prefix/path of the cluster"
+    )
+    parser.add_argument(
+        "--no-verify-certs",
+        dest="verify_certs",
+        action="store_false",
+        help="Do not verify TLS certs (https only)",
+    )
+    parser.add_argument(
+        "--ca-certs", dest="ca_certs", help="Path to a CA bundle (https only)"
+    )
+    parser.add_argument(
+        "-i",
+        "--input",
+        default="es_dump",
+        help="Directory holding the dump (default: ./es_dump)",
+    )
+    parser.add_argument(
+        "--file",
+        dest="files",
+        action="append",
+        help="Specific .ndjson file to load (repeatable). Overrides --input scan",
+    )
+    parser.add_argument(
+        "--index",
+        dest="force_index",
+        help="Force every loaded document into this index name",
+    )
+    parser.add_argument(
+        "--rename", action="append", help="Remap an index name as old=new (repeatable)"
+    )
+    parser.add_argument(
+        "--chunk-size",
+        type=int,
+        default=500,
+        help="Documents per bulk request (default: 500)",
+    )
+    parser.add_argument(
+        "--replicas", type=int, help="Override number_of_replicas when creating indices"
+    )
+    parser.add_argument(
+        "--no-create",
+        dest="create",
+        action="store_false",
+        help="Do not create missing indices (rely on dynamic mapping)",
+    )
+    parser.add_argument(
+        "--recreate",
+        action="store_true",
+        help="DELETE each target index before loading (destructive)",
+    )
+    parser.add_argument(
+        "--refresh", action="store_true", help="Refresh each index after loading it"
+    )
+    parser.add_argument(
+        "--limit", type=int, help="Stop after N documents per file (for testing)"
+    )
     args = parser.parse_args(raw_args)
 
     try:
@@ -340,7 +382,9 @@ def main(raw_args=None):
     settings = {}
     if args.ini:
         if not os.path.exists(args.ini):
-            print("ERROR: ini file does not exist: {}".format(args.ini), file=sys.stderr)
+            print(
+                "ERROR: ini file does not exist: {}".format(args.ini), file=sys.stderr
+            )
             return 1
         settings = read_ini_settings(args.ini)
 
@@ -351,8 +395,10 @@ def main(raw_args=None):
         files = args.files
     else:
         if not os.path.isdir(args.input):
-            print("ERROR: input directory does not exist: {}".format(args.input),
-                  file=sys.stderr)
+            print(
+                "ERROR: input directory does not exist: {}".format(args.input),
+                file=sys.stderr,
+            )
             return 1
         files = sorted(glob.glob(os.path.join(args.input, "*.ndjson")))
     if not files:
@@ -366,17 +412,27 @@ def main(raw_args=None):
             ca_certs=args.ca_certs,
         )
     except ImportError:
-        print("ERROR: the 'elasticsearch' package is not installed in this "
-              "environment.", file=sys.stderr)
+        print(
+            "ERROR: the 'elasticsearch' package is not installed in this "
+            "environment.",
+            file=sys.stderr,
+        )
         return 1
 
     if not client.ping():
-        print("ERROR: cannot reach ElasticSearch at {scheme}://{host}:{port}".format(**conn),
-              file=sys.stderr)
+        print(
+            "ERROR: cannot reach ElasticSearch at {scheme}://{host}:{port}".format(
+                **conn
+            ),
+            file=sys.stderr,
+        )
         return 1
 
-    print("Connected to {scheme}://{host}:{port} (elasticsearch-py major {major})".format(
-        major=major, **conn))
+    print(
+        "Connected to {scheme}://{host}:{port} (elasticsearch-py major {major})".format(
+            major=major, **conn
+        )
+    )
 
     total_ok = 0
     total_fail = 0
@@ -406,7 +462,9 @@ def main(raw_args=None):
                 if not created:
                     print("    index will be auto-created on first write")
             else:
-                print("    index missing and --no-create set; relying on dynamic mapping")
+                print(
+                    "    index missing and --no-create set; relying on dynamic mapping"
+                )
         else:
             print("    loading into existing index (its current mapping is kept)")
 
@@ -431,8 +489,11 @@ def main(raw_args=None):
     except Exception:
         pass
 
-    print("\nImport finished: {:,} documents loaded, {:,} failed.".format(
-        total_ok, total_fail))
+    print(
+        "\nImport finished: {:,} documents loaded, {:,} failed.".format(
+            total_ok, total_fail
+        )
+    )
     return 1 if total_fail else 0
 
 

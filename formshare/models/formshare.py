@@ -113,6 +113,7 @@ class User(Base):
     user_password_reset_token = Column(Unicode(64))
     user_password_reset_expires_on = Column(DateTime)
     user_max_projects = Column(INTEGER, server_default=text("'1'"))
+    user_max_submissions = Column(INTEGER, server_default=text("'500'"))
     user_kb_used = Column(DECIMAL(14, 3), server_default=text("'0'"))
     user_in_files_kb_used = Column(DECIMAL(14, 3), server_default=text("'0'"))
     user_in_files_last_event = Column(DateTime)
@@ -173,6 +174,7 @@ class Project(Base):
     project_icon = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_formlist_auth = Column(INTEGER, server_default=text("'1'"))
     project_hexcolor = Column(Unicode(60))
+    project_blob_storage = Column(INTEGER, server_default=text("'0'"))
     project_timezone = Column(
         ForeignKey("timezone.timezone_code", ondelete="RESTRICT"),
         nullable=False,

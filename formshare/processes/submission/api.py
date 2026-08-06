@@ -109,6 +109,10 @@ def get_submission_media_file(
 
 
 def list_submission_media_files(request, project, form, submission):
+    for plugin in p.PluginImplementations(p.IMediaStorage):
+        res = plugin.get_submission_media_list(request, project, form, submission)
+        if res is not None:
+            return res
     form_directory = get_form_directory(request, project, form)
     odk_dir = get_odk_path(request)
     submissions_path = os.path.join(
@@ -289,6 +293,16 @@ def get_submission_media_files(request, project, form, just_for_submissions=None
                     continue
             tmp_dir = os.path.join(odk_dir, *["tmp", uid, submission_id])
             os.makedirs(tmp_dir)
+            placed = None
+            for plugin in p.PluginImplementations(p.IMediaStorage):
+                placed = plugin.fetch_submission_media_to_dir(
+                    request.registry.settings, project, form, submission_id, tmp_dir
+                )
+                if placed is not None:
+                    created = created or placed
+                    break
+            if placed is not None:
+                continue
             submissions_path = os.path.join(
                 odk_dir, *["forms", form_directory, "submissions", submission_id, "*.*"]
             )

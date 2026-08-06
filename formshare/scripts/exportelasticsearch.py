@@ -74,9 +74,7 @@ def read_ini_settings(ini_path):
     parser.read(ini_path)
     section = "app:formshare"
     if not parser.has_section(section):
-        section = next(
-            (s for s in parser.sections() if s.startswith("app:")), None
-        )
+        section = next((s for s in parser.sections() if s.startswith("app:")), None)
     if section is None:
         return {}
     return dict(parser.items(section))
@@ -94,7 +92,7 @@ def resolve_connection(args, settings):
     def ini(key, default=None):
         return settings.get("elasticsearch.{}.{}".format(group, key), default)
 
-    use_ssl = (ini("use_ssl", "False") == "True")
+    use_ssl = ini("use_ssl", "False") == "True"
     scheme_default = settings.get(
         "elasticsearch.user.scheme", "https" if use_ssl else "http"
     )
@@ -126,8 +124,9 @@ def resolve_connection(args, settings):
     }
 
 
-def build_client(conn, request_timeout=800, max_retries=10, verify_certs=True,
-                 ca_certs=None):
+def build_client(
+    conn, request_timeout=800, max_retries=10, verify_certs=True, ca_certs=None
+):
     """Build an Elasticsearch client that works on both 7.x and 9.x clients.
 
     The only meaningful difference between the major versions is the
@@ -143,7 +142,9 @@ def build_client(conn, request_timeout=800, max_retries=10, verify_certs=True,
         major = version[0]
     else:
         try:
-            major = int(str(getattr(elasticsearch, "__versionstr__", "8")).split(".")[0])
+            major = int(
+                str(getattr(elasticsearch, "__versionstr__", "8")).split(".")[0]
+            )
         except (ValueError, AttributeError):
             major = 8
 
@@ -192,9 +193,7 @@ def dump_mapping(client, index_name, out_dir):
 
     index_settings = raw_settings[index_name]["settings"].get("index", {})
     portable = {
-        key: index_settings[key]
-        for key in PORTABLE_SETTINGS
-        if key in index_settings
+        key: index_settings[key] for key in PORTABLE_SETTINGS if key in index_settings
     }
     mapping_doc = {
         "settings": portable,
@@ -206,8 +205,15 @@ def dump_mapping(client, index_name, out_dir):
     return target
 
 
-def dump_documents(client, index_name, out_dir, scroll_size, scroll_time,
-                   limit=None, progress_every=10000):
+def dump_documents(
+    client,
+    index_name,
+    out_dir,
+    scroll_size,
+    scroll_time,
+    limit=None,
+    progress_every=10000,
+):
     """Scroll every document of ``index_name`` into ``<index>.ndjson``.
 
     Returns the number of documents written.
@@ -244,7 +250,9 @@ def main(raw_args=None):
         description="Export FormShare ElasticSearch indices to NDJSON.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--ini", help="FormShare ini file to read connection defaults from")
+    parser.add_argument(
+        "--ini", help="FormShare ini file to read connection defaults from"
+    )
     parser.add_argument(
         "--ini-group",
         default="user",
@@ -256,28 +264,56 @@ def main(raw_args=None):
     parser.add_argument("--scheme", choices=["http", "https"], help="Connection scheme")
     parser.add_argument("--user", help="Basic-auth user (omit for no auth)")
     parser.add_argument("--password", help="Basic-auth password")
-    parser.add_argument("--url-prefix", dest="url_prefix", help="URL prefix/path of the cluster")
-    parser.add_argument("--no-verify-certs", dest="verify_certs", action="store_false",
-                        help="Do not verify TLS certs (https only)")
-    parser.add_argument("--ca-certs", dest="ca_certs", help="Path to a CA bundle (https only)")
-    parser.add_argument("-o", "--output", default="es_dump",
-                        help="Output directory for the dump (default: ./es_dump)")
-    parser.add_argument("--index", dest="indices", action="append",
-                        help="Index to export (repeatable). Overrides the default/ini set")
-    parser.add_argument("--all", dest="dump_all", action="store_true",
-                        help="Export every non-system index on the cluster")
-    parser.add_argument("--scroll-size", type=int, default=1000,
-                        help="Documents per scroll batch (default: 1000)")
-    parser.add_argument("--scroll-time", default="5m",
-                        help="Scroll context keep-alive (default: 5m)")
-    parser.add_argument("--limit", type=int,
-                        help="Stop after N documents per index (for testing)")
+    parser.add_argument(
+        "--url-prefix", dest="url_prefix", help="URL prefix/path of the cluster"
+    )
+    parser.add_argument(
+        "--no-verify-certs",
+        dest="verify_certs",
+        action="store_false",
+        help="Do not verify TLS certs (https only)",
+    )
+    parser.add_argument(
+        "--ca-certs", dest="ca_certs", help="Path to a CA bundle (https only)"
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        default="es_dump",
+        help="Output directory for the dump (default: ./es_dump)",
+    )
+    parser.add_argument(
+        "--index",
+        dest="indices",
+        action="append",
+        help="Index to export (repeatable). Overrides the default/ini set",
+    )
+    parser.add_argument(
+        "--all",
+        dest="dump_all",
+        action="store_true",
+        help="Export every non-system index on the cluster",
+    )
+    parser.add_argument(
+        "--scroll-size",
+        type=int,
+        default=1000,
+        help="Documents per scroll batch (default: 1000)",
+    )
+    parser.add_argument(
+        "--scroll-time", default="5m", help="Scroll context keep-alive (default: 5m)"
+    )
+    parser.add_argument(
+        "--limit", type=int, help="Stop after N documents per index (for testing)"
+    )
     args = parser.parse_args(raw_args)
 
     settings = {}
     if args.ini:
         if not os.path.exists(args.ini):
-            print("ERROR: ini file does not exist: {}".format(args.ini), file=sys.stderr)
+            print(
+                "ERROR: ini file does not exist: {}".format(args.ini), file=sys.stderr
+            )
             return 1
         settings = read_ini_settings(args.ini)
 
@@ -290,17 +326,27 @@ def main(raw_args=None):
             ca_certs=args.ca_certs,
         )
     except ImportError:
-        print("ERROR: the 'elasticsearch' package is not installed in this "
-              "environment.", file=sys.stderr)
+        print(
+            "ERROR: the 'elasticsearch' package is not installed in this "
+            "environment.",
+            file=sys.stderr,
+        )
         return 1
 
     if not client.ping():
-        print("ERROR: cannot reach ElasticSearch at {scheme}://{host}:{port}".format(**conn),
-              file=sys.stderr)
+        print(
+            "ERROR: cannot reach ElasticSearch at {scheme}://{host}:{port}".format(
+                **conn
+            ),
+            file=sys.stderr,
+        )
         return 1
 
-    print("Connected to {scheme}://{host}:{port} (elasticsearch-py major {major})".format(
-        major=major, **conn))
+    print(
+        "Connected to {scheme}://{host}:{port} (elasticsearch-py major {major})".format(
+            major=major, **conn
+        )
+    )
 
     # Work out which indices to export.
     if args.indices:
@@ -344,7 +390,9 @@ def main(raw_args=None):
         manifest["indices"].append({"index": index_name, "documents": written})
         total += written
 
-    with open(os.path.join(args.output, "manifest.json"), "w", encoding="utf-8") as handle:
+    with open(
+        os.path.join(args.output, "manifest.json"), "w", encoding="utf-8"
+    ) as handle:
         json.dump(manifest, handle, ensure_ascii=False, indent=2)
 
     try:
@@ -352,8 +400,11 @@ def main(raw_args=None):
     except Exception:
         pass
 
-    print("\nExport finished: {:,} documents across {} index(es) -> {}".format(
-        total, len(manifest["indices"]), os.path.abspath(args.output)))
+    print(
+        "\nExport finished: {:,} documents across {} index(es) -> {}".format(
+            total, len(manifest["indices"]), os.path.abspath(args.output)
+        )
+    )
     if missing:
         print("Indices not found on source (skipped): {}".format(", ".join(missing)))
     return 0

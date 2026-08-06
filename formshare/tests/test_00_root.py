@@ -5,7 +5,7 @@ import time
 import unittest
 from types import SimpleNamespace
 
-import pkg_resources
+import importlib.metadata
 
 from .steps.api import t_e_s_t_api
 from .steps.assistant_access import t_e_s_t_assistant_access
@@ -150,7 +150,7 @@ class FunctionalTests(unittest.TestCase):
         self.test_object.product_id = ""
 
     def test_all(self):
-        pkg_resources.require("formshare")
+        importlib.metadata.distribution("formshare")
 
         def show_health():
             res = self.test_object.testapp.get("/health", status=200)
@@ -294,6 +294,11 @@ class FunctionalTests(unittest.TestCase):
         print("Testing unauthorized access")
         t_e_s_t_unauthorized_access(self.test_object)
 
+        print("Testing crowdsourcing")
+        t_e_s_t_crowdsourcing(self.test_object)
+        print("Testing delete project with data")
+        t_e_s_t_delete_projects(self.test_object)
+
         print("Testing create super user")
         t_e_s_t_create_super_user()
         print("Testing configure alembic")
@@ -308,10 +313,6 @@ class FunctionalTests(unittest.TestCase):
         t_e_s_t_update_aes_key(self.test_object)
         print("Testing error pages")
         t_e_s_t_error_pages(self.test_object)
-        print("Testing crowdsourcing")
-        t_e_s_t_crowdsourcing(self.test_object)
-        print("Testing delete project with data")
-        t_e_s_t_delete_projects(self.test_object)
 
         show_health()
         end_time = datetime.datetime.now()

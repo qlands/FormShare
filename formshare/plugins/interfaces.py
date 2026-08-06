@@ -39,6 +39,7 @@ __all__ = [
     "IEnvironment",
     "IXMLSubmission",
     "IMediaSubmission",
+    "IMediaStorage",
     "IJSONSubmission",
     "IRawSubmission",
     "IPartner",
@@ -833,6 +834,18 @@ class IProduct(Interface):  # pragma: no cover
         'metadata':{'key':value}}]
         """
         raise NotImplementedError("register_products must be implemented in subclasses")
+
+    def update_products(self, config, products):
+        """
+        Called by FormShare AFTER all built-in and plugin products have been
+        registered, so a plugin can modify the final product list — e.g. hide or
+        replace a built-in product it supersedes. Receives the current list of
+        product dicts and MUST return the (possibly modified) list.
+        :param config: ``pyramid.config`` object
+        :param products: current list of registered product dicts
+        :return: the modified list of product dicts
+        """
+        return products
 
     def get_product_description(self, request, product_code):
         """
@@ -2042,6 +2055,65 @@ class IMediaSubmission(Interface):  # pragma: no cover
         :param media_file: Media file
         :return: None
         """
+
+
+class IMediaStorage(Interface):  # pragma: no cover
+    """
+    Delegate submission-media READ operations to an external store (e.g. Azure Blob).
+
+    Every method may return None to tell FormShare to fall back to its local-disk
+    behaviour, so a form can be partially migrated (some submissions offloaded to
+    the external store, others still on local disk).
+    """
+
+    def get_submission_media_list(self, request, project, form, submission):
+        """
+        Return the media file list for a submission, or None to use local disk.
+        :param request: FormShare request object
+        :param project: Project ID
+        :param form: XForm ID
+        :param submission: Submission ID
+        :return: [{"file": <name>, "image": <bool>}, ...] or None
+        """
+        raise NotImplementedError(
+            "get_submission_media_list must be implemented in subclasses"
+        )
+
+    def open_submission_media(
+        self, request, project, form, submission, file_name, thumbnail
+    ):
+        """
+        Return a ready HTTP Response for one media file (e.g. a StreamingResponse
+        that streams the bytes from the external store, or a redirect), or None to
+        use local disk.
+        :param request: FormShare request object
+        :param project: Project ID
+        :param form: XForm ID
+        :param submission: Submission ID
+        :param file_name: Media file name
+        :param thumbnail: True to return the thumbnail variant
+        :return: a Response object or None
+        """
+        raise NotImplementedError(
+            "open_submission_media must be implemented in subclasses"
+        )
+
+    def fetch_submission_media_to_dir(
+        self, settings, project, form, submission, dest_dir
+    ):
+        """
+        Download a submission's media files into dest_dir (for zip assembly), or
+        None to use local disk.
+        :param settings: FormShare settings dict
+        :param project: Project ID
+        :param form: XForm ID
+        :param submission: Submission ID
+        :param dest_dir: Destination directory
+        :return: True if any file was written, or None
+        """
+        raise NotImplementedError(
+            "fetch_submission_media_to_dir must be implemented in subclasses"
+        )
 
 
 class IRawSubmission(Interface):  # pragma: no cover

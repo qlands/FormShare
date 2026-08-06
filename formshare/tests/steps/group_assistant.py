@@ -46,7 +46,7 @@ def t_e_s_t_group_assistant(test_object):
     # Add a group to a form succeeds
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/groups/add".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         {"group_id": "assgrp003", "group_can_submit": 1},
         status=302,
@@ -94,7 +94,7 @@ def t_e_s_t_group_assistant(test_object):
     # Add an assistant to a form succeeds
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/assistants/add".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_b"
         ),
         {
             "coll_id": "{}|{}|{}".format(

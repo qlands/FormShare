@@ -146,6 +146,21 @@ def load_environment(settings, config, apppath, policy_array):
         for product in products:
             add_product(product, True)
 
+    # Call any connected plugins so they can modify the final product list
+    # (e.g. hide/replace a built-in product they supersede). Guarded so existing
+    # IProduct plugins that do not implement update_products are simply skipped.
+    from formshare.products import get_products, set_products
+
+    for plugin in p.PluginImplementations(p.IProduct):
+        updater = getattr(plugin, "update_products", None)
+        if callable(updater):
+            try:
+                modified = updater(config, get_products())
+                if modified is not None:
+                    set_products(modified)
+            except NotImplementedError:
+                pass
+
     # Call any connected plugins to add their modifications into the schema. Not all tables has extras so only
     # certain tables are allowed
     # These tables also need an update trigger. See 1f4badb4de3f_add_more_extra_triggers.py

@@ -140,7 +140,7 @@ def t_e_s_t_forms(test_object):
     assert "FS_error" in res.headers
 
     # Upload a form fails. Too many selects
-    paths = ["resources", "forms", "old" "form07.xlsx"]
+    paths = ["resources", "forms", "old", "form07.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
 
     res = test_object.testapp.post(

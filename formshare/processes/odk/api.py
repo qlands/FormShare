@@ -59,6 +59,7 @@ from formshare.processes.db import (
     get_assistant_password,
     get_assistant_login,
     project_has_crowdsourcing,
+    project_serves_entity_list,
     get_all_project_forms,
     is_file_a_lookup,
     get_name_and_label_from_file,
@@ -93,6 +94,13 @@ from formshare.middleware.response import Response
 from pyxform import xls2xform
 from pyxform.errors import PyXFormError
 from pyxform.xls2json import parse_file_to_json
+from formshare.processes.odk.entities import (
+    deployment_supports_entities,
+    case_list_name,
+    case_list_file_name,
+    wrong_case_selector_file,
+    inject_entity_declaration,
+)
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -1389,6 +1397,7 @@ def upload_odk_form(
     form_caselabel=None,
     form_caseselector=None,
     form_casedatetime=None,
+    project_entities=0,
 ):
     _ = request.translate
     uid = str(uuid.uuid4())
@@ -1429,6 +1438,30 @@ def upload_odk_form(
             and file_name.find(".xlsm") == -1
         ):
             return False, _("Invalid file type")
+
+        # A case creator form in a project that serves entities gets its
+        # entities sheet written here, before pyxform reads the workbook. Both
+        # conversions below read this same file, so the XForm the device
+        # downloads and the schema the repository is built from come from one
+        # edit and cannot disagree.
+        #
+        # RSTools leaves the declaration out of the schema, so this adds no
+        # column and does not disturb merging against a version that predates it.
+        if (
+            int(project_case or 0) == 1
+            and int(form_casetype or 0) == 1
+            and int(project_entities or 0) == 1
+            and deployment_supports_entities(request)
+        ):
+            project_code = get_project_code_from_id(request, user_id, project_id)
+            declared, declare_message = inject_entity_declaration(
+                file_name, case_list_name(project_code), form_caselabel
+            )
+            if not declared:
+                return False, _(
+                    "This project serves its cases as an entity list and the case "
+                    "creator form could not be prepared for it: {}"
+                ).format(declare_message)
 
         xls2xform.xls2xform_convert(file_name, xml_file)
 
@@ -1584,6 +1617,27 @@ def upload_odk_form(
                                         "The variable must be select_one_from_file using a CSV file "
                                         "or a barcode".format(form_caseselector)
                                     )
+                                else:
+                                    expected_file = wrong_case_selector_file(
+                                        request,
+                                        project_id,
+                                        get_project_code_from_id(
+                                            request, user_id, project_id
+                                        ),
+                                        form_caseselector_file,
+                                    )
+                                    if expected_file is not None:
+                                        error = 1
+                                        message = _(
+                                            "This project serves its cases as an entity list, which the "
+                                            'device knows by name. The variable "{}" must select from '
+                                            '"{}", not from "{}", or the form will find no cases to '
+                                            "choose from.".format(
+                                                form_caseselector,
+                                                expected_file,
+                                                form_caseselector_file,
+                                            )
+                                        )
                                 case_datetime_found = False
                                 for a_field in fields:
                                     if a_field["name"] == form_casedatetime:
@@ -2080,6 +2134,27 @@ def update_odk_form(
                                                     form_caseselector
                                                 )
                                             )
+                                        else:
+                                            expected_file = wrong_case_selector_file(
+                                                request,
+                                                project_id,
+                                                get_project_code_from_id(
+                                                    request, user_id, project_id
+                                                ),
+                                                form_caseselector_file,
+                                            )
+                                            if expected_file is not None:
+                                                error = 1
+                                                message = _(
+                                                    "This project serves its cases as an entity list, which "
+                                                    'the device knows by name. The variable "{}" must '
+                                                    'select from "{}", not from "{}", or the form will '
+                                                    "find no cases to choose from.".format(
+                                                        form_caseselector,
+                                                        expected_file,
+                                                        form_caseselector_file,
+                                                    )
+                                                )
 
                                         case_datetime_found = False
                                         for a_field in fields:
@@ -2446,10 +2521,21 @@ def generate_form_list(project_array):
 
 
 def generate_manifest(media_file_array):
+    """Builds the OpenRosa manifest.
+
+    Every key of a media file dict becomes a child element, except "type", which
+    the spec puts on the mediaFile as an attribute and which is how a client
+    tells an entity list from an ordinary attachment. Any other key stays a
+    child, so <integrityUrl> and the rest are unaffected.
+    """
     root = etree.Element("manifest", xmlns="http://openrosa.org/xforms/xformsManifest")
     for file in media_file_array:
         xform_tag = etree.Element("mediaFile")
         for key, value in file.items():
+            if key == "type":
+                if value:
+                    xform_tag.set("type", value)
+                continue
             atag = etree.Element(key)
             atag.text = value
             xform_tag.append(atag)
@@ -2511,6 +2597,14 @@ def get_manifest(request, user, project, project_id, form):
     form_files = get_form_files(request, project_id, form)
     if form_files:
         file_array = []
+        # A project that serves its cases as an entity list sends the same case
+        # CSV, with the columns an entity list needs and a type attribute that
+        # tells the client to merge it into its entity store rather than treat
+        # it as a plain attachment. Everything else stays an ordinary media file.
+        serves_entities = deployment_supports_entities(
+            request
+        ) and project_serves_entity_list(request, project_id)
+        entity_list_type = "entityList" if serves_entities else None
         case_lookup_file, last_gen, case_type, case_selector = get_case_lookup_file(
             request, project_id, form
         )
@@ -2560,11 +2654,21 @@ def get_manifest(request, user, project, project_id, form):
                         temp_csv = os.path.join(odk_dir, *paths)
                         if case_type == 4:
                             generated = generate_lookup_file(
-                                request, project_id, schema, temp_csv, True
+                                request,
+                                project_id,
+                                schema,
+                                temp_csv,
+                                True,
+                                serves_entities,
                             )
                         else:
                             generated = generate_lookup_file(
-                                request, project_id, schema, temp_csv, False
+                                request,
+                                project_id,
+                                schema,
+                                temp_csv,
+                                False,
+                                serves_entities,
                             )
                         if generated:
                             log.info("File {} generated".format(file["file_name"]))
@@ -2610,6 +2714,7 @@ def get_manifest(request, user, project, project_id, form):
                                     file_array.append(
                                         {
                                             "filename": file_name,
+                                            "type": entity_list_type,
                                             "hash": "md5:" + md5sum,
                                             "downloadUrl": request.route_url(
                                                 "odkmediafile",
@@ -2626,6 +2731,7 @@ def get_manifest(request, user, project, project_id, form):
                                     file_array.append(
                                         {
                                             "filename": file_name,
+                                            "type": entity_list_type,
                                             "hash": "md5:" + file["file_md5"],
                                             "downloadUrl": request.route_url(
                                                 "odkmediafile",
@@ -2646,6 +2752,7 @@ def get_manifest(request, user, project, project_id, form):
                                 file_array.append(
                                     {
                                         "filename": file_name,
+                                        "type": entity_list_type,
                                         "hash": "md5:" + file["file_md5"],
                                         "downloadUrl": request.route_url(
                                             "odkmediafile",
@@ -2661,6 +2768,7 @@ def get_manifest(request, user, project, project_id, form):
                             file_array.append(
                                 {
                                     "filename": file_name,
+                                    "type": entity_list_type,
                                     "hash": "md5:" + file["file_md5"],
                                     "downloadUrl": request.route_url(
                                         "odkmediafile",
@@ -3185,12 +3293,27 @@ def create_repository(
                 if form_data["form_case"] == 1 and form_data["form_casetype"] > 1:
                     form_creator = get_case_form(request, project)
                     form_creator_data = get_form_data(request, project, form_creator)
+                    # Which column of the creator a follow-up points at.
+                    #
+                    # Normally the case identifier the project owner nominated.
+                    # A project serving its cases as an entity list links on
+                    # rowuuid instead, because the device decides what a
+                    # follow-up carries: a select over an entity list stores the
+                    # entity's id, and for a case registered offline that id is
+                    # the uuid the device minted -- which is that row's rowuuid,
+                    # not its case identifier. Linking on the identifier would
+                    # refuse every follow-up made offline.
+                    link_field = (
+                        "rowuuid"
+                        if project_serves_entity_list(request, project)
+                        else form_creator_data["form_pkey"]
+                    )
                     creator_pkey_data = get_field_details(
                         request,
                         project,
                         form_creator,
                         "maintable",
-                        form_creator_data["form_pkey"],
+                        link_field,
                     )
                     tree = etree.parse(create_xml_file)
                     root = tree.getroot()
@@ -3203,7 +3326,7 @@ def create_repository(
                             "creator_table",
                             form_creator_data["form_schema"] + ".maintable",
                         )
-                        table.set("creator_field", form_creator_data["form_pkey"])
+                        table.set("creator_field", link_field)
                         table.set("selector_field", form_data["form_caseselector"])
                         table.set(
                             "block_trigger", "T" + str(uuid.uuid4()).replace("-", "_")
@@ -3228,7 +3351,7 @@ def create_repository(
                                 "rtable",
                                 form_creator_data["form_schema"] + ".maintable",
                             )
-                            field.set("rfield", form_creator_data["form_pkey"])
+                            field.set("rfield", link_field)
                             field.set(
                                 "rname", "fk_" + str(uuid.uuid4()).replace("-", "_")
                             )
@@ -3454,6 +3577,39 @@ def move_media_files(odk_dir, xform_directory, src_submission, trg_submission):
             )
 
 
+def _entity_flag_is_set(submission_data, attribute):
+    """An <entity> create/update flag, which ODK allows to be a bound expression."""
+    value = submission_data.get("meta/entity/@" + attribute, "")
+    return str(value).strip().lower() in ("1", "true")
+
+
+def set_rowuuid_from_entity(submission_data):
+    """Adopts a device-minted entity id as the row's rowuuid.
+
+    A form that declares an entity mints the case identity on the device and
+    sends it back as the meta/entity/@id attribute. Taking it as the rowuuid
+    gives the case one identity instead of two: JSONToMySQL stores an explicit
+    rowuuid, and the unique index on that column then makes a resend of the same
+    submission collide rather than register the case a second time.
+
+    Only on create. On an update form the same attribute names *the case being
+    updated* -- a row that already exists and whose rowuuid this already is --
+    so adopting it there would make the follow-up claim the creator's identity
+    and the insert would be refused. An entity that both creates and updates is
+    an upsert, which is ambiguous here, so it is left alone as well.
+
+    Does nothing to a submission that carries no entity, which is every
+    submission until a form declares one.
+    """
+    entity_id = submission_data.get("meta/entity/@id", "")
+    if not entity_id:
+        return
+    if _entity_flag_is_set(submission_data, "create") and not _entity_flag_is_set(
+        submission_data, "update"
+    ):
+        submission_data["rowuuid"] = entity_id
+
+
 def store_json_file(
     request,
     submission_id,
@@ -3468,6 +3624,7 @@ def store_json_file(
     form,
     assistant_uuid,
 ):
+    _ = request.translate
     if schema is not None:
         if schema != "":
             # Add the controlling fields to the JSON file
@@ -3486,6 +3643,7 @@ def store_json_file(
                 submission_data["_submission_id"] = submission_id
                 submission_data["_project_code"] = project_code
                 submission_data["_active"] = 1
+                set_rowuuid_from_entity(submission_data)
                 geopoint_variables = get_form_geopoints(request, project, form)
                 if geopoint_variables:
                     for geopoint_variable in geopoint_variables:
@@ -3769,6 +3927,17 @@ def store_json_file(
                                 submission_id,
                                 p.returncode,
                                 json_file,
+                            )
+
+                        # A return code of 2 means the submission was accepted but did
+                        # not enter the repository: a trigger or another constraint
+                        # rejected it, and it is now in the JSON logs to be cleaned.
+                        # Hand a message back so the enumerator is told rather than
+                        # left believing the record was stored.
+                        if p.returncode == 2:
+                            return p.returncode, _(
+                                "This submission could not be stored and has been sent "
+                                "to the logs. A colleague will contact you to fix it."
                             )
 
                         return p.returncode, ""
@@ -4224,7 +4393,7 @@ def store_json_submission(request, user, project, assistant_uuid):
                                         unique_id
                                     )
                                 )
-                                return True, 201
+                                return True, 201, ""
 
                             log.error(
                                 "Submission {} has will be processed by FormShare".format(
@@ -4314,44 +4483,48 @@ def store_json_submission(request, user, project, assistant_uuid):
                                 else:
                                     res_code = continue_processing
                                 if res_code == 0:
-                                    return True, 201
+                                    return True, 201, ""
                                 else:
                                     if res_code == 1:
-                                        return False, 500
+                                        return False, 500, ""
                                     else:
-                                        return True, 201
+                                        # Accepted, but it did not enter the
+                                        # repository: it is in the JSON logs to
+                                        # be cleaned. message says so, and is
+                                        # relayed to the enumerator.
+                                        return True, 201, message
                             else:
-                                return False, 404
+                                return False, 404, ""
                         else:
                             log.error(
                                 "Enumerator %s cannot submit data to %s",
                                 assistant_uuid,
                                 xform_id,
                             )
-                            return False, 404
+                            return False, 404, ""
                     else:
                         log.error(
                             "The form {} is blocked and cannot accept submissions at the moment".format(
                                 xform_id
                             )
                         )
-                        return False, 404
+                        return False, 404, ""
                 else:
                     log.error(
                         "The form {} does not accept submissions".format(xform_id)
                     )
-                    return False, 404
+                    return False, 404, ""
             else:
                 log.error(
                     "Submission for ID %s does not exist in the database", xform_id
                 )
-                return False, 404
+                return False, 404, ""
         else:
             log.error("Submission does not have and ID")
-            return False, 404
+            return False, 404, ""
     else:
         log.error("Submission does not have an JSON file")
-        return False, 500
+        return False, 500, ""
 
 
 def store_submission(request, user, project, assistant_uuid):
@@ -4422,7 +4595,7 @@ def store_submission(request, user, project, assistant_uuid):
                             + ". Command line: "
                             + " ".join(args)
                         )
-                        return False, 500
+                        return False, 500, ""
                     else:
                         os.remove(temp_file_path)
                 else:
@@ -4507,7 +4680,7 @@ def store_submission(request, user, project, assistant_uuid):
                                         unique_id
                                     )
                                 )
-                                return True, 201
+                                return True, 201, ""
 
                             log.error(
                                 "Submission {} has will be processed by FormShare".format(
@@ -4598,46 +4771,50 @@ def store_submission(request, user, project, assistant_uuid):
                                             xml_file,
                                         )
                                 if res_code == 0:
-                                    return True, 201
+                                    return True, 201, ""
                                 else:
                                     if res_code == 1:
-                                        return False, 500
+                                        return False, 500, ""
                                     else:
-                                        return True, 201
+                                        # Accepted, but it did not enter the
+                                        # repository: it is in the JSON logs to
+                                        # be cleaned. message says so, and is
+                                        # relayed to the enumerator.
+                                        return True, 201, message
                             else:
-                                return False, 404
+                                return False, 404, ""
                         else:
                             log.error(
                                 "Enumerator %s cannot submit data to %s",
                                 assistant_uuid,
                                 xform_id,
                             )
-                            return False, 404
+                            return False, 404, ""
                     else:
                         log.error(
                             "The form {} is blocked and cannot accept submissions at the moment".format(
                                 xform_id
                             )
                         )
-                        return False, 404
+                        return False, 404, ""
                 else:
                     log.error(
                         "The form {} does not accept submissions".format(xform_id)
                     )
-                    return False, 404
+                    return False, 404, ""
             else:
                 log.error(
                     "Submission for ID {} with version {} does not exist in the database".format(
                         xform_id, xform_version
                     )
                 )
-                return False, 404
+                return False, 404, ""
         else:
             log.error("Submission does not have and ID")
-            return False, 404
+            return False, 404, ""
     else:
         log.error("Submission does not have an XML file")
-        return False, 500
+        return False, 500, ""
 
 
 def get_html_from_diff(request, project, form, submission, revision):

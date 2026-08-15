@@ -1,0 +1,13 @@
+<?xml version='1.0' ?>
+<data id="demo_case_creator" version="1">
+  <hid>HH-042</hid>
+  <fname>Maria Gomez</fname>
+  <age>34</age>
+  <coll_date>2026-08-15</coll_date>
+  <meta>
+    <instanceID>uuid:8f14e45f-ceea-467a-a3a3-c1f2c0a1bb3d</instanceID>
+    <entity dataset="demo_cases" create="1" id="044be76f-4a5f-48f6-9d39-ba680862079b">
+      <label>Maria Gomez</label>
+    </entity>
+  </meta>
+</data>

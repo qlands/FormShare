@@ -50,6 +50,7 @@ __all__ = [
     "project_has_case_lookup_table",
     "invalid_aliases",
     "project_has_crowdsourcing",
+    "project_serves_entity_list",
     "get_forms_number",
     "get_project_tenant",
     "get_project_query_users",
@@ -792,6 +793,23 @@ def project_has_case_lookup_table(request, project):
         return False
     else:
         return True
+
+
+def project_serves_entity_list(request, project_id):
+    """Whether this project's case list goes out as an ODK entity list.
+
+    Only true for a case project that asked for it. Projects that predate the
+    feature keep the relational-only behaviour their repositories were built
+    with.
+    """
+    res = (
+        request.dbsession.query(Project.project_case, Project.project_entities)
+        .filter(Project.project_id == project_id)
+        .first()
+    )
+    if res is None:
+        return False
+    return int(res[0] or 0) == 1 and int(res[1] or 0) == 1
 
 
 def project_has_crowdsourcing(request, project_id):

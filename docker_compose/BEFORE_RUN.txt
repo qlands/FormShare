@@ -9,10 +9,13 @@ sudo mkdir -p /opt/formshare_community/repository
 sudo mkdir -p /opt/formshare_community/config
 sudo mkdir -p /opt/formshare_community/mysql
 sudo mkdir -p /opt/formshare_community/plugins
-sudo mkdir -p /opt/formshare_community/elasticsearch/certs
 sudo mkdir -p /opt/formshare_community/elasticsearch/esdata
-sudo mkdir -p /opt/formshare_community/elasticsearch/esdata2
 sudo chmod -R g+w /opt/formshare_community
+
+(Elasticsearch runs as a single node, so there is no second data directory and
+no certificates to generate. If you are upgrading from a two-node setup, the
+old esdata2 and certs directories are no longer used and can be removed once
+the single node is up and healthy.)
 
 2) Install docker-compose and give it enough memory
 sudo apt-get install -y docker-compose

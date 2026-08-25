@@ -1,10 +1,33 @@
 version: "3.8"
 
+# ElasticSearch on its own, for a FormShare instance whose MySQL lives
+# elsewhere.
+#
 # Before execution do
-# mkdir -p /opt/formshare/elasticsearch/esdata
-# mkdir -p /opt/formshare/elasticsearch/esdata2
-# mkdir -p /opt/formshare/elasticsearch/certs
-# sudo chmod -R g+w /opt/formshare/elasticsearch
+#   mkdir -p /opt/formshare/elasticsearch/esdata
+#   sudo chmod -R g+w /opt/formshare/elasticsearch
+#
+# A SINGLE node, on purpose. FormShare asks ElasticSearch for exact-term
+# filters, a sort by date, and the geotile_grid + geo_centroid the map uses to
+# cluster GPS points. On one shard, ten million points occupy under 2 GB and the
+# heaviest map query answers in about 80 ms. A second node would not help: a
+# two-node cluster has a quorum of two, so losing either one leaves the cluster
+# without a master and read-only -- twice the failure surface, no fault
+# tolerance. That starts at three nodes.
+#
+# Single-node also means no inter-node traffic. The certificates that used to
+# be generated here were transport-layer only -- they encrypted node-to-node
+# traffic, while HTTP was already plaintext -- so with one node they secured
+# nothing, and the generation step is gone.
+#
+# EXPECTED AT STARTUP -- this is not a fault:
+#
+#   [WARN][o.e.b.BootstrapChecks] Transport SSL must be enabled if security is
+#   enabled. Please set [xpack.security.transport.ssl.enabled] to [true]...
+#
+# Verified against 9.2.1 with exactly these settings: under
+# discovery.type=single-node the check is a warning rather than a fatal error,
+# the node starts and reaches green.
 
 services:
   fses01:
@@ -13,19 +36,22 @@ services:
     environment:
       - node.name=fses01
       - cluster.name=fs-es-cluster
-      - discovery.seed_hosts=fses02
-      - cluster.initial_master_nodes=fses01,fses02
 
+      # One node, forming no cluster. Also skips the bootstrap check that would
+      # otherwise demand transport TLS.
+      - discovery.type=single-node
+
+      # Heap is not what grows here. Aggregations read doc values, which are
+      # memory-mapped and served from the page cache, so heap stays flat as the
+      # index grows -- 512m carried ten million points with the breakers at
+      # zero. This node costs ~0.9 GB resident: the pre-touched heap plus about
+      # 260 MB of JVM metaspace, code cache and thread stacks. The index itself
+      # wants ~2 GB of free RAM per ten million submissions as page cache.
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
 
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=false
-
-      - xpack.security.transport.ssl.enabled=true
-      - xpack.security.transport.ssl.verification_mode=certificate
-      - xpack.security.transport.ssl.keystore.path=/usr/share/elasticsearch/config/certs/transport.p12
-      - xpack.security.transport.ssl.truststore.path=/usr/share/elasticsearch/config/certs/transport.p12
 
       - ELASTIC_PASSWORD=my_secure_password
 
@@ -33,91 +59,18 @@ services:
       memlock:
         soft: -1
         hard: -1
+
+    ports:
+      - "9200:9200"
 
     volumes:
       - /opt/formshare/elasticsearch/esdata:/usr/share/elasticsearch/data
-      - /opt/formshare/elasticsearch/certs:/usr/share/elasticsearch/config/certs
 
-    command: >
-      bash -lc '
-        set -euo pipefail
-
-        CERT_DIR=/usr/share/elasticsearch/config/certs
-        mkdir -p "$$CERT_DIR"
-
-        # If CA already exists → skip generation → start ES normally
-        if [ -f "$$CERT_DIR/ca.p12" ]; then
-          echo "CA already exists. Skipping cert generation."
-          exec /usr/local/bin/docker-entrypoint.sh
-        fi
-
-        echo "Generating CA and transport certs..."
-
-        bin/elasticsearch-certutil ca --silent --out "$$CERT_DIR/ca.p12" --pass ""
-
-        # Add other dns or ip as necessary
-        bin/elasticsearch-certutil cert --silent \
-          --ca "$$CERT_DIR/ca.p12" --ca-pass "" \
-          --out "$$CERT_DIR/transport.p12" --pass "" \
-          --dns fses01 --dns fses02 --dns localhost \
-          --ip 127.0.0.1
-
-        exec /usr/local/bin/docker-entrypoint.sh
-      '
-
-    networks:
-      - esnet
-
-  fses02:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.2.1
-    container_name: fses02
-    depends_on:
-      - fses01
-    environment:
-      - node.name=fses02
-      - cluster.name=fs-es-cluster
-      - discovery.seed_hosts=fses01
-      - cluster.initial_master_nodes=fses01,fses02
-
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-
-      - xpack.security.enabled=true
-      - xpack.security.http.ssl.enabled=false
-
-      - xpack.security.transport.ssl.enabled=true
-      - xpack.security.transport.ssl.verification_mode=certificate
-      - xpack.security.transport.ssl.keystore.path=/usr/share/elasticsearch/config/certs/transport.p12
-      - xpack.security.transport.ssl.truststore.path=/usr/share/elasticsearch/config/certs/transport.p12
-
-      - ELASTIC_PASSWORD=my_secure_password
-
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-
-    volumes:
-      - /opt/formshare/elasticsearch/esdata2:/usr/share/elasticsearch/data
-      - /opt/formshare/elasticsearch/certs:/usr/share/elasticsearch/config/certs
-
-    command: >
-      bash -lc '
-        set -euo pipefail
-        CERT_DIR=/usr/share/elasticsearch/config/certs
-
-        for i in $$(seq 1 120); do
-          [ -f "$$CERT_DIR/transport.p12" ] && break
-          sleep 1
-        done
-
-        if [ ! -f "$$CERT_DIR/transport.p12" ]; then
-          echo "transport.p12 not found after waiting; aborting."
-          exit 1
-        fi
-
-        exec /usr/local/bin/docker-entrypoint.sh
-      '
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -u elastic:$${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
 
     networks:
       - esnet

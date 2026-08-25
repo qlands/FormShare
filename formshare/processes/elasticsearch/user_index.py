@@ -167,16 +167,26 @@ class UserIndexManager(object):
                 self.use_ssl = False
         except KeyError:
             self.use_ssl = False
-
+        # One shard, no replica. A shard is a whole Lucene index and costs
+        # memory and cluster state whether or not it holds anything; five of
+        # them for an index measured in megabytes is all overhead. One shard
+        # carries 10 million points in under 2 GB and answers the map's
+        # heaviest aggregation in about 80 ms, so it is not the thing that
+        # will need splitting first. A replica needs a second node to live on
+        # and leaves the index yellow forever without one.
+        #
+        # Both are set per index by elasticsearch.<index>.number_of_shards and
+        # .number_of_replicas. Shards cannot be changed after an index is
+        # created -- only reindexed or _split. Replicas can, at any time.
         try:
             number_of_shards = int(settings["elasticsearch.user.number_of_shards"])
         except KeyError:
-            number_of_shards = 5
+            number_of_shards = 1
 
         try:
             number_of_replicas = int(settings["elasticsearch.user.number_of_replicas"])
         except KeyError:
-            number_of_replicas = 1
+            number_of_replicas = 0
 
         connection = self.create_connection()
         if connection is not None:

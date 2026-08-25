@@ -51,6 +51,14 @@
                 <div class="col-sm-10"><input type="checkbox" name="project_case" class="js-switch" {% if projectDetails.project_case == 1 %}checked{% endif %} /><span class="form-text m-b-none">{% block case_comment %}{{ _('This means that the forms in this project and their submissions will be related to cases.') }} {{ _('Read more about longitudinal forms') }} <a target="_blank" href="{{ request.url_for_static('longitudinal_infographic_en.pdf') }}" style="color: #0a6aa1">{{ _('here') }}.</a> {% endblock case_comment %}</span></div>
             </div>
              <div class="hr-line-dashed"></div>
+            {% if entitiesSupported %}
+                {% block project_form_entities %}
+                    <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Cases work offline') }}</label>
+                        <div class="col-sm-10"><input type="checkbox" name="project_entities" class="js-switch" {% if projectDetails.project_entities == 1 %}checked{% endif %} {% if projectDetails.total_forms is defined and projectDetails.total_forms > 0 %}disabled{% endif %} /><span class="form-text m-b-none">{% block entities_comment %}{{ _('Only for case/longitudinal projects. The list of cases is sent to ODK as an entity list, so an enumerator can register a case and follow it up straight away without waiting to be online.') }} {% if projectDetails.total_forms is defined and projectDetails.total_forms > 0 %}<b>{{ _('This cannot be changed once the project has forms.') }}</b>{% else %}{{ _('This cannot be changed once the project has forms.') }}{% endif %}{% endblock entities_comment %}</span></div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+                {% endblock project_form_entities %}
+            {% endif %}
         {% endblock project_form_case %}
         <span><b>{{ _('Optional. True by default.') }}</b></span>
         <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Requires authentication to accept data') }}</label>

@@ -1,4 +1,5 @@
 import logging
+from xml.sax.saxutils import escape
 
 from sqlalchemy.exc import OperationalError as SAOperationalError
 from webob.exc import HTTPNotFound
@@ -23,6 +24,34 @@ from formshare.views.classes import ODKView
 from formshare.middleware.response import Response
 
 log = logging.getLogger("formshare")
+
+
+def submission_response(status, message=""):
+    """Builds the reply to a submission.
+
+    OpenRosa lets the server say something back, and Collect shows it to the
+    enumerator. A submission that was accepted but did not reach the repository
+    is the case that needs it: without a message the enumerator sees a plain
+    success and walks away believing the record was stored.
+
+    Without a message this is the bare status the caller used to build by hand.
+    """
+    if not message:
+        return Response(status=status)
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<OpenRosaResponse xmlns="http://openrosa.org/http/response">\n'
+        "<message>{}</message>\n"
+        "</OpenRosaResponse>"
+    ).format(escape(str(message)))
+    headers = [
+        ("Content-Type", "text/xml; charset=utf-8"),
+        ("X-OpenRosa-Version", "1.0"),
+        ("X-OpenRosa-Accept-Content-Length", "10000000"),
+    ]
+    response = Response(headerlist=headers, status=status)
+    response.body = body.encode("utf-8")
+    return response
 
 
 class ODKFormList(ODKView):
@@ -79,30 +108,26 @@ class ODKPushData(ODKView):
                         if self.authorize(
                             get_assistant_password(self.request, assistant_uuid)
                         ):
-                            stored, error = store_submission(
+                            stored, error, message = store_submission(
                                 self.request, user_id, project_id, assistant_uuid
                             )
                             if stored:
-                                response = Response(status=201)
-                                return response
+                                return submission_response(201, message)
                             else:
-                                response = Response(status=error)
-                                return response
+                                return submission_response(error)
                         else:
                             return self.ask_for_credentials()
                     else:
                         response = Response(status=401)
                         return response
                 else:
-                    stored, error = store_submission(
+                    stored, error, message = store_submission(
                         self.request, user_id, project_id, "public"
                     )
                     if stored:
-                        response = Response(status=201)
-                        return response
+                        return submission_response(201, message)
                     else:
-                        response = Response(status=error)
-                        return response
+                        return submission_response(error)
             else:
                 response = Response(status=404)
                 return response
@@ -133,30 +158,26 @@ class ODKPushJSONData(ODKView):
                         if self.authorize(
                             get_assistant_password(self.request, assistant_uuid)
                         ):
-                            stored, error = store_json_submission(
+                            stored, error, message = store_json_submission(
                                 self.request, user_id, project_id, assistant_uuid
                             )
                             if stored:
-                                response = Response(status=201)
-                                return response
+                                return submission_response(201, message)
                             else:
-                                response = Response(status=error)
-                                return response
+                                return submission_response(error)
                         else:
                             return self.ask_for_credentials()
                     else:
                         response = Response(status=401)
                         return response
                 else:
-                    stored, error = store_json_submission(
+                    stored, error, message = store_json_submission(
                         self.request, user_id, project_id, "public"
                     )
                     if stored:
-                        response = Response(status=201)
-                        return response
+                        return submission_response(201, message)
                     else:
-                        response = Response(status=error)
-                        return response
+                        return submission_response(error)
             else:
                 response = Response(status=404)
                 return response
@@ -212,29 +233,25 @@ class ODKSubmission(ODKView):
                             if self.authorize(
                                 get_assistant_password(self.request, assistant_uuid)
                             ):
-                                stored, error = store_submission(
+                                stored, error, message = store_submission(
                                     self.request, user_id, project_id, assistant_uuid
                                 )
                                 if stored:
-                                    response = Response(status=201)
-                                    return response
+                                    return submission_response(201, message)
                                 else:
-                                    response = Response(status=error)
-                                    return response
+                                    return submission_response(error)
                             else:
                                 return self.ask_for_credentials()
                         else:
                             return self.ask_for_credentials()
                     else:
-                        stored, error = store_submission(
+                        stored, error, message = store_submission(
                             self.request, user_id, project_id, "public"
                         )
                         if stored:
-                            response = Response(status=201)
-                            return response
+                            return submission_response(201, message)
                         else:
-                            response = Response(status=error)
-                            return response
+                            return submission_response(error)
                 else:
                     response = Response(status=404)
                     return response

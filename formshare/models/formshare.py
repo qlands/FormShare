@@ -170,6 +170,7 @@ class Project(Base):
     project_unarchived_date = Column(DateTime)
     project_image = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_case = Column(INTEGER, server_default=text("'0'"))
+    project_entities = Column(INTEGER, server_default=text("'0'"))
     project_encrypted = Column(INTEGER, server_default=text("'0'"))
     project_icon = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_formlist_auth = Column(INTEGER, server_default=text("'1'"))

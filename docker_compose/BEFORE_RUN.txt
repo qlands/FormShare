@@ -9,18 +9,52 @@ sudo mkdir -p /opt/formshare_community/repository
 sudo mkdir -p /opt/formshare_community/config
 sudo mkdir -p /opt/formshare_community/mysql
 sudo mkdir -p /opt/formshare_community/plugins
-sudo mkdir -p /opt/formshare_community/elasticsearch/certs
 sudo mkdir -p /opt/formshare_community/elasticsearch/esdata
-sudo mkdir -p /opt/formshare_community/elasticsearch/esdata2
 sudo chmod -R g+w /opt/formshare_community
 
-2) Install docker-compose and give it enough memory
+(Elasticsearch runs as a single node, so there is no second data directory and
+no certificates to generate. If you are upgrading from a two-node setup, the
+old esdata2 and certs directories are no longer used and can be removed once
+the single node is up and healthy.)
+
+2) Install Docker Compose and check the kernel's memory-map limit
 sudo apt-get install -y docker-compose
-sudo sysctl -w vm.max_map_count=262144
-echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
+
+Elasticsearch memory-maps its index files, so the kernel has to allow enough
+mapping regions (vm.max_map_count). This is a COUNT of mappings, not an amount
+of memory -- raising it costs no RAM. Elasticsearch wants at least 262144.
+
+Check what this host already has:
+
+sudo sysctl -n vm.max_map_count
+
+  * 262144 or higher -> nothing to do. Current distributions (Ubuntu 22.04+,
+    Debian 12+, RHEL 9+) already ship 1048576. Do NOT run
+    "sudo sysctl -w vm.max_map_count=262144" on those hosts: 262144 is a
+    minimum, not a target, so assigning it LOWERS the limit.
+
+  * Lower than 262144 (older kernels default to 65530) -> raise it:
+
+    echo 'vm.max_map_count=262144' | sudo tee /etc/sysctl.d/60-elasticsearch.conf
+    sudo sysctl --system
+
+vm.max_map_count is a host-wide kernel setting shared by every container. It is
+not namespaced, so it cannot be set per-container in the compose file -- which
+is why it belongs here rather than in servers.yml.
+
+Note that FormShare runs Elasticsearch with discovery.type=single-node, so a
+value below 262144 will not stop the node from starting: that startup check is
+downgraded to a warning. The kernel limit still applies at run time, so a
+too-low value surfaces later as "OutOfMemoryError: Map failed" under load
+instead of as a clear failure at boot.
+
+(The memory Elasticsearch actually needs is set in servers.yml: ES_HEAP for the
+JVM heap, default 512m, plus bootstrap.memory_lock and the memlock ulimit to
+keep that heap out of swap. Beyond the heap, leave free RAM for the page cache
+-- roughly 2 GB per 10 million submissions.)
 
 3) Create a .env file using the example
-cp .env.example .env
+cp env.example .env
 
 4) Edit .env file to change:
 -The mysql security credentials:

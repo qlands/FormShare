@@ -217,7 +217,9 @@ def get_field_details(request, project, form, table, field):
     return res
 
 
-def generate_lookup_file(request, project, schema, file_name, only_inactive):
+def generate_lookup_file(
+    request, project, schema, file_name, only_inactive, as_entity_list=False
+):
     """
     Generates a temporary CSV file based on the case lookup field definition.
     :param request: Pyramid request object
@@ -225,12 +227,35 @@ def generate_lookup_file(request, project, schema, file_name, only_inactive):
     :param schema: Schema
     :param file_name: File to generate
     :param only_inactive: Just generate inactive cases
+    :param as_entity_list: Emit the columns an ODK entity list needs
     :return: True or False
+
+    The entity variant differs in two ways, and both matter:
+
+    * **name is the rowuuid**, not the case identifier the project owner
+      nominated. A client keys an entity on this column, and the device decides
+      what a follow-up carries: a select over an entity list stores the entity's
+      id, and for a case registered offline that id is the uuid the device
+      minted -- which is that row's rowuuid. Sending the case identifier instead
+      would mean a case registered offline never matches the row that comes
+      back, so the device would keep two of it and never drop the one it created
+      itself. The nominated identifier still goes out, as its own column.
+
+      The follow-up trigger is pointed at rowuuid to match, in create_repository.
+      The two have to move together or every follow-up is refused.
+
+    * **__version is required.** A client that does not find that column throws
+      the whole list away without reporting anything, and a value that is not an
+      integer raises. Cases have no version counter, and for a list that is only
+      ever read this is a constant.
     """
     try:
+        # select_field, heading and empty are written in lockstep: the Nth
+        # select expression is the Nth column of the header and of the
+        # placeholder row. Append to all three together or the CSV shifts.
         select_field = ["'list_caseselector' as list_name"]
-        heading = ["list_name", "name", "label"]
-        empty = ["list_caseselector", "empty", "empty"]
+        heading = ["list_name"]
+        empty = ["list_caseselector"]
 
         res = (
             request.dbsession.query(CaseLookUp.field_name)
@@ -239,7 +264,12 @@ def generate_lookup_file(request, project, schema, file_name, only_inactive):
             .filter(CaseLookUp.field_editable == 0)
             .first()
         )
-        select_field.append(res[0] + " as name")
+        name_field = res[0]
+        select_field.append(
+            "rowuuid as name" if as_entity_list else name_field + " as name"
+        )
+        heading.append("name")
+        empty.append("empty")
 
         res = (
             request.dbsession.query(CaseLookUp.field_name)
@@ -249,7 +279,21 @@ def generate_lookup_file(request, project, schema, file_name, only_inactive):
             .first()
         )
         select_field.append(res[0] + " as label")
+        heading.append("label")
+        empty.append("empty")
         label_field = res[0]
+
+        if as_entity_list:
+            select_field.append("1 as __version")
+            heading.append("__version")
+            empty.append("1")
+            # name now carries the rowuuid, so the nominated case identifier
+            # goes out as a column of its own: a form that shows it or filters
+            # on it still can.
+            if name_field != label_field:
+                select_field.append(name_field)
+                heading.append(name_field)
+                empty.append("empty")
 
         fields = (
             request.dbsession.query(CaseLookUp)

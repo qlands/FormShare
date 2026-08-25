@@ -1363,6 +1363,7 @@ class AddNewForm(PrivateView):
                 form_caselabel,
                 form_caseselector,
                 form_casedatetime,
+                project_details.get("project_entities", 0),
             )
 
             if uploaded:

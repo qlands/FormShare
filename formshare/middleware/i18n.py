@@ -17,13 +17,18 @@ Locale detection order:
     1. Cookie  "_LOCALE_"   (Pyramid's default locale cookie name)
     2. "Accept-Language" header
     3. Default fallback ("en")
+
+Both sources are client controlled, so every candidate goes through
+normalize_locale() before it reaches Babel or gettext.
 """
 
 import logging
 import os
+import re
 import sys
 from typing import Callable
 from formshare.processes.logging.loggerclass import SecretLogger
+from babel import Locale, UnknownLocaleError
 from babel.support import Translations
 
 logging.setLoggerClass(SecretLogger)
@@ -32,6 +37,92 @@ log = logging.getLogger("formshare")
 # Module-level cache: (locale_name) -> merged Translations object.
 # Rebuilt if invalidated (e.g. during development hot-reload).
 _translations_cache: dict = {}
+
+DEFAULT_LOCALE = "en"
+
+# A locale identifier we are willing to hand to Babel/gettext: letters, plus
+# optional script/territory subtags.  Deliberately strict - the value arrives
+# from a cookie or an Accept-Language header and ends up as a path component
+# in Translations.load().
+_LOCALE_RE = re.compile(r"^[A-Za-z]{2,8}(?:[_-][A-Za-z0-9]{2,8}){0,2}$")
+
+# Cache for get_supported_locales().
+_supported_locales: tuple = ()
+
+
+def get_supported_locales() -> tuple:
+    """Locales that have a translation catalogue in formshare/locale.
+
+    Scanned once and cached.  DEFAULT_LOCALE is always included so the
+    fallback can never be empty.
+    """
+    global _supported_locales
+    if _supported_locales:
+        return _supported_locales
+
+    module = sys.modules.get("formshare")
+    if module is None:  # pragma: no cover
+        import formshare as module
+    locale_path = os.path.join(os.path.dirname(module.__file__), "locale")
+
+    found = set()
+    try:
+        for entry in os.listdir(locale_path):
+            if _LOCALE_RE.match(entry) and os.path.isdir(
+                os.path.join(locale_path, entry)
+            ):
+                found.add(entry)
+    except OSError as e:  # pragma: no cover
+        log.warning("Could not scan locale directory %s: %s", locale_path, e)
+
+    found.add(DEFAULT_LOCALE)
+    _supported_locales = tuple(sorted(found))
+    return _supported_locales
+
+
+def normalize_locale(raw) -> str:
+    """Map an untrusted locale string onto one FormShare can actually render.
+
+    The "_LOCALE_" cookie and the Accept-Language header are both set by the
+    client, so this never raises and never returns something Babel cannot
+    parse.  Unusable or untranslated input becomes DEFAULT_LOCALE: the text
+    falls back to English either way, and keeping the requested locale would
+    only yield a NullTranslations that plugin catalogues cannot merge into.
+    """
+    if not isinstance(raw, str):
+        return DEFAULT_LOCALE
+
+    candidate = raw.strip()
+    if not candidate or len(candidate) > 32 or not _LOCALE_RE.match(candidate):
+        return DEFAULT_LOCALE
+
+    candidate = candidate.replace("-", "_")
+    supported = get_supported_locales()
+    if candidate in supported:
+        return candidate
+
+    # Fall back to the base language: "es_MX" -> "es", "pt-BR" -> "pt"
+    base = candidate.split("_")[0].lower()
+    if base in supported:
+        return base
+
+    return DEFAULT_LOCALE
+
+
+def get_locale(locale_name) -> Locale:
+    """Return a Babel Locale for *locale_name*, never raising.
+
+    Locale() treats its whole argument as a bare language code, so
+    Locale("zh_CN") raises UnknownLocaleError while Locale.parse("zh_CN")
+    succeeds.  Callers only need character_order (RTL), so anything we cannot
+    parse degrades to the default locale instead of propagating - this runs
+    inside view constructors, including the 404 view.
+    """
+    try:
+        return Locale.parse(locale_name)
+    except (ValueError, TypeError, UnknownLocaleError):
+        log.debug("Unusable locale %r; falling back to %s", locale_name, DEFAULT_LOCALE)
+        return Locale(DEFAULT_LOCALE)
 
 
 def get_locale_name(request) -> str:
@@ -42,24 +133,23 @@ def get_locale_name(request) -> str:
     """
     locale = request.cookies.get("_LOCALE_")
     if locale:
-        return locale
+        return normalize_locale(locale)
 
     accept_language = request.headers.get("Accept-Language", "")
     if accept_language:
         # Take the first language tag and normalise  (e.g. "es-MX,es;q=0.9" -> "es_MX")
         primary = accept_language.split(",")[0].split(";")[0].strip()
-        locale = primary.replace("-", "_")
-        if locale:
-            return locale
+        if primary:
+            return normalize_locale(primary)
 
-    return "en"
+    return DEFAULT_LOCALE
 
 
 def build_translator(locale_name: str) -> Callable[[str], str]:
     """Return a translate(msgid) callable for *locale_name*.
 
     Loads FormShare's core translations and merges all plugin translations
-    (ITranslation) – identical logic to the old add_localizer() event handler.
+    (ITranslation) - identical logic to the old add_localizer() event handler.
 
     Results are cached per locale_name.
     """
@@ -81,6 +171,12 @@ def build_translator(locale_name: str) -> Callable[[str], str]:
             "Could not load FormShare translations for '%s': %s", locale_name, e
         )
         translations = Translations()  # identity translator
+
+    # Translations.load() returns a bare gettext.NullTranslations when there is
+    # no catalogue for this locale, and NullTranslations has no merge().  Swap
+    # in an empty (identity) Translations so plugin catalogues can still merge.
+    if not isinstance(translations, Translations):
+        translations = Translations()
 
     # -- Merge plugin translations --
     try:
@@ -112,7 +208,7 @@ def _make_callable(translations: Translations) -> Callable[[str], str]:
     usage: _(msgid) -> str."""
 
     def translate(msgid, **kwargs):
-        # Support translationstring-style mapping argument (ignored here –
+        # Support translationstring-style mapping argument (ignored here -
         # the templates do their own substitution).
         if not msgid:
             return msgid
@@ -125,3 +221,5 @@ def _make_callable(translations: Translations) -> Callable[[str], str]:
 def invalidate_cache():
     """Clear the translations cache.  Call after hot-reloading plugins."""
     _translations_cache.clear()
+    global _supported_locales
+    _supported_locales = ()

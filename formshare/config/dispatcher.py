@@ -25,6 +25,7 @@ Flow per request
 import asyncio
 import functools
 import logging
+from http import HTTPStatus
 from concurrent.futures import ThreadPoolExecutor
 from formshare.processes.logging.loggerclass import SecretLogger
 from starlette.requests import Request
@@ -213,9 +214,20 @@ def make_error_endpoint(view_class, renderer, db_session_factory, jinja_env, app
             except FSHTTPException as http_exc:
                 return _http_exc_to_starlette(http_exc)
             except Exception:
-                log.exception("Error view %s raised", view_class.__name__)
+                # The error view itself failed.  Serve a bare response that
+                # keeps the ORIGINAL status: a 404 whose NotFoundView raises
+                # is still a 404.  Reporting it as 500 hides real failures and
+                # turns routine scanner traffic into a flood of tracebacks.
+                status = _error_fallback_status(exc)
+                log.exception(
+                    "Error view %s raised; serving bare %s",
+                    view_class.__name__,
+                    status,
+                )
                 return StarletteResponse(
-                    content=b"Internal Server Error", status_code=500
+                    content=_status_body(status),
+                    status_code=status,
+                    media_type="text/plain",
                 )
 
             fs_response = _result_to_fs_response(
@@ -254,6 +266,26 @@ def make_error_endpoint(view_class, renderer, db_session_factory, jinja_env, app
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
+
+def _error_fallback_status(exc) -> int:
+    """Status to serve when an error view raises while handling *exc*.
+
+    Starlette/FastAPI HTTP exceptions carry the status the client should see;
+    anything else is a genuine server fault.
+    """
+    status = getattr(exc, "status_code", None)
+    if isinstance(status, int) and 400 <= status <= 599:
+        return status
+    return 500
+
+
+def _status_body(status: int) -> bytes:
+    """Minimal plain-text body for *status* (e.g. b"Not Found")."""
+    try:
+        return HTTPStatus(status).phrase.encode("utf-8")
+    except ValueError:  # pragma: no cover - non-standard status
+        return b"Error"
 
 
 def _rollback(db_session):

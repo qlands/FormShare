@@ -164,19 +164,59 @@ def reset_key_exists(request, reset_key):
     return False
 
 
+def reset_key_has_expired(request, reset_key):
+    """True if *reset_key* is on record but its 24h window has passed.
+
+    Deliberately separate from reset_key_exists(): an unknown key stays a 404,
+    while a known-but-expired key should tell the user what happened rather
+    than render a form that cannot succeed.
+    """
+    res = (
+        request.dbsession.query(userModel)
+        .filter(userModel.user_password_reset_key == reset_key)
+        .first()
+    )
+    if res is None:
+        return False
+    if res.user_password_reset_expires_on is None:
+        return True
+    return res.user_password_reset_expires_on <= datetime.datetime.now()
+
+
 def set_password_reset_token(request, user_id, reset_key, reset_token):
+    """Store a new password reset key/token for *user_id*.
+
+    Returns True if the token was persisted, False otherwise.  The caller MUST
+    check the result before emailing the key: an email carrying a key that was
+    never stored produces a 404 the user can do nothing about.
+
+    The newest request always wins.  An earlier version filtered on
+    ``user_password_reset_key.is_(None)`` so a second request while a key was
+    still on record silently matched zero rows - and because nothing clears
+    the key when it expires (reset_password() only clears it on success), any
+    abandoned reset locked the account out of recovery permanently.
+    """
     token_expires_on = datetime.datetime.now() + relativedelta(hours=+24)
     try:
-        request.dbsession.query(userModel).filter(userModel.user_id == user_id).filter(
-            userModel.user_password_reset_key.is_(None)
-        ).update(
-            {
-                "user_password_reset_key": reset_key,
-                "user_password_reset_token": reset_token,
-                "user_password_reset_expires_on": token_expires_on,
-            }
+        updated = (
+            request.dbsession.query(userModel)
+            .filter(userModel.user_id == user_id)
+            .update(
+                {
+                    "user_password_reset_key": reset_key,
+                    "user_password_reset_token": reset_token,
+                    "user_password_reset_expires_on": token_expires_on,
+                }
+            )
         )
         request.dbsession.commit()
+        if not updated:
+            log.error(
+                "No password reset token was stored for user {}: "
+                "the user row was not found".format(user_id)
+            )
+            return False
+        return True
     except Exception as e:
         request.dbsession.rollback()
         log.error(
@@ -184,6 +224,7 @@ def set_password_reset_token(request, user_id, reset_key, reset_token):
                 user_id, str(e)
             )
         )
+        return False
 
 
 def reset_password(request, user_id, reset_key, reset_token, new_password):

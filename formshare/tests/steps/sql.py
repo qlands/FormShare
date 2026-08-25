@@ -105,6 +105,19 @@ def get_tokens_from_user(config, user_email):
     }
 
 
+def expire_password_reset_token(config, user_email):
+    """Backdate a user's reset token so it reads as expired.
+
+    Lets the reset workflow be tested without waiting out the 24h window.
+    """
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    engine.execute(
+        "UPDATE fsuser SET user_password_reset_expires_on = DATE_SUB(NOW(), INTERVAL 1 DAY) "
+        "WHERE user_email = '{}'".format(user_email)
+    )
+    engine.dispose()
+
+
 def change_user_status(config, user_id, status):
     from sqlalchemy import create_engine
 

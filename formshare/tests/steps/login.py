@@ -2,7 +2,11 @@ import secrets
 import time
 import uuid
 
-from .sql import get_tokens_from_user, change_user_status
+from .sql import (
+    get_tokens_from_user,
+    change_user_status,
+    expire_password_reset_token,
+)
 
 
 def t_e_s_t_login(test_object):
@@ -273,6 +277,101 @@ def t_e_s_t_login(test_object):
             "email": random_login + "@qlands.com",
             "user": "some_thing",
             "token": token_data["user_password_reset_token"],
+            "password": "123",
+            "password2": "123",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    # -----------------------------------------------------------------------
+    # Regression: an abandoned or expired reset must not block a new one.
+    #
+    # set_password_reset_token() used to filter on
+    # user_password_reset_key.is_(None), so a second request while a key was
+    # still on record silently updated zero rows - and since nothing clears
+    # the key when it expires, the email still went out carrying a key that
+    # was never stored. Every link from then on 404'd, permanently, with no
+    # way back for the user.
+    # -----------------------------------------------------------------------
+
+    # First request. The user does NOT act on it.
+    res = test_object.testapp.post(
+        "/recover",
+        {"email": random_login + "@qlands.com", "user": "some_thing"},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    time.sleep(2)
+    first_token = get_tokens_from_user(
+        test_object.server_config, random_login + "@qlands.com"
+    )
+    assert first_token["user_password_reset_key"] is not None
+
+    # Second request while the first key is still outstanding.
+    res = test_object.testapp.post(
+        "/recover",
+        {"email": random_login + "@qlands.com", "user": "some_thing"},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    time.sleep(2)
+    second_token = get_tokens_from_user(
+        test_object.server_config, random_login + "@qlands.com"
+    )
+
+    # The stored key must actually have changed - this is the regression.
+    assert second_token["user_password_reset_key"] is not None
+    assert (
+        second_token["user_password_reset_key"]
+        != first_token["user_password_reset_key"]
+    ), "The second reset request did not store a new key"
+
+    # The key that was emailed must resolve. This 404'd before the fix.
+    test_object.testapp.get(
+        "/reset/{}/password".format(second_token["user_password_reset_key"]),
+        status=200,
+    )
+
+    # An expired link says so on page load instead of rendering a form that
+    # can only fail with "Invalid token" after the user types a password.
+    expire_password_reset_token(test_object.server_config, random_login + "@qlands.com")
+    res = test_object.testapp.get(
+        "/reset/{}/password".format(second_token["user_password_reset_key"]),
+        status=200,
+    )
+    assert "FS_error" in res.headers
+
+    # An expired key must not block a further request either - this is the
+    # exact sequence users reported: wait too long, ask again, get a 404.
+    res = test_object.testapp.post(
+        "/recover",
+        {"email": random_login + "@qlands.com", "user": "some_thing"},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    time.sleep(2)
+    third_token = get_tokens_from_user(
+        test_object.server_config, random_login + "@qlands.com"
+    )
+    assert (
+        third_token["user_password_reset_key"]
+        != second_token["user_password_reset_key"]
+    ), "A request made after the previous key expired did not store a new key"
+
+    res = test_object.testapp.get(
+        "/reset/{}/password".format(third_token["user_password_reset_key"]),
+        status=200,
+    )
+    assert "FS_error" not in res.headers
+
+    # And it completes. Password stays "123" for the tests that follow.
+    res = test_object.testapp.post(
+        "/reset/{}/password".format(third_token["user_password_reset_key"]),
+        {
+            "email": random_login + "@qlands.com",
+            "user": "some_thing",
+            "token": third_token["user_password_reset_token"],
             "password": "123",
             "password2": "123",
         },

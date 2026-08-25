@@ -21,7 +21,7 @@ import os
 import validators
 import re
 from itsdangerous import URLSafeSerializer
-from babel import Locale
+from formshare.middleware.i18n import get_locale
 from formencode.variabledecode import variable_decode
 from formshare import plugins as p
 from formshare.config.auth import (
@@ -372,7 +372,7 @@ class ExceptionView(object):
         self.resultDict = {"errors": []}
         self.errors = []
         self.returnRawViewResult = False
-        locale = Locale(request.locale_name)
+        locale = get_locale(request.locale_name)
         if locale.character_order == "left-to-right":
             self.resultDict["rtl"] = False
         else:
@@ -483,7 +483,7 @@ class PublicView(object):
         self.errors = []
         self.warning_messages = []
         self.returnRawViewResult = False
-        locale = Locale(request.locale_name)
+        locale = get_locale(request.locale_name)
         if locale.character_order == "left-to-right":
             self.resultDict["rtl"] = False
         else:
@@ -622,7 +622,7 @@ class PrivateView(object):
         self.token_data = {}
         self.activeProject = {}
         self.api = False
-        locale = Locale(request.locale_name)
+        locale = get_locale(request.locale_name)
         if locale.character_order == "left-to-right":
             self.classResult["rtl"] = False
         else:
@@ -1139,7 +1139,7 @@ class AssistantView(object):
         self._ = self.request.translate
         self.errors = []
         self.resultDict = {"errors": []}
-        locale = Locale(request.locale_name)
+        locale = get_locale(request.locale_name)
         if locale.character_order == "left-to-right":
             self.resultDict["rtl"] = False
         else:
@@ -1485,7 +1485,7 @@ class PartnerView(object):
         self._ = self.request.translate
         self.errors = []
         self.resultDict = {"errors": []}
-        locale = Locale(request.locale_name)
+        locale = get_locale(request.locale_name)
         if locale.character_order == "left-to-right":
             self.resultDict["rtl"] = False
         else:

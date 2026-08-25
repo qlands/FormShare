@@ -1,5 +1,5 @@
 
-QLANDS COMMUNITY OPEN-SOURCE LICENSE (QCOSL) v1.1
+QLANDS COMMUNITY OPEN-SOURCE LICENSE (QCOSL) v1.2
 
 Copyright (c) QLands Software Inc.
 
@@ -48,12 +48,52 @@ Redistributions must include:
 • This License text.
 • All copyright notices contained in the original Software.
 
+
 --------------------------------------------------------------------
-3. RESTRICTION ON HOSTED SERVICES
+3. PERMITTED USES
 --------------------------------------------------------------------
 
-You may not provide the Software or any derivative work as a Hosted Service
-to third parties without obtaining a commercial license from QLands Software Inc.
+The following uses are permitted under this License:
+
+• Internal deployment within an Organization without public Sign up / Registration
+• Academic and research use without public Sign up / Registration
+• Non‑commercial experimentation or development
+• Contributions of modifications back to the Software
+• Distribution of the Software in source or binary form under this License
+• Program deployment by an Organization, as described in Section 4.1 below
+
+--------------------------------------------------------------------
+3.1 PROGRAM DEPLOYMENT BY AN ORGANIZATION
+--------------------------------------------------------------------
+
+Notwithstanding Section 4, an Organization may deploy the Software to deliver its own
+programs, projects, or services, and may grant access to individuals or entities outside
+the Organization whom it has enrolled, accredited, contracted, or otherwise expressly
+authorized to take part in those programs (for example, implementing partners, government
+counterparts, health facilities and providers, field staff, enumerators, or study
+participants), provided that:
+
+(a) there is no public Sign up / Registration, and every account is issued or approved
+    by the Organization;
+
+(b) the deployment serves the Organization's own program objectives, and the Software
+    is not offered to third parties as a hosted product, platform, or service in its
+    own right; and
+
+(c) no fee is charged for access to the Software itself, whether as a subscription,
+    usage, hosting, licensing, or comparable charge.
+
+For the avoidance of doubt, funding of the program by a donor, grant, or contract does
+not constitute a fee under paragraph (c), and an Organization does not become a provider
+of a Hosted Service merely because the people it has authorized to use its deployment are
+not its own employees.
+
+--------------------------------------------------------------------
+4. RESTRICTION ON HOSTED SERVICES WITH PUBLIC SIGN UP / REGISTRATION
+--------------------------------------------------------------------
+
+You may not provide the Software or any derivative work as a SaaS
+to third parties with a public sign / registration without obtaining a commercial license from QLands Software Inc.
 
 This restriction applies whether or not:
 
@@ -64,27 +104,16 @@ This restriction applies whether or not:
 
 Prohibited activities include but are not limited to:
 
-• Operating a hosted instance of the Software for third parties
 • Providing managed hosting services based on the Software with public Sign up / Registration
 • Offering Software functionality through a web service or API
 • Packaging the Software as a platform or SaaS product
-• Operating a public instance intended for external users
+• Operating a public instance (public SaaS) but charging for value added services
 
 The restriction applies regardless of whether users are charged for access.
 
-Internal use within an Organization is permitted as long as there is no public Sign up / Registration.
+Internal use within an Organization is permitted as long as there is no public Sign up / Registration. See
+Section 3.
 
---------------------------------------------------------------------
-4. PERMITTED USES
---------------------------------------------------------------------
-
-The following uses are permitted under this License:
-
-• Internal deployment within an Organization without public Sign up / Registration
-• Academic and research use without public Sign up / Registration
-• Non‑commercial experimentation or development
-• Contributions of modifications back to the Software
-• Distribution of the Software in source or binary form under this License
 
 --------------------------------------------------------------------
 5. PLUGINS AND EXTENSIONS
@@ -92,7 +121,7 @@ The following uses are permitted under this License:
 
 You may develop plugins, modules, integrations, or extensions for the Software.
 
-However, such plugins or extensions may not be used to enable a Hosted Service
+However, such plugins or extensions may not be used to enable a SaaS Service
 based on the Software unless authorized by QLands Software Inc.
 
 Plugins themselves may be distributed under any license of your choosing,

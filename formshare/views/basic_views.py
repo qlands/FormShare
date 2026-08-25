@@ -15,6 +15,7 @@ from formshare.config.auth import (
     get_user_data,
     get_assistant_data,
     reset_key_exists,
+    reset_key_has_expired,
     get_partner_data,
     set_password_reset_token,
     reset_password,
@@ -279,6 +280,16 @@ class ResetPasswordView(PublicView):
         if not reset_key_exists(self.request, reset_key):
             raise HTTPNotFound()
 
+        # Say so on page load rather than after the user has typed a new
+        # password only to be told "Invalid token".
+        if reset_key_has_expired(self.request, reset_key):
+            self.append_to_errors(
+                self._(
+                    "This password reset link has expired. Please request a new one."
+                )
+            )
+            return {}
+
         if self.request.method == "POST":
             if (
                 self.request.registry.settings.get("perform_post_checks", "true")
@@ -334,7 +345,15 @@ class ResetPasswordView(PublicView):
                                     self._("The password cannot be empty")
                                 )
                         else:
-                            self.append_to_errors(self._("Invalid token"))
+                            # Unreachable via the UI (the guard above catches
+                            # expiry on page load); kept so the check cannot be
+                            # bypassed by posting straight to this endpoint.
+                            self.append_to_errors(
+                                self._(
+                                    "This password reset link has expired. "
+                                    "Please request a new one."
+                                )
+                            )
                     else:
                         self.append_to_errors(self._("Invalid token"))
                 else:
@@ -376,7 +395,18 @@ class RecoverPasswordView(PublicView):
             if user is not None:
                 reset_key = str(uuid.uuid4())
                 reset_token = secrets.token_hex(16)
-                set_password_reset_token(self.request, user.id, reset_key, reset_token)
+                if not set_password_reset_token(
+                    self.request, user.id, reset_key, reset_token
+                ):
+                    # Never email a key that was not persisted: the link would
+                    # 404 and the user has no way to tell why.
+                    self.append_to_errors(
+                        self._(
+                            "We could not start the password reset. "
+                            "Please try again in a few minutes."
+                        )
+                    )
+                    return {}
                 send_password_email(
                     self.request, user.email, reset_token, reset_key, user.userData
                 )

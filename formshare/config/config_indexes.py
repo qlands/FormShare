@@ -3,7 +3,7 @@ from formshare.processes.logging.loggerclass import SecretLogger
 import time
 
 import requests
-from formshare.config.elasticfeeds import configure_manager
+
 from formshare.processes.elasticsearch.partner_index import (
     configure_partner_index_manager,
 )
@@ -50,8 +50,7 @@ def configure_indexes(settings):
         if version[1] != "2":
             log.error("This version of FormShare requires ElasticSearch version 9.2.X")
 
-    # Load the feeds manager
-    configure_manager(settings)
+
     # Load the user index manager
     configure_user_index_manager(settings)
     # Load the partner index

@@ -11,8 +11,6 @@ from datetime import datetime
 
 import formshare.plugins as p
 import qrcode
-from elasticfeeds.activity import Actor, Object, Activity
-from formshare.config.elasticfeeds import get_manager
 from formshare.processes.color_hash import ColorHash
 from formshare.processes.db import (
     add_project,
@@ -288,15 +286,6 @@ class AddProjectView(ProjectsView):
                                     + ".png",
                                 },
                             )
-
-                            # Store the notifications
-                            feed_manager = get_manager(self.request)
-                            # Notify tha the user added a project
-                            actor = Actor(self.user.login, "person")
-                            feed_object = Object(message, "project")
-                            activity = Activity("add", actor, feed_object)
-                            feed_manager.add_activity_feed(activity)
-
                             self.request.session.flash(
                                 self._("The project has been created")
                             )
@@ -412,13 +401,6 @@ class EditProjectView(ProjectsView):
                         self.request, project_id, project_details
                     )
                     if modified:
-                        # Store the notifications
-                        feed_manager = get_manager(self.request)
-                        # Notify tha the user edited the project
-                        actor = Actor(self.user.login, "person")
-                        feed_object = Object(project_id, "project")
-                        activity = Activity("edit", actor, feed_object)
-                        feed_manager.add_activity_feed(activity)
                         for plugin in p.PluginImplementations(p.IProject):
                             plugin.after_editing_project(
                                 self.request, user_id, project_id, project_details
@@ -605,13 +587,6 @@ class DeleteProjectView(ProjectsView):
                 if deleted:
                     # Delete the bucket
                     delete_bucket(self.request, project_id)
-                    # Store the notifications
-                    feed_manager = get_manager(self.request)
-                    # Notify tha the user deleted the project
-                    actor = Actor(self.user.login, "person")
-                    feed_object = Object(project_id, "project")
-                    activity = Activity("delete", actor, feed_object)
-                    feed_manager.add_activity_feed(activity)
 
                     for plugin in p.PluginImplementations(p.IProject):
                         plugin.after_deleting_project(

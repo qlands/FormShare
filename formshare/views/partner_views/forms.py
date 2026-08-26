@@ -5,9 +5,7 @@ import mimetypes
 import os
 
 import formshare.plugins as p
-from elasticfeeds.activity import Actor, Object, Activity
 from formshare.config.auth import check_partner_login
-from formshare.config.elasticfeeds import get_manager
 from formshare.config.encdecdata import encode_data
 from formshare.processes.db.form import (
     get_form_details,
@@ -211,25 +209,6 @@ class PartnerFormDetails(PartnerView):
         form_data = get_form_details(self.request, user_id, project_id, form_id)
         if form_data is None:
             raise HTTPNotFound
-
-        feed_manager = get_manager(self.request)
-        actor = Actor(self.partner.id, "partner")
-        feed_object = Object("{}|{}|{}".format(user_id, project_id, form_id), "form")
-        activity = Activity(
-            "access",
-            actor,
-            feed_object,
-            extra={"remote_address": self.request.remote_addr},
-        )
-        try:
-            feed_manager.add_activity_feed(activity)
-        except Exception as e:
-            log.error(
-                "Error: {} while registering "
-                "activity for partner {} to form {}".format(
-                    str(e), self.partner.email, project_id + "|" + form_id
-                )
-            )
 
         forms = get_forms_for_schema(self.request, form_data["form_schema"])
         number_with_gps = get_number_of_datasets_with_gps(
@@ -530,30 +509,6 @@ class PartnerDownloadPrivateProduct(PartnerView):
                 )
                 break  # Only one plugging will be called to extend before_download_product
             if continue_download:
-                feed_manager = get_manager(self.request)
-                actor = Actor(self.partner.id, "partner")
-                feed_object = Object(
-                    "{}|{}|{}|{}|{}".format(
-                        user_id, project_id, form_id, product_id, output_id
-                    ),
-                    "output",
-                )
-                activity = Activity(
-                    "download",
-                    actor,
-                    feed_object,
-                    extra={"remote_address": self.request.remote_addr},
-                )
-                try:
-                    feed_manager.add_activity_feed(activity)
-                except Exception as e:
-                    log.error(
-                        "Error: {} while registering "
-                        "activity for partner {} to form {}".format(
-                            str(e), self.partner.email, project_id + "|" + form_id
-                        )
-                    )
-
                 filename, file_extension = os.path.splitext(output_file)
                 if file_extension == "":
                     file_extension = "unknown"

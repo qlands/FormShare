@@ -336,4 +336,5 @@ class TestSubmissionResponse(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    if os.environ.get("USE_RSTOOLS", "false") == "true":
+        unittest.main()

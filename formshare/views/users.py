@@ -7,8 +7,6 @@ import uuid
 
 import formshare.plugins as p
 import validators
-from elasticfeeds.activity import Actor, Object, Activity
-from formshare.config.elasticfeeds import get_manager
 from formshare.config.encdecdata import encode_data
 from formshare.processes.db import (
     get_user_details,
@@ -488,31 +486,6 @@ class AddUserView(PrivateView):
                                                     self.request,
                                                     user_details,
                                                 )
-                                            # Store the notifications
-                                            feed_manager = get_manager(self.request)
-                                            # The user follows himself
-                                            try:
-                                                feed_manager.follow(
-                                                    user_details["user_id"],
-                                                    user_details["user_id"],
-                                                )
-                                            except Exception as e:
-                                                log.warning(
-                                                    "User {} was in FormShare at some point. Error: {}".format(
-                                                        user_details["user_id"], str(e)
-                                                    )
-                                                )
-                                            # The user join FormShare
-                                            actor = Actor(
-                                                user_details["user_id"], "person"
-                                            )
-                                            feed_object = Object(
-                                                "formshare", "platform"
-                                            )
-                                            activity = Activity(
-                                                "join", actor, feed_object
-                                            )
-                                            feed_manager.add_activity_feed(activity)
 
                                             # Add the user to the user index
                                             user_index = get_user_index_manager(

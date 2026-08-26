@@ -8,9 +8,7 @@ import logging
 
 import requests
 import validators
-from elasticfeeds.activity import Actor, Object, Activity
 from formshare.app import load_settings_from_ini
-from formshare.config.elasticfeeds import configure_manager
 from formshare.config.encdecdata import encode_data_with_key
 from formshare.models import User
 from formshare.models import get_engine, get_session_factory
@@ -89,28 +87,12 @@ def main(raw_args=None):
                     )
                     dbsession.add(new_user)
 
-                    feed_manager = configure_manager(settings)
-                    # The user follows himself
-                    try:
-                        feed_manager.follow(user_id, user_id)
-                    except Exception as e:
-                        print(
-                            "User {} was in FormShare at some point. Error: {}".format(
-                                user_id, str(e)
-                            )
-                        )
-
                     user_details = {
                         "user_id": user_id,
                         "user_email": user_email,
                         "user_name": "FormShare Administrator",
                         "tenant_id": "main",
                     }
-                    # The user join FormShare
-                    actor = Actor(user_details["user_id"], "person")
-                    feed_object = Object("formshare", "platform")
-                    activity = Activity("join", actor, feed_object)
-                    feed_manager.add_activity_feed(activity)
 
                     # Add the user to the user index
                     user_index = configure_user_index_manager(settings)

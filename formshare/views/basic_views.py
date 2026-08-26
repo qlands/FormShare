@@ -3,13 +3,11 @@ import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 import re
 import secrets
-import traceback
 import uuid
 from ast import literal_eval
 import shutil
 import formshare.plugins as p
 import validators
-from elasticfeeds.activity import Actor, Object, Activity
 from formencode.variabledecode import variable_decode
 from formshare.config.auth import (
     get_user_data,
@@ -20,7 +18,6 @@ from formshare.config.auth import (
     set_password_reset_token,
     reset_password,
 )
-from formshare.config.elasticfeeds import get_manager
 from formshare.config.encdecdata import encode_data
 from formshare.processes.avatar import Avatar
 from formshare.processes.db import (
@@ -757,25 +754,6 @@ class RegisterView(PublicView):
                                     if not added:
                                         self.append_to_errors(error_message)
                                     else:
-                                        # Store the notifications
-                                        feed_manager = get_manager(self.request)
-                                        # The user follows himself
-                                        try:
-                                            feed_manager.follow(
-                                                data["user_id"], data["user_id"]
-                                            )
-                                        except Exception as e:
-                                            log.warning(
-                                                "User {} was in FormShare at some point. Error: {}".format(
-                                                    data["user_id"], str(e)
-                                                )
-                                            )
-                                        # The user join FormShare
-                                        actor = Actor(data["user_id"], "person")
-                                        feed_object = Object("formshare", "platform")
-                                        activity = Activity("join", actor, feed_object)
-                                        feed_manager.add_activity_feed(activity)
-
                                         # Add the user to the user index
                                         user_index = get_user_index_manager(
                                             self.request

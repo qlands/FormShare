@@ -5,10 +5,7 @@ import uuid
 
 import formshare.plugins as p
 import validators
-from elasticfeeds.aggregators import YearMonthAggregator
-from formshare.config.elasticfeeds import get_manager
 from formshare.config.encdecdata import encode_data
-from formshare.processes.db.form import get_form_data
 from formshare.processes.db.partner import (
     partner_exists,
     register_partner,
@@ -18,11 +15,9 @@ from formshare.processes.db.partner import (
     update_partner_password,
     delete_partner,
 )
-from formshare.processes.db.project import get_project_details
 from formshare.processes.db.timezone import get_timezones
 from formshare.processes.db.user import get_user_details
 from formshare.processes.elasticsearch.partner_index import get_partner_index_manager
-from formshare.products.products import get_product_description, get_product
 from formshare.views.classes import PrivateView
 from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound
 
@@ -81,63 +76,13 @@ class PartnerActivityView(PrivateView):
         if partner_details is None:
             raise HTTPNotFound
 
-        esf_manager = get_manager(self.request)
-
-        es_result = esf_manager.execute_raw_feeds_query(
-            get_years_query_dict(partner_to_view)
-        )
-        year_bukets = es_result["aggregations"]["feed_years"]["buckets"]
-        years = []
-        for a_year in year_bukets:
-            years.append(str(a_year["key"]))
-
-        if year is None:
-            year = datetime.datetime.now().strftime("%Y")
-        else:
-            if not year.isdigit():
-                year = datetime.datetime.now().strftime("%Y")
-
-        partner_aggregator = YearMonthAggregator(partner_to_view, int(year))
-        partner_feeds = esf_manager.get_feeds(partner_aggregator)
-        if partner_feeds:
-            partner_feeds = partner_feeds[0]["months"]
-        for a_month in partner_feeds:
-            for an_activity in a_month["activities"]:
-                if an_activity["type"] == "access":
-                    parts = an_activity["object"]["id"].split("|")
-                    an_activity["user_id"] = parts[0]
-                    an_activity["project_id"] = parts[1]
-                    an_activity["form_id"] = parts[2]
-                    an_activity["project_details"] = get_project_details(
-                        self.request, parts[1]
-                    )
-                    an_activity["form_details"] = get_form_data(
-                        self.request, parts[1], parts[2]
-                    )
-                if an_activity["type"] == "download":
-                    parts = an_activity["object"]["id"].split("|")
-                    an_activity["user_id"] = parts[0]
-                    an_activity["project_id"] = parts[1]
-                    an_activity["form_id"] = parts[2]
-                    an_activity["product_id"] = parts[3]
-                    an_activity["output_id"] = parts[4]
-                    an_activity["project_details"] = get_project_details(
-                        self.request, parts[1]
-                    )
-                    an_activity["form_details"] = get_form_data(
-                        self.request, parts[1], parts[2]
-                    )
-                    an_activity["product"] = get_product(parts[3])
-                    an_activity["product_desc"] = get_product_description(
-                        self.request, parts[3]
-                    )
         return {
             "userid": user_id,
             "partnerid": partner_to_view,
             "partnerData": partner_details,
             "year": year,
-            "years": years,
-            "feeds": partner_feeds,
+            "years": None,
+            "feeds": [],
         }
 
 
@@ -222,21 +167,6 @@ class AddPartnerView(PrivateView):
                                 if not added:
                                     self.append_to_errors(error_message)
                                 else:
-                                    # Creates the partner as an actor
-                                    feed_manager = get_manager(self.request)
-                                    try:
-                                        feed_manager.follow(
-                                            partner_details["partner_id"],
-                                            partner_details["partner_id"],
-                                            activity_type="partner",
-                                        )
-                                    except Exception as e:
-                                        log.warning(
-                                            "Partner {} was in FormShare at some point. Error: {}".format(
-                                                partner_details["partner_email"], str(e)
-                                            )
-                                        )
-
                                     # Add the partner to the partner index
                                     partner_index = get_partner_index_manager(
                                         self.request

@@ -65,9 +65,7 @@ def main(raw_args=None):
         trim_blocks=False,
     )
     sqlalchemy_url = get_ini_value(os.path.abspath(args.ini_path), "sqlalchemy.url", "")
-    elasticfeeds_host = get_ini_value(
-        os.path.abspath(args.ini_path), "elasticfeeds.host", "localhost"
-    )
+
 
     elasticsearch_user_host = get_ini_value(
         os.path.abspath(args.ini_path), "elasticsearch.user.host", "localhost"
@@ -109,7 +107,6 @@ def main(raw_args=None):
         "mysql_user": mysql_user,
         "mysql_password": mysql_password,
         "sqlalchemy_url": sqlalchemy_url,
-        "elasticfeeds_host": elasticfeeds_host,
         "elasticsearch_user_host": elasticsearch_user_host,
         "elasticsearch_repository_host": elasticsearch_repository_host,
         "elasticsearch_records_host": elasticsearch_records_host,

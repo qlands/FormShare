@@ -109,7 +109,7 @@ def t_e_s_t_forms(test_object):
         status=302,
         upload_files=[("xlsx", resource_file)],
     )
-    assert "FS_error" in res.headers
+    assert "FS_error" not in res.headers
 
     # Uploads a form fails. Duplicated variables
     paths = ["resources", "forms", "form05.xlsx"]
@@ -418,13 +418,27 @@ def t_e_s_t_forms(test_object):
     )
     assert "FS_error" in res.headers
 
+    # Upload of 06 is fine
+    paths = ["resources", "forms", "form06_OK.xlsx"]
+    resource_file = os.path.join(test_object.path, *paths)
+
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/forms/add".format(
+            test_object.randonLogin, test_object.project
+        ),
+        {"form_pkey": "hid"},
+        status=302,
+        upload_files=[("xlsx", resource_file)],
+    )
+    assert "FS_error" not in res.headers
+
     # Update a form fails. Duplicated options
-    paths = ["resources", "forms", "form06.xlsx"]
+    paths = ["resources", "forms", "form06_U.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
 
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_6"
         ),
         {"form_pkey": "hid"},
         status=302,
@@ -432,13 +446,27 @@ def t_e_s_t_forms(test_object):
     )
     assert "FS_error" in res.headers
 
+    # Duplicate options with choice filter pass
+    paths = ["resources", "forms", "duplicated_choices_filter.xlsx"]
+    resource_file = os.path.join(test_object.path, *paths)
+
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/forms/add".format(
+            test_object.randonLogin, test_object.project
+        ),
+        {"form_pkey": "hh_id"},
+        status=302,
+        upload_files=[("xlsx", resource_file)],
+    )
+    assert "FS_error" not in res.headers
+
     # Update a form fails. Too many selects
     paths = ["resources", "forms", "form07B.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
 
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
-            test_object.randonLogin, test_object.project, "Justtest"
+            test_object.randonLogin, test_object.project, "Justtest_7"
         ),
         {"form_pkey": "hid"},
         status=302,

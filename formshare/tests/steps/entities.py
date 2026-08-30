@@ -222,9 +222,7 @@ def t_e_s_t_entities(test_object):
     assert workbook["entities"].cell(row=2, column=1).value == dataset
 
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistants/add".format(
-            login, PROJECT, CREATOR_ID
-        ),
+        "/user/{}/project/{}/form/{}/assistants/add".format(login, PROJECT, CREATOR_ID),
         {
             "coll_id": "{}|{}|{}".format(project_id, assistant, assistant_uuid),
             "coll_can_submit": "1",

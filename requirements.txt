@@ -100,7 +100,7 @@ pytest-cov==7.0.0
 python-dateutil==2.9.0.post0
 python-docx==1.2.0
 python-editor==1.0.4
-python-multipart==0.0.30
+python-multipart==0.0.31
 python-slugify==8.0.4
 pytokens==0.4.1
 pytz==2025.2
@@ -151,7 +151,7 @@ validators==0.35.0
 vine==5.1.0
 wcwidth==0.2.14
 WebHelpers2==2.1
-WebOb==1.8.10
+WebOb==1.8.11
 WebTest==3.0.7
 wheel==0.46.2
 wrapt==2.0.1

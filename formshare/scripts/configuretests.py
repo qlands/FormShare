@@ -66,7 +66,6 @@ def main(raw_args=None):
     )
     sqlalchemy_url = get_ini_value(os.path.abspath(args.ini_path), "sqlalchemy.url", "")
 
-
     elasticsearch_user_host = get_ini_value(
         os.path.abspath(args.ini_path), "elasticsearch.user.host", "localhost"
     )

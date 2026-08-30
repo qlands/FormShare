@@ -50,7 +50,6 @@ def configure_indexes(settings):
         if version[1] != "2":
             log.error("This version of FormShare requires ElasticSearch version 9.2.X")
 
-
     # Load the user index manager
     configure_user_index_manager(settings)
     # Load the partner index

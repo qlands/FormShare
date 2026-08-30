@@ -208,9 +208,7 @@ class TestSelectorFileCheck(unittest.TestCase):
 
     def test_says_nothing_where_the_deployment_cannot_serve_entities(self):
         self.assertIsNone(
-            wrong_case_selector_file(
-                FakeRequest(), "p1", "demo", "households.csv"
-            )
+            wrong_case_selector_file(FakeRequest(), "p1", "demo", "households.csv")
         )
 
 

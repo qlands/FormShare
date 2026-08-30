@@ -28,7 +28,9 @@ def main(raw_args=None):
     random_login = random_login[-12:]
 
     user_password = os.getenv("FORMSHARE_ADMIN_PASSWORD", "change_me_admin")
-    user_email = os.getenv("FORMSHARE_ADMIN_EMAIL", "{}@myserver.com".format(random_login))
+    user_email = os.getenv(
+        "FORMSHARE_ADMIN_EMAIL", "{}@myserver.com".format(random_login)
+    )
     user_id = os.getenv("FORMSHARE_ADMIN_USER", random_login)
 
     email_valid = validators.email(user_email)

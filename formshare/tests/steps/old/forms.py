@@ -126,7 +126,7 @@ def t_e_s_t_forms(test_object):
     assert "FS_error" in res.headers
 
     # Uploads a form fails. Duplicated options
-    paths = ["resources", "forms", "old" ,"form06.xlsx"]
+    paths = ["resources", "forms", "old", "form06.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
 
     res = test_object.testapp.post(
@@ -413,7 +413,7 @@ def t_e_s_t_forms(test_object):
     assert "FS_error" in res.headers
 
     # Update a form fails. Duplicated options
-    paths = ["resources", "forms", "old" ,"form06.xlsx"]
+    paths = ["resources", "forms", "old", "form06.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
 
     res = test_object.testapp.post(

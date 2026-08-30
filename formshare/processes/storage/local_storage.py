@@ -106,6 +106,16 @@ def get_stream(request, bucket_id, file_name):
         return res
     except FileNotFoundException:
         pass
+    except OSError as e:
+        # A form file recorded under an empty name resolves to the bucket's
+        # own directory, and opening it raises IsADirectoryError. The caller
+        # asked whether the file is there; it is not, and saying so is better
+        # than taking down the page that lists it.
+        log.error(
+            "Unable to read '{}' from bucket {}. Error: {}".format(
+                file_name, bucket_id, str(e)
+            )
+        )
     return None
 
 

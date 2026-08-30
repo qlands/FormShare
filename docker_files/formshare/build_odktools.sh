@@ -1,1 +1,0 @@
-sudo docker build --no-cache --rm -t qlands/odktools:20260407 -f ./odktools.Dockerfile .

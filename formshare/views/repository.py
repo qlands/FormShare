@@ -11,7 +11,11 @@ from formshare.processes.db import (
 )
 from formshare.processes.elasticsearch.repository_index import delete_dataset_from_index
 from formshare.processes.email.send_email import send_error_to_technical_team
-from formshare.processes.odk.api import create_repository, get_odk_path
+from formshare.processes.odk.api import (
+    create_repository,
+    get_odk_path,
+    describe_ambiguous_selects,
+)
 from formshare.processes.odk.processes import get_form_data
 from formshare.views.classes import PrivateView
 from lxml import etree
@@ -70,6 +74,7 @@ class GenerateRepository(PrivateView):
         form_data = get_form_data(project_id, form_id, self.request)
         result_code = -1
         list_array = []
+        select_errors = []
         duplicated_choices = []
         tables_with_name_error = []
         languages = []
@@ -500,57 +505,15 @@ class GenerateRepository(PrivateView):
                                 self.append_to_errors(txt_message)
 
                             if result_code == 9:  # pragma: no cover
-                                # Duplicated options
+                                # A select whose options cannot be told apart.
+                                # Not necessarily duplicated ones: since schema
+                                # 3.0 a repeated code is legal where a
+                                # choice_filter separates the repeats, and one
+                                # of the reasons carries no repeated option at
+                                # all.
                                 stage = -1
                                 root = etree.fromstring(message)
-                                xml_lists = root.findall(".//list")
-                                if xml_lists:
-                                    for aList in xml_lists:
-                                        list_element = {"name": aList.get("name")}
-                                        xml_values = aList.findall(".//value")
-                                        value_array = []
-                                        for aValue in xml_values:
-                                            value_array.append(aValue.text)
-                                        list_element["values"] = value_array
-                                        xml_references = aList.findall(".//reference")
-                                        ref_array = []
-                                        for aRef in xml_references:
-                                            ref_array.append(
-                                                {
-                                                    "variable": aRef.get("variable"),
-                                                    "option": aRef.get("option"),
-                                                }
-                                            )
-                                        list_element["references"] = ref_array
-                                        list_array.append(list_element)
-                                else:
-                                    xml_lists = root.findall(".//duplicatedItem")
-                                    if xml_lists:
-                                        for aList in xml_lists:
-                                            variable_name = aList.get("variableName")
-                                            duplicated_value = aList.get(
-                                                "duplicatedValue"
-                                            )
-                                            found_index = -1
-                                            for index, an_error in enumerate(
-                                                list_array
-                                            ):
-                                                if (
-                                                    an_error["name"]
-                                                    == variable_name + ".csv"
-                                                ):
-                                                    found_index = index
-                                                    break
-                                            if found_index == -1:
-                                                list_element = {
-                                                    "name": variable_name + ".csv",
-                                                    "values": [duplicated_value],
-                                                }
-                                                list_array.append(list_element)
-                                            else:
-                                                list_array[found_index][
-                                                    "values"
-                                                ].append(duplicated_value)
+                                select_errors = describe_ambiguous_selects(root, self._)
 
                             if result_code == 36:  # pragma: no cover
                                 # Multi-select variable with spaces in options
@@ -713,6 +676,7 @@ class GenerateRepository(PrivateView):
                     "projectDetails": project_details,
                     "result_code": result_code,
                     "list_array": list_array,
+                    "select_errors": select_errors,
                     "duplicated_choices": duplicated_choices,
                     "tables_with_name_error": tables_with_name_error,
                     "file_with_error": file_with_error,

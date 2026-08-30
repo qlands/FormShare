@@ -93,6 +93,8 @@ from formshare.processes.odk.api import (
     create_repository,
     merge_versions,
     check_jxform_file,
+    describe_ambiguous_selects,
+    ambiguous_selects_heading,
     store_file_in_directory,
     retrieve_form_file_stream,
 )
@@ -597,30 +599,15 @@ class FormDetails(PrivateView):
             if created == 9:
                 # Duplicated options
                 root = etree.fromstring(message)
-                duplicated_items = root.findall(".//duplicatedItem")
                 txt_message = (
                     self._("FormShare thoroughly checks your ODK for inconsistencies.")
                     + "\n"
                 )
                 txt_message = (
-                    txt_message
-                    + self._(
-                        "The following options are duplicated in the ODK you just submitted:"
-                    )
-                    + "\n"
+                    txt_message + ambiguous_selects_heading(root, self._) + "\n"
                 )
-                if duplicated_items:
-                    for a_item in duplicated_items:
-                        variable_name = a_item.get("variableName")
-                        duplicated_option = a_item.get("duplicatedValue")
-                        txt_message = (
-                            txt_message
-                            + "\t"
-                            + self._("Option {} in variable {}").format(
-                                duplicated_option, variable_name
-                            )
-                            + "\n"
-                        )
+                for a_message in describe_ambiguous_selects(root, self._):
+                    txt_message = txt_message + "\t" + a_message + "\n"
                 errors.append(txt_message)
 
             if created == 36:
@@ -2031,12 +2018,26 @@ class AddFileToForm(PrivateView):
 
         if self.request.method == "POST":
             files = self.request.POST.getall("filetoupload")
+            # A file input submitted with nothing chosen still arrives as a
+            # part of the request, carrying an empty file name. Stored, it
+            # becomes a form file called "", and from then on every read of the
+            # form's files asks the storage for a name that resolves to the
+            # bucket's own directory rather than to a file in it.
+            files = [
+                a_file
+                for a_file in files
+                if str(getattr(a_file, "filename", "") or "").strip() != ""
+            ]
             form_data = self.get_post_dict()
             self.returnRawViewResult = True
 
             next_page = self.request.route_url(
                 "form_details", userid=user_id, projcode=project_code, formid=form_id
             )
+
+            if not files:
+                self.add_error(self._("No files were attached"))
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
             error = False
             messages = []
@@ -2205,6 +2206,7 @@ class AddFileToForm(PrivateView):
                                     project_id,
                                     form_id,
                                     current_form_data["form_schema"],
+                                    current_form_data["form_insertxmlfile"],
                                     file_name,
                                     tmp_file,
                                 )
@@ -2222,22 +2224,16 @@ class AddFileToForm(PrivateView):
                         )
                     )
                     error = True
-                    if len(files) == 1:
-                        if files[0] == b"":
-                            message = self._("No files were attached")
-                        else:
-                            message = self._(
-                                "Error {} encountered. A log entry has been produced".format(
-                                    type(e).__name__
-                                )
-                            )
-
-                    else:
-                        message = self._(
+                    # An upload with nothing attached is turned away before the
+                    # loop now, so the only thing left to report here is the
+                    # exception itself.
+                    messages.append(
+                        self._(
                             "Error {} encountered. A log entry has been produced".format(
                                 type(e).__name__
                             )
                         )
+                    )
             if not error:
                 if len(files) == 1:
                     self.request.session.flash(

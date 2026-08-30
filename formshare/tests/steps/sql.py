@@ -52,6 +52,35 @@ def get_one_submission(config, form_schema):
     return result
 
 
+def count_lookup_rows(config, form_schema, table):
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    result = engine.execute(
+        "SELECT COUNT(*) FROM {}.{}".format(form_schema, table)
+    ).fetchone()
+    result = result[0]
+    engine.dispose()
+    return result
+
+
+def get_lookup_choice(config, form_schema, table, code_column, desc_column, code):
+    """What one choice of a GeoJSON lookup looks like once a file update ran.
+
+    The geometry is asked for by type rather than by value, because it is the
+    column MySQL derives for itself: if the update wrote nothing usable into
+    geometry_json, there is no row here at all.
+    """
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    result = engine.execute(
+        "SELECT {}, ST_GeometryType(geometry) FROM {}.{} WHERE {} = '{}'".format(
+            desc_column, form_schema, table, code_column, code
+        )
+    ).fetchone()
+    engine.dispose()
+    if result is None:
+        return None
+    return {"description": result[0], "geometry_type": result[1]}
+
+
 def get_partner_api_key(config, partner_id):
     engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
     result = engine.execute(

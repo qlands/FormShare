@@ -3,7 +3,7 @@ version: 2
 jobs:
   py-3.13:
     docker:
-      - image: qlands/odktools_circleci:20260216
+      - image: qlands/odktools_circleci:20260829
         environment:
           - ELASTIC_USER=elastic
           - ELASTIC_PASSWORD=RxlCXBATIkd8meZ97XH8z
@@ -11,7 +11,7 @@ jobs:
           - MYSQL_HOST_PORT=3306
           - MYSQL_USER_NAME=root
           - MYSQL_USER_PASSWORD=circleci
-          - ODKTOOLS_PATH=/opt/odktools
+          - ODKTOOLS_PATH=/opt/odktools/build
           - ELASTIC_SEARCH_HOST=localhost
           - ELASTIC_SEARCH_PORT=9200
           - FORMSHARE_HOST=localhost

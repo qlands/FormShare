@@ -891,6 +891,14 @@ class DictField(Base):
     field_encrypted = Column(INTEGER, server_default=text("'0'"))
     field_unique = Column(INTEGER, server_default=text("'0'"))
     field_ontology = Column(Unicode(120))
+    # Schema format 3.0 attributes. They say what a lookup row is and what may
+    # be written to a column, which is what a replaced CSV or GeoJSON needs to
+    # know before it merges anything into a live lookup table.
+    field_rfilter = Column(Unicode(1024))
+    field_generatedas = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    field_autoincrement = Column(INTEGER, server_default=text("'0'"))
+    field_notnull = Column(INTEGER, server_default=text("'0'"))
+    field_srid = Column(Unicode(64))
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     dicttable = relationship("DictTable")

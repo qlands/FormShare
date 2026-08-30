@@ -1,0 +1,20 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "gp1",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.08,
+          46.58
+        ]
+      },
+      "properties": {
+        "title": "First place",
+        "annual_visits": 10
+      }
+    }
+  ]
+}

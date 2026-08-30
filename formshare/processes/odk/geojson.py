@@ -1,11 +1,14 @@
 import json
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
-import uuid
 from formshare.processes.db.dictionary import (
-    get_dictionary_fields,
-    get_references_from_file,
+    bindable_value,
+    get_filter_columns_from_file,
+    get_merge_columns,
     get_name_and_label_from_file,
+    get_references_from_file,
+    merge_file_into_lookup,
+    update_insert_xml_from_lookup,
 )
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
@@ -14,8 +17,64 @@ from sqlalchemy.orm.session import Session
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
+# The column RSTools gives a GeoJSON lookup to hold the geometry of a feature
+# exactly as the file wrote it. The "geometry" column beside it is derived from
+# this one by MySQL and cannot be written at all. See appendGeometryFields in
+# JXFormToMysql/main.cpp.
+GEOMETRY_COLUMN = "geometry_json"
+
+# The geometries ODK reads, and so the ones RSTools builds a lookup from. The
+# authority is isSupportedGeometry in JXFormToMysql/main.cpp.
+SUPPORTED_GEOMETRIES = ["Point", "LineString", "Polygon"]
+
+
+def feature_code(a_feature, code_column):
+    """
+    The identifier of a feature, read the way RSTools reads it.
+
+    The GeoJSON spec puts id on the Feature object, not in its properties, so
+    the top level is asked first and properties is the fallback for the files
+    that do it the other way round. A number is a valid identifier. The
+    authority is featureCode in JXFormToMysql/main.cpp.
+
+    :param a_feature: A feature of the file
+    :param code_column: The column the form calls the code of the choice
+    :return: The identifier as a string, or None when the feature has none
+    """
+    for value in [
+        a_feature.get("id"),
+        a_feature.get("properties", {}).get(code_column),
+    ]:
+        if isinstance(value, bool) or value is None:
+            continue
+        if isinstance(value, str):
+            if value != "":
+                return value
+            continue
+        if isinstance(value, (int, float)):
+            return "{:.0f}".format(value)
+    return None
+
 
 def check_geojson(request, file_name, name, label):
+    """
+    Whether a GeoJSON file may replace the one a lookup was built from.
+
+    Checked the way RSTools checks it, so that a file the tool accepted when it
+    built the repository is not refused here. Two things follow from that. A
+    lookup holds points, lines and polygons, not points alone. And a feature is
+    named by its top level id first, so a spec-compliant file whose features
+    carry no properties at all is a perfectly good one.
+
+    The label is not required either: a feature with no title is shown by its
+    identifier, which is what Collect does.
+
+    :param request: Pyramid request object
+    :param file_name: Path of the file to read
+    :param name: The column the form calls the code of the choice
+    :param label: The column the form calls the description of the choice
+    :return: (True, "") or (False, message)
+    """
     _ = request.translate
     try:
         f = open(file_name)
@@ -34,22 +93,14 @@ def check_geojson(request, file_name, name, label):
                             "The GeoJSON file has features without geometry"
                         )
                     else:
-                        if a_feature["geometry"].get("type", "") != "Point":
+                        geometry_type = a_feature["geometry"].get("type", "")
+                        if geometry_type not in SUPPORTED_GEOMETRIES:
                             return False, _(
-                                "The GeoJSON file has features that are not point"
+                                "The GeoJSON file has features whose geometry is "
+                                "not a point, a line or a polygon"
                             )
-                    if "properties" not in a_feature.keys():
-                        return False, _(
-                            "The GeoJSON file has features without properties"
-                        )
-                    else:
-                        if (
-                            name not in a_feature["properties"].keys()
-                            or label not in a_feature["properties"].keys()
-                        ):
-                            return False, _(
-                                "The GeoJSON file has features with properties without id or label"
-                            )
+                    if feature_code(a_feature, name) is None:
+                        return False, _("The GeoJSON file has features without an id")
             else:
                 return False, _("The GeoJSON file does not have features")
         else:
@@ -61,110 +112,131 @@ def check_geojson(request, file_name, name, label):
 
 
 def update_lookup_from_geo_json(
-    request, user_id, project_id, form_id, form_schema, file_name, file_path
+    request,
+    user_id,
+    project_id,
+    form_id,
+    form_schema,
+    form_insert_file,
+    file_name,
+    file_path,
 ):
-    uid = str(uuid.uuid4())
-    uid = "TMP_" + uid.replace("-", "_")
     rel_table, rel_field = get_references_from_file(
         request, project_id, form_id, file_name
     )
-    fields = get_dictionary_fields(request, project_id, form_id, rel_table)
-    sql = "CREATE TABLE {}.{} (".format(form_schema, uid)
-    field_array = []
-    field_name_array = []
-    table_key = ""
-    rel_desc = rel_field.replace("_cod", "_des")
-    for a_field in fields:
-        field_name = a_field["field_name"]
-        if field_name != "rowuuid":
-            field_type = a_field["field_type"]
-            if a_field["field_type"] == "varchar":
-                field_type = "varchar({})".format(a_field["field_size"])
-            if a_field["field_type"] == "int":
-                field_type = "int({})".format(a_field["field_size"])
-            if a_field["field_key"] == 1:
-                field_array.append(field_name + " " + field_type + " PRIMARY KEY")
-                table_key = field_name
-            else:
-                if field_name != rel_desc:
-                    field_name_array.append(field_name)
-                field_array.append(field_name + " " + field_type)
-    sql = sql + ",".join(field_array) + ")"
-
-    sql_url = request.registry.settings.get("sqlalchemy.url")
-    engine = create_engine(sql_url, poolclass=NullPool)
+    rel_field_desc = rel_field.replace("_cod", "_des")
+    filter_columns = get_filter_columns_from_file(
+        request, project_id, form_id, file_name
+    )
+    identity = [rel_field] + filter_columns
     name, label = get_name_and_label_from_file(request, project_id, form_id, file_name)
-    session = Session(bind=engine)
-    temp_table_created = False
+
     try:
-        session.execute(sql)
-        temp_table_created = True
         f = open(file_path)
         data = json.load(f)
         f.close()
-        for a_feature in data["features"]:
-            sql = "INSERT INTO {}.{} ({},{},".format(
-                form_schema, uid, table_key, rel_desc
+    except Exception as e:
+        log.error("Error opening GeoJSON file {}. Error {}".format(file_path, str(e)))
+        return False, "Cannot open {}".format(file_name)
+    features = data.get("features", [])
+
+    # Every property any feature carries. A lookup column was made out of one
+    # of these and carries its name, so this is what they are matched against.
+    file_columns = []
+    for a_feature in features:
+        for a_property in a_feature.get("properties", {}).keys():
+            if a_property not in file_columns:
+                file_columns.append(a_property)
+
+    # The code, the description and the geometry do not come from a property of
+    # the same name, so they are named here and read out of the feature itself
+    # below. Only their presence matters to get_merge_columns.
+    sources = {rel_field: name, GEOMETRY_COLUMN: GEOMETRY_COLUMN}
+    if rel_field_desc != rel_field:
+        sources[rel_field_desc] = label
+    columns, message = get_merge_columns(
+        request,
+        project_id,
+        form_id,
+        rel_table,
+        rel_field,
+        identity,
+        file_columns,
+        sources,
+    )
+    if columns is None:
+        return False, "{}. {}".format(file_name, message)
+
+    rows = []
+    seen = set()
+    for a_feature in features:
+        properties = a_feature.get("properties", {})
+        code = feature_code(a_feature, name)
+        if code is None:
+            return False, "{} has features without an id".format(file_name)
+        geometry = a_feature.get("geometry", {})
+        if geometry.get("type", "") not in SUPPORTED_GEOMETRIES:
+            return (
+                False,
+                "{} has features whose geometry is not a point, a line or a polygon".format(
+                    file_name
+                ),
             )
-            sql = (
-                sql
-                + ",".join(field_name_array)
-                + ") VALUES ('{}',".format(a_feature["properties"][name])
+        # RSTools stores a code with its apostrophes turned into backticks, so
+        # the lookup holds it that way and this has to ask for it that way.
+        code = code.replace("'", "`").replace('"', "")
+        a_row = {}
+        for a_field in columns:
+            a_column = a_field["field_name"]
+            if a_column == rel_field:
+                a_row[a_column] = code
+            elif a_column == rel_field_desc:
+                # A feature with no title is shown by its identifier, which is
+                # what Collect does and what RSTools stored when it built the
+                # lookup.
+                description = properties.get(label)
+                if description is None or description == "":
+                    description = code
+                a_row[a_column] = str(description).replace('"', "")
+            elif a_column == GEOMETRY_COLUMN:
+                # Handed to MySQL exactly as it arrived. The geometry column
+                # beside this one is derived from it, so nothing here has to
+                # know how to build a geometry or which of a pair of numbers is
+                # the latitude.
+                a_row[a_column] = json.dumps(geometry)
+            else:
+                a_row[a_column] = bindable_value(properties.get(sources[a_column]))
+
+        key = tuple(str(a_row[a_column]) for a_column in identity)
+        if key in seen:
+            return False, "You have a duplicated feature in {}: '{}'".format(
+                file_name, code
             )
-            sql = sql + "'{}',".format(a_feature["properties"][label])
-            for a_field in field_name_array:
-                if a_field != "coordinates":
-                    sql = sql + "'{}',".format(a_feature["properties"].get(a_field, ""))
-                else:
-                    lati = a_feature["geometry"]["coordinates"][0]
-                    long = a_feature["geometry"]["coordinates"][1]
-                    sql = sql + "'{} {}',".format(lati, long)
-            sql = sql[: len(sql) - 1] + ")"
-            session.execute(sql)
+        seen.add(key)
+        rows.append(a_row)
 
-        # Update the description, properties, and coordinates
-        session.execute("SET @odktools_current_user = '" + user_id + "'")
-        sql = "UPDATE {}.{} TA, {}.{} TB SET TA.{} = TB.{},".format(
-            form_schema, rel_table, form_schema, uid, rel_desc, rel_desc
+    sql_url = request.registry.settings.get("sqlalchemy.url")
+    engine = create_engine(sql_url, poolclass=NullPool)
+    session = Session(bind=engine)
+    try:
+        merge_file_into_lookup(
+            session, user_id, form_schema, rel_table, columns, identity, rows
         )
-        for a_field in field_name_array:
-            sql = sql + "TA.{} = TB.{},".format(a_field, a_field)
-        sql = sql[: len(sql) - 1]
-        sql = sql + " WHERE TA.{} = TB.{}".format(table_key, table_key)
-        session.execute(sql)
-
-        # Delete items that do not exist
-        sql = "DELETE IGNORE FROM {}.{} WHERE {} NOT IN (SELECT {} FROM {}.{})".format(
-            form_schema, rel_table, rel_field, rel_field, form_schema, uid
+        update_insert_xml_from_lookup(
+            session,
+            form_insert_file,
+            form_schema,
+            rel_table,
+            columns,
+            identity,
+            rel_field_desc,
         )
-        session.execute(sql)
-
-        # Insert new items
-        sql = "INSERT IGNORE INTO {}.{} ({},{},".format(
-            form_schema, rel_table, table_key, rel_desc
-        )
-        for a_field in field_name_array:
-            sql = sql + a_field + ","
-        sql = sql[: len(sql) - 1] + ")"
-        sql = sql + " SELECT {},{},".format(table_key, rel_desc)
-        for a_field in field_name_array:
-            sql = sql + a_field + ","
-        sql = sql[: len(sql) - 1]
-        sql = sql + " FROM {}.{}".format(form_schema, uid)
-        session.execute(sql)
-
-        sql = "DROP TABLE {}.{}".format(form_schema, uid)
-        session.execute(sql)
-
         session.commit()
         engine.dispose()
 
         return True, ""
     except Exception as e:
-        if temp_table_created:
-            sql = "DROP TABLE {}.{}".format(form_schema, uid)
-            session.execute(sql)
-        session.commit()
+        session.rollback()
         engine.dispose()
         log.error(
             "Unable to upload lookup connected to GeoJSON. Error: {}".format(str(e))

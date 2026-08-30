@@ -151,10 +151,7 @@ def t_e_s_t_forms(test_object):
         status=302,
         upload_files=[("xlsx", resource_file)],
     )
-    if os.environ.get("USE_RSTOOLS", "false") == "false":
-        assert "FS_error" in res.headers
-    else:
-        assert "FS_error" not in res.headers
+    assert "FS_error" not in res.headers
 
     # Upload a form fails. Bad language
     paths = ["resources", "forms", "bad_language", "bad_language.xlsx"]
@@ -182,10 +179,7 @@ def t_e_s_t_forms(test_object):
         status=302,
         upload_files=[("xlsx", resource_file)],
     )
-    if os.environ.get("USE_RSTOOLS", "false") == "false":
-        assert "FS_error" in res.headers
-    else:
-        assert "FS_error" not in res.headers
+    assert "FS_error" not in res.headers
 
     # Upload a form that has select with "or other" fails.
 
@@ -472,10 +466,7 @@ def t_e_s_t_forms(test_object):
         status=302,
         upload_files=[("xlsx", resource_file)],
     )
-    if os.environ.get("USE_RSTOOLS", "false") == "false":
-        assert "FS_error" in res.headers
-    else:
-        assert "FS_error" not in res.headers
+    assert "FS_error" not in res.headers
 
     # Update a form fails. Tables with more than 64 characters
     paths = ["resources", "forms", "bad_size", "bad_size.xlsx"]
@@ -839,6 +830,44 @@ def t_e_s_t_forms(test_object):
         upload_files=[("filetoupload", resource_file)],
     )
     assert "FS_error" not in res.headers
+
+    # Posts the upload form without choosing a file. The browser still sends
+    # the part, with an empty file name, and storing it made a form file called
+    # "" that resolved to the storage directory rather than to a file in it -
+    # which took down the form's own page from then on, not just the upload.
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, "test001", "Justtest"
+        ),
+        status=302,
+        upload_files=[("filetoupload", "", b"")],
+    )
+    assert "FS_error" in res.headers
+
+    # The form still opens, and has not gained a file with no name.
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}".format(
+            test_object.randonLogin, "test001", "Justtest"
+        ),
+        status=200,
+    )
+    test_object.root.assertNotIn(b"/uploads//retrieve", res.body)
+
+    # And with no part at all, which is what a client that omits the field sends
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, "test001", "Justtest"
+        ),
+        status=302,
+    )
+    assert "FS_error" in res.headers
+
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}".format(
+            test_object.randonLogin, "test001", "Justtest"
+        ),
+        status=200,
+    )
 
     # Uploads the same file to the form
     paths = ["resources", "test1.dat"]

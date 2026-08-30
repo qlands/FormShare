@@ -76,12 +76,13 @@ class PartnerActivityView(PrivateView):
         if partner_details is None:
             raise HTTPNotFound
 
+        # We need to bring back the partner activity feeds. Empty for now
         return {
             "userid": user_id,
             "partnerid": partner_to_view,
             "partnerData": partner_details,
             "year": year,
-            "years": None,
+            "years": [],
             "feeds": [],
         }
 

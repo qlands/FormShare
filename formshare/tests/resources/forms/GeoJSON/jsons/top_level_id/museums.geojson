@@ -1,0 +1,20 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+      {
+          "type": "Feature",
+          "id": "fs87b",
+          "geometry": {
+              "type": "Point",
+              "coordinates": [
+                  7.0801379,
+                  46.5841618
+              ]
+          },
+          "properties": {
+              "title": "HR Giger Museum renamed",
+              "annual_visits": 42000
+          }
+      }
+  ]
+}

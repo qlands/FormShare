@@ -22,6 +22,10 @@ import pandas as pd
 import formshare.plugins as plugins
 from bs4 import BeautifulSoup
 from formshare.processes.color_hash import ColorHash
+from formshare.processes.odk.geojson import (
+    check_geojson,
+    update_lookup_from_geo_json,
+)
 from formshare.processes.db import (
     assistant_has_form,
     get_assistant_forms,
@@ -130,6 +134,8 @@ __all__ = [
     "import_external_data",
     "store_json_file",
     "check_jxform_file",
+    "describe_ambiguous_selects",
+    "ambiguous_selects_heading",
     "get_missing_support_files",
     "create_repository",
     "merge_versions",
@@ -407,6 +413,91 @@ def remove_column_from_array(column, array):
         pos = pos + 1
     if idx >= 0:
         array.pop(idx)
+
+
+def describe_ambiguous_selects(root, translate):
+    """
+    Say what JXFormToMySQL refused about a select, in the terms it refused it.
+
+    Exit code 9 covers two reports. The older one, <XMLDuplicatedSelects>, is a
+    list whose options repeat in a form that did not declare
+    allow_choice_duplicates, and "duplicated" is the right word for it. The
+    newer one, <XMLAmbiguousSelects>, is a repeat the schema cannot resolve,
+    and there "duplicated" is the wrong diagnosis: since schema 3.0 a repeated
+    option code is legal where a choice_filter tells the repeats apart. What is
+    wrong is named by the reason, and one of the four carries no repeated
+    option at all.
+
+    :param root: The parsed output of the tool
+    :param translate: The request's translator
+    :return: One message per question, empty if the report has neither shape
+    """
+    _ = translate
+    messages = []
+    for an_item in root.findall(".//ambiguousItem"):
+        variable_name = an_item.get("variableName")
+        options = ", ".join(
+            a_value.get("duplicatedValue")
+            for a_value in an_item.findall(".//duplicatedItem")
+        )
+        reason = an_item.get("reason")
+        if reason == "nocolumn":
+            messages.append(
+                _(
+                    'The choice_filter of "{}" names the column "{}", which the list it reads does not have'
+                ).format(variable_name, an_item.get("missingColumn"))
+            )
+        elif reason == "nofilter":
+            messages.append(
+                _(
+                    'The options {} of "{}" repeat, and it has no choice_filter to tell them apart'
+                ).format(options, variable_name)
+            )
+        elif reason == "weakfilter":
+            messages.append(
+                _(
+                    'The options {} of "{}" repeat, and its choice_filter does not tell them apart'
+                ).format(options, variable_name)
+            )
+        elif reason == "multiselect":
+            messages.append(
+                _(
+                    '"{}" is a multiple select over a list whose options {} repeat. A multiple select stores only the code, so the repeats cannot be resolved'
+                ).format(variable_name, options)
+            )
+        else:
+            messages.append(
+                _('The options {} of "{}" cannot be told apart').format(
+                    options, variable_name
+                )
+            )
+    if messages:
+        return messages
+    # The older report: a flat list of values, with no question to attach them
+    # to beyond the one each names.
+    for a_value in root.findall(".//duplicatedItem"):
+        messages.append(
+            _("Option {} in variable {}").format(
+                a_value.get("duplicatedValue"), a_value.get("variableName")
+            )
+        )
+    return messages
+
+
+def ambiguous_selects_heading(root, translate):
+    """
+    The line that introduces what describe_ambiguous_selects returned.
+
+    :param root: The parsed output of the tool
+    :param translate: The request's translator
+    :return: The heading, without a trailing newline
+    """
+    _ = translate
+    if root.find(".//ambiguousItem") is not None:
+        return _(
+            "The ODK you just submitted has selects whose options cannot be told apart:"
+        )
+    return _("The following options are duplicated in the ODK you just submitted:")
 
 
 def check_jxform_file(
@@ -890,29 +981,12 @@ def check_jxform_file(
                 + " ".join(args)
             )
             root = etree.fromstring(stdout)
-            duplicated_items = root.findall(".//duplicatedItem")
             message = (
                 _("FormShare thoroughly checks your ODK for inconsistencies.") + "\n"
             )
-            message = (
-                message
-                + _(
-                    "The following options are duplicated in the ODK you just submitted:"
-                )
-                + "\n"
-            )
-            if duplicated_items:
-                for a_item in duplicated_items:
-                    variable_name = a_item.get("variableName")
-                    duplicated_option = a_item.get("duplicatedValue")
-                    message = (
-                        message
-                        + "\t"
-                        + _("Option {} in variable {}").format(
-                            duplicated_option, variable_name
-                        )
-                        + "\n"
-                    )
+            message = message + ambiguous_selects_heading(root, _) + "\n"
+            for a_message in describe_ambiguous_selects(root, _):
+                message = message + "\t" + a_message + "\n"
             email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
                 user_id, project_id, form_id
             )
@@ -1109,7 +1183,8 @@ def check_jxform_file(
             return 29, message
         if p.returncode == 30:
             message = (
-                "The following GeoJSON file does not have the id or title columns: \n"
+                "The following GeoJSON file has features without an id. ODK reads the "
+                "top level id of a feature, or a property of that name: \n"
             )
             root = etree.fromstring(stdout)
             files_with_problems = root.findall(".//file")
@@ -1148,7 +1223,10 @@ def check_jxform_file(
             )
             return 31, message
         if p.returncode == 32:
-            message = "The following GeoJSON file has features that are not point: \n"
+            message = (
+                "The following GeoJSON file has features whose geometry ODK does not "
+                "read. It reads Point, LineString and Polygon: \n"
+            )
             root = etree.fromstring(stdout)
             files_with_problems = root.findall(".//file")
             if files_with_problems:
@@ -2585,6 +2663,32 @@ def is_csv_usable(file_path):
     return False
 
 
+def is_geojson_usable(file_path):
+    """
+    Whether a generated GeoJSON is worth putting in front of a device.
+
+    Only that it parses and is a feature collection with something in it.
+    Whether its features suit the lookup is check_geojson's question, and it
+    needs the form to answer it.
+
+    :param file_path: The file the plugin generated
+    :return: True if the file can be read
+    """
+    try:
+        with open(file_path) as a_file:
+            data = json.load(a_file)
+        if data.get("type", "") != "FeatureCollection":
+            log.error("{} is not a Feature Collection".format(file_path))
+            return False
+        if len(data.get("features", [])) == 0:
+            log.error("{} does not have features".format(file_path))
+            return False
+        return True
+    except Exception as e:
+        log.error("Unable to read {}. Error {}".format(file_path, str(e)))
+    return False
+
+
 def is_csv_a_select(request, project_id, form_id, file_name, file_path):
     csv_data = pd.read_csv(file_path)
     name, label = get_name_and_label_from_file(request, project_id, form_id, file_name)
@@ -2816,7 +2920,7 @@ def get_manifest(request, user, project, project_id, form):
                         if file_name.upper().find(".CSV") > 0:
                             file_is_usable = is_csv_usable(plugin_form_file)
                         if file_name.upper().find(".GEOJSON") > 0:
-                            pass  # We need to control GEOJSON formats
+                            file_is_usable = is_geojson_usable(plugin_form_file)
                         file_stats = os.stat(plugin_form_file)
                         if file_stats.st_size > 0 and file_is_usable:
                             plugin_file = open(plugin_form_file, "rb")
@@ -2906,7 +3010,51 @@ def get_manifest(request, user, project, project_id, form):
                                                             )
                                                         )
                                             if file_name.upper().find(".GEOJSON") > 0:
-                                                pass  # We need to implement GEOJSON
+                                                name, label = (
+                                                    get_name_and_label_from_file(
+                                                        request,
+                                                        project_id,
+                                                        form,
+                                                        file_name,
+                                                    )
+                                                )
+                                                file_ok, error_message = check_geojson(
+                                                    request,
+                                                    plugin_form_file,
+                                                    name,
+                                                    label,
+                                                )
+                                                if file_ok:
+                                                    form_xml_insert_file = (
+                                                        get_form_xml_insert_file(
+                                                            request, project_id, form
+                                                        )
+                                                    )
+                                                    result, message = (
+                                                        update_lookup_from_geo_json(
+                                                            request,
+                                                            user,
+                                                            project_id,
+                                                            form,
+                                                            form_schema,
+                                                            form_xml_insert_file,
+                                                            file_name,
+                                                            plugin_form_file,
+                                                        )
+                                                    )
+                                                else:
+                                                    result = False
+                                                    message = error_message
+                                                if not result:
+                                                    error = True
+                                                    log.error(
+                                                        "Error {} while updating lookup from file {}. "
+                                                        "Schema {}".format(
+                                                            message,
+                                                            plugin_form_file,
+                                                            form_schema,
+                                                        )
+                                                    )
                                     plugin_file_generated = True
                                 else:
                                     plugin_file.close()
@@ -2940,7 +3088,7 @@ def get_manifest(request, user, project, project_id, form):
                     if file_name.upper().find(".CSV") > 0:
                         file_is_usable = is_csv_usable(plugin_form_file)
                     if file_name.upper().find(".GEOJSON") > 0:
-                        pass  # We need to control GEOJSON formats
+                        file_is_usable = is_geojson_usable(plugin_form_file)
                     file_stats = os.stat(plugin_form_file)
                     if file_stats.st_size > 0 and file_is_usable:
                         plugin_file = open(plugin_form_file, "rb")
@@ -3023,7 +3171,43 @@ def get_manifest(request, user, project, project_id, form):
                                                         )
                                                     )
                                         if file_name.upper().find(".GEOJSON") > 0:
-                                            pass  # We need to implement GEOJSON
+                                            name, label = get_name_and_label_from_file(
+                                                request, project_id, form, file_name
+                                            )
+                                            file_ok, error_message = check_geojson(
+                                                request, plugin_form_file, name, label
+                                            )
+                                            if file_ok:
+                                                form_xml_insert_file = (
+                                                    get_form_xml_insert_file(
+                                                        request, project_id, form
+                                                    )
+                                                )
+                                                result, message = (
+                                                    update_lookup_from_geo_json(
+                                                        request,
+                                                        user,
+                                                        project_id,
+                                                        form,
+                                                        form_schema,
+                                                        form_xml_insert_file,
+                                                        file_name,
+                                                        plugin_form_file,
+                                                    )
+                                                )
+                                            else:
+                                                result = False
+                                                message = error_message
+                                            if not result:
+                                                error = True
+                                                log.error(
+                                                    "Error {} while updating lookup from file {}. "
+                                                    "Schema {}".format(
+                                                        message,
+                                                        plugin_form_file,
+                                                        form_schema,
+                                                    )
+                                                )
                                 plugin_file_generated = True
                             else:
                                 plugin_file.close()

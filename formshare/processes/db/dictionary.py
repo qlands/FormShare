@@ -1,8 +1,9 @@
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 import os
+import re
 import uuid
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 from sqlalchemy.orm.session import Session
 from formshare.models import DictTable, DictField, map_from_schema, map_to_schema
@@ -23,12 +24,434 @@ __all__ = [
     "get_name_and_label_from_file",
     "update_lookup_from_csv",
     "get_references_from_file",
+    "get_filter_columns_from_file",
+    "get_lookup_merge_fields",
+    "get_merge_columns",
+    "get_identity_join",
+    "merge_file_into_lookup",
+    "update_insert_xml_from_lookup",
+    "sql_column_type",
+    "find_source_column",
+    "fix_field_name",
+    "bindable_value",
+    "xml_attribute",
     "get_primary_keys",
     "get_lookup_relation_fields",
 ]
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
+
+
+def fix_field_name(name):
+    """
+    The column name RSTools makes of a CSV header or a GeoJSON property.
+
+    The authority is fixColumnName followed by fixField in
+    JXFormToMysql/main.cpp: lowercased and trimmed, a colon or a dash turned
+    into an underscore, then anything that is not a letter, a digit or an
+    underscore dropped. Matching the same way is what lets a header written
+    "Sub-Location" find the lookup column called sub_location.
+    :param name: A column of a CSV file or a property of a GeoJSON feature
+    :return: The name the column has in the lookup table
+    """
+    name = str(name).strip().lower().replace(":", "_").replace("-", "_")
+    return re.sub(r"[^a-z0-9_]", "", name)
+
+
+def find_source_column(lookup_column, available_columns):
+    """
+    The column of a replaced file that feeds one column of its lookup table
+    :param lookup_column: Name of the column in the lookup table
+    :param available_columns: The columns the file carries
+    :return: The name of the column in the file, or None if it has none
+    """
+    for a_column in available_columns:
+        if a_column == lookup_column:
+            return a_column
+    for a_column in available_columns:
+        if fix_field_name(a_column) == lookup_column:
+            return a_column
+    return None
+
+
+def sql_column_type(a_field):
+    """
+    The MySQL declaration of a lookup column, as RSTools writes it
+    :param a_field: A field as returned by get_dictionary_fields
+    :return: The type as it goes in a CREATE TABLE
+    """
+    field_type = a_field["field_type"]
+    if field_type == "varchar" or field_type == "int":
+        return "{}({})".format(field_type, a_field["field_size"])
+    if field_type == "decimal":
+        return "{}({},{})".format(
+            field_type, a_field["field_size"], a_field["field_decsize"]
+        )
+    return field_type
+
+
+def bindable_value(value):
+    """
+    A value read out of pandas or of JSON as something the driver can bind
+    :param value: The value as the file gave it
+    :return: The same value as a plain Python one
+    """
+    if isinstance(value, (dict, list)):
+        # A nested JSON value has no column of its own to go in. RSTools stores
+        # it as empty rather than as its text, so this does the same.
+        return ""
+    if hasattr(value, "item"):
+        return value.item()
+    return value
+
+
+def xml_attribute(value):
+    """
+    A value read from a lookup table as it goes into the insert XML file
+    :param value: The value as MySQL returned it
+    :return: The value as a string, empty when there is none
+    """
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+
+def get_lookup_merge_fields(request, project_id, form_id, rel_table, code_column):
+    """
+    The fields of a lookup table that a replaced file is allowed to write.
+
+    Three kinds are left out. The surrogate key, which MySQL assigns and which
+    exists precisely so that the code does not have to be unique. rowuuid,
+    which a trigger mints. And any generated column: a GeoJSON lookup derives
+    its geometry from geometry_json, and MySQL raises 3105 if anything gives
+    that column a value.
+
+    :param request: Pyramid request object
+    :param project_id: Project ID
+    :param form_id: Form ID
+    :param rel_table: Lookup table
+    :param code_column: The column holding the code of a choice
+    :return: Array of dict fields
+    """
+    fields = []
+    for a_field in get_dictionary_fields(request, project_id, form_id, rel_table):
+        if a_field["field_name"] == "rowuuid":
+            continue
+        if a_field.get("field_generatedas"):
+            continue
+        if a_field.get("field_autoincrement") == 1:
+            continue
+        if a_field["field_key"] == 1 and a_field["field_name"] != code_column:
+            continue
+        fields.append(a_field)
+    return fields
+
+
+def get_filter_columns_from_file(request, project_id, form_id, file_name):
+    """
+    The lookup columns that identify a choice, beyond its code.
+
+    Since schema format 3.0 a lookup is keyed by a surrogate and the index on
+    its code is not unique, so the code alone no longer names a row: "v001"
+    under one sub location and "v001" under another are two choices. What tells
+    them apart is the choice_filter, which RSTools records on the referencing
+    field as rfilter, in "lookupColumn:dataColumn" pairs separated by commas.
+    Only the lookup side of each pair matters here.
+
+    A list whose codes do not repeat has no filter and no extra columns, and
+    the code names the row on its own.
+
+    :param request: Pyramid request object
+    :param project_id: Project ID
+    :param form_id: Form ID
+    :param file_name: CSV or GeoJSON file
+    :return: Array of column names, empty when the code names the choice
+    """
+    res = (
+        request.dbsession.query(DictField.field_rfilter)
+        .filter(DictField.project_id == project_id)
+        .filter(DictField.form_id == form_id)
+        .filter(DictField.field_externalfilename == file_name)
+        .filter(DictField.field_rlookup == 1)
+        .first()
+    )
+    if res is None:
+        # Check if the file is linked to a multi_select
+        res = (
+            request.dbsession.query(DictField.table_name, DictField.field_name)
+            .filter(DictField.project_id == project_id)
+            .filter(DictField.form_id == form_id)
+            .filter(DictField.field_externalfilename == file_name)
+            .filter(DictField.field_odktype == "select all that apply")
+            .first()
+        )
+        if res is not None:
+            res = (
+                request.dbsession.query(DictField.field_rfilter)
+                .filter(DictField.project_id == project_id)
+                .filter(DictField.form_id == form_id)
+                .filter(
+                    DictField.table_name
+                    == "{}_msel_{}".format(res.table_name, res.field_name)
+                )
+                .filter(DictField.field_rlookup == 1)
+                .first()
+            )
+    if res is None or not res.field_rfilter:
+        return []
+    return [a_pair.split(":")[0] for a_pair in res.field_rfilter.split(",")]
+
+
+def get_identity_join(identity):
+    """
+    The condition that says a row of the file and a row of the lookup are the
+    same choice.
+
+    "<=>" rather than "=" so that a NULL matches a NULL, which is what a column
+    no file has ever filled looks like on both sides.
+
+    :param identity: The columns that name a choice
+    :return: The condition, with the lookup as TA and the file as TB
+    """
+    return " AND ".join("TA.{0} <=> TB.{0}".format(a_column) for a_column in identity)
+
+
+def get_merge_columns(
+    request, project_id, form_id, rel_table, rel_field, identity, file_columns, sources
+):
+    """
+    Work out which column of a replaced file feeds which column of its lookup.
+
+    Every column of the lookup is carried, not only the code and the
+    description: the columns a choice_filter names are what tell two choices
+    sharing a code apart, and a row inserted without them cannot be chosen in a
+    submission or resolved in an export.
+
+    :param request: Pyramid request object
+    :param project_id: Project ID
+    :param form_id: Form ID
+    :param rel_table: Lookup table
+    :param rel_field: The column holding the code of a choice
+    :param identity: The columns that name a choice
+    :param file_columns: The columns the file carries
+    :param sources: Mapping of lookup column to file column, already holding
+                    the ones the dictionary names rather than the file
+    :return: (fields, error message). fields is None when there is a message
+    """
+    fields = []
+    carried = []
+    for a_field in get_lookup_merge_fields(
+        request, project_id, form_id, rel_table, rel_field
+    ):
+        field_name = a_field["field_name"]
+        if field_name not in sources:
+            source = find_source_column(field_name, file_columns)
+            if source is None:
+                if a_field.get("field_notnull") == 1:
+                    # Left out, a row would reach a column that has no default
+                    # and cannot have one, and MySQL would discard the row and
+                    # report a warning rather than an error.
+                    return None, (
+                        "The file does not have the column '{}', which every "
+                        "option has to have".format(field_name)
+                    )
+                # A column the file no longer carries is left as it stands
+                # rather than overwritten with nothing. Unless it names the
+                # choice, in which case there is nothing safe to do but stop.
+                continue
+            sources[field_name] = source
+        fields.append(a_field)
+        carried.append(field_name)
+    for a_column in identity:
+        if a_column not in carried:
+            return None, (
+                "The file does not have the column '{}', which tells its "
+                "repeated options apart".format(a_column)
+            )
+    return fields, ""
+
+
+def merge_file_into_lookup(
+    session, user_id, form_schema, rel_table, columns, identity, rows
+):
+    """
+    Put the rows of a replaced CSV or GeoJSON into its lookup table.
+
+    Keyed on identity throughout. The code alone stopped naming a row when 3.0
+    made the key of a lookup a surrogate and left the index on its code
+    without UNIQUE, so joining on the code would carry one option's values onto
+    another option's row and INSERT IGNORE would append the whole file again.
+
+    A choice the file no longer carries stays where it is. Submissions may
+    already reference it, and since 3.0 the referential integrity guard raises
+    1451 for the whole delete rather than skipping the rows that are in use.
+
+    :param session: An open SQLAlchemy session
+    :param user_id: The user doing the upload, for the audit triggers
+    :param form_schema: Schema of the repository
+    :param rel_table: Lookup table
+    :param columns: The fields of the lookup this file may write
+    :param identity: The columns that name a choice
+    :param rows: One dict per row of the file, keyed by lookup column
+    """
+    uid = str(uuid.uuid4())
+    uid = "TMP_" + uid.replace("-", "_")
+    column_names = [a_field["field_name"] for a_field in columns]
+    session.execute(
+        "CREATE TABLE {}.{} ({})".format(
+            form_schema,
+            uid,
+            ",".join(
+                "{} {}".format(a_field["field_name"], sql_column_type(a_field))
+                for a_field in columns
+            ),
+        )
+    )
+    try:
+        session.execute(
+            "CREATE INDEX code_index ON {}.{} ({})".format(
+                form_schema, uid, identity[0]
+            )
+        )
+        insert = text(
+            "INSERT INTO {}.{} ({}) VALUES ({})".format(
+                form_schema,
+                uid,
+                ",".join(column_names),
+                ",".join(":" + a_column for a_column in column_names),
+            )
+        )
+        for a_row in rows:
+            session.execute(insert, a_row)
+
+        session.execute("SET @odktools_current_user = '" + user_id + "'")
+        join = get_identity_join(identity)
+
+        # Update the columns that do not name the choice, on the rows the file
+        # and the lookup agree are the same choice.
+        updatable = [a_column for a_column in column_names if a_column not in identity]
+        if updatable:
+            session.execute(
+                "UPDATE {}.{} TA, {}.{} TB SET {} WHERE {}".format(
+                    form_schema,
+                    rel_table,
+                    form_schema,
+                    uid,
+                    ",".join(
+                        "TA.{0} = TB.{0}".format(a_column) for a_column in updatable
+                    ),
+                    join,
+                )
+            )
+
+        # Insert the choices the lookup does not have yet, with every column
+        # the file gives them. Not INSERT IGNORE: there is no unique index left
+        # for it to skip anything on, and it is what turned a row MySQL refused
+        # into a silent success.
+        session.execute(
+            "INSERT INTO {}.{} ({}) SELECT {} FROM {}.{} TB"
+            " WHERE NOT EXISTS (SELECT 1 FROM {}.{} TA WHERE {})".format(
+                form_schema,
+                rel_table,
+                ",".join(column_names),
+                ",".join("TB." + a_column for a_column in column_names),
+                form_schema,
+                uid,
+                form_schema,
+                rel_table,
+                join,
+            )
+        )
+    except Exception:
+        # Rolled back here rather than by the caller, because the DROP below is
+        # DDL and MySQL commits the open transaction before running it. Left to
+        # the caller, an update that got as far as the UPDATE and then failed on
+        # the INSERT would be committed on the way out.
+        session.rollback()
+        raise
+    finally:
+        try:
+            session.execute("DROP TABLE {}.{}".format(form_schema, uid))
+        except Exception as e:
+            log.error(
+                "Unable to drop the temporary table {}.{}. Error: {}".format(
+                    form_schema, uid, str(e)
+                )
+            )
+
+
+def update_insert_xml_from_lookup(
+    session, form_insert_file, form_schema, rel_table, columns, identity, desc_column
+):
+    """
+    Bring the insert XML file back in step with the lookup table.
+
+    The file is what a repository is seeded from when it is built again, so a
+    choice that only ever reached the table would come back missing. A value is
+    matched the way the merge matches a row - on the code and on every column
+    the choice_filter names - and carries every column of the lookup, which is
+    what RSTools writes into it: the description under "description", and each
+    remaining column, geometry_json included, under its own name.
+
+    The merge is already committed by the time this runs, because creating and
+    dropping the temporary table it uses is DDL and MySQL commits around it. So
+    a failure here leaves the file a step behind the table rather than undoing
+    anything, and the next upload that succeeds puts it right.
+
+    :param session: An open SQLAlchemy session
+    :param form_insert_file: Path of the insert XML file
+    :param form_schema: Schema of the repository
+    :param rel_table: Lookup table
+    :param columns: The fields of the lookup this file may write
+    :param identity: The columns that name a choice
+    :param desc_column: The column holding the description of a choice
+    """
+    column_names = [a_field["field_name"] for a_field in columns]
+    lookup_rows = session.execute(
+        "SELECT {} FROM {}.{}".format(",".join(column_names), form_schema, rel_table)
+    ).fetchall()
+
+    parser = etree.XMLParser(remove_blank_text=True)
+    tree = etree.parse(form_insert_file, parser)
+
+    tables = tree.xpath('//table[@name="{}"]'.format(rel_table))
+    for a_table in tables:
+        curren_values = a_table.findall(".//value")
+        for a_lookup_row in lookup_rows:
+            values = dict(zip(column_names, a_lookup_row))
+            attributes = {"code": xml_attribute(values[identity[0]])}
+            for a_column in identity[1:]:
+                attributes[a_column] = xml_attribute(values[a_column])
+            others = {}
+            for a_column in column_names:
+                if a_column in identity:
+                    continue
+                if a_column == desc_column:
+                    others["description"] = xml_attribute(values[a_column])
+                else:
+                    others[a_column] = xml_attribute(values[a_column])
+            new_value_found = False
+            for a_current_value in curren_values:
+                matches = True
+                for an_attribute, a_value in attributes.items():
+                    if a_current_value.get(an_attribute, None) != a_value:
+                        matches = False
+                        break
+                if matches:
+                    new_value_found = True
+                    for an_attribute, a_value in others.items():
+                        a_current_value.set(an_attribute, a_value)
+            if not new_value_found:
+                new_element = etree.Element("value", attributes)
+                for an_attribute, a_value in others.items():
+                    new_element.set(an_attribute, a_value)
+                a_table.append(new_element)
+    tree.write(
+        form_insert_file, pretty_print=True, encoding="UTF-8", xml_declaration=True
+    )
 
 
 def update_lookup_from_csv(
@@ -42,126 +465,94 @@ def update_lookup_from_csv(
     dataframe,
     lookup_type,
 ):
-    uid = str(uuid.uuid4())
-    uid = "TMP_" + uid.replace("-", "_")
-    field_type, field_size = get_type_and_size_from_file(
+    rel_table, rel_field = get_references_from_file(
         request, project_id, form_id, file_name
     )
-    if field_type == "varchar":
-        sql = "CREATE TABLE {}.{} (var_code {}({}) PRIMARY KEY, var_label text)".format(
-            form_schema, uid, field_type, field_size
-        )
-    else:
-        sql = "CREATE TABLE {}.{} (var_code {} PRIMARY KEY, var_label text)".format(
-            form_schema, uid, field_type
-        )
+    rel_field_desc = rel_field.replace("_cod", "_des")
+    filter_columns = get_filter_columns_from_file(
+        request, project_id, form_id, file_name
+    )
+    identity = [rel_field] + filter_columns
+    name, label = get_name_and_label_from_file(request, project_id, form_id, file_name)
+
+    # The code and the description are named on the field itself. Every other
+    # column of the lookup was made out of a column of the file and carries its
+    # name, so it is looked for there.
+    sources = {rel_field: name}
+    if rel_field_desc != rel_field:
+        sources[rel_field_desc] = label
+    columns, message = get_merge_columns(
+        request,
+        project_id,
+        form_id,
+        rel_table,
+        rel_field,
+        identity,
+        dataframe.columns,
+        sources,
+    )
+    if columns is None:
+        return False, "{}. {}".format(file_name, message)
+
+    rows = []
+    seen = set()
+    for ind in dataframe.index:
+        a_row = {}
+        for a_field in columns:
+            a_column = a_field["field_name"]
+            a_row[a_column] = bindable_value(dataframe[sources[a_column]][ind])
+        code = a_row[rel_field]
+        if isinstance(code, str):
+            # RSTools stores a code with its apostrophes turned into backticks,
+            # so the lookup holds it that way and this has to ask for it that
+            # way.
+            code = code.replace("'", "`").replace('"', "")
+            a_row[rel_field] = code
+            if lookup_type == 2:
+                if code.find(" ") >= 0:
+                    return (
+                        False,
+                        '{} is used by a multi-select but it has spaces in the column "name"'.format(
+                            file_name
+                        ),
+                    )
+        if isinstance(a_row.get(rel_field_desc), str):
+            a_row[rel_field_desc] = a_row[rel_field_desc].replace('"', "")
+
+        # Two rows of a file naming the same choice cannot both be meant, and
+        # one of them would win the merge without saying so. A code repeating
+        # under different filter values is a different matter: that is what
+        # allow_choice_duplicates is for, and it is what the file is expected
+        # to hold.
+        key = tuple(str(a_row[a_column]) for a_column in identity)
+        if key in seen:
+            return False, "You have a duplicated option in {}: '{}'".format(
+                file_name, code
+            )
+        seen.add(key)
+        rows.append(a_row)
 
     sql_url = request.registry.settings.get("sqlalchemy.url")
     engine = create_engine(sql_url, poolclass=NullPool)
     session = Session(bind=engine)
-    temp_table_created = False
     try:
-        session.execute(sql)
-        temp_table_created = True
-        name, label = get_name_and_label_from_file(
-            request, project_id, form_id, file_name
+        merge_file_into_lookup(
+            session, user_id, form_schema, rel_table, columns, identity, rows
         )
-        for ind in dataframe.index:
-            code = dataframe[name][ind]
-            if isinstance(code, str):
-                code = code.replace("'", "`").replace('"', "")
-                if lookup_type == 2:
-                    if code.find(" ") >= 0:
-                        sql = "DROP TABLE {}.{}".format(form_schema, uid)
-                        session.execute(sql)
-                        return (
-                            False,
-                            '{} is used by a multi-select but it has spaces in the column "name"'.format(
-                                file_name
-                            ),
-                        )
-
-            value = dataframe[label][ind]
-            if isinstance(value, str):
-                value = value.replace('"', "")
-            sql = (
-                "INSERT INTO {}.{} (var_code, var_label) VALUES ('{}', \"{}\")".format(
-                    form_schema,
-                    uid,
-                    code,
-                    value,
-                )
-            )
-            session.execute(sql)
-
-        rel_table, rel_field = get_references_from_file(
-            request, project_id, form_id, file_name
+        update_insert_xml_from_lookup(
+            session,
+            form_insert_file,
+            form_schema,
+            rel_table,
+            columns,
+            identity,
+            rel_field_desc,
         )
-        rel_field_desc = rel_field.replace("_cod", "_des")
-
-        # Update the descriptions
-        session.execute("SET @odktools_current_user = '" + user_id + "'")
-        sql = "UPDATE {}.{} TA, {}.{} TB SET TA.{} = TB.var_label WHERE TA.{} = TB.var_code".format(
-            form_schema, rel_table, form_schema, uid, rel_field_desc, rel_field
-        )
-        session.execute(sql)
-
-        # Insert new items
-        sql = "INSERT IGNORE INTO {}.{} ({},{}) SELECT var_code, var_label FROM {}.{}".format(
-            form_schema, rel_table, rel_field, rel_field_desc, form_schema, uid
-        )
-        session.execute(sql)
-
-        sql = "DROP TABLE {}.{}".format(form_schema, uid)
-        session.execute(sql)
-        temp_table_created = False
-
-        sql = "SELECT {},{} FROM {}.{}".format(
-            rel_field, rel_field_desc, form_schema, rel_table
-        )
-        new_values = session.execute(sql).fetchall()
-
-        # Now we update the Insert XML file based on the values of the Lookup table
-        parser = etree.XMLParser(remove_blank_text=True)
-        tree = etree.parse(form_insert_file, parser)
-
-        tables = tree.xpath('//table[@name="{}"]'.format(rel_table))
-        for a_table in tables:
-            curren_values = a_table.findall(".//value")
-            for a_new_value in new_values:
-                new_value_found = False
-                new_value = a_new_value[0]
-                if isinstance(new_value, int):
-                    new_value = str(new_value)
-                for a_current_value in curren_values:
-                    if a_current_value.get("code", None) == new_value:
-                        new_value_found = True
-                        a_current_value.set("description", a_new_value[1])
-                if not new_value_found:
-                    new_element = etree.Element(
-                        "value", code=new_value, description=a_new_value[1]
-                    )
-                    a_table.append(new_element)
-        tree.write(
-            form_insert_file, pretty_print=True, encoding="UTF-8", xml_declaration=True
-        )
-
         session.commit()
         engine.dispose()
-
         return True, ""
-    except IntegrityError:
-        if temp_table_created:
-            sql = "DROP TABLE {}.{}".format(form_schema, uid)
-            session.execute(sql)
-        session.commit()
-        engine.dispose()
-        return False, "You have a duplicated option in {}".format(file_name)
     except Exception as e:
-        if temp_table_created:
-            sql = "DROP TABLE {}.{}".format(form_schema, uid)
-            session.execute(sql)
-        session.commit()
+        session.rollback()
         engine.dispose()
         log.error(
             "Unable to upload lookup connected to {}. Error: {}".format(
@@ -246,48 +637,6 @@ def get_references_from_file(request, project_id, form_id, file_name):
             )
             return res.field_rtable, res.field_rfield
     return res.field_rtable, res.field_rfield
-
-
-def get_type_and_size_from_file(request, project_id, form_id, file_name):
-    """
-    Return the size of the code column of a CSV file used by a form
-    :param request: Pyramid request object
-    :param project_id: Project ID
-    :param form_id: Form ID
-    :param file_name: CSV file
-    """
-    res = (
-        request.dbsession.query(DictField.field_type, DictField.field_size)
-        .filter(DictField.project_id == project_id)
-        .filter(DictField.form_id == form_id)
-        .filter(DictField.field_externalfilename == file_name)
-        .filter(DictField.field_rlookup == 1)
-        .first()
-    )
-    if res is None:
-        # Look for type and size in LookUp table
-        res = (
-            request.dbsession.query(DictField.table_name, DictField.field_name)
-            .filter(DictField.project_id == project_id)
-            .filter(DictField.form_id == form_id)
-            .filter(DictField.field_externalfilename == file_name)
-            .filter(DictField.field_odktype == "select all that apply")
-            .first()
-        )
-        if res is not None:
-            res = (
-                request.dbsession.query(DictField.field_type, DictField.field_size)
-                .filter(DictField.project_id == project_id)
-                .filter(DictField.form_id == form_id)
-                .filter(
-                    DictField.table_name
-                    == "{}_msel_{}".format(res.table_name, res.field_name)
-                )
-                .filter(DictField.field_rlookup == 1)
-                .first()
-            )
-            return res.field_type, res.field_size
-    return res.field_type, res.field_size
 
 
 def get_name_and_label_from_file(request, project_id, form_id, file_name):
@@ -567,6 +916,21 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
             field_key = 1
         else:
             field_key = 0
+        # Schema format 3.0. A lookup whose form declares allow_choice_duplicates
+        # is keyed by an autoincrement surrogate rather than by its code, and a
+        # GeoJSON lookup carries a geometry MySQL derives for itself. Neither may
+        # be written by a file update, so both are recorded here rather than
+        # guessed at later.
+        field_autoincrement = a_field.get("autoincrement", "false")
+        if field_autoincrement == "true":
+            field_autoincrement = 1
+        else:
+            field_autoincrement = 0
+        field_notnull = a_field.get("notnull", "false")
+        if field_notnull == "true":
+            field_notnull = 1
+        else:
+            field_notnull = 0
         field_sensitive = a_field.get("sensitive", "false")
         if field_sensitive == "true":
             field_sensitive = 1
@@ -594,6 +958,11 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
             "field_decsize": a_field.get("decsize", 0),
             "field_sensitive": field_sensitive,
             "field_protection": a_field.get("protection"),
+            "field_rfilter": a_field.get("rfilter"),
+            "field_generatedas": a_field.get("generatedas"),
+            "field_autoincrement": field_autoincrement,
+            "field_notnull": field_notnull,
+            "field_srid": a_field.get("srid"),
         }
         if a_field.get("selecttype") == "2":
             if new_field_dict["field_externalfilename"].upper().find(".CSV") == -1:

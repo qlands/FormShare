@@ -223,6 +223,21 @@ def update_dictionary_tables(
             field_key = 1
         else:
             field_key = 0
+        # Schema format 3.0. A lookup whose form declares allow_choice_duplicates
+        # is keyed by an autoincrement surrogate rather than by its code, and a
+        # GeoJSON lookup carries a geometry MySQL derives for itself. Neither may
+        # be written by a file update, so both are recorded here rather than
+        # guessed at later.
+        field_autoincrement = a_field.get("autoincrement", "false")
+        if field_autoincrement == "true":
+            field_autoincrement = 1
+        else:
+            field_autoincrement = 0
+        field_notnull = a_field.get("notnull", "false")
+        if field_notnull == "true":
+            field_notnull = 1
+        else:
+            field_notnull = 0
         field_sensitive = a_field.get("sensitive", "false")
         formshare_sensitive = a_field.get("formshare_sensitive", "no")
         if (
@@ -284,6 +299,11 @@ def update_dictionary_tables(
             "field_encrypted": field_encrypted,
             "field_unique": field_unique,
             "field_ontology": field_ontology,
+            "field_rfilter": a_field.get("rfilter"),
+            "field_generatedas": a_field.get("generatedas"),
+            "field_autoincrement": field_autoincrement,
+            "field_notnull": field_notnull,
+            "field_srid": a_field.get("srid"),
         }
         if a_field.get("selecttype") == "2":
             if new_field_dict["field_externalfilename"].upper().find(".CSV") == -1:

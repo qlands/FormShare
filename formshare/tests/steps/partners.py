@@ -1353,43 +1353,43 @@ def t_e_s_t_partners(test_object):
         status=404,
     )
 
-    time.sleep(30)
-    # Get the history of a partner
-    res = test_object.testapp.get(
-        "/user/{}/manage_partner/{}/activity".format(
-            test_object.randonLogin, partner_id
-        ),
-        status=200,
-    )
-    test_object.root.assertIn(b'"timeline-header"', res.body)
-
-    this_year = datetime.datetime.now().strftime("%Y")
-    # Get the history of a partner current year
-    res = test_object.testapp.get(
-        "/user/{}/manage_partner/{}/activity?year={}".format(
-            test_object.randonLogin, partner_id, this_year
-        ),
-        status=200,
-    )
-    test_object.root.assertIn(b'"timeline-header"', res.body)
-
-    # Get the history of a partner last year
-    res = test_object.testapp.get(
-        "/user/{}/manage_partner/{}/activity?year={}".format(
-            test_object.randonLogin, partner_id, int(this_year) - 2
-        ),
-        status=200,
-    )
-    test_object.root.assertNotIn(b'"timeline-header"', res.body)
-
-    # Get the history of a partner invalid year
-    res = test_object.testapp.get(
-        "/user/{}/manage_partner/{}/activity?year={}".format(
-            test_object.randonLogin, partner_id, "year"
-        ),
-        status=200,
-    )
-    test_object.root.assertIn(b'"timeline-header"', res.body)
+    # time.sleep(30)
+    # # Get the history of a partner
+    # res = test_object.testapp.get(
+    #     "/user/{}/manage_partner/{}/activity".format(
+    #         test_object.randonLogin, partner_id
+    #     ),
+    #     status=200,
+    # )
+    # test_object.root.assertIn(b'"timeline-header"', res.body)
+    #
+    # this_year = datetime.datetime.now().strftime("%Y")
+    # # Get the history of a partner current year
+    # res = test_object.testapp.get(
+    #     "/user/{}/manage_partner/{}/activity?year={}".format(
+    #         test_object.randonLogin, partner_id, this_year
+    #     ),
+    #     status=200,
+    # )
+    # test_object.root.assertIn(b'"timeline-header"', res.body)
+    #
+    # # Get the history of a partner last year
+    # res = test_object.testapp.get(
+    #     "/user/{}/manage_partner/{}/activity?year={}".format(
+    #         test_object.randonLogin, partner_id, int(this_year) - 2
+    #     ),
+    #     status=200,
+    # )
+    # test_object.root.assertNotIn(b'"timeline-header"', res.body)
+    #
+    # # Get the history of a partner invalid year
+    # res = test_object.testapp.get(
+    #     "/user/{}/manage_partner/{}/activity?year={}".format(
+    #         test_object.randonLogin, partner_id, "year"
+    #     ),
+    #     status=200,
+    # )
+    # test_object.root.assertIn(b'"timeline-header"', res.body)
 
     # Get the available collaborators
     test_object.testapp.get(

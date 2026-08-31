@@ -174,7 +174,12 @@ class FunctionalTests(unittest.TestCase):
         print("Testing projects")
         t_e_s_t_projects(self.test_object)
 
-        if os.environ.get("FORMSHARE_TEST_ENTITIES", "false") == "false":
+        # print("Testing offline entities")
+        # t_e_s_t_entities(self.test_object)
+
+        # ---We can use this to test certain parts of the suite
+        run_whole_suite = True
+        if run_whole_suite:
             print("Testing collaborators")
             t_e_s_t_collaborators(self.test_object)
             print("Testing assistants")
@@ -274,14 +279,13 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_case_management_start(self.test_object)
             print("Testing case management")
             t_e_s_t_case_management(self.test_object)
-        # Offline entities are off unless the deployment says otherwise, so a
-        # run that does not want them should not pay for them. The parts that
-        # need no server are in test_01_entities.py and always run.
+            # Offline entities are off unless the deployment says otherwise, so a
+            # run that does not want them should not pay for them. The parts that
+            # need no server are in test_01_entities.py and always run.
 
-        print("Testing offline entities")
-        t_e_s_t_entities(self.test_object)
+            print("Testing offline entities")
+            t_e_s_t_entities(self.test_object)
 
-        if os.environ.get("FORMSHARE_TEST_ENTITIES", "false") == "false":
             print("Testing assistant group access")
             t_e_s_t_group_assistant(self.test_object)
             print("Testing Delete form with repository")

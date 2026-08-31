@@ -80,7 +80,10 @@ from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_form,
 )
 from formshare.processes.email.send_email import send_error_to_technical_team
-from formshare.processes.odk.processes import update_form_repository_info
+from formshare.processes.odk.processes import (
+    update_form_repository_info,
+    get_form_case_params,
+)
 from formshare.processes.storage import (
     get_stream,
     response_stream,
@@ -2010,6 +2013,7 @@ def update_odk_form(
     form_caselabel=None,
     form_caseselector=None,
     form_casedatetime=None,
+    project_entities=0,
 ):
     _ = request.translate
     uid = str(uuid.uuid4())
@@ -2050,6 +2054,42 @@ def update_odk_form(
             and file_name.find(".xlsm") == -1
         ):
             return False, _("Invalid file type")
+
+        # A new version of a case creator form is declared the same way the
+        # version it replaces was. This route replaces a form that has no
+        # repository yet, so nothing in the database is at risk -- what is at
+        # risk is the feature. The declaration is FormShare's rather than the
+        # user's, and a replacement that arrives without one would go on to
+        # build its repository from a form that has quietly stopped making
+        # entities. A new version uploaded to merge into an existing
+        # repository goes through AddNewForm instead, which has declared it
+        # from the previous version all along.
+        #
+        # Same way means the same two cells. The dataset comes from the project
+        # code, which cannot change. The label variable comes from the form as
+        # it stands rather than from this request, so that a request which also
+        # renames the case label cannot make the two versions declare different
+        # things.
+        #
+        # Nothing is checked here on purpose. The declaration goes into the
+        # workbook and the rest of this function reads it like any other part
+        # of the form, so a new version that renamed the label variable out
+        # from under it is caught by pyxform, where every other broken
+        # reference is caught.
+        if int(project_entities or 0) == 1 and deployment_supports_entities(request):
+            stored_casetype, stored_caselabel, _selector, _datetime = (
+                get_form_case_params(request, project_id, for_form_id)
+            )
+            if int(project_case or 0) == 1 and int(stored_casetype or 0) == 1:
+                project_code = get_project_code_from_id(request, user_id, project_id)
+                declared, declare_message = inject_entity_declaration(
+                    file_name, case_list_name(project_code), stored_caselabel
+                )
+                if not declared:
+                    return False, _(
+                        "This project serves its cases as an entity list and the case "
+                        "creator form could not be prepared for it: {}"
+                    ).format(declare_message)
 
         xls2xform.xls2xform_convert(file_name, xml_file)
 
@@ -3874,6 +3914,7 @@ def store_json_file(
 
             # Second we pass the temporal JSON to jQ to order its elements
             # this will help later on if we want to compare between JSONs
+            print("Calling JQ for submission {}".format(submission_id))
             args = ["jq", "-S", ".", temp_json_file]
 
             final = open(ordered_json_file, "w")
@@ -3983,10 +4024,16 @@ def store_json_file(
                     if not continue_processing:
                         return 1, message
 
+                    print(
+                        "Calling JSONToMySQL for submission {} {}".format(
+                            submission_id, " ".join(args)
+                        )
+                    )
                     p = Popen(args, stdout=PIPE, stderr=PIPE)
                     stdout, stderr = p.communicate()
                     # An error 2 is an SQL error that goes to the logs
                     if p.returncode == 0 or p.returncode == 2:
+                        print("Storing submission {}".format(submission_id))
                         if project_has_crowdsourcing(request, project):
                             assistant_uuid = None
                         added, message = add_submission(
@@ -4223,6 +4270,7 @@ def store_json_file(
                 )
                 return 1, ""
     else:
+        print("Submission ID {} will not go into the repository".format(submission_id))
         # We compare the MD5Sum of the testing submissions so the
         # media files are stored in the proper way if ODK Collect
         # send the media files in separate submissions when such
@@ -4438,6 +4486,8 @@ def convert_xml_to_json(
         "-x " + xml_form_file,
     ]
     p = Popen(args, stdout=PIPE, stderr=PIPE)
+
+    print("Calling xml_to_json: {}".format(" ".join(args)))
     stdout, stderr = p.communicate()
     if p.returncode == 0:
         continue_processing = 0
@@ -4867,7 +4917,7 @@ def store_submission(request, user, project, assistant_uuid):
                                 return True, 201, ""
 
                             log.error(
-                                "Submission {} has will be processed by FormShare".format(
+                                "Submission {} will be processed by FormShare".format(
                                     unique_id
                                 )
                             )

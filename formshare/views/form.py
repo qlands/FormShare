@@ -154,6 +154,13 @@ def remove_column_from_array(column, array):
         array.pop(idx)
 
 
+# What the merge check may report and still let the merge go ahead: a field that
+# is new, a table that is new, and a description that changed, which the user is
+# asked to confirm separately. Everything else stops it, including a code added
+# to RSTools after this list was written.
+MERGE_ERRORS_THAT_ALLOW_A_MERGE = ["FNF", "TNF", "VNS"]
+
+
 class FormDetails(PrivateView):
     def report_critical_error(
         self, user, project, form, error_code, message
@@ -329,8 +336,17 @@ class FormDetails(PrivateView):
                         fatal_error = False
                         for a_error in xml_errors:
                             error_code = a_error.get("code")
+                            # Anything not named here stops the merge. The list
+                            # is of codes that describe a change a merge can
+                            # carry, not of codes that refuse one, because the
+                            # other way round a code this version has not heard
+                            # of left the form marked mergeable and said
+                            # nothing -- so a version RSTools had refused was
+                            # published as ready to merge.
+                            if error_code in MERGE_ERRORS_THAT_ALLOW_A_MERGE:
+                                continue
+                            fatal_error = True
                             if error_code == "TNS":
-                                fatal_error = True
                                 table_name = a_error.get("table")
                                 c_from = a_error.get("from")
                                 c_to = a_error.get("to")
@@ -342,9 +358,8 @@ class FormDetails(PrivateView):
                                         )
                                     )
                                 )
-                            if error_code == "TWP":  # pragma: no cover
+                            elif error_code == "TWP":  # pragma: no cover
                                 #  We leave it here just in case.. TWP might not be possible.
-                                fatal_error = True
                                 table_name = a_error.get("table")
                                 c_from = a_error.get("from")
                                 errors.append(
@@ -355,8 +370,7 @@ class FormDetails(PrivateView):
                                         )
                                     )
                                 )
-                            if error_code == "FNS":
-                                fatal_error = True
+                            elif error_code == "FNS":
                                 table_name = a_error.get("table")
                                 field_name = a_error.get("field")
                                 errors.append(
@@ -367,8 +381,7 @@ class FormDetails(PrivateView):
                                         )
                                     )
                                 )
-                            if error_code == "RNS":
-                                fatal_error = True
+                            elif error_code == "RNS":
                                 table_name = a_error.get("table")
                                 field_code = a_error.get("field")
                                 errors.append(
@@ -376,6 +389,26 @@ class FormDetails(PrivateView):
                                         'The variable "{}" in repeat "{}" has a different choice list name. '
                                         "You must rename the variable before merging. ".format(
                                             field_code, table_name
+                                        )
+                                    )
+                                )
+                            elif error_code == "ACD":
+                                errors.append(
+                                    self._(
+                                        'The form changed "allow_choice_duplicates" from "{}" to "{}". '
+                                        "It decides how the lookup tables are keyed and cannot change "
+                                        "once the repository exists. You must fix it in the Excel "
+                                        "file before merging.".format(
+                                            a_error.get("from"), a_error.get("to")
+                                        )
+                                    )
+                                )
+                            else:  # pragma: no cover
+                                errors.append(
+                                    self._(
+                                        "The new version cannot be merged into the existing "
+                                        'repository. The check reported "{}".'.format(
+                                            error_code
                                         )
                                     )
                                 )
@@ -1674,6 +1707,7 @@ class UploadNewVersion(PrivateView):
                 form_caselabel,
                 form_caseselector,
                 form_casedatetime,
+                project_details.get("project_entities", 0),
             )
 
             if updated:

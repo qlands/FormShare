@@ -379,6 +379,20 @@ class RepositoryMergeForm(PrivateView):
                                             )
                                         )
                                     )
+                                if error_code == "ACD":  # pragma: no cover
+                                    # Reached only by a form that got past the
+                                    # check, which refuses this. Here so the
+                                    # page says something if it ever does.
+                                    error_type = 2
+                                    errors.append(
+                                        self._(
+                                            'The form changed "allow_choice_duplicates" from "{}" to "{}". '
+                                            "It decides how the lookup tables are keyed and cannot change "
+                                            "once the repository exists.".format(
+                                                a_error.get("from"), a_error.get("to")
+                                            )
+                                        )
+                                    )
                     except Exception as e:
                         send_error_to_technical_team(
                             self.request,

@@ -131,6 +131,7 @@ def _get_project_owner(request, project):
         .filter(Userproject.access_type == 1)
         .filter(Project.project_archived == 0)
         .filter(Project.project_archiving == 0)
+        .filter(Project.project_restoring == 0)
         .first()
     )
     if res is not None:
@@ -147,6 +148,7 @@ def _check_my_access(request, user, project):
         .filter(Userproject.user_id == user)
         .filter(Project.project_archived == 0)
         .filter(Project.project_archiving == 0)
+        .filter(Project.project_restoring == 0)
         .first()
     )
     if res is not None:
@@ -629,6 +631,7 @@ def get_project_code_from_id(request, user, project_id):
         .filter(Userproject.access_type == 1)
         .filter(Project.project_archived == 0)
         .filter(Project.project_archiving == 0)
+        .filter(Project.project_restoring == 0)
         .first()
     )
     if res is not None:

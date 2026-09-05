@@ -66,6 +66,7 @@ def get_user_stats(request, user):
         .filter(Userproject.project_accepted == 1)
         .filter(Project.project_archived == 0)
         .filter(Project.project_archiving == 0)
+        .filter(Project.project_restoring == 0)
         .count(),
         "num_forms": request.dbsession.query(Odkform)
         .filter(Odkform.project_id == Userproject.project_id)
@@ -74,6 +75,7 @@ def get_user_stats(request, user):
         .filter(Userproject.project_accepted == 1)
         .filter(Project.project_archived == 0)
         .filter(Project.project_archiving == 0)
+        .filter(Project.project_restoring == 0)
         .count(),
     }
 
@@ -83,6 +85,7 @@ def get_user_stats(request, user):
         .filter(Userproject.user_id == user)
         .filter(Project.project_archived == 0)
         .filter(Project.project_archiving == 0)
+        .filter(Project.project_restoring == 0)
         .order_by(Project.project_cdate.desc())
         .first()
     )
@@ -98,6 +101,7 @@ def get_user_stats(request, user):
         .filter(Userproject.project_id == Project.project_id)
         .filter(Project.project_archived == 0)
         .filter(Project.project_archiving == 0)
+        .filter(Project.project_restoring == 0)
     )
     my_collaborators = map_from_schema(
         request.dbsession.query(User)
@@ -117,6 +121,7 @@ def get_user_stats(request, user):
         .filter(Userproject.project_accepted == 1)
         .filter(Project.project_archived == 0)
         .filter(Project.project_archiving == 0)
+        .filter(Project.project_restoring == 0)
     )
     collaborators = map_from_schema(
         request.dbsession.query(User)
@@ -266,6 +271,7 @@ def get_user_databases(request, user_id):
         .filter(Userproject.project_accepted == 1)
         .filter(Project.project_archived == 0)
         .filter(Project.project_archiving == 0)
+        .filter(Project.project_restoring == 0)
         .filter(Userproject.user_id == user_id)
         .filter(Odkform.form_schema.isnot(None))
         .order_by(Project.project_name)

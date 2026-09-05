@@ -62,12 +62,18 @@ def get_user_stats(request, user):
     res = {
         "num_projects": request.dbsession.query(Userproject)
         .filter(Userproject.user_id == user)
+        .filter(Userproject.project_id == Project.project_id)
         .filter(Userproject.project_accepted == 1)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .count(),
         "num_forms": request.dbsession.query(Odkform)
         .filter(Odkform.project_id == Userproject.project_id)
+        .filter(Userproject.project_id == Project.project_id)
         .filter(Userproject.user_id == user)
         .filter(Userproject.project_accepted == 1)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .count(),
     }
 
@@ -75,6 +81,8 @@ def get_user_stats(request, user):
         request.dbsession.query(Project.project_cdate)
         .filter(Project.project_id == Userproject.project_id)
         .filter(Userproject.user_id == user)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .order_by(Project.project_cdate.desc())
         .first()
     )
@@ -87,6 +95,9 @@ def get_user_stats(request, user):
         request.dbsession.query(Userproject.project_id)
         .filter(Userproject.user_id == user)
         .filter(Userproject.access_type == 1)
+        .filter(Userproject.project_id == Project.project_id)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
     )
     my_collaborators = map_from_schema(
         request.dbsession.query(User)
@@ -101,8 +112,11 @@ def get_user_stats(request, user):
     not_my_projects = (
         request.dbsession.query(Userproject.project_id)
         .filter(Userproject.user_id == user)
+        .filter(Userproject.project_id == Project.project_id)
         .filter(Userproject.access_type != 1)
         .filter(Userproject.project_accepted == 1)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
     )
     collaborators = map_from_schema(
         request.dbsession.query(User)
@@ -251,6 +265,7 @@ def get_user_databases(request, user_id):
         .filter(Odkform.project_id == Project.project_id)
         .filter(Userproject.project_accepted == 1)
         .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .filter(Userproject.user_id == user_id)
         .filter(Odkform.form_schema.isnot(None))
         .order_by(Project.project_name)

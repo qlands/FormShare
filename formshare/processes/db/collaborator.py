@@ -2,7 +2,7 @@ import datetime
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 
-from formshare.models import Userproject, User, map_from_schema
+from formshare.models import Userproject, User, Project, map_from_schema
 from sqlalchemy.exc import IntegrityError
 
 __all__ = [
@@ -24,8 +24,11 @@ def get_project_collaborators(request, project, current_user, retrieve_max=0):
         request.dbsession.query(User, Userproject)
         .filter(Userproject.user_id == User.user_id)
         .filter(Userproject.project_id == project)
+        .filter(Userproject.project_id == Project.project_id)
         .filter(Userproject.user_id != current_user)
         .filter(Userproject.project_accepted == 1)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .order_by(Userproject.access_date.desc())
         .all()
     )
@@ -59,6 +62,9 @@ def remove_collaborator_from_project(request, project, collaborator):
         active_project = (
             request.dbsession.query(Userproject)
             .filter(Userproject.user_id == collaborator)
+            .filter(Userproject.project_id == Project.project_id)
+            .filter(Project.project_archived == 0)
+            .filter(Project.project_archiving == 0)
             .filter(Userproject.project_active == 1)
             .first()
         )
@@ -66,6 +72,9 @@ def remove_collaborator_from_project(request, project, collaborator):
             last_project = (
                 request.dbsession.query(Userproject)
                 .filter(Userproject.user_id == collaborator)
+                .filter(Userproject.project_id == Project.project_id)
+                .filter(Project.project_archived == 0)
+                .filter(Project.project_archiving == 0)
                 .order_by(Userproject.access_date.desc())
                 .first()
             )
@@ -208,6 +217,9 @@ def get_collaboration_details(request, user_id, project_id):
         request.dbsession.query(Userproject)
         .filter(Userproject.user_id == user_id)
         .filter(Userproject.project_id == project_id)
+        .filter(Userproject.project_id == Project.project_id)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .first()
     )
     if res is not None:

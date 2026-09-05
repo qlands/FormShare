@@ -11,7 +11,14 @@ MAX_BYTES = MAX_MB * 1024 * 1024
 def send_bulk_to_es(payload, bulk_number):
     print("Sending bulk to ES of {} elements".format(bulk_number))
     headers = {"Content-Type": "application/x-ndjson"}
-    response = requests.post(f"{ES_HOST}/_bulk", headers=headers, data=payload)
+
+    auth = (
+        os.getenv("ES_USER", "change_me_admin"),
+        os.getenv("ES_PASSWORD", "change_me_admin"),
+    )
+    response = requests.post(
+        f"{ES_HOST}/_bulk", headers=headers, data=payload, auth=auth
+    )
     if response.status_code != 200 or response.json().get("errors"):
         print("❌ Error in bulk {} request: {}".format(bulk_number, response.text))
         exit(1)

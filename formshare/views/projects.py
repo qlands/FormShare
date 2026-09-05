@@ -36,6 +36,7 @@ from formshare.processes.db import (
     get_project_details,
     get_extended_project_details,
     get_user_projects,
+    get_user_archived_projects,
     get_forms_number,
 )
 from formshare.processes.elasticsearch.repository_index import (
@@ -93,7 +94,10 @@ class ProjectListView(ProjectsView):
 
         next_url = self.request.params.get("next", self.request.url)
         user_projects = get_user_projects(self.request, self.userID, self.userID)
-
+        archived_project = get_user_archived_projects(
+            self.request, self.userID, self.userID
+        )
+        user_projects = user_projects + archived_project
         return {"userProjects": user_projects, "next": next_url}
 
 

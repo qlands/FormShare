@@ -2,7 +2,7 @@ import datetime
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 import uuid
-
+from sqlalchemy import or_
 import dateutil.parser
 from formshare.models import (
     Project,
@@ -24,6 +24,7 @@ from sqlalchemy.exc import IntegrityError
 __all__ = [
     "get_project_id_from_name",
     "get_user_projects",
+    "get_user_archived_projects",
     "get_active_project",
     "add_project",
     "modify_project",
@@ -833,6 +834,8 @@ def get_project_id_from_name(request, user, project_code):
         .filter(Userproject.user_id == user)
         .filter(Project.project_code == project_code)
         .filter(Userproject.access_type == 1)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .first()
     )
     if res is not None:
@@ -856,6 +859,9 @@ def api_get_project_access_type(request, user, project_id):
         request.dbsession.query(Userproject.access_type)
         .filter(Userproject.user_id == user)
         .filter(Userproject.project_id == project_id)
+        .filter(Userproject.project_id == Project.project_id)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .first()
     )
     if res is not None:
@@ -871,6 +877,8 @@ def get_project_code_from_id(request, user, project_id):
         .filter(Userproject.user_id == user)
         .filter(Project.project_id == project_id)
         .filter(Userproject.access_type == 1)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .first()
     )
     if res is not None:
@@ -1020,6 +1028,9 @@ def get_project_owner(request, project):
     res = (
         request.dbsession.query(Userproject.user_id)
         .filter(Userproject.project_id == project)
+        .filter(Userproject.project_id == Project.project_id)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .filter(Userproject.access_type == 1)
         .first()
     )
@@ -1039,7 +1050,10 @@ def get_project_query_users(request, project_id):
         .distinct(Odkform.form_schema)
         .filter(Odkform.project_id == Userproject.project_id)
         .filter(Userproject.user_id == User.user_id)
+        .filter(Userproject.project_id == Project.project_id)
         .filter(Userproject.project_accepted == 1)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .filter(Odkform.project_id == project_id)
         .filter(Odkform.form_schema.isnot(None))
         .filter(User.user_query_user.isnot(None))
@@ -1077,6 +1091,9 @@ def is_collaborator(request, user, project, accepted_status=1):
         request.dbsession.query(Userproject.user_id)
         .filter(Userproject.project_id == project)
         .filter(Userproject.user_id == user)
+        .filter(Userproject.project_id == Project.project_id)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .filter(Userproject.project_accepted == accepted_status)
         .first()
     )
@@ -1090,8 +1107,11 @@ def get_owned_project(request, user):
     res = (
         request.dbsession.query(Project)
         .filter(Project.project_id == Userproject.project_id)
+        .filter(Userproject.project_id == Project.project_id)
         .filter(Userproject.user_id == user)
         .filter(Userproject.access_type == 1)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .all()
     )
     return map_from_schema(res)
@@ -1105,6 +1125,8 @@ def get_user_projects(request, user, logged_user):
             .filter(Project.project_id == Userproject.project_id)
             .filter(Userproject.user_id == user)
             .filter(Userproject.project_accepted == 1)
+            .filter(Project.project_archived == 0)
+            .filter(Project.project_archiving == 0)
             .order_by(Userproject.project_active.desc())
             .order_by(Project.project_cdate.desc())
             .all()
@@ -1119,6 +1141,8 @@ def get_user_projects(request, user, logged_user):
             request.dbsession.query(Project)
             .filter(Project.project_id == Userproject.project_id)
             .filter(Userproject.user_id == user)
+            .filter(Project.project_archived == 0)
+            .filter(Project.project_archiving == 0)
             .filter(Userproject.project_accepted == 1)
             .all()
         )
@@ -1130,6 +1154,8 @@ def get_user_projects(request, user, logged_user):
                 .filter(Project.project_id == Userproject.project_id)
                 .filter(Userproject.user_id == logged_user)
                 .filter(Userproject.project_id == project["project_id"])
+                .filter(Project.project_archived == 0)
+                .filter(Project.project_archiving == 0)
                 .filter(Userproject.project_accepted == 1)
                 .first()
             )
@@ -1183,6 +1209,62 @@ def get_user_projects(request, user, logged_user):
     return projects
 
 
+def get_user_archived_projects(request, user, logged_user):
+    if user == logged_user:
+        # The logged account is the user account = Seeing my projects
+        res = (
+            request.dbsession.query(Project, Userproject)
+            .filter(Project.project_id == Userproject.project_id)
+            .filter(Userproject.user_id == user)
+            .filter(Userproject.project_accepted == 1)
+            .filter(or_(Project.project_archived == 1, Project.project_archiving == 1))
+            .order_by(Userproject.project_active.desc())
+            .order_by(Project.project_cdate.desc())
+            .all()
+        )
+        projects = map_from_schema(res)
+    else:
+        projects = []
+        # The logged account is different as the user account =  Seeing someone else projects
+
+        # Get all the projects of that user
+        all_user_projects = (
+            request.dbsession.query(Project)
+            .filter(Project.project_id == Userproject.project_id)
+            .filter(Userproject.user_id == user)
+            .filter(or_(Project.project_archived == 1, Project.project_archiving == 1))
+            .filter(Userproject.project_accepted == 1)
+            .all()
+        )
+        all_user_projects = map_from_schema(all_user_projects)
+        for project in all_user_projects:
+            # Check each project to see if the logged user collaborate with it
+            res = (
+                request.dbsession.query(Project, Userproject)
+                .filter(Project.project_id == Userproject.project_id)
+                .filter(Userproject.user_id == logged_user)
+                .filter(Userproject.project_id == project["project_id"])
+                .filter(
+                    or_(Project.project_archived == 1, Project.project_archiving == 1)
+                )
+                .filter(Userproject.project_accepted == 1)
+                .first()
+            )
+            collaborative_project = map_from_schema(res)
+            if collaborative_project:
+                collaborative_project["collaborate"] = True
+                collaborative_project["user_id"] = user
+                projects.append(collaborative_project)
+
+    for project in projects:
+        project["project_archived_by"] = get_user_name(
+            request, project["project_archived_by"]
+        )
+
+    projects = sorted(projects, key=lambda prj: project["project_cdate"], reverse=True)
+    return projects
+
+
 def get_active_project(request, user):
     res = (
         request.dbsession.query(Project, Userproject)
@@ -1190,6 +1272,8 @@ def get_active_project(request, user):
         .filter(Userproject.user_id == user)
         .filter(Userproject.project_active == 1)
         .filter(Userproject.project_accepted == 1)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .first()
     )
     mapped_data = map_from_schema(res)
@@ -1201,6 +1285,9 @@ def get_active_project(request, user):
             res = (
                 request.dbsession.query(Userproject.user_id)
                 .filter(Userproject.project_id == mapped_data["project_id"])
+                .filter(Userproject.project_id == Project.project_id)
+                .filter(Project.project_archived == 0)
+                .filter(Project.project_archiving == 0)
                 .filter(Userproject.access_type == 1)
                 .first()
             )
@@ -1220,6 +1307,8 @@ def get_active_project(request, user):
             .filter(Project.project_id == Userproject.project_id)
             .filter(Userproject.user_id == user)
             .filter(Userproject.project_accepted == 1)
+            .filter(Project.project_archived == 0)
+            .filter(Project.project_archiving == 0)
             .first()
         )
         if res is not None:
@@ -1244,7 +1333,10 @@ def get_active_project(request, user):
                 res = (
                     request.dbsession.query(Userproject.user_id)
                     .filter(Userproject.project_id == mapped_data["project_id"])
+                    .filter(Userproject.project_id == Project.project_id)
                     .filter(Userproject.access_type == 1)
+                    .filter(Project.project_archived == 0)
+                    .filter(Project.project_archiving == 0)
                     .first()
                 )
                 if res is not None:
@@ -1350,12 +1442,18 @@ def delete_project(request, user, project):
             request.dbsession.query(Userproject)
             .filter(Userproject.user_id == user)
             .filter(Userproject.project_active == 1)
+            .filter(Userproject.project_id == Project.project_id)
+            .filter(Project.project_archived == 0)
+            .filter(Project.project_archiving == 0)
             .first()
         )
         if res is None:
             res = (
                 request.dbsession.query(Userproject)
                 .filter(Userproject.user_id == user)
+                .filter(Userproject.project_id == Project.project_id)
+                .filter(Project.project_archived == 0)
+                .filter(Project.project_archiving == 0)
                 .order_by(Userproject.access_date.desc())
                 .first()
             )
@@ -1466,6 +1564,9 @@ def get_project_details(request, project):
             request.dbsession.query(Userproject.user_id)
             .filter(Userproject.project_id == project)
             .filter(Userproject.access_type == 1)
+            .filter(Userproject.project_id == Project.project_id)
+            .filter(Project.project_archived == 0)
+            .filter(Project.project_archiving == 0)
             .first()
         )
         if res is not None:
@@ -1526,8 +1627,11 @@ def get_project_access_type(request, project_id, user_id, logged_user):
         res = (
             request.dbsession.query(Userproject.access_type)
             .filter(Userproject.project_id == project_id)
+            .filter(Userproject.project_id == Project.project_id)
             .filter(Userproject.user_id == logged_user)
             .filter(Userproject.project_accepted == 1)
+            .filter(Project.project_archived == 0)
+            .filter(Project.project_archiving == 0)
             .first()
         )
         if res is None:
@@ -1539,8 +1643,11 @@ def get_active_project_access_type(request, project_id, logged_user):
     res = (
         request.dbsession.query(Userproject.access_type)
         .filter(Userproject.project_id == project_id)
+        .filter(Userproject.project_id == Project.project_id)
         .filter(Userproject.user_id == logged_user)
         .filter(Userproject.project_accepted == 1)
+        .filter(Project.project_archived == 0)
+        .filter(Project.project_archiving == 0)
         .first()
     )
     if res is None:

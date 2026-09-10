@@ -31,6 +31,7 @@ from formshare.processes.db import (
     update_dictionary_field_sensitive,
     get_form_survey_columns,
     get_assistant_uuid,
+    get_lookup_desc_field,
 )
 from formshare.processes.elasticsearch.record_index import (
     delete_form_records,
@@ -934,7 +935,7 @@ def get_lookup_values(request, project, form, rtable, rfield):
         "SELECT "
         + rfield
         + ","
-        + rfield.replace("_cod", "_des")
+        + get_lookup_desc_field(rfield)
         + " FROM "
         + schema
         + "."
@@ -1276,7 +1277,7 @@ def get_lookup_options(
     key_data,
 ):
     schema = get_form_schema(request, project, form)
-    field_desc = lookup_field.replace("_cod", "_des")
+    field_desc = get_lookup_desc_field(lookup_field)
     key_array = []
     for key, value in key_data.items():
         key_array.append("{} = '{}'".format(key, value))

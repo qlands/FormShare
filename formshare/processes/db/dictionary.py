@@ -33,6 +33,7 @@ __all__ = [
     "sql_column_type",
     "find_source_column",
     "fix_field_name",
+    "get_lookup_desc_field",
     "bindable_value",
     "xml_attribute",
     "get_primary_keys",
@@ -57,6 +58,28 @@ def fix_field_name(name):
     """
     name = str(name).strip().lower().replace(":", "_").replace("-", "_")
     return re.sub(r"[^a-z0-9_]", "", name)
+
+
+def get_lookup_desc_field(code_field):
+    """
+    The description column of the lookup whose code column is code_field.
+
+    A lookup is named after its list: a list called cantons becomes lkpcantons
+    with cantons_cod and cantons_des. Only the suffix tells the two apart, and
+    it is the last four characters that do. Replacing every "_cod" in the name
+    also rewrites whatever earlier happens to be spelled the same way: a list
+    called hogar_codigo would ask for hogar_desigo_des, a column no lookup has,
+    and its labels would be left out with nothing said.
+
+    The authority is LookupColumns::descColumn in common/lookupcolumns.h of
+    RSTools. A name that does not end in _cod is not a code column and comes
+    back as it is: there is nothing to derive from it.
+    :param code_field: The code column of a lookup, as rfield names it in create.xml
+    :return: The description column of the same lookup
+    """
+    if not code_field.endswith("_cod"):
+        return code_field
+    return code_field[:-4] + "_des"
 
 
 def find_source_column(lookup_column, available_columns):
@@ -468,7 +491,7 @@ def update_lookup_from_csv(
     rel_table, rel_field = get_references_from_file(
         request, project_id, form_id, file_name
     )
-    rel_field_desc = rel_field.replace("_cod", "_des")
+    rel_field_desc = get_lookup_desc_field(rel_field)
     filter_columns = get_filter_columns_from_file(
         request, project_id, form_id, file_name
     )

@@ -4,6 +4,7 @@ from formshare.processes.logging.loggerclass import SecretLogger
 from formshare.processes.db.dictionary import (
     bindable_value,
     get_filter_columns_from_file,
+    get_lookup_desc_field,
     get_merge_columns,
     get_name_and_label_from_file,
     get_references_from_file,
@@ -124,7 +125,7 @@ def update_lookup_from_geo_json(
     rel_table, rel_field = get_references_from_file(
         request, project_id, form_id, file_name
     )
-    rel_field_desc = rel_field.replace("_cod", "_des")
+    rel_field_desc = get_lookup_desc_field(rel_field)
     filter_columns = get_filter_columns_from_file(
         request, project_id, form_id, file_name
     )

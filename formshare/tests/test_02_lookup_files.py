@@ -64,7 +64,21 @@ PLACES = [
     a_field("rowuuid", "varchar", 80),
 ]
 
-LOOKUPS = {"lkpvillages": VILLAGES, "lkpplace": PLACES}
+# A list whose name is spelled with _cod inside it, as a Spanish form writes
+# one: only the last four characters say which column is the code and which
+# the description.
+HOGAR_CODIGO = [
+    a_field("hogar_codigo_rowid", "int", 12, key=1, autoincrement=1),
+    a_field("hogar_codigo_cod", "varchar", 128),
+    a_field("hogar_codigo_des", "text"),
+    a_field("rowuuid", "varchar", 80),
+]
+
+LOOKUPS = {
+    "lkpvillages": VILLAGES,
+    "lkpplace": PLACES,
+    "lkphogar_codigo": HOGAR_CODIGO,
+}
 
 
 class RecordingSession(object):
@@ -330,6 +344,32 @@ def test_a_list_with_no_filter_merges_on_its_code(lookup, insert_file):
     assert session.statements_starting("UPDATE")[0].endswith(
         "WHERE TA.villages_cod <=> TB.villages_cod"
     )
+
+
+def test_a_list_spelled_with_cod_inside_its_name_keeps_its_description(
+    lookup, insert_file
+):
+    """hogar_codigo becomes hogar_codigo_cod and hogar_codigo_des. Deriving
+    the description column by replacing every _cod asked for hogar_desigo_des,
+    which no lookup has, so the labels were quietly left out of the merge."""
+    session = lookup(
+        "lkphogar_codigo", "hogar_codigo_cod", [], "name", "label", select_rows=[]
+    )
+    result, message = dictionary.update_lookup_from_csv(
+        FakeRequest(),
+        "auser",
+        "aproject",
+        "aform",
+        "myschema",
+        insert_file("lkphogar_codigo", []),
+        "hogares.csv",
+        villages_csv([{"name": "h001", "label": "Casa Ntemba"}]),
+        1,
+    )
+    assert (result, message) == (True, "")
+    assert session.bound == [
+        {"hogar_codigo_cod": "h001", "hogar_codigo_des": "Casa Ntemba"}
+    ]
 
 
 def test_a_multiselect_still_refuses_a_code_with_spaces(lookup, insert_file):
@@ -636,6 +676,20 @@ def test_a_lookup_column_is_found_under_the_name_the_file_gives_it():
         == "Sub-Location"
     )
     assert dictionary.find_source_column("missing", ["name"]) is None
+
+
+def test_the_description_column_is_named_by_its_suffix_alone():
+    """A list may be called anything, including a word spelled with _cod or
+    _des inside it. The authority is LookupColumns::descColumn in RSTools: the
+    last four characters are swapped, and a name that does not end in _cod is
+    not a code column and comes back as it is."""
+    assert dictionary.get_lookup_desc_field("villages_cod") == "villages_des"
+    assert dictionary.get_lookup_desc_field("hogar_codigo_cod") == "hogar_codigo_des"
+    assert (
+        dictionary.get_lookup_desc_field("form_description_cod")
+        == "form_description_des"
+    )
+    assert dictionary.get_lookup_desc_field("villages_rowid") == "villages_rowid"
 
 
 def test_a_derived_or_assigned_column_is_never_written(monkeypatch):

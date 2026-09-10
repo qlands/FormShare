@@ -3,7 +3,7 @@ version: 2
 jobs:
   py-3.13:
     docker:
-      - image: qlands/odktools_circleci:20260829
+      - image: qlands/odktools_circleci:20260910
         environment:
           - ELASTIC_USER=elastic
           - ELASTIC_PASSWORD=RxlCXBATIkd8meZ97XH8z

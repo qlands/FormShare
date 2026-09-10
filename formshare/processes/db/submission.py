@@ -3,9 +3,13 @@ import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 
 from formshare.models import Submission
-from sqlalchemy.exc import IntegrityError
 
-__all__ = ["get_submission_data", "add_submission", "add_submission_same_as"]
+__all__ = [
+    "get_submission_data",
+    "add_submission",
+    "add_submission_same_as",
+    "update_submission_size",
+]
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -23,6 +27,13 @@ def get_submission_data(request, project, form, original_md5sum):
     return res
 
 
+def update_submission_size(request, submission_id, submission_size):
+    request.dbsession.query(Submission).filter(
+        Submission.submission_id == submission_id
+    ).update({"submission_size": submission_size})
+    request.dbsession.commit()
+
+
 def add_submission(
     request,
     project,
@@ -32,6 +43,7 @@ def add_submission(
     md5sum,
     original_md5sum,
     status,
+    submission_size=0,
 ):
     new_submission = Submission(
         submission_id=submission,
@@ -42,6 +54,7 @@ def add_submission(
         coll_uuid=assistant_uuid,
         md5sum=md5sum,
         original_md5sum=original_md5sum,
+        submission_size=submission_size,
     )
     try:
         request.dbsession.add(new_submission)

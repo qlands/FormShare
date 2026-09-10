@@ -3,9 +3,6 @@ import glob
 import io
 import json
 import logging
-
-from validators import email
-
 from formshare.processes.logging.loggerclass import SecretLogger
 import mimetypes
 import os
@@ -70,7 +67,7 @@ from formshare.processes.db import (
     get_form_xml_insert_file,
     update_lookup_from_csv,
     update_media_lastgen,
-    get_assistant_uuid,
+    update_submission_size,
 )
 from formshare.processes.elasticsearch.record_index import (
     add_record,
@@ -89,7 +86,6 @@ from formshare.processes.storage import (
     response_stream,
     store_file,
     delete_stream,
-    get_temporary_directory,
 )
 from formshare.products.fs1import.fs1import import formshare_one_import_json
 from formshare.products.repository import create_database_repository
@@ -104,7 +100,6 @@ from pyxform.xls2json import parse_file_to_json
 from formshare.processes.odk.entities import (
     deployment_supports_entities,
     case_list_name,
-    case_list_file_name,
     wrong_case_selector_file,
     inject_entity_declaration,
 )
@@ -3834,6 +3829,29 @@ def set_rowuuid_from_entity(submission_data):
         submission_data["rowuuid"] = entity_id
 
 
+def get_directory_size(path):
+    total = 0
+    stack = [path]
+    while stack:
+        current = stack.pop()
+        try:
+            entries = os.scandir(current)
+        except OSError:
+            continue
+        with entries:
+            for entry in entries:
+                try:
+                    # is_dir/is_file use the type readdir already returned, so
+                    # they are free; only entry.stat() costs a syscall.
+                    if entry.is_dir(follow_symlinks=False):
+                        stack.append(entry.path)
+                    elif entry.is_file(follow_symlinks=False):
+                        total += entry.stat(follow_symlinks=False).st_size
+                except OSError:
+                    continue
+    return total
+
+
 def store_json_file(
     request,
     submission_id,
@@ -3914,7 +3932,7 @@ def store_json_file(
 
             # Second we pass the temporal JSON to jQ to order its elements
             # this will help later on if we want to compare between JSONs
-            print("Calling JQ for submission {}".format(submission_id))
+            # print("Calling JQ for submission {}".format(submission_id))
             args = ["jq", "-S", ".", temp_json_file]
 
             final = open(ordered_json_file, "w")
@@ -4033,7 +4051,76 @@ def store_json_file(
                     stdout, stderr = p.communicate()
                     # An error 2 is an SQL error that goes to the logs
                     if p.returncode == 0 or p.returncode == 2:
-                        print("Storing submission {}".format(submission_id))
+
+                        # Account the submission media
+                        submission_directory = os.path.join(
+                            odk_dir,
+                            *[
+                                "forms",
+                                xform_directory,
+                                "submissions",
+                                submission_id,
+                            ]
+                        )
+                        bytes_used = get_directory_size(submission_directory)
+
+                        # Account the original submission from Collect
+                        submission_file = os.path.join(
+                            odk_dir,
+                            *[
+                                "forms",
+                                xform_directory,
+                                "submissions",
+                                submission_id + ".xml",
+                            ]
+                        )
+                        if os.path.exists(submission_file):
+                            file_stats = os.stat(submission_file)
+                            bytes_used = bytes_used + file_stats.st_size
+
+                        # Account the original JSON transformation
+                        submission_file = os.path.join(
+                            odk_dir,
+                            *[
+                                "forms",
+                                xform_directory,
+                                "submissions",
+                                submission_id + ".original.json",
+                            ]
+                        )
+                        if os.path.exists(submission_file):
+                            file_stats = os.stat(submission_file)
+                            bytes_used = bytes_used + file_stats.st_size
+
+                        # Account the ordered JSON transformation
+                        submission_file = os.path.join(
+                            odk_dir,
+                            *[
+                                "forms",
+                                xform_directory,
+                                "submissions",
+                                submission_id + ".ordered.json",
+                            ]
+                        )
+                        if os.path.exists(submission_file):
+                            file_stats = os.stat(submission_file)
+                            bytes_used = bytes_used + file_stats.st_size
+
+                        # Account the JSON transformation
+                        submission_file = os.path.join(
+                            odk_dir,
+                            *[
+                                "forms",
+                                xform_directory,
+                                "submissions",
+                                submission_id + ".json",
+                            ]
+                        )
+                        if os.path.exists(submission_file):
+                            file_stats = os.stat(submission_file)
+                            bytes_used = bytes_used + file_stats.st_size
+
+                        # print("Storing submission {}".format(submission_id))
                         if project_has_crowdsourcing(request, project):
                             assistant_uuid = None
                         added, message = add_submission(
@@ -4045,6 +4132,7 @@ def store_json_file(
                             md5sum,
                             original_md5,
                             p.returncode,
+                            bytes_used,
                         )
 
                         if not added:
@@ -4241,6 +4329,76 @@ def store_json_file(
                         odk_dir, xform_directory, submission_id, sameas.submission_id
                     )
 
+                    # Account for the media files
+                    submission_directory = os.path.join(
+                        odk_dir,
+                        *[
+                            "forms",
+                            xform_directory,
+                            "submissions",
+                            sameas.submission_id,
+                        ]
+                    )
+                    bytes_used = get_directory_size(submission_directory)
+
+                    # Account the XML from Collect
+                    submission_file = os.path.join(
+                        odk_dir,
+                        *[
+                            "forms",
+                            xform_directory,
+                            "submissions",
+                            sameas.submission_id + ".xml",
+                        ]
+                    )
+                    if os.path.exists(submission_file):
+                        file_stats = os.stat(submission_file)
+                        bytes_used = bytes_used + file_stats.st_size
+
+                    # Account the original JSON transformation
+                    submission_file = os.path.join(
+                        odk_dir,
+                        *[
+                            "forms",
+                            xform_directory,
+                            "submissions",
+                            sameas.submission_id + ".original.json",
+                        ]
+                    )
+                    if os.path.exists(submission_file):
+                        file_stats = os.stat(submission_file)
+                        bytes_used = bytes_used + file_stats.st_size
+
+                    # Account the ordered JSON transformation
+                    submission_file = os.path.join(
+                        odk_dir,
+                        *[
+                            "forms",
+                            xform_directory,
+                            "submissions",
+                            sameas.submission_id + ".ordered.json",
+                        ]
+                    )
+                    if os.path.exists(submission_file):
+                        file_stats = os.stat(submission_file)
+                        bytes_used = bytes_used + file_stats.st_size
+
+                    # Account the JSON transformation
+                    submission_file = os.path.join(
+                        odk_dir,
+                        *[
+                            "forms",
+                            xform_directory,
+                            "submissions",
+                            sameas.submission_id + ".json",
+                        ]
+                    )
+                    if os.path.exists(submission_file):
+                        file_stats = os.stat(submission_file)
+                        bytes_used = bytes_used + file_stats.st_size
+
+                    update_submission_size(request, sameas.submission_id, bytes_used)
+
                     for a_plugin in plugins.PluginImplementations(
                         plugins.IJSONSubmission
                     ):
@@ -4269,8 +4427,14 @@ def store_json_file(
                     + " ".join(args)
                 )
                 return 1, ""
+        else:
+            log.error(
+                "Schema is black while processing submission {} in form {} of project {}".format(
+                    submission_id, form, project
+                )
+            )
     else:
-        print("Submission ID {} will not go into the repository".format(submission_id))
+        # print("Submission ID {} will not go into the repository".format(submission_id))
         # We compare the MD5Sum of the testing submissions so the
         # media files are stored in the proper way if ODK Collect
         # send the media files in separate submissions when such
@@ -4487,7 +4651,7 @@ def convert_xml_to_json(
     ]
     p = Popen(args, stdout=PIPE, stderr=PIPE)
 
-    print("Calling xml_to_json: {}".format(" ".join(args)))
+    # print("Calling xml_to_json: {}".format(" ".join(args)))
     stdout, stderr = p.communicate()
     if p.returncode == 0:
         continue_processing = 0

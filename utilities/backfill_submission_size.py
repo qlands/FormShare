@@ -85,7 +85,11 @@ def submission_bytes(submissions_dir, submission_id):
 def human(num):
     for unit in ("B", "KB", "MB", "GB", "TB"):
         if abs(num) < 1000 or unit == "TB":
-            return "{:,.0f}{}".format(num, unit) if unit == "B" else "{:,.1f}{}".format(num, unit)
+            return (
+                "{:,.0f}{}".format(num, unit)
+                if unit == "B"
+                else "{:,.1f}{}".format(num, unit)
+            )
         num /= 1000.0
 
 
@@ -153,8 +157,11 @@ def main():
         print("Nothing to do.")
         return
 
-    print("{} submission(s) to {}".format(
-        len(rows), "verify" if args.verify else "measure"))
+    print(
+        "{} submission(s) to {}".format(
+            len(rows), "verify" if args.verify else "measure"
+        )
+    )
     print("repository: {}\n".format(repo_path))
 
     started = time.perf_counter()
@@ -165,7 +172,13 @@ def main():
     missing_dirs = set()
     worst = []
 
-    for index, (project_id, form_id, submission_id, stored, form_directory) in enumerate(rows, 1):
+    for index, (
+        project_id,
+        form_id,
+        submission_id,
+        stored,
+        form_directory,
+    ) in enumerate(rows, 1):
         if not form_directory:
             missing_dirs.add((project_id, form_id))
             continue
@@ -192,16 +205,20 @@ def main():
                 else:
                     shrank += 1
         elif size != stored:
-            updates.append({"size": size, "pid": project_id, "fid": form_id,
-                            "sid": submission_id})
+            updates.append(
+                {"size": size, "pid": project_id, "fid": form_id, "sid": submission_id}
+            )
         if index % 2000 == 0:
             sys.stderr.write("\r  {}/{} ...".format(index, len(rows)))
             sys.stderr.flush()
     sys.stderr.write("\r\033[K")
     elapsed = time.perf_counter() - started
 
-    print("measured {} submission(s) in {:.1f}s, {} total".format(
-        measured, elapsed, human(total_bytes)))
+    print(
+        "measured {} submission(s) in {:.1f}s, {} total".format(
+            measured, elapsed, human(total_bytes)
+        )
+    )
     if empty:
         print("  {} measured as 0 - their files are not on disk".format(empty))
     if missing_dirs:
@@ -210,14 +227,22 @@ def main():
     if args.verify:
         print("\n--- verify ---")
         print("  {} agree exactly with what FormShare recorded".format(unchanged))
-        print("  {} differ: {} larger, {} smaller, {} with no files left".format(
-            mismatched, grew, shrank, gone))
+        print(
+            "  {} differ: {} larger, {} smaller, {} with no files left".format(
+                mismatched, grew, shrank, gone
+            )
+        )
         for sid, stored, size in worst:
-            print("    {}  stored {:>14,}  measured {:>14,}  delta {:>+14,}".format(
-                sid[:36], stored, size, size - stored))
+            print(
+                "    {}  stored {:>14,}  measured {:>14,}  delta {:>+14,}".format(
+                    sid[:36], stored, size, size - stored
+                )
+            )
         if mismatched:
             print()
-            print("  A difference does not necessarily mean this disagrees with api.py.")
+            print(
+                "  A difference does not necessarily mean this disagrees with api.py."
+            )
             print("  submission_size is written once when the submission arrives and")
             print("  never revisited, so it goes stale as soon as the files change:")
             print()
@@ -251,7 +276,7 @@ def main():
     )
     try:
         for start in range(0, len(updates), args.batch):
-            chunk = updates[start:start + args.batch]
+            chunk = updates[start : start + args.batch]
             transaction = connection.begin()
             connection.execute(update_sql, chunk)
             transaction.commit()
@@ -259,11 +284,16 @@ def main():
             sys.stderr.write("\r  {}/{} written".format(written, len(updates)))
             sys.stderr.flush()
         sys.stderr.write("\r\033[K")
-        print("done: {} row(s) updated, {} accounted for".format(
-            written, human(total_bytes)))
+        print(
+            "done: {} row(s) updated, {} accounted for".format(
+                written, human(total_bytes)
+            )
+        )
     except Exception as e:
-        sys.exit("\nstopped after {} row(s): {}\nRe-running resumes where it "
-                 "left off, since only rows at 0 are selected.".format(written, e))
+        sys.exit(
+            "\nstopped after {} row(s): {}\nRe-running resumes where it "
+            "left off, since only rows at 0 are selected.".format(written, e)
+        )
     finally:
         connection.close()
 

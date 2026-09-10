@@ -32,13 +32,14 @@ def add_submission(
     md5sum,
     original_md5,
     status,
+    submission_size=0,
 ):
     try:
         if assistant_uuid != "public":
             engine.execute(
                 "INSERT INTO submission (project_id,form_id,submission_id,submission_dtime,submission_status,"
-                "coll_uuid,md5sum,original_md5sum)"
-                " VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                "coll_uuid,md5sum,original_md5sum,submission_size)"
+                " VALUES ('{}','{}','{}','{}','{}','{}','{}','{}',{})".format(
                     project,
                     form,
                     submission,
@@ -47,13 +48,14 @@ def add_submission(
                     assistant_uuid,
                     md5sum,
                     original_md5,
+                    submission_size,
                 )
             )
         else:
             engine.execute(
                 "INSERT INTO submission (project_id,form_id,submission_id,submission_dtime,submission_status,"
-                "coll_uuid,md5sum,original_md5sum)"
-                " VALUES ('{}','{}','{}','{}','{}',null,'{}','{}')".format(
+                "coll_uuid,md5sum,original_md5sum,submission_size)"
+                " VALUES ('{}','{}','{}','{}','{}',null,'{}','{}',{})".format(
                     project,
                     form,
                     submission,
@@ -61,6 +63,7 @@ def add_submission(
                     status,
                     md5sum,
                     original_md5,
+                    submission_size,
                 )
             )
     except Exception as e:
@@ -136,6 +139,29 @@ def get_assistant_name(engine, assistant_uuid):
             return row[0]
     else:
         return assistant_uuid
+
+
+def get_directory_size(path):
+    total = 0
+    stack = [path]
+    while stack:
+        current = stack.pop()
+        try:
+            entries = os.scandir(current)
+        except OSError:
+            continue
+        with entries:
+            for entry in entries:
+                try:
+                    # is_dir/is_file use the type readdir already returned, so
+                    # they are free; only entry.stat() costs a syscall.
+                    if entry.is_dir(follow_symlinks=False):
+                        stack.append(entry.path)
+                    elif entry.is_file(follow_symlinks=False):
+                        total += entry.stat(follow_symlinks=False).st_size
+                except OSError:
+                    continue
+    return total
 
 
 def store_json_file(
@@ -307,6 +333,74 @@ def store_json_file(
         stdout, stderr = p.communicate()
         # An error 2 is an SQL error that goes to the logs
         if p.returncode == 0 or p.returncode == 2:
+
+            submission_directory = os.path.join(
+                odk_dir,
+                *[
+                    "forms",
+                    xform_directory,
+                    "submissions",
+                    submission_id,
+                ]
+            )
+            bytes_used = get_directory_size(submission_directory)
+
+            # Account the original submission from Collect
+            submission_file = os.path.join(
+                odk_dir,
+                *[
+                    "forms",
+                    xform_directory,
+                    "submissions",
+                    submission_id + ".xml",
+                ]
+            )
+            if os.path.exists(submission_file):
+                file_stats = os.stat(submission_file)
+                bytes_used = bytes_used + file_stats.st_size
+
+            # Account the original JSON transformation
+            submission_file = os.path.join(
+                odk_dir,
+                *[
+                    "forms",
+                    xform_directory,
+                    "submissions",
+                    submission_id + ".original.json",
+                ]
+            )
+            if os.path.exists(submission_file):
+                file_stats = os.stat(submission_file)
+                bytes_used = bytes_used + file_stats.st_size
+
+            # Account the ordered JSON transformation
+            submission_file = os.path.join(
+                odk_dir,
+                *[
+                    "forms",
+                    xform_directory,
+                    "submissions",
+                    submission_id + ".ordered.json",
+                ]
+            )
+            if os.path.exists(submission_file):
+                file_stats = os.stat(submission_file)
+                bytes_used = bytes_used + file_stats.st_size
+
+            # Account the JSON transformation
+            submission_file = os.path.join(
+                odk_dir,
+                *[
+                    "forms",
+                    xform_directory,
+                    "submissions",
+                    submission_id + ".json",
+                ]
+            )
+            if os.path.exists(submission_file):
+                file_stats = os.stat(submission_file)
+                bytes_used = bytes_used + file_stats.st_size
+
             added, message = add_submission(
                 engine,
                 project,
@@ -316,6 +410,7 @@ def store_json_file(
                 md5sum,
                 original_md5,
                 p.returncode,
+                bytes_used,
             )
 
             if not added:

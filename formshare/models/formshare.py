@@ -760,6 +760,7 @@ class Submission(Base):
     md5sum = Column(Unicode(120))
     original_md5sum = Column(Unicode(120))
     sameas = Column(Unicode(64))
+    submission_size = Column(BIGINT(unsigned=True), server_default=text("'0'"))
 
     collaborator = relationship("Collaborator")
     project = relationship("Odkform")

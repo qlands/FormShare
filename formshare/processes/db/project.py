@@ -827,18 +827,29 @@ def project_has_crowdsourcing(request, project_id):
     return False
 
 
-def get_project_id_from_name(request, user, project_code):
-    res = (
-        request.dbsession.query(Project)
-        .filter(Project.project_id == Userproject.project_id)
-        .filter(Userproject.user_id == user)
-        .filter(Project.project_code == project_code)
-        .filter(Userproject.access_type == 1)
-        .filter(Project.project_archived == 0)
-        .filter(Project.project_archiving == 0)
-        .filter(Project.project_restoring == 0)
-        .first()
-    )
+def get_project_id_from_name(request, user, project_code, filter_archived=True):
+    if filter_archived:
+        res = (
+            request.dbsession.query(Project)
+            .filter(Project.project_id == Userproject.project_id)
+            .filter(Userproject.user_id == user)
+            .filter(Project.project_code == project_code)
+            .filter(Userproject.access_type == 1)
+            .filter(Project.project_archived == 0)
+            .filter(Project.project_archiving == 0)
+            .filter(Project.project_restoring == 0)
+            .first()
+        )
+    else:
+        res = (
+            request.dbsession.query(Project)
+            .filter(Project.project_id == Userproject.project_id)
+            .filter(Userproject.user_id == user)
+            .filter(Project.project_code == project_code)
+            .filter(Userproject.access_type == 1)
+            .first()
+        )
+
     if res is not None:
         return res.project_id
     return None
@@ -1027,17 +1038,25 @@ def get_case_schema(request, project):
         return None
 
 
-def get_project_owner(request, project):
-    res = (
-        request.dbsession.query(Userproject.user_id)
-        .filter(Userproject.project_id == project)
-        .filter(Userproject.project_id == Project.project_id)
-        .filter(Project.project_archived == 0)
-        .filter(Project.project_archiving == 0)
-        .filter(Project.project_restoring == 0)
-        .filter(Userproject.access_type == 1)
-        .first()
-    )
+def get_project_owner(request, project, filter_archived=True):
+    if filter_archived:
+        res = (
+            request.dbsession.query(Userproject.user_id)
+            .filter(Userproject.project_id == project)
+            .filter(Userproject.project_id == Project.project_id)
+            .filter(Project.project_archived == 0)
+            .filter(Project.project_archiving == 0)
+            .filter(Project.project_restoring == 0)
+            .filter(Userproject.access_type == 1)
+            .first()
+        )
+    else:
+        res = (
+            request.dbsession.query(Userproject.user_id)
+            .filter(Userproject.project_id == project)
+            .filter(Userproject.access_type == 1)
+            .first()
+        )
     if res is not None:
         return res.user_id
     else:
@@ -1283,9 +1302,39 @@ def get_user_archived_projects(request, user, logged_user):
                 projects.append(collaborative_project)
 
     for project in projects:
+        submissions, last, by, form = get_dataset_stats_for_project(
+            request.registry.settings, project["project_id"]
+        )
+        if last is not None:
+            project["last_submission"] = dateutil.parser.parse(last)
+        else:
+            project["last_submission"] = None
+        project["total_submissions"] = submissions
+        project["last_submission_by"] = by
+        project["last_submission_by_details"] = get_by_details(
+            request, user, project["project_id"], by
+        )
+        project["last_submission_form"] = form
+        project["last_submission_form_details"] = get_form_data(
+            request, project["project_id"], form
+        )
+        project["total_forms"] = get_forms_number(request, project["project_id"])
+        project["total_case_creators"] = get_number_of_case_creators(
+            request, project["project_id"]
+        )
+        project["total_case_creators_with_repository"] = (
+            get_number_of_case_creators_with_repository(request, project["project_id"])
+        )
+        project["case_form"] = get_case_form(request, project["project_id"])
+        project["case_schema"] = get_case_schema(request, project["project_id"])
+        project["has_case_lookup_table"] = project_has_case_lookup_table(
+            request, project["project_id"]
+        )
+
         project["project_archived_by"] = get_user_name(
             request, project["project_archived_by"]
         )
+        project["owner"] = get_project_owner(request, project["project_id"], False)
 
     projects = sorted(projects, key=lambda prj: project["project_cdate"], reverse=True)
     return projects
@@ -1588,20 +1637,28 @@ def remove_file_from_project(request, project, file_name):
         return False, str(e)
 
 
-def get_project_details(request, project):
+def get_project_details(request, project, filter_archived=True):
     res = request.dbsession.query(Project).filter(Project.project_id == project).first()
     if res is not None:
         mapped_data = map_from_schema(res)
-        res = (
-            request.dbsession.query(Userproject.user_id)
-            .filter(Userproject.project_id == project)
-            .filter(Userproject.access_type == 1)
-            .filter(Userproject.project_id == Project.project_id)
-            .filter(Project.project_archived == 0)
-            .filter(Project.project_archiving == 0)
-            .filter(Project.project_restoring == 0)
-            .first()
-        )
+        if filter_archived:
+            res = (
+                request.dbsession.query(Userproject.user_id)
+                .filter(Userproject.project_id == project)
+                .filter(Userproject.access_type == 1)
+                .filter(Userproject.project_id == Project.project_id)
+                .filter(Project.project_archived == 0)
+                .filter(Project.project_archiving == 0)
+                .filter(Project.project_restoring == 0)
+                .first()
+            )
+        else:
+            res = (
+                request.dbsession.query(Userproject.user_id)
+                .filter(Userproject.project_id == project)
+                .filter(Userproject.access_type == 1)
+                .first()
+            )
         if res is not None:
             mapped_data["owner"] = res.user_id
         else:
@@ -1653,21 +1710,32 @@ def get_extended_project_details(request, user, project_id):
     return project
 
 
-def get_project_access_type(request, project_id, user_id, logged_user):
+def get_project_access_type(
+    request, project_id, user_id, logged_user, filter_archived=True
+):
     if user_id == logged_user:
         return 1
     else:
-        res = (
-            request.dbsession.query(Userproject.access_type)
-            .filter(Userproject.project_id == project_id)
-            .filter(Userproject.project_id == Project.project_id)
-            .filter(Userproject.user_id == logged_user)
-            .filter(Userproject.project_accepted == 1)
-            .filter(Project.project_archived == 0)
-            .filter(Project.project_archiving == 0)
-            .filter(Project.project_restoring == 0)
-            .first()
-        )
+        if filter_archived:
+            res = (
+                request.dbsession.query(Userproject.access_type)
+                .filter(Userproject.project_id == project_id)
+                .filter(Userproject.project_id == Project.project_id)
+                .filter(Userproject.user_id == logged_user)
+                .filter(Userproject.project_accepted == 1)
+                .filter(Project.project_archived == 0)
+                .filter(Project.project_archiving == 0)
+                .filter(Project.project_restoring == 0)
+                .first()
+            )
+        else:
+            res = (
+                request.dbsession.query(Userproject.access_type)
+                .filter(Userproject.project_id == project_id)
+                .filter(Userproject.user_id == logged_user)
+                .filter(Userproject.project_accepted == 1)
+                .first()
+            )
         if res is None:
             return 5  # Five is not access at all
         return res.access_type

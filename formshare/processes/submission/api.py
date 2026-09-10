@@ -1700,6 +1700,7 @@ def delete_submission(
         ).filter(Submission.form_id == form).filter(
             Submission.submission_id == submission_id
         ).delete()
+        request.dbsession.commit()
 
     # If the submission goes to longs then create a log file for it
     # and add it to the logs
@@ -1768,9 +1769,11 @@ def delete_all_submission(request, user, project, form, deleted_by):
         request.dbsession.query(Submission).filter(
             Submission.project_id == project
         ).filter(Submission.form_id == form).delete()
+        request.dbsession.commit()
         request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
             Jsonlog.form_id == form
         ).delete()
+        request.dbsession.commit()
 
         odk_dir = get_odk_path(request)
         form_directory = get_form_directory(request, project, form)

@@ -239,7 +239,9 @@ def get_identity_join(identity):
     :param identity: The columns that name a choice
     :return: The condition, with the lookup as TA and the file as TB
     """
-    return " AND ".join("TA.{0} <=> TB.{0}".format(a_column) for a_column in identity)
+    return " AND ".join(
+        "TA.`{0}` <=> TB.`{0}`".format(a_column) for a_column in identity
+    )
 
 
 def get_merge_columns(
@@ -323,19 +325,22 @@ def merge_file_into_lookup(
     uid = str(uuid.uuid4())
     uid = "TMP_" + uid.replace("-", "_")
     column_names = [a_field["field_name"] for a_field in columns]
+    query_column_names = []
+    for a_column_name in column_names:
+        query_column_names.append("`{}`".format(a_column_name))
     session.execute(
-        "CREATE TABLE {}.{} ({})".format(
+        "CREATE TABLE {}.`{}` ({})".format(
             form_schema,
             uid,
             ",".join(
-                "{} {}".format(a_field["field_name"], sql_column_type(a_field))
+                "`{}` {}".format(a_field["field_name"], sql_column_type(a_field))
                 for a_field in columns
             ),
         )
     )
     try:
         session.execute(
-            "CREATE INDEX code_index ON {}.{} ({})".format(
+            "CREATE INDEX code_index ON {}.`{}` (`{}`)".format(
                 form_schema, uid, identity[0]
             )
         )
@@ -343,7 +348,7 @@ def merge_file_into_lookup(
             "INSERT INTO {}.{} ({}) VALUES ({})".format(
                 form_schema,
                 uid,
-                ",".join(column_names),
+                ",".join(query_column_names),
                 ",".join(":" + a_column for a_column in column_names),
             )
         )
@@ -358,13 +363,13 @@ def merge_file_into_lookup(
         updatable = [a_column for a_column in column_names if a_column not in identity]
         if updatable:
             session.execute(
-                "UPDATE {}.{} TA, {}.{} TB SET {} WHERE {}".format(
+                "UPDATE {}.`{}` TA, {}.`{}` TB SET {} WHERE {}".format(
                     form_schema,
                     rel_table,
                     form_schema,
                     uid,
                     ",".join(
-                        "TA.{0} = TB.{0}".format(a_column) for a_column in updatable
+                        "TA.`{0}` = TB.`{0}`".format(a_column) for a_column in updatable
                     ),
                     join,
                 )
@@ -374,13 +379,18 @@ def merge_file_into_lookup(
         # the file gives them. Not INSERT IGNORE: there is no unique index left
         # for it to skip anything on, and it is what turned a row MySQL refused
         # into a silent success.
+
+        query_column_names = []
+        for a_column_name in column_names:
+            query_column_names.append("`{}`".format(a_column_name))
+
         session.execute(
-            "INSERT INTO {}.{} ({}) SELECT {} FROM {}.{} TB"
-            " WHERE NOT EXISTS (SELECT 1 FROM {}.{} TA WHERE {})".format(
+            "INSERT INTO {}.`{}` ({}) SELECT {} FROM {}.`{}` TB"
+            " WHERE NOT EXISTS (SELECT 1 FROM {}.`{}` TA WHERE {})".format(
                 form_schema,
                 rel_table,
-                ",".join(column_names),
-                ",".join("TB." + a_column for a_column in column_names),
+                ",".join(query_column_names),
+                ",".join("TB." + a_column for a_column in query_column_names),
                 form_schema,
                 uid,
                 form_schema,
@@ -433,8 +443,13 @@ def update_insert_xml_from_lookup(
     :param desc_column: The column holding the description of a choice
     """
     column_names = [a_field["field_name"] for a_field in columns]
+    query_column_names = []
+    for a_column in column_names:
+        query_column_names.append("`{}`".format(a_column))
     lookup_rows = session.execute(
-        "SELECT {} FROM {}.{}".format(",".join(column_names), form_schema, rel_table)
+        "SELECT {} FROM {}.`{}`".format(
+            ",".join(query_column_names), form_schema, rel_table
+        )
     ).fetchall()
 
     parser = etree.XMLParser(remove_blank_text=True)

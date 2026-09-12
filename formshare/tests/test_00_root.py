@@ -34,7 +34,6 @@ from .steps.delete_active_project import t_e_s_t_delete_active_project
 from .steps.delete_form_with_repository import t_e_s_t_delete_form_with_repository
 from .steps.error_pages import t_e_s_t_error_pages
 from .steps.external_select import t_e_s_t_external_select
-from .steps.entities import t_e_s_t_entities
 from .steps.five_collaborators import t_e_s_t_five_collaborators
 from .steps.form_access import t_e_s_t_form_access
 from .steps.form_merge import t_e_s_t_form_merge
@@ -174,9 +173,6 @@ class FunctionalTests(unittest.TestCase):
         print("Testing projects")
         t_e_s_t_projects(self.test_object)
 
-        # print("Testing offline entities")
-        # t_e_s_t_entities(self.test_object)
-
         # ---We can use this to test certain parts of the suite
         run_whole_suite = True
         if run_whole_suite:
@@ -279,12 +275,6 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_case_management_start(self.test_object)
             print("Testing case management")
             t_e_s_t_case_management(self.test_object)
-            # Offline entities are off unless the deployment says otherwise, so a
-            # run that does not want them should not pay for them. The parts that
-            # need no server are in test_01_entities.py and always run.
-
-            print("Testing offline entities")
-            t_e_s_t_entities(self.test_object)
 
             print("Testing assistant group access")
             t_e_s_t_group_assistant(self.test_object)

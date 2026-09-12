@@ -254,7 +254,7 @@ class GetFormAudit(PrivateView):
                         timezone = project_details["project_timezone"]
                 if timezone != self.system_timezone:
                     field_names = [
-                        "CONVERT_TZ(audit_date,'{}','{}') as audit_date".format(
+                        "CONVERT_TZ(`audit_date`,'{}','{}') as audit_date".format(
                             self.system_timezone, timezone
                         ),
                         "audit_user",

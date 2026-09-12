@@ -70,6 +70,7 @@ def build_database(
         + " DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci",
     ]
     try:
+        log.info("Creating repository {}".format(schema))
         check_call(args)
     except CalledProcessError as e:
         error_message = "Error dropping schema \n"
@@ -81,6 +82,7 @@ def build_database(
 
     if not error:
         send_task_status_to_form(settings, task_id, _("Creating new tables..."))
+        log.info("Creating new tables in {} using file: {}".format(schema, create_file))
         args = ["mysql", "--defaults-file=" + cnf_file, schema]
         with open(create_file) as input_file:
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)

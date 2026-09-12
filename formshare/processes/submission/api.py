@@ -923,6 +923,9 @@ def field_is_editable(field_name):
         "_lastupdate",
         "_cellid",
         "rowindex",
+        "_cellxpos",
+        "_cellypos",
+        "link_rowuuid",
     ]
     if field_name in read_only_fields:
         return "false"
@@ -932,14 +935,15 @@ def field_is_editable(field_name):
 def get_lookup_values(request, project, form, rtable, rfield):
     schema = get_form_schema(request, project, form)
     sql = (
-        "SELECT "
+        "SELECT `"
         + rfield
-        + ","
+        + "`,`"
         + get_lookup_desc_field(rfield)
-        + " FROM "
+        + "` FROM "
         + schema
-        + "."
+        + ".`"
         + rtable
+        + "`"
     )
     records = request.dbsession.execute(sql).fetchall()
     res_dict = {"": ""}
@@ -1143,11 +1147,18 @@ def get_request_data_jqgrid(
 ):
     _ = request.translate
     schema = get_form_schema(request, project, form)
-    sql_fields = ",".join(fields)
+    query_fields = []
+    for a_field in fields:
+        if a_field.find("(") < 0:
+            query_fields.append("`{}`".format(a_field))
+        else:
+            # The field is a function
+            query_fields.append("{}".format(a_field))
+    sql_fields = ",".join(query_fields)
 
     if search_field is None or search_string == "":
         if fixed_filter_field is None:
-            sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
+            sql = "SELECT " + sql_fields + " FROM " + schema + ".`" + table_name + "`"
             where_clause = ""
         else:
             sql = (
@@ -1155,55 +1166,62 @@ def get_request_data_jqgrid(
                 + sql_fields
                 + " FROM "
                 + schema
-                + "."
+                + ".`"
                 + table_name
-                + " WHERE {} = '{}'".format(fixed_filter_field, fixed_filter_value)
+                + "` WHERE `{}` = '{}'".format(fixed_filter_field, fixed_filter_value)
             )
-            where_clause = " WHERE {} = '{}'".format(
+            where_clause = " WHERE `{}` = '{}'".format(
                 fixed_filter_field, fixed_filter_value
             )
     else:
-        sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
+        sql = "SELECT " + sql_fields + " FROM " + schema + ".`" + table_name + "`"
         if search_operator == "like":
             sql = (
                 sql
-                + " WHERE LOWER("
+                + " WHERE LOWER(`"
                 + search_field
-                + ") like '%"
+                + "`) like '%"
                 + search_string.lower()
                 + "%'"
             )
             where_clause = (
-                " WHERE LOWER("
+                " WHERE LOWER(`"
                 + search_field
-                + ") like '%"
+                + "`) like '%"
                 + search_string.lower()
                 + "%'"
             )
         else:
             sql = (
                 sql
-                + " WHERE LOWER("
+                + " WHERE LOWER(`"
                 + search_field
-                + ") not like '%"
+                + "`) not like '%"
                 + search_string.lower()
                 + "%'"
             )
             where_clause = (
-                " WHERE LOWER("
+                " WHERE LOWER(`"
                 + search_field
-                + ") not like '%"
+                + "`) not like '%"
                 + search_string.lower()
                 + "%'"
             )
         if fixed_filter_field is not None:
-            sql = sql + " AND {} = '{}'".format(fixed_filter_field, fixed_filter_value)
-            where_clause = where_clause + " AND {} = '{}'".format(
+            sql = sql + " AND `{}` = '{}'".format(
+                fixed_filter_field, fixed_filter_value
+            )
+            where_clause = where_clause + " AND `{}` = '{}'".format(
                 fixed_filter_field, fixed_filter_value
             )
 
     count_sql = (
-        "SELECT count(*) as total FROM " + schema + "." + table_name + where_clause
+        "SELECT count(*) as total FROM "
+        + schema
+        + ".`"
+        + table_name
+        + "`"
+        + where_clause
     )
     records = request.dbsession.execute(count_sql).fetchone()
     total = records.total
@@ -1216,7 +1234,7 @@ def get_request_data_jqgrid(
         start = 0
 
     if table_order is not None:
-        sql = sql + " ORDER BY " + table_order + " " + order_direction
+        sql = sql + " ORDER BY `" + table_order + "` " + order_direction
     sql = sql + " LIMIT " + str(start) + "," + str(length)
 
     records = request.dbsession.execute(sql).fetchall()
@@ -1280,9 +1298,9 @@ def get_lookup_options(
     field_desc = get_lookup_desc_field(lookup_field)
     key_array = []
     for key, value in key_data.items():
-        key_array.append("{} = '{}'".format(key, value))
+        key_array.append("`{}` = '{}'".format(key, value))
     # Select the available items in the lookup table
-    sql = "SELECT {},{} FROM {}.{} WHERE {} NOT IN (SELECT {} FROM {}.{} WHERE {})".format(
+    sql = "SELECT `{}`,`{}` FROM {}.`{}` WHERE `{}` NOT IN (SELECT `{}` FROM {}.`{}` WHERE {})".format(
         lookup_field,
         field_desc,
         schema,
@@ -1300,7 +1318,7 @@ def get_lookup_options(
             available_options.append({"code": a_row[0], "desc": a_row[1]})
 
     # Select the items selected from the lookup table
-    sql = "SELECT {},{} from {}.{}, {}.{} WHERE {} = {} AND {} ORDER BY {}.rowindex ASC".format(
+    sql = "SELECT `{}`,`{}` from {}.`{}`, {}.`{}` WHERE `{}` = `{}` AND {} ORDER BY `{}`.rowindex ASC".format(
         lookup_field,
         field_desc,
         schema,
@@ -1323,8 +1341,12 @@ def get_lookup_options(
 
 def get_primary_key_data(request, project, form, table_name, keys, row_uuid):
     schema = get_form_schema(request, project, form)
-    sql = "SELECT {} FROM {}.{} WHERE rowuuid = '{}'".format(
-        ",".join(keys), schema, table_name, row_uuid
+    query_keys = []
+    for a_key in keys:
+        query_keys.append("`{}`".format(a_key))
+
+    sql = "SELECT {} FROM {}.`{}` WHERE rowuuid = '{}'".format(
+        ",".join(query_keys), schema, table_name, row_uuid
     )
     res = request.dbsession.execute(sql).fetchone()
     if res is not None:
@@ -1358,11 +1380,11 @@ def update_multiselect_data(
     parent_sql = (
         "UPDATE "
         + schema
-        + "."
+        + ".`"
         + parent_table
-        + " SET "
+        + "` SET `"
         + parent_field
-        + " = '"
+        + "` = '"
         + string_value
         + "'"
     )
@@ -1371,10 +1393,10 @@ def update_multiselect_data(
 
     delete_array = []
     for key, value in primary_key_data.items():
-        delete_array.append("{} = '{}'".format(key, value))
+        delete_array.append("`{}` = '{}'".format(key, value))
 
     # Delete the current multiselect values
-    delete_sql = "DELETE FROM {}.{} WHERE {}".format(
+    delete_sql = "DELETE FROM {}.`{}` WHERE {}".format(
         schema, multiselect_table, " AND ".join(delete_array)
     )
 
@@ -1383,15 +1405,15 @@ def update_multiselect_data(
     if len(multiselect_values) > 0:
         columns_array = []
         for key in primary_key_data.keys():
-            columns_array.append(key)
-        columns_array.append(multiselect_field)
+            columns_array.append("`{}`".format(key))
+        columns_array.append("`{}`".format(multiselect_field))
         index = 1
         for a_value in multiselect_values:
             value_array = []
             for pk_value in primary_key_data.values():
                 value_array.append("'{}'".format(pk_value))
             value_array.append("'{}'".format(a_value))
-            insert_sql = "INSERT INTO {}.{} ({}) VALUES ({})".format(
+            insert_sql = "INSERT INTO {}.`{}` ({}) VALUES ({})".format(
                 schema,
                 multiselect_table,
                 ",".join(columns_array),
@@ -1430,7 +1452,17 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
     _ = request.translate
     sql_url = request.registry.settings.get("sqlalchemy.url")
     schema = get_form_schema(request, project, form)
-    sql = "UPDATE " + schema + "." + table_name + " SET " + field + " = '" + value + "'"
+    sql = (
+        "UPDATE "
+        + schema
+        + ".`"
+        + table_name
+        + "` SET `"
+        + field
+        + "` = '"
+        + value
+        + "'"
+    )
     sql = sql + " WHERE rowuuid = '" + row_uuid + "'"
     sql = sql.replace("''", "null")
 
@@ -1827,7 +1859,7 @@ def delete_all_submission(request, user, project, form, deleted_by):
 
 
 def update_record_with_id(request, user, schema, table, rowuuid, data):
-    sql = "DESC {}.{}".format(schema, table)
+    sql = "DESC {}.`{}`".format(schema, table)
     fields = request.dbsession.execute(sql).fetchall()
     field_array = []
     key_array = []
@@ -1840,15 +1872,20 @@ def update_record_with_id(request, user, schema, table, rowuuid, data):
     data.pop("apikey", None)
     for a_key in key_array:
         data.pop(a_key, None)
+
+    for a_key in data.keys():
+        if not field_is_editable(a_key):
+            data.pop(a_key, None)
+
     fields_not_found = []
     for a_key in data.keys():
         if a_key not in field_array:
             fields_not_found.append(a_key)
     if len(fields_not_found) == 0:
-        sql = "UPDATE {}.{}".format(schema, table) + " SET "
+        sql = "UPDATE {}.`{}`".format(schema, table) + " SET "
         updates = []
         for a_key in data.keys():
-            updates.append(a_key + " = '{}'".format(data[a_key]))
+            updates.append("`{}` = '{}'".format(a_key, data[a_key]))
         sql = sql + ",".join(updates)
         sql = sql + " WHERE rowuuid = '" + rowuuid + "'"
         sql_url = request.registry.settings.get("sqlalchemy.url")

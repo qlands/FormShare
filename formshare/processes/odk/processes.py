@@ -74,7 +74,7 @@ def get_error_description_from_file(request, project, form, log_file):
                 if len(message_parts) == 2:
                     schema = get_form_schema(request, project, form)
                     primary_key = get_form_primary_key(request, project, form)
-                    sql = "SELECT surveyid from {}.maintable WHERE {} = '{}'".format(
+                    sql = "SELECT surveyid from {}.maintable WHERE `{}` = '{}'".format(
                         schema, primary_key, message_parts[0]
                     )
                     res = request.dbsession.execute(sql).fetchone()

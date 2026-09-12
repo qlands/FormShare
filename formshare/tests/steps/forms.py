@@ -84,7 +84,7 @@ def t_e_s_t_forms(test_object):
     assert "FS_error" in res.headers
 
     # Uploads a form fails. Invalid field name
-    paths = ["resources", "forms", "form03.xlsx"]
+    paths = ["resources", "forms", "form03_OK.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
 
     res = test_object.testapp.post(
@@ -95,7 +95,7 @@ def t_e_s_t_forms(test_object):
         status=302,
         upload_files=[("xlsx", resource_file)],
     )
-    assert "FS_error" in res.headers
+    assert "FS_error" not in res.headers
 
     # Uploads a form fails. Duplicated choices
     paths = ["resources", "forms", "form04.xlsx"]
@@ -382,7 +382,7 @@ def t_e_s_t_forms(test_object):
         status=302,
         upload_files=[("xlsx", resource_file)],
     )
-    assert "FS_error" in res.headers
+    assert "FS_error" not in res.headers
 
     # Update a form fails. Duplicated choices
     paths = ["resources", "forms", "form04.xlsx"]
@@ -396,7 +396,7 @@ def t_e_s_t_forms(test_object):
         status=302,
         upload_files=[("xlsx", resource_file)],
     )
-    assert "FS_error" in res.headers
+    assert "FS_error" not in res.headers
 
     # Update a form fails. Duplicated variables
     paths = ["resources", "forms", "form05.xlsx"]

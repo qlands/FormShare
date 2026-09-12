@@ -95,6 +95,12 @@ def t_e_s_t_audit(test_object):
     test_object.testapp.set_cookie("_TIMEZONE_", "user")
 
     # Loads the audit data for the grid
+    print(
+        "/user/{}/project/{}/form/{}/audit/get"
+        "?callback=jQuery31104503466642261382_1578424030318".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        )
+    )
     test_object.testapp.post(
         "/user/{}/project/{}/form/{}/audit/get"
         "?callback=jQuery31104503466642261382_1578424030318".format(

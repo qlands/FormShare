@@ -111,9 +111,9 @@ def internal_build_kml(
         sql = (
             "SELECT count(surveyid) as total FROM "
             + form_schema
-            + "."
+            + ".`"
             + temp_table_name
-            + " WHERE _geopoint IS NOT NULL"
+            + "` WHERE _geopoint IS NOT NULL"
         )
         submissions = engine.execute(sql).fetchone()
         total = submissions.total
@@ -121,9 +121,9 @@ def internal_build_kml(
         sql = (
             "SELECT * FROM "
             + form_schema
-            + "."
+            + ".`"
             + temp_table_name
-            + " WHERE _geopoint IS NOT NULL"
+            + "` WHERE _geopoint IS NOT NULL"
         )
         submissions = engine.execute(sql).fetchall()
         records = []

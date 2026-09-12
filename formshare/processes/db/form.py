@@ -325,15 +325,20 @@ def generate_lookup_file(
 
         sql = "SELECT count(surveyid) FROM {}.maintable".format(schema)
         res = request.dbsession.execute(sql).fetchone()
+
+        query_field = []
+        for a_field in select_field:
+            query_field.append("`{}`".format(a_field))
+
         if res[0] > 0:
             sql = (
-                "SELECT " + ",".join(select_field) + " from {}.maintable".format(schema)
+                "SELECT " + ",".join(query_field) + " from {}.maintable".format(schema)
             )
             if only_inactive:
                 sql = sql + " WHERE _active = 0"
             else:
                 sql = sql + " WHERE _active = 1"
-            sql = sql + " AND {} IS NOT NULL ORDER BY _submitted_date".format(
+            sql = sql + " AND `{}` IS NOT NULL ORDER BY _submitted_date".format(
                 label_field
             )
             cursor = request.dbsession.execute(sql)

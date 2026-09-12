@@ -248,17 +248,18 @@ def test_the_merge_is_keyed_on_the_whole_identity(lookup, insert_file):
         1,
     )
     identity = (
-        "TA.villages_cod <=> TB.villages_cod AND TA.sub_location <=> TB.sub_location"
+        "TA.`villages_cod` <=> TB.`villages_cod` AND "
+        "TA.`sub_location` <=> TB.`sub_location`"
     )
     update = session.statements_starting("UPDATE")
     assert len(update) == 1
     assert update[0].endswith("WHERE " + identity)
-    assert update[0].count("SET TA.villages_des = TB.villages_des") == 1
+    assert update[0].count("SET TA.`villages_des` = TB.`villages_des`") == 1
 
-    insert = session.statements_starting("INSERT INTO myschema.lkpvillages")
+    insert = session.statements_starting("INSERT INTO myschema.`lkpvillages`")
     assert len(insert) == 1
     assert insert[0].endswith(
-        "WHERE NOT EXISTS (SELECT 1 FROM myschema.lkpvillages TA WHERE {})".format(
+        "WHERE NOT EXISTS (SELECT 1 FROM myschema.`lkpvillages` TA WHERE {})".format(
             identity
         )
     )
@@ -342,7 +343,7 @@ def test_a_list_with_no_filter_merges_on_its_code(lookup, insert_file):
     )
     assert (result, message) == (True, "")
     assert session.statements_starting("UPDATE")[0].endswith(
-        "WHERE TA.villages_cod <=> TB.villages_cod"
+        "WHERE TA.`villages_cod` <=> TB.`villages_cod`"
     )
 
 
@@ -433,7 +434,7 @@ def test_a_failed_merge_is_rolled_back_before_the_temporary_table_is_dropped(
     ran = session.execute
 
     def failing(statement, params=None):
-        if str(statement).startswith("INSERT INTO myschema.lkpvillages"):
+        if str(statement).startswith("INSERT INTO myschema.`lkpvillages`"):
             ran(statement, params)
             raise Exception("1451 Cannot add or update a child row")
         return ran(statement, params)
@@ -560,7 +561,7 @@ def test_geojson_writes_the_geometry_it_was_given(lookup, insert_file, geojson_f
     assert "place_rowid" not in session.sql
     assert "rowuuid" not in session.sql
     assert "coordinates" not in session.sql
-    assert "TB.geometry," not in session.sql
+    assert "`geometry`" not in session.sql
     assert "INSERT IGNORE" not in session.sql
     assert "DELETE" not in session.sql
 
@@ -732,8 +733,11 @@ def test_a_column_the_file_must_fill_is_refused_when_it_is_missing(monkeypatch):
 
 
 def test_the_join_matches_a_null_filter_value():
+    # Every identifier is quoted: since RSTools started quoting its own, a
+    # question - and so a filter column - can be called FROM or ORDER.
     assert dictionary.get_identity_join(["villages_cod", "sub_location"]) == (
-        "TA.villages_cod <=> TB.villages_cod AND TA.sub_location <=> TB.sub_location"
+        "TA.`villages_cod` <=> TB.`villages_cod` AND "
+        "TA.`sub_location` <=> TB.`sub_location`"
     )
 
 

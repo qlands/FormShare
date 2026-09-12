@@ -47,7 +47,7 @@ def internal_build_media_zip(
         submissions = engine.execute(sql).fetchone()
         total = submissions.total
 
-        sql = "SELECT surveyid," + primary_key + " FROM " + form_schema + ".maintable"
+        sql = "SELECT surveyid,`" + primary_key + "` FROM " + form_schema + ".maintable"
         submissions = engine.execute(sql).fetchall()
         uid = str(uuid.uuid4())
         repo_dir = settings["repository.path"]

@@ -4,8 +4,7 @@
 {% block titlesection %}{{ _("Links to lists") }}{% endblock titlesection %}
 
 {% block breadcrumbs %}
-    {% set crumb_current = _('Links to lists') %}
-    {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_lists.jinja2' %}
+    {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_links.jinja2' %}
 {% endblock breadcrumbs %}
 
 {% block maincontent %}
@@ -18,7 +17,7 @@
                 <div class="ibox-content">
                     <h2>{{ _('Links to lists') }} — {{ formData.form_name }}</h2>
                     <p>
-                        {{ _('This form reads the published lists below. Choose which one is the case link: the list whose rows this form follows up. When the repository is built, the case link becomes a foreign key with a membership check, so a submission can only reference a row that exists in that list. The other lists stay as read-only references.') }}
+                        {{ _('This form reads the published lists below. Choose which one is the case link: the list whose rows this form follows up. When the repository is built, the case link becomes a foreign key with a membership check, so a submission can only reference a row that exists in that list. The other lists stay as read-only references. This does not affect your form at testing stage however, ') }} <b style="color: red">{{ _('it cannot be undone after you create the repository.') }}</b>
                     </p>
                     {% if not hasCreateXml %}
                         <div class="alert alert-warning">{{ _('Upload the form before setting its links.') }}</div>

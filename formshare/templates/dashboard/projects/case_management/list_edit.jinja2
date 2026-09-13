@@ -1,0 +1,78 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Edit list") }}{% endblock titlesection %}
+
+{% block breadcrumbs %}{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-lg-12">
+            {% block form_errors %}
+                {{ form.display_errors(errors) }}
+            {% endblock form_errors %}
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h2><code>{{ listData.list_filename }}</code></h2>
+                    <p>
+                        {{ _('Served from') }} <b>{{ listData.source_form }}</b> / <b>{{ listData.source_table }}</b>.
+                        {{ _('Every list carries name (the row identity) and label. The columns below are served in addition, in this order.') }}
+                    </p>
+                    <div class="hr-line-dashed"></div>
+                    <h3>{{ _('Label') }}</h3>
+                    <form method="post" class="form-inline">
+                        {{ form.secure_form(request) }}
+                        <select name="label_column" class="form-control">
+                            {% for a_column in tableColumns %}
+                                <option value="{{ a_column.field_name }}" {% if a_column.field_name == listData.label_column %}selected{% endif %}>{{ a_column.field_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" name="change_label" value="1" class="btn btn-white">{{ _('Change the label column') }}</button>
+                    </form>
+                    <div class="hr-line-dashed"></div>
+                    <h3>{{ _('Served columns') }}</h3>
+                    {% if listColumns %}
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>{{ _('Column') }}</th>
+                                <th>{{ _('Served as') }}</th>
+                                <th>{{ _('Actions') }}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for a_column in listColumns %}
+                                <tr>
+                                    <td>{{ a_column.column_name }}</td>
+                                    <td>{{ a_column.column_as or a_column.column_name }}</td>
+                                    <td>
+                                        <form method="post" style="display: inline">
+                                            {{ form.secure_form(request) }}
+                                            <input type="hidden" name="column_name" value="{{ a_column.column_name }}">
+                                            <button type="submit" name="remove_column" value="1" class="btn btn-xs btn-danger">{{ _('Remove') }}</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>{{ _('Only name and label are served.') }}</p>
+                    {% endif %}
+                    <form method="post" class="form-inline">
+                        {{ form.secure_form(request) }}
+                        <select name="column_name" class="form-control">
+                            {% for a_column in tableColumns %}
+                                <option value="{{ a_column.field_name }}">{{ a_column.field_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" name="column_as" class="form-control" placeholder="{{ _('Served as (optional)') }}">
+                        <button type="submit" name="add_column" value="1" class="btn btn-primary">{{ _('Add the column') }}</button>
+                    </form>
+                    <div class="hr-line-dashed"></div>
+                    <a class="btn btn-white" href="{{ request.route_url('project_case_lists', userid=userid, projcode=projcode) }}">{{ _('Back to the lists') }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock maincontent %}

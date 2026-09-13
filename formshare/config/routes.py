@@ -73,6 +73,12 @@ from formshare.views.collaborators import (
     AcceptCollaboration,
 )
 from formshare.views.dashboard import UserDashBoardView
+from formshare.views.case_management import (
+    PublishedListsView,
+    AddPublishedListView,
+    EditPublishedListView,
+    DeletePublishedListView,
+)
 from formshare.views.form import (
     FormDetails,
     AddNewForm,
@@ -390,6 +396,42 @@ def load_routes(config, settings):
             "project_case_lookup_table_example",
             "/user/{userid}/project/{projcode}/caselookupcsv",
             CaseLookUpCSV,
+            None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_case_lists",
+            "/user/{userid}/project/{projcode}/caselists",
+            PublishedListsView,
+            "dashboard/projects/case_management/lists.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_case_list_add",
+            "/user/{userid}/project/{projcode}/caselists/add",
+            AddPublishedListView,
+            "dashboard/projects/case_management/list_add.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_case_list_edit",
+            "/user/{userid}/project/{projcode}/caselists/{listid}/edit",
+            EditPublishedListView,
+            "dashboard/projects/case_management/list_edit.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_case_list_delete",
+            "/user/{userid}/project/{projcode}/caselists/{listid}/delete",
+            DeletePublishedListView,
             None,
         )
     )

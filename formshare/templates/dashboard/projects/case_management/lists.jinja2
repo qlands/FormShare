@@ -1,0 +1,62 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Published lists") }}{% endblock titlesection %}
+
+{% block breadcrumbs %}{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-lg-12">
+            {% block form_errors %}
+                {{ form.display_errors(errors) }}
+            {% endblock form_errors %}
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h2>{{ _('Published lists') }}</h2>
+                    <p>
+                        {{ _('A published list is a real-time file generated from the data of a form and sent to the devices as a form attachment. A follow-up form uses it with select_one_from_file, naming the file exactly as it appears here.') }}
+                    </p>
+                    <a class="btn btn-primary" href="{{ request.route_url('project_case_list_add', userid=userid, projcode=projcode) }}">{{ _('Publish a new list') }}</a>
+                    <hr class="hr-line-dashed">
+                    {% if lists %}
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>{{ _('File name') }}</th>
+                                <th>{{ _('Source form') }}</th>
+                                <th>{{ _('Source table') }}</th>
+                                <th>{{ _('Label column') }}</th>
+                                <th>{{ _('Edition') }}</th>
+                                <th>{{ _('Last generated') }}</th>
+                                <th>{{ _('Actions') }}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for a_list in lists %}
+                                <tr>
+                                    <td><code>{{ a_list.list_filename }}</code></td>
+                                    <td>{{ a_list.source_form }}</td>
+                                    <td>{{ a_list.source_table }}</td>
+                                    <td>{{ a_list.label_column }}</td>
+                                    <td>{{ a_list.list_seq }}</td>
+                                    <td>{% if a_list.list_lastgen %}{{ a_list.list_lastgen }}{% else %}{{ _('Never') }}{% endif %}</td>
+                                    <td>
+                                        <a class="btn btn-xs btn-white" href="{{ request.route_url('project_case_list_edit', userid=userid, projcode=projcode, listid=a_list.list_id) }}">{{ _('Edit') }}</a>
+                                        <form method="post" style="display: inline" action="{{ request.route_url('project_case_list_delete', userid=userid, projcode=projcode, listid=a_list.list_id) }}">
+                                            {{ form.secure_form(request) }}
+                                            <button type="submit" class="btn btn-xs btn-danger">{{ _('Delete') }}</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>{{ _('This project publishes no lists yet.') }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock maincontent %}

@@ -24,6 +24,10 @@ from formshare.processes.odk.geojson import (
     update_lookup_from_geo_json,
 )
 from formshare.processes.db import (
+    get_project_published_lists,
+    get_list_source_schema,
+    generate_published_list_file,
+    list_is_stale,
     assistant_has_form,
     get_assistant_forms,
     get_project_id_from_name,
@@ -2630,10 +2634,78 @@ def is_csv_a_select(request, project_id, form_id, file_name, file_path):
     return True
 
 
+def refresh_published_lists(request, project_id, form, form_files):
+    """Regenerates any published list this form attaches, when stale.
+
+    A published list is served as a plain attachment -- the registry's whole
+    wire contract is the file name -- so this runs before the manifest is
+    built and only replaces the stored file; serving stays the ordinary
+    media-file path. Returns {file_name: new_md5} for the entries it
+    replaced, so the caller can refresh the hashes it already fetched.
+
+    A list whose generation fails keeps its previous edition: stale data a
+    device can use beats a manifest error it cannot.
+    """
+    published = get_project_published_lists(request, project_id)
+    if not published:
+        return {}
+    lists_by_filename = {}
+    for a_list in published:
+        lists_by_filename[a_list["list_filename"]] = a_list
+    refreshed = {}
+    for a_file in form_files:
+        a_list = lists_by_filename.get(a_file["file_name"])
+        if a_list is None:
+            continue
+        schema = get_list_source_schema(request, a_list)
+        if schema is None or schema == "":
+            # The source repository is not built yet; there is nothing to
+            # generate from and the stored file (if any) stands.
+            continue
+        last_submission = get_last_submission_date_from_schema(request, schema)
+        last_clean = get_last_clean_date_from_schema(request, schema)
+        if not list_is_stale(a_list["list_lastgen"], last_submission, last_clean):
+            continue
+        odk_dir = get_odk_path(request)
+        uid = str(uuid.uuid4())
+        temp_dir = os.path.join(odk_dir, *["tmp", uid])
+        os.makedirs(temp_dir)
+        temp_file = os.path.join(temp_dir, a_file["file_name"])
+        generated, message = generate_published_list_file(request, a_list, temp_file)
+        if not generated:
+            log.error(
+                "Unable to generate list {} of project {}: {}".format(
+                    a_list["list_id"], project_id, message
+                )
+            )
+            continue
+        with open(temp_file, "rb") as generated_file:
+            md5sum = md5(generated_file.read()).hexdigest()
+        if md5sum == a_file["file_md5"]:
+            # The table changed and changed back, or the change is outside
+            # the served columns. The edition was stamped either way.
+            continue
+        added, message = add_file_to_form(
+            request, project_id, form, a_file["file_name"], True, md5sum
+        )
+        if added:
+            bucket_id = project_id + form
+            bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
+            with open(temp_file, "rb") as generated_file:
+                store_file(request, bucket_id, a_file["file_name"], generated_file)
+            refreshed[a_file["file_name"]] = md5sum
+    return refreshed
+
+
 def get_manifest(request, user, project, project_id, form):
     form_files = get_form_files(request, project_id, form)
     if form_files:
         file_array = []
+        refreshed_lists = refresh_published_lists(request, project_id, form, form_files)
+        if refreshed_lists:
+            for a_form_file in form_files:
+                if a_form_file["file_name"] in refreshed_lists:
+                    a_form_file["file_md5"] = refreshed_lists[a_form_file["file_name"]]
         case_lookup_file, last_gen, case_type, case_selector = get_case_lookup_file(
             request, project_id, form
         )

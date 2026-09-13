@@ -9,6 +9,7 @@ from sqlalchemy import (
     Date,
     ForeignKey,
     ForeignKeyConstraint,
+    UniqueConstraint,
     INTEGER,
     BigInteger,
     Index,
@@ -916,6 +917,104 @@ class CaseLookUp(Base):
     field_editable = Column(INTEGER, server_default=text("'1'"))
 
     project = relationship("Project")
+
+
+class PublishedList(Base):
+    """A real-time file the project publishes from a repository table.
+
+    The registry of docs/formshare_case_management/ (formshare.md section 2.1).
+    The key column of every list is rowuuid and is deliberately not a column
+    here: making it configurable would invite the 2021 mistake back.
+    """
+
+    __tablename__ = "publishedlist"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["source_project", "source_form"],
+            ["odkform.project_id", "odkform.form_id"],
+        ),
+        UniqueConstraint("project_id", "list_filename"),
+    )
+
+    project_id = Column(
+        ForeignKey("project.project_id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    list_id = Column(Unicode(120), primary_key=True, nullable=False)
+    list_filename = Column(Unicode(120), nullable=False)
+    list_format = Column(Unicode(12), nullable=False, server_default=text("'csv'"))
+    source_project = Column(Unicode(64), nullable=False)
+    source_form = Column(Unicode(120), nullable=False)
+    source_table = Column(Unicode(120), nullable=False)
+    label_column = Column(Unicode(120), nullable=False)
+    filter_sql = Column(MEDIUMTEXT())
+    geometry_column = Column(Unicode(120))
+    list_filter_mode = Column(Unicode(20), server_default=text("'all'"))
+    list_lastgen = Column(DateTime)
+    list_seq = Column(INTEGER, server_default=text("'0'"))
+    list_createdate = Column(DateTime)
+
+    project = relationship(
+        "Project", primaryjoin="PublishedList.project_id == Project.project_id"
+    )
+
+
+class PublishedListColumn(Base):
+    """Which source columns a published list serves, in order."""
+
+    __tablename__ = "publishedlistcolumn"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "list_id"],
+            ["publishedlist.project_id", "publishedlist.list_id"],
+            ondelete="CASCADE",
+        ),
+    )
+
+    project_id = Column(Unicode(64), primary_key=True, nullable=False)
+    list_id = Column(Unicode(120), primary_key=True, nullable=False)
+    column_name = Column(Unicode(120), primary_key=True, nullable=False)
+    column_source = Column(Unicode(20), nullable=False, server_default=text("'table'"))
+    column_as = Column(Unicode(120))
+    column_order = Column(INTEGER, server_default=text("'0'"))
+
+    publishedlist = relationship("PublishedList")
+
+
+class ListConsumer(Base):
+    """A form that feeds, reads or updates a published list.
+
+    Written when a form upload matches an attachment name against the
+    registry. consumer_is_link marks the one reference whose FK and trigger
+    make the form a follow-up of that list's rows (the case link); the rest
+    are auxiliary reads.
+    """
+
+    __tablename__ = "listconsumer"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["list_project", "list_id"],
+            ["publishedlist.project_id", "publishedlist.list_id"],
+            ondelete="CASCADE",
+        ),
+        ForeignKeyConstraint(
+            ["consumer_project", "consumer_form"],
+            ["odkform.project_id", "odkform.form_id"],
+            ondelete="CASCADE",
+        ),
+    )
+
+    list_project = Column(Unicode(64), primary_key=True, nullable=False)
+    list_id = Column(Unicode(120), primary_key=True, nullable=False)
+    consumer_project = Column(Unicode(64), primary_key=True, nullable=False)
+    consumer_form = Column(Unicode(120), primary_key=True, nullable=False)
+    consumer_role = Column(Unicode(20), nullable=False, server_default=text("'reads'"))
+    selector_field = Column(Unicode(120))
+    consumer_is_link = Column(INTEGER, server_default=text("'0'"))
+
+    publishedlist = relationship("PublishedList")
+    odkform = relationship("Odkform")
 
 
 class CookieConsent(Base):

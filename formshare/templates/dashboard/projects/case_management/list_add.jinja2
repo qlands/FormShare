@@ -1,0 +1,67 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Publish a list") }}{% endblock titlesection %}
+
+{% block breadcrumbs %}{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-lg-12">
+            {% block form_errors %}
+                {{ form.display_errors(errors) }}
+            {% endblock form_errors %}
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h2>{{ _('Publish a list') }}</h2>
+                    <p>{{ _('Choose the form and table the cases come from, the column that labels each case, and the file name that follow-up forms will reference.') }}</p>
+                    <form method="post" class="form-horizontal">
+                        {{ form.secure_form(request) }}
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">{{ _('List code') }}</label>
+                            <div class="col-sm-10">
+                                <input type="text" name="list_id" class="form-control" value="{{ listData.list_id }}" placeholder="cases">
+                                <span class="form-text m-b-none">{{ _('A short internal code for the list. Lower case, no spaces.') }}</span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">{{ _('File name') }}</label>
+                            <div class="col-sm-10">
+                                <input type="text" name="list_filename" class="form-control" value="{{ listData.list_filename }}" placeholder="cases.csv">
+                                <span class="form-text m-b-none">{{ _('The exact name a form must use in select_one_from_file. Lower case, ending in .csv') }}</span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">{{ _('Source form') }}</label>
+                            <div class="col-sm-10">
+                                <select name="source_form" class="form-control" id="source_form">
+                                    <option value="">{{ _('Select a form with a repository') }}</option>
+                                    {% for a_form in forms %}
+                                        <option value="{{ a_form.form_id }}">{{ a_form.form_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">{{ _('Source table') }}</label>
+                            <div class="col-sm-10">
+                                <input type="text" name="source_table" class="form-control" value="{{ listData.source_table or 'maintable' }}">
+                                <span class="form-text m-b-none">{{ _('maintable, or the table of a repeat.') }}</span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">{{ _('Label column') }}</label>
+                            <div class="col-sm-10">
+                                <input type="text" name="label_column" class="form-control" value="{{ listData.label_column }}">
+                                <span class="form-text m-b-none">{{ _('The column whose value names each case on the device.') }}</span>
+                            </div>
+                        </div>
+                        <div class="hr-line-dashed"></div>
+                        <button type="submit" class="btn btn-primary">{{ _('Publish the list') }}</button>
+                        <a class="btn btn-white" href="{{ request.route_url('project_case_lists', userid=userid, projcode=projcode) }}">{{ _('Cancel') }}</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock maincontent %}

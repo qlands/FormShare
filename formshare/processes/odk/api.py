@@ -31,6 +31,7 @@ from formshare.processes.db import (
     update_media_lastgen,
     get_case_link_consumer,
     get_consumer_sources,
+    apply_link_attributes,
     sync_form_consumers,
     assistant_has_form,
     get_assistant_forms,
@@ -3366,47 +3367,29 @@ def apply_registry_links(request, project, form, create_xml_file, create_file):
         return 0, ""
     tree = etree.parse(create_xml_file)
     root = tree.getroot()
-    table = root.find(".//table[@name='maintable']")
-    if table is None:
-        return 1, "Main table was not found in {}".format(create_xml_file)
+    # Read the rowuuid type of each distinct source once. rowuuid is a control
+    # column RSTools writes, not a form field, so it is read from the built
+    # source schema rather than the dictionary.
     key_types = {}
     for a_source in sources:
-        schema = a_source["source_schema"]
-        source_table = a_source["source_table"]
-        cache_key = schema + "." + source_table
-        if cache_key not in key_types:
+        ref = a_source["source_schema"] + "." + a_source["source_table"]
+        if ref not in key_types:
             key_row = request.dbsession.execute(
                 "SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH "
                 "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = :s "
                 "AND TABLE_NAME = :t AND COLUMN_NAME = 'rowuuid'",
-                {"s": schema, "t": source_table},
+                {"s": a_source["source_schema"], "t": a_source["source_table"]},
             ).fetchone()
             if key_row is None:
-                return 1, "The source table {} has no rowuuid column".format(cache_key)
-            key_types[cache_key] = (key_row[0], str(key_row[1] or 80))
-        key_type, key_size = key_types[cache_key]
-        field = root.find(".//field[@name='" + a_source["selector_field"] + "']")
-        if field is None:
-            return 1, "The selector field {} was not found in {}".format(
-                a_source["selector_field"], create_xml_file
-            )
-        field.set("type", key_type)
-        field.set("size", key_size)
-        field.set("rtable", cache_key)
-        field.set("rfield", "rowuuid")
-        field.set("rname", "fk_" + str(uuid.uuid4()).replace("-", "_"))
-        field.set("rlookup", "false")
-        field.set("on_delete", "RESTRICT")
-        # The foreign key already enforces membership: a selector value that
-        # names no source row is refused (MySQL 1452), and ON DELETE RESTRICT
-        # protects the source. The friendlier BEFORE INSERT trigger RSTools can
-        # emit (case_followup) additionally refuses NULL with a message and
-        # hides inactive rows -- but it hardcodes `_active = 1`, a column only a
-        # maintable case creator has, so it breaks against a repeat-table
-        # source like a staff roster. That filter/_active-aware membership is
-        # deferred until RSTools can generate it without assuming _active on the
-        # source (docs/formshare_case_management/rstools.md). is_link is still
-        # recorded; today it changes the role, not the DDL.
+                return 1, "The source table {} has no rowuuid column".format(ref)
+            key_types[ref] = (key_row[0], str(key_row[1] or 80))
+    # The foreign keys enforce existence (MySQL 1452) and protect the source
+    # (ON DELETE RESTRICT); the active case link additionally gets a membership
+    # trigger. All of it is create.xml attributes, realised by one
+    # createFromXML run. docs/formshare_case_management/formshare.md section 3.4.
+    applied, message = apply_link_attributes(root, sources, key_types)
+    if not applied:
+        return 1, message
     if not os.path.exists(create_xml_file + ".case.bk"):
         shutil.copy(create_xml_file, create_xml_file + ".case.bk")
     tree.write(

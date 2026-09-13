@@ -448,3 +448,117 @@ def test_active_none_serves_both():
     sql, _ = cm.build_list_select("FS_abc", "maintable", "hh_name", [], active=None)
     assert "_active" not in sql
     assert sql.endswith(" ORDER BY rowuuid")
+
+
+# ---------------------------------------------------------------------------
+# The create.xml link attributes: FK for all, membership trigger for the
+# active case link only (2026-09-13)
+# ---------------------------------------------------------------------------
+
+_CREATE_XML = (
+    "<XMLSchemaStructure><tables><table name='maintable'>"
+    "<field name='centre_id' type='int'/>"
+    "<field name='worker_id' type='int'/>"
+    "</table></tables></XMLSchemaStructure>"
+)
+
+
+def _linked_root(sources):
+    from lxml import etree
+
+    root = etree.fromstring(_CREATE_XML)
+    key_types = {
+        "FS_src.maintable": ("varchar", "80"),
+        "FS_src.roster": ("varchar", "80"),
+    }
+    ok, message = cm.apply_link_attributes(root, sources, key_types)
+    assert ok, message
+    return root
+
+
+def test_every_selector_gets_a_foreign_key_and_the_rowuuid_type():
+    root = _linked_root(
+        [
+            {
+                "selector_field": "worker_id",
+                "source_schema": "FS_src",
+                "source_table": "roster",
+                "is_link": True,
+                "list_active": 1,
+            },
+            {
+                "selector_field": "centre_id",
+                "source_schema": "FS_src",
+                "source_table": "maintable",
+                "is_link": False,
+                "list_active": 1,
+            },
+        ]
+    )
+    for name, ref in [
+        ("worker_id", "FS_src.roster"),
+        ("centre_id", "FS_src.maintable"),
+    ]:
+        field = root.find(".//field[@name='" + name + "']")
+        assert field.get("type") == "varchar"
+        assert field.get("size") == "80"
+        assert field.get("rtable") == ref
+        assert field.get("rfield") == "rowuuid"
+        assert field.get("on_delete") == "RESTRICT"
+
+
+def test_the_active_case_link_gets_the_membership_trigger():
+    root = _linked_root(
+        [
+            {
+                "selector_field": "worker_id",
+                "source_schema": "FS_src",
+                "source_table": "roster",
+                "is_link": True,
+                "list_active": 1,
+            }
+        ]
+    )
+    table = root.find(".//table[@name='maintable']")
+    assert table.get("case_followup") == "true"
+    assert table.get("creator_table") == "FS_src.roster"
+    assert table.get("creator_field") == "rowuuid"
+    assert table.get("selector_field") == "worker_id"
+    assert table.get("block_trigger") is not None
+
+
+def test_an_auxiliary_link_gets_no_membership_trigger():
+    root = _linked_root(
+        [
+            {
+                "selector_field": "centre_id",
+                "source_schema": "FS_src",
+                "source_table": "maintable",
+                "is_link": False,
+                "list_active": 1,
+            }
+        ]
+    )
+    table = root.find(".//table[@name='maintable']")
+    assert table.get("case_followup") is None
+    # but the foreign key is still there
+    assert root.find(".//field[@name='centre_id']").get("rtable") == "FS_src.maintable"
+
+
+def test_an_inactive_case_link_keeps_the_fk_but_skips_the_trigger():
+    """RSTools hardcodes _active = 1 in the trigger, so a case link over an
+    inactive-serving list would reject every selection; it gets the FK only."""
+    root = _linked_root(
+        [
+            {
+                "selector_field": "worker_id",
+                "source_schema": "FS_src",
+                "source_table": "roster",
+                "is_link": True,
+                "list_active": 0,
+            }
+        ]
+    )
+    table = root.find(".//table[@name='maintable']")
+    assert table.get("case_followup") is None
+    assert root.find(".//field[@name='worker_id']").get("rtable") == "FS_src.roster"

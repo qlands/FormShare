@@ -25,6 +25,9 @@ import csv
 import datetime
 import logging
 import re
+import uuid
+
+from lxml import etree
 
 from formshare.models import (
     PublishedList,
@@ -62,6 +65,7 @@ __all__ = [
     "get_case_link_consumer",
     "get_case_link_source",
     "get_consumer_sources",
+    "apply_link_attributes",
     "source_form_has_consumers",
     "generate_published_list_file",
 ]
@@ -477,7 +481,7 @@ def sync_form_consumers(request, project_id, form_id, maintable_fields):
                         consumer_is_link=0,
                     )
                 )
-        request.dbsession.flush()
+        request.dbsession.commit()
         # Auto-mark the case link when there is exactly one consumer and no
         # choice has been made.
         current = get_form_consumers(request, project_id, form_id)
@@ -524,7 +528,7 @@ def set_case_link(request, project_id, form_id, list_id):
         ).update(
             {"consumer_is_link": 1, "consumer_role": "updates"}
         )
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
         request.dbsession.rollback()
@@ -605,6 +609,7 @@ def get_consumer_sources(request, project_id, form_id):
                 "source_schema": res[0],
                 "source_table": a_list["source_table"],
                 "is_link": int(consumer["consumer_is_link"] or 0) == 1,
+                "list_active": int(a_list.get("list_active", 1) or 0),
             }
         )
     return result
@@ -629,3 +634,53 @@ def source_form_has_consumers(request, source_project, source_form):
         .all()
     )
     return len(res) > 0
+
+
+def apply_link_attributes(root, sources, key_types):
+    """Wires a form's list consumers into its create.xml tree (pure).
+
+    For every consumer: retype the selector to the source's rowuuid and add a
+    foreign key to ``<source>.<table>(rowuuid)`` ON DELETE RESTRICT. For the
+    one consumer that is the case link *and* serves active rows, also set the
+    maintable attributes RSTools turns into a membership trigger -- it checks
+    the selector exists in the source with ``_active = 1`` and refuses null.
+
+    The active-rows condition matters: RSTools hardcodes ``_active = 1`` in
+    that trigger, so a case link over an *inactive*-serving list would have
+    every selection rejected. Such a link keeps the foreign key (existence)
+    and skips the trigger until RSTools can take the active value as an
+    argument (rstools.md).
+
+    :param root: the parsed create.xml root
+    :param sources: get_consumer_sources(...) output
+    :param key_types: {"schema.table": (type, size)} for each source
+    :return: (True, "") or (False, message)
+    """
+    table = root.find(".//table[@name='maintable']")
+    if table is None:
+        return False, "Main table was not found in create.xml"
+    for a_source in sources:
+        ref = a_source["source_schema"] + "." + a_source["source_table"]
+        key = key_types.get(ref)
+        if key is None:
+            return False, "No key type for {}".format(ref)
+        key_type, key_size = key
+        field = root.find(".//field[@name='" + a_source["selector_field"] + "']")
+        if field is None:
+            return False, "The selector field {} was not found in create.xml".format(
+                a_source["selector_field"]
+            )
+        field.set("type", key_type)
+        field.set("size", str(key_size))
+        field.set("rtable", ref)
+        field.set("rfield", "rowuuid")
+        field.set("rname", "fk_" + str(uuid.uuid4()).replace("-", "_"))
+        field.set("rlookup", "false")
+        field.set("on_delete", "RESTRICT")
+        if a_source["is_link"] and int(a_source.get("list_active", 1)) == 1:
+            table.set("case_followup", "true")
+            table.set("creator_table", ref)
+            table.set("creator_field", "rowuuid")
+            table.set("selector_field", a_source["selector_field"])
+            table.set("block_trigger", "T" + str(uuid.uuid4()).replace("-", "_"))
+    return True, ""

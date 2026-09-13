@@ -60,7 +60,6 @@ from formshare.processes.db import (
     get_assistant_password,
     get_assistant_login,
     project_has_crowdsourcing,
-    project_serves_entity_list,
     get_all_project_forms,
     is_file_a_lookup,
     get_name_and_label_from_file,
@@ -97,12 +96,6 @@ from formshare.middleware.response import Response
 from pyxform import xls2xform
 from pyxform.errors import PyXFormError
 from pyxform.xls2json import parse_file_to_json
-from formshare.processes.odk.entities import (
-    deployment_supports_entities,
-    case_list_name,
-    wrong_case_selector_file,
-    inject_entity_declaration,
-)
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -1481,7 +1474,6 @@ def upload_odk_form(
     form_caselabel=None,
     form_caseselector=None,
     form_casedatetime=None,
-    project_entities=0,
 ):
     _ = request.translate
     uid = str(uuid.uuid4())
@@ -1522,30 +1514,6 @@ def upload_odk_form(
             and file_name.find(".xlsm") == -1
         ):
             return False, _("Invalid file type")
-
-        # A case creator form in a project that serves entities gets its
-        # entities sheet written here, before pyxform reads the workbook. Both
-        # conversions below read this same file, so the XForm the device
-        # downloads and the schema the repository is built from come from one
-        # edit and cannot disagree.
-        #
-        # RSTools leaves the declaration out of the schema, so this adds no
-        # column and does not disturb merging against a version that predates it.
-        if (
-            int(project_case or 0) == 1
-            and int(form_casetype or 0) == 1
-            and int(project_entities or 0) == 1
-            and deployment_supports_entities(request)
-        ):
-            project_code = get_project_code_from_id(request, user_id, project_id)
-            declared, declare_message = inject_entity_declaration(
-                file_name, case_list_name(project_code), form_caselabel
-            )
-            if not declared:
-                return False, _(
-                    "This project serves its cases as an entity list and the case "
-                    "creator form could not be prepared for it: {}"
-                ).format(declare_message)
 
         xls2xform.xls2xform_convert(file_name, xml_file)
 
@@ -1701,27 +1669,6 @@ def upload_odk_form(
                                         "The variable must be select_one_from_file using a CSV file "
                                         "or a barcode".format(form_caseselector)
                                     )
-                                else:
-                                    expected_file = wrong_case_selector_file(
-                                        request,
-                                        project_id,
-                                        get_project_code_from_id(
-                                            request, user_id, project_id
-                                        ),
-                                        form_caseselector_file,
-                                    )
-                                    if expected_file is not None:
-                                        error = 1
-                                        message = _(
-                                            "This project serves its cases as an entity list, which the "
-                                            'device knows by name. The variable "{}" must select from '
-                                            '"{}", not from "{}", or the form will find no cases to '
-                                            "choose from.".format(
-                                                form_caseselector,
-                                                expected_file,
-                                                form_caseselector_file,
-                                            )
-                                        )
                                 case_datetime_found = False
                                 for a_field in fields:
                                     if a_field["name"] == form_casedatetime:
@@ -2016,7 +1963,6 @@ def update_odk_form(
     form_caselabel=None,
     form_caseselector=None,
     form_casedatetime=None,
-    project_entities=0,
 ):
     _ = request.translate
     uid = str(uuid.uuid4())
@@ -2057,42 +2003,6 @@ def update_odk_form(
             and file_name.find(".xlsm") == -1
         ):
             return False, _("Invalid file type")
-
-        # A new version of a case creator form is declared the same way the
-        # version it replaces was. This route replaces a form that has no
-        # repository yet, so nothing in the database is at risk -- what is at
-        # risk is the feature. The declaration is FormShare's rather than the
-        # user's, and a replacement that arrives without one would go on to
-        # build its repository from a form that has quietly stopped making
-        # entities. A new version uploaded to merge into an existing
-        # repository goes through AddNewForm instead, which has declared it
-        # from the previous version all along.
-        #
-        # Same way means the same two cells. The dataset comes from the project
-        # code, which cannot change. The label variable comes from the form as
-        # it stands rather than from this request, so that a request which also
-        # renames the case label cannot make the two versions declare different
-        # things.
-        #
-        # Nothing is checked here on purpose. The declaration goes into the
-        # workbook and the rest of this function reads it like any other part
-        # of the form, so a new version that renamed the label variable out
-        # from under it is caught by pyxform, where every other broken
-        # reference is caught.
-        if int(project_entities or 0) == 1 and deployment_supports_entities(request):
-            stored_casetype, stored_caselabel, _selector, _datetime = (
-                get_form_case_params(request, project_id, for_form_id)
-            )
-            if int(project_case or 0) == 1 and int(stored_casetype or 0) == 1:
-                project_code = get_project_code_from_id(request, user_id, project_id)
-                declared, declare_message = inject_entity_declaration(
-                    file_name, case_list_name(project_code), stored_caselabel
-                )
-                if not declared:
-                    return False, _(
-                        "This project serves its cases as an entity list and the case "
-                        "creator form could not be prepared for it: {}"
-                    ).format(declare_message)
 
         xls2xform.xls2xform_convert(file_name, xml_file)
 
@@ -2255,27 +2165,6 @@ def update_odk_form(
                                                     form_caseselector
                                                 )
                                             )
-                                        else:
-                                            expected_file = wrong_case_selector_file(
-                                                request,
-                                                project_id,
-                                                get_project_code_from_id(
-                                                    request, user_id, project_id
-                                                ),
-                                                form_caseselector_file,
-                                            )
-                                            if expected_file is not None:
-                                                error = 1
-                                                message = _(
-                                                    "This project serves its cases as an entity list, which "
-                                                    'the device knows by name. The variable "{}" must '
-                                                    'select from "{}", not from "{}", or the form will '
-                                                    "find no cases to choose from.".format(
-                                                        form_caseselector,
-                                                        expected_file,
-                                                        form_caseselector_file,
-                                                    )
-                                                )
 
                                         case_datetime_found = False
                                         for a_field in fields:
@@ -2644,10 +2533,11 @@ def generate_form_list(project_array):
 def generate_manifest(media_file_array):
     """Builds the OpenRosa manifest.
 
-    Every key of a media file dict becomes a child element, except "type", which
-    the spec puts on the mediaFile as an attribute and which is how a client
-    tells an entity list from an ordinary attachment. Any other key stays a
-    child, so <integrityUrl> and the rest are unaffected.
+    Every key of a media file dict becomes a child element, except "type",
+    which the OpenRosa spec puts on the mediaFile as an attribute when present.
+    Nothing in FormShare sets it today; the handling stays because it is the
+    spec's, not a feature's. Any other key stays a child, so <integrityUrl>
+    and the rest are unaffected.
     """
     root = etree.Element("manifest", xmlns="http://openrosa.org/xforms/xformsManifest")
     for file in media_file_array:
@@ -2744,14 +2634,6 @@ def get_manifest(request, user, project, project_id, form):
     form_files = get_form_files(request, project_id, form)
     if form_files:
         file_array = []
-        # A project that serves its cases as an entity list sends the same case
-        # CSV, with the columns an entity list needs and a type attribute that
-        # tells the client to merge it into its entity store rather than treat
-        # it as a plain attachment. Everything else stays an ordinary media file.
-        serves_entities = deployment_supports_entities(
-            request
-        ) and project_serves_entity_list(request, project_id)
-        entity_list_type = "entityList" if serves_entities else None
         case_lookup_file, last_gen, case_type, case_selector = get_case_lookup_file(
             request, project_id, form
         )
@@ -2806,7 +2688,6 @@ def get_manifest(request, user, project, project_id, form):
                                 schema,
                                 temp_csv,
                                 True,
-                                serves_entities,
                             )
                         else:
                             generated = generate_lookup_file(
@@ -2815,7 +2696,6 @@ def get_manifest(request, user, project, project_id, form):
                                 schema,
                                 temp_csv,
                                 False,
-                                serves_entities,
                             )
                         if generated:
                             log.info("File {} generated".format(file["file_name"]))
@@ -2861,7 +2741,6 @@ def get_manifest(request, user, project, project_id, form):
                                     file_array.append(
                                         {
                                             "filename": file_name,
-                                            "type": entity_list_type,
                                             "hash": "md5:" + md5sum,
                                             "downloadUrl": request.route_url(
                                                 "odkmediafile",
@@ -2878,7 +2757,6 @@ def get_manifest(request, user, project, project_id, form):
                                     file_array.append(
                                         {
                                             "filename": file_name,
-                                            "type": entity_list_type,
                                             "hash": "md5:" + file["file_md5"],
                                             "downloadUrl": request.route_url(
                                                 "odkmediafile",
@@ -2899,7 +2777,6 @@ def get_manifest(request, user, project, project_id, form):
                                 file_array.append(
                                     {
                                         "filename": file_name,
-                                        "type": entity_list_type,
                                         "hash": "md5:" + file["file_md5"],
                                         "downloadUrl": request.route_url(
                                             "odkmediafile",
@@ -2915,7 +2792,6 @@ def get_manifest(request, user, project, project_id, form):
                             file_array.append(
                                 {
                                     "filename": file_name,
-                                    "type": entity_list_type,
                                     "hash": "md5:" + file["file_md5"],
                                     "downloadUrl": request.route_url(
                                         "odkmediafile",
@@ -3520,21 +3396,12 @@ def create_repository(
                 if form_data["form_case"] == 1 and form_data["form_casetype"] > 1:
                     form_creator = get_case_form(request, project)
                     form_creator_data = get_form_data(request, project, form_creator)
-                    # Which column of the creator a follow-up points at.
-                    #
-                    # Normally the case identifier the project owner nominated.
-                    # A project serving its cases as an entity list links on
-                    # rowuuid instead, because the device decides what a
-                    # follow-up carries: a select over an entity list stores the
-                    # entity's id, and for a case registered offline that id is
-                    # the uuid the device minted -- which is that row's rowuuid,
-                    # not its case identifier. Linking on the identifier would
-                    # refuse every follow-up made offline.
-                    link_field = (
-                        "rowuuid"
-                        if project_serves_entity_list(request, project)
-                        else form_creator_data["form_pkey"]
-                    )
+                    # Which column of the creator a follow-up points at: the
+                    # case identifier the project owner nominated. The native
+                    # case-management registry will link on rowuuid instead
+                    # (docs/formshare_case_management/), but that arrives with
+                    # the registry, not before.
+                    link_field = form_creator_data["form_pkey"]
                     creator_pkey_data = get_field_details(
                         request,
                         project,
@@ -3804,37 +3671,22 @@ def move_media_files(odk_dir, xform_directory, src_submission, trg_submission):
             )
 
 
-def _entity_flag_is_set(submission_data, attribute):
-    """An <entity> create/update flag, which ODK allows to be a bound expression."""
-    value = submission_data.get("meta/entity/@" + attribute, "")
-    return str(value).strip().lower() in ("1", "true")
+def set_rowuuid_from_meta(submission_data):
+    """Adopts a device-minted rowuuid as the row's rowuuid.
 
+    A client that mints the row identity on the device (FormShare Collect,
+    through KotlinRosa) sends it as meta/rowuuid. Taking it as the rowuuid
+    gives the row one identity instead of two: JSONToMySQL stores an explicit
+    rowuuid, and the unique index on that column then makes a resend of the
+    same submission collide rather than insert a second row.
 
-def set_rowuuid_from_entity(submission_data):
-    """Adopts a device-minted entity id as the row's rowuuid.
-
-    A form that declares an entity mints the case identity on the device and
-    sends it back as the meta/entity/@id attribute. Taking it as the rowuuid
-    gives the case one identity instead of two: JSONToMySQL stores an explicit
-    rowuuid, and the unique index on that column then makes a resend of the same
-    submission collide rather than register the case a second time.
-
-    Only on create. On an update form the same attribute names *the case being
-    updated* -- a row that already exists and whose rowuuid this already is --
-    so adopting it there would make the follow-up claim the creator's identity
-    and the insert would be refused. An entity that both creates and updates is
-    an upsert, which is ambiguous here, so it is left alone as well.
-
-    Does nothing to a submission that carries no entity, which is every
-    submission until a form declares one.
+    Does nothing when the key is absent or empty, which is every submission
+    from a client that does not mint it -- those rows keep the server-minted
+    default, exactly as before.
     """
-    entity_id = submission_data.get("meta/entity/@id", "")
-    if not entity_id:
-        return
-    if _entity_flag_is_set(submission_data, "create") and not _entity_flag_is_set(
-        submission_data, "update"
-    ):
-        submission_data["rowuuid"] = entity_id
+    row_uuid = str(submission_data.get("meta/rowuuid", "") or "").strip()
+    if row_uuid:
+        submission_data["rowuuid"] = row_uuid
 
 
 def get_directory_size(path):
@@ -3893,7 +3745,7 @@ def store_json_file(
                 submission_data["_submission_id"] = submission_id
                 submission_data["_project_code"] = project_code
                 submission_data["_active"] = 1
-                set_rowuuid_from_entity(submission_data)
+                set_rowuuid_from_meta(submission_data)
                 geopoint_variables = get_form_geopoints(request, project, form)
                 if geopoint_variables:
                     for geopoint_variable in geopoint_variables:

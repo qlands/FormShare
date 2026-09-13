@@ -43,7 +43,6 @@ from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
     get_number_of_datasets_with_gps_in_project,
 )
-from formshare.processes.odk.entities import deployment_supports_entities
 from formshare.processes.storage import (
     store_file,
     get_stream,
@@ -192,16 +191,10 @@ class AddProjectView(ProjectsView):
             else:
                 project_details["project_case"] = 0
 
-            # Serving cases as an entity list is an option on a case project and
-            # meaningless without one, so it cannot outlive the checkbox above.
-            if (
-                "project_entities" in project_details.keys()
-                and project_details["project_case"] == 1
-                and deployment_supports_entities(self.request)
-            ):
-                project_details["project_entities"] = 1
-            else:
-                project_details["project_entities"] = 0
+            # The entity-list option is gone -- native case management replaced
+            # it (docs/formshare_case_management/). The column stays at 0 until
+            # the cleanup migration drops it.
+            project_details["project_entities"] = 0
 
             if "project_formlist_auth" in project_details.keys():
                 project_details["project_formlist_auth"] = 1
@@ -317,7 +310,6 @@ class AddProjectView(ProjectsView):
         return {
             "projectDetails": project_details,
             "timezones": get_timezones(self.request),
-            "entitiesSupported": deployment_supports_entities(self.request),
         }
 
 
@@ -356,23 +348,10 @@ class EditProjectView(ProjectsView):
                 if total_forms == 0:
                     project_details["project_case"] = 0
 
-            # Unlike the case switch, this one is settled before the first form
-            # and never after. Turning it on later would advertise a case list
-            # as an entity list that the already built creator form cannot
-            # populate; turning it off later would leave follow-up repositories
-            # linked on rowuuid while the list stopped sending it. Once a form
-            # exists the key is dropped, which leaves the stored value alone.
-            if total_forms == 0:
-                if (
-                    "project_entities" in project_details.keys()
-                    and project_details.get("project_case") == 1
-                    and deployment_supports_entities(self.request)
-                ):
-                    project_details["project_entities"] = 1
-                else:
-                    project_details["project_entities"] = 0
-            else:
-                project_details.pop("project_entities", None)
+            # The entity-list option is gone -- native case management replaced
+            # it (docs/formshare_case_management/). The stored value is left
+            # alone until the cleanup migration drops the column.
+            project_details.pop("project_entities", None)
 
             if "project_formlist_auth" in project_details.keys():
                 project_details["project_formlist_auth"] = 1
@@ -424,7 +403,6 @@ class EditProjectView(ProjectsView):
         return {
             "projectDetails": project_details,
             "timezones": get_timezones(self.request),
-            "entitiesSupported": deployment_supports_entities(self.request),
         }
 
 

@@ -232,7 +232,40 @@ def t_e_s_t_clean_interface(test_object):
         "SELECT rowuuid FROM {}.maintable".format(form_details["form_schema"])
     ).first()
     row_uuid = res[0]
+    # Two crops the lookup knows, for the multiselect editor below
+    crop_codes = [
+        a_row[0]
+        for a_row in engine.execute(
+            "SELECT crop_list_cod FROM {}.lkpcrop_list "
+            "ORDER BY crop_list_cod LIMIT 2".format(form_details["form_schema"])
+        ).fetchall()
+    ]
     engine.dispose()
+    assert len(crop_codes) == 2
+
+    # The multiselect editor: the crops of that row live in their own table,
+    # and the editor lists the options taken and the options left
+    multiselect_url = (
+        "/user/{}/project/{}/assistantaccess/form/{}/clean/maintable/"
+        "multiselect/maintable_msel_crops/{}".format(
+            test_object.randonLogin,
+            test_object.project,
+            test_object.formID,
+            row_uuid,
+        )
+    )
+    res = test_object.testapp.get(multiselect_url, status=200)
+    assert "FS_error" not in res.headers
+
+    # Two options, then one, then none
+    res = test_object.testapp.post(multiselect_url, {"to[]": crop_codes}, status=200)
+    assert res.json["status"] == 200
+    res = test_object.testapp.post(multiselect_url, {"to[]": crop_codes[0]}, status=200)
+    assert res.json["status"] == 200
+    res = test_object.testapp.post(multiselect_url, {}, status=200)
+    assert res.json["status"] == 200
+    res = test_object.testapp.get(multiselect_url, status=200)
+    assert "FS_error" not in res.headers
 
     # Emits a change into the database fails. Unknow operation
     test_object.testapp.post(
@@ -381,3 +414,31 @@ def t_e_s_t_clean_interface(test_object):
         },
         status=200,
     )
+
+    # The columns FormShare keeps for itself are dropped from an update,
+    # not written: who submitted the row stays as it was
+    engine = create_engine(
+        test_object.server_config["sqlalchemy.url"], poolclass=NullPool
+    )
+    submitted_by = engine.execute(
+        "SELECT _submitted_by FROM {}.maintable WHERE rowuuid = '{}'".format(
+            form_details["form_schema"], row_uuid
+        )
+    ).first()[0]
+    test_object.testapp.post_json(
+        "/api_update",
+        {
+            "apikey": test_object.assistantLoginKey,
+            "rowuuid": row_uuid,
+            "landcultivated": 15,
+            "_submitted_by": "nobody",
+        },
+        status=200,
+    )
+    res = engine.execute(
+        "SELECT _submitted_by, landcultivated FROM {}.maintable "
+        "WHERE rowuuid = '{}'".format(form_details["form_schema"], row_uuid)
+    ).first()
+    engine.dispose()
+    assert res[0] == submitted_by
+    assert float(res[1]) == 15

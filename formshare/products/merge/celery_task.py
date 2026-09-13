@@ -1124,8 +1124,9 @@ def internal_merge_into_repository(
     log.info("Merging successful")
 
 
+# Runs in the Celery worker, which coverage does not measure
 @celeryApp.task(bind=True, base=CeleryTask)
-def merge_into_repository(
+def merge_into_repository(  # pragma: no cover
     self,
     settings,
     user,

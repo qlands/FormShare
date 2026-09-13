@@ -125,8 +125,9 @@ def internal_import_xml_files(
             f.write(a_message + "\n")
 
 
+# Runs in the Celery worker, which coverage does not measure
 @celeryApp.task(bind=True, base=CeleryTask)
-def import_xml_files(
+def import_xml_files(  # pragma: no cover
     self,
     settings,
     user,

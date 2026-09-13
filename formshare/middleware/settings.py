@@ -26,13 +26,16 @@ _lock = threading.Lock()
 
 
 def init_settings(settings: dict) -> None:
-    """Populate the global settings store.
+    """Make *settings* the global settings store.
 
     Call this once during application startup before any request is handled.
+    The dict is kept, not copied: it is the same object every request reads
+    through request.registry.settings, so a value changed at runtime (the
+    test suite flips deployment switches this way) is seen everywhere.
     """
+    global _settings
     with _lock:
-        _settings.clear()
-        _settings.update(settings)
+        _settings = settings
 
 
 def get_settings() -> dict:

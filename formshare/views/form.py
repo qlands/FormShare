@@ -786,7 +786,9 @@ class FormDetails(PrivateView):
                         "An email has been sent to the technical team and they will contact you ASAP."
                     )
                 )
-            if created == 21:
+            # jxformtomysql stopped returning 21 with schema format 3.0, when
+            # identical choice lists began to share one lookup table
+            if created == 21:  # pragma: no cover
                 # Duplicated lookups
                 txt_message = (
                     self._("The following choices are duplicated in your ODK:") + "\n"

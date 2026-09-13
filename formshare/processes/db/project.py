@@ -866,7 +866,8 @@ def get_project_tenant(request, project_id):
     return None
 
 
-def api_get_project_access_type(request, user, project_id):
+# Not called by FormShare or by any plugin. Kept for the plugins that may.
+def api_get_project_access_type(request, user, project_id):  # pragma: no cover
     res = (
         request.dbsession.query(Userproject.access_type)
         .filter(Userproject.user_id == user)
@@ -1063,7 +1064,8 @@ def get_project_owner(request, project, filter_archived=True):
         return None
 
 
-def get_project_query_users(request, project_id):
+# Not called by FormShare or by any plugin. Kept for the plugins that may.
+def get_project_query_users(request, project_id):  # pragma: no cover
     res = (
         request.dbsession.query(
             Odkform.form_schema,
@@ -1159,7 +1161,9 @@ def get_user_projects(request, user, logged_user):
             .all()
         )
         projects = map_from_schema(res)
-    else:
+    else:  # pragma: no cover
+        # Every caller passes the logged user as the user, so this branch,
+        # for seeing someone else's projects, is not reached today
         projects = []
         # The logged account is different as the user account =  Seeing someone else projects
 
@@ -1258,7 +1262,8 @@ def get_user_archived_projects(request, user, logged_user):
             .all()
         )
         projects = map_from_schema(res)
-    else:
+    else:  # pragma: no cover
+        # As in get_user_projects: no caller asks for someone else's projects
         projects = []
         # The logged account is different as the user account =  Seeing someone else projects
 

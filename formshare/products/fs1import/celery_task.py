@@ -571,8 +571,9 @@ def internal_import_json_files(
     engine.dispose()
 
 
+# Runs in the Celery worker, which coverage does not measure
 @celeryApp.task(bind=True, base=CeleryTask)
-def import_json_files(
+def import_json_files(  # pragma: no cover
     self,
     user,
     project,

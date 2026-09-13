@@ -40,7 +40,9 @@ class TaskStreamView(AsyncView):
     methods = ["GET"]
     requireAuth = True
 
-    async def process_view(self, request):
+    # The stream stays open until the task ends, which the synchronous test
+    # client cannot wait for
+    async def process_view(self, request):  # pragma: no cover
         task_id = request.path_params["task_id"]
         redis_url = self.settings.get("celery.broker", "redis://localhost:6379/0")
         channel = "formshare:tasks:{}".format(task_id)

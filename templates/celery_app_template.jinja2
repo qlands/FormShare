@@ -38,7 +38,9 @@ def get_ini_value(key, default=None):
 
 def get_tasks():
     tasks = []
-    if os.environ.get("FORMSHARE_RUN_FROM_CELERY", "false") == "true":
+    # Only the Celery worker loads its plugins here; the test suite measures
+    # the web process, in which this stays False
+    if os.environ.get("FORMSHARE_RUN_FROM_CELERY", "false") == "true":  # pragma: no cover
         if os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "false":
             celery_plugins = get_ini_value(CELERY_PLUGINS_ENTRY_POINT_GROUP, "")
             plugins = get_ini_value(PLUGINS_ENTRY_POINT_GROUP, "").split()

@@ -2,6 +2,7 @@ import glob
 import os
 import time
 
+from .config_switches import settings_set_to
 from .sql import get_form_details
 
 
@@ -1021,6 +1022,49 @@ def t_e_s_t_odk(test_object):
             FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
         ),
     )
+
+    # A form without a repository takes only so many test submissions. With
+    # the limit at none, its pages say it is full and a submission, as XML or
+    # as JSON, is refused
+    with settings_set_to({"maximum.testing": "0"}):
+        test_object.testapp.get(
+            "/user/{}/project/{}/form/{}".format(
+                test_object.randonLogin, test_object.project, test_object.formID
+            ),
+            status=200,
+        )
+        test_object.testapp.get(
+            "/user/{}/project/{}".format(test_object.randonLogin, test_object.project),
+            status=200,
+        )
+        test_object.testapp.post(
+            "/user/{}/project/{}/push".format(
+                test_object.randonLogin, test_object.project
+            ),
+            status=404,
+            upload_files=[
+                ("filetoupload", submission_file),
+                ("image", image_file),
+                ("sound", sound_file),
+            ],
+            extra_environ=dict(
+                FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+            ),
+        )
+        test_object.testapp.post(
+            "/user/{}/project/{}/push_json".format(
+                test_object.randonLogin, test_object.project
+            ),
+            status=404,
+            upload_files=[
+                ("filetoupload", submission_file_json),
+                ("image", image_file),
+                ("sound", sound_file),
+            ],
+            extra_environ=dict(
+                FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+            ),
+        )
 
     time.sleep(5)  # Wait for ElasticSearch to store this
 

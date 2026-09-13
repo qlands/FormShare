@@ -27,7 +27,9 @@ def main(global_config, **settings):
     apppath = os.path.dirname(os.path.abspath(__file__))
     settings.setdefault("apppath", apppath)
 
-    if global_config is not None:
+    # The paste entry point: nothing calls main with a global_config since
+    # the FastAPI migration, and setup.py declares no paste.app_factory
+    if global_config is not None:  # pragma: no cover
         from configparser import ConfigParser, NoOptionError
 
         cfg = ConfigParser()

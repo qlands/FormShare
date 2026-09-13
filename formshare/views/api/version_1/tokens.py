@@ -53,7 +53,10 @@ class TokenView(object):
                     current_secret = decode_data(
                         self.request, res.user_apisecret.encode()
                     )
-                    if current_secret != "":
+                    # decode_data hands back bytes, so the comparison has
+                    # to be with bytes: against "" it was never equal, and a
+                    # user with an empty secret was told the key did not exist
+                    if current_secret != b"":
                         if current_secret.decode() == api_secret:
                             token = secrets.token_hex(16)
                             token_expires_on = datetime.now() + relativedelta(hours=+24)

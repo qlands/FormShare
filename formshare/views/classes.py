@@ -663,13 +663,16 @@ class PrivateView(object):
             self.system_timezone_offset = "+00:00"
             self.system_timezone_name = "UTC"
 
-    def get_token_from_data(self, dict_data):
+    # The two token helpers and token_required serve views that plugins
+    # define (the workspace plugin signs the data of its forms with them);
+    # nothing in FormShare itself sets token_required.
+    def get_token_from_data(self, dict_data):  # pragma: no cover
         key = self.request.registry.settings["aes.key"]
         auth_s = URLSafeSerializer(key, self.user.login)
         token = auth_s.dumps(dict_data)
         return token
 
-    def get_data_from_token(self, token):
+    def get_data_from_token(self, token):  # pragma: no cover
         key = self.request.registry.settings["aes.key"]
         auth_s = URLSafeSerializer(key, self.user.login)
         try:
@@ -817,7 +820,9 @@ class PrivateView(object):
                 token_user = get_user_with_token(self.request, authorization_token)
                 if token_user is not None:
                     self.user = get_user_data(token_user, self.request)
-                    if self.user is None:
+                    # The token was found on an active user a moment ago, so
+                    # the user data is there; this guards a race with a delete
+                    if self.user is None:  # pragma: no cover
                         self.returnRawViewResult = True
                         response = Response(
                             content_type="application/json",
@@ -1025,7 +1030,7 @@ class PrivateView(object):
             for key, value in dct.items():
                 if isinstance(value, str):
                     dct[key] = value.strip()
-            if self.token_required:
+            if self.token_required:  # pragma: no cover
                 if "token" not in dct.keys():
                     raise HTTPNotFound()
                 token_data = self.get_data_from_token(dct["token"])
@@ -1048,7 +1053,7 @@ class PrivateView(object):
             for key, value in dct.items():
                 if isinstance(value, str):
                     dct[key] = value.strip()
-            if self.token_required:
+            if self.token_required:  # pragma: no cover
                 if "token" not in dct.keys():
                     raise HTTPNotFound()
                 token_data = self.get_data_from_token(dct["token"])
@@ -1242,9 +1247,11 @@ class AssistantView(object):
                     self.assistant = get_assistant_data(
                         self.project_assistant, token_assistant, self.request
                     )
-                    self.assistantUUID = self.assistant.loginUUID
-
-                    if self.assistant is None:
+                    # A token names an assistant of the user, and the
+                    # assistant is looked up in this project: it is not found
+                    # when the same assistant name lives in several projects
+                    # and this is not one of them
+                    if self.assistant is None:  # pragma: no cover
                         response = Response(
                             content_type="application/json",
                             status=401,
@@ -1257,6 +1264,7 @@ class AssistantView(object):
                         )
                         return response
                     else:
+                        self.assistantUUID = self.assistant.loginUUID
                         self.api = True
                 else:
                     self.returnRawViewResult = True

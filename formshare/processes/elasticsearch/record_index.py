@@ -2,6 +2,7 @@ from uuid import UUID
 
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import RequestError
+from elasticsearch.exceptions import ConnectionError as ESConnectionError
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 import os
@@ -80,11 +81,13 @@ def create_connection(settings):
     except KeyError:
         use_ssl = False
 
+    # The client takes the prefix as path_prefix, and TLS is a scheme, not
+    # a flag: given url_prefix or use_ssl in the host it refuses to start
+    if use_ssl:
+        scheme = "https"
     cnt_params = {"host": host, "port": port, "scheme": scheme}
     if url_prefix is not None:
-        cnt_params["url_prefix"] = url_prefix
-    if use_ssl:
-        cnt_params["use_ssl"] = use_ssl
+        cnt_params["path_prefix"] = url_prefix
     connection = Elasticsearch(
         [cnt_params],
         basic_auth=(user_name, user_password),
@@ -130,7 +133,7 @@ def index_exists(connection, index_name):
         else:
             return False
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def create_record_index(settings):
@@ -179,7 +182,7 @@ def create_record_index(settings):
         else:
             connection.close()
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def delete_form_records(settings, project_id, form_id):
@@ -202,7 +205,7 @@ def delete_form_records(settings, project_id, form_id):
             else:
                 raise e
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def delete_from_record_index(settings, record_uuid):
@@ -222,7 +225,7 @@ def delete_from_record_index(settings, record_uuid):
             else:
                 raise e
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def add_record(
@@ -242,7 +245,7 @@ def add_record(
                 connection.index(index=index_name, id=record_uuid, body=data_dict)
                 connection.close()
             else:
-                raise RequestError("Cannot connect to ElasticSearch")
+                raise ESConnectionError("Cannot connect to ElasticSearch")
         except Exception as e:  # pragma: no cover
             data_dict = {
                 "project_id": project_id,
@@ -334,7 +337,7 @@ def get_table(settings, record_uuid):
                     es_result["hits"]["hits"][0]["_source"]["table"],
                 )
         else:
-            raise RequestError("Cannot connect to ElasticSearch")
+            raise ESConnectionError("Cannot connect to ElasticSearch")
     else:
         return None, None
 
@@ -361,6 +364,6 @@ def get_project_and_form(settings, record_uuid):
                     es_result["hits"]["hits"][0]["_source"]["form_id"],
                 )
         else:
-            raise RequestError("Cannot connect to ElasticSearch")
+            raise ESConnectionError("Cannot connect to ElasticSearch")
     else:
         return None, None

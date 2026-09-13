@@ -142,8 +142,9 @@ def internal_build_media_zip(
             file.writestr("empty.txt", _("There are no media files"))
 
 
+# Runs in the Celery worker, which coverage does not measure
 @celeryApp.task(bind=True, base=CeleryTask)
-def build_media_zip(
+def build_media_zip(  # pragma: no cover
     self,
     settings,
     odk_dir,

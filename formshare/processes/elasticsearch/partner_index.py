@@ -1,5 +1,6 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import RequestError
+from elasticsearch.exceptions import ConnectionError as ESConnectionError
 
 
 class PartnerExistError(Exception):
@@ -111,11 +112,13 @@ class PartnerIndexManager(object):
                 raise ValueError("URL prefix must be string")
         if not isinstance(self.use_ssl, bool):
             raise ValueError("Use SSL must be boolean")
-        cnt_params = {"host": self.host, "port": self.port, "scheme": self.scheme}
+        # The client takes the prefix as path_prefix, and TLS is a scheme,
+        # not a flag: given url_prefix or use_ssl in the host it refuses to
+        # start
+        scheme = "https" if self.use_ssl else self.scheme
+        cnt_params = {"host": self.host, "port": self.port, "scheme": scheme}
         if self.url_prefix is not None:
-            cnt_params["url_prefix"] = self.url_prefix
-        if self.use_ssl:
-            cnt_params["use_ssl"] = self.use_ssl
+            cnt_params["path_prefix"] = self.url_prefix
         connection = Elasticsearch(
             [cnt_params],
             basic_auth=(self.user_name, self.user_password),
@@ -216,7 +219,7 @@ class PartnerIndexManager(object):
                 connection.close()
 
         else:
-            raise RequestError("Cannot connect to ElasticSearch")
+            raise ESConnectionError("Cannot connect to ElasticSearch")
 
     def partner_exists(self, partner_id):
         """
@@ -233,7 +236,7 @@ class PartnerIndexManager(object):
             if res["hits"]["total"]["value"] > 0:
                 return True
         else:
-            raise RequestError("Cannot connect to ElasticSearch")
+            raise ESConnectionError("Cannot connect to ElasticSearch")
         return False
 
     def add_partner(self, partner_id, data_dict):
@@ -254,7 +257,7 @@ class PartnerIndexManager(object):
                 )
                 connection.close()
             else:
-                raise RequestError("Cannot connect to ElasticSearch")
+                raise ESConnectionError("Cannot connect to ElasticSearch")
         else:
             raise PartnerExistError()
 
@@ -275,7 +278,7 @@ class PartnerIndexManager(object):
                 connection.close()
                 return True
             else:
-                raise RequestError("Cannot connect to ElasticSearch")
+                raise ESConnectionError("Cannot connect to ElasticSearch")
         else:
             raise PartnerNotExistError()
 
@@ -298,7 +301,7 @@ class PartnerIndexManager(object):
                 connection.close()
                 return True
             else:
-                raise RequestError("Cannot connect to ElasticSearch")
+                raise ESConnectionError("Cannot connect to ElasticSearch")
         else:
             raise PartnerNotExistError()
 
@@ -328,5 +331,5 @@ class PartnerIndexManager(object):
                     result.append(hit["_source"])
                 return result, total
         else:
-            raise RequestError("Cannot connect to ElasticSearch")
+            raise ESConnectionError("Cannot connect to ElasticSearch")
         return result, 0

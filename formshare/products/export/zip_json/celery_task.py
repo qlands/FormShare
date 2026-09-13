@@ -146,8 +146,9 @@ def internal_build_zip_json(
         )
 
 
+# Runs in the Celery worker, which coverage does not measure
 @celeryApp.task(bind=True, base=CeleryTask)
-def build_zip_json(
+def build_zip_json(  # pragma: no cover
     self,
     settings,
     odk_dir,

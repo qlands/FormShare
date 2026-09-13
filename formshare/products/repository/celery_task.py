@@ -636,8 +636,9 @@ def internal_create_mysql_repository(
         )
 
 
+# Runs in the Celery worker, which coverage does not measure
 @celeryApp.task(bind=True, base=CeleryTask)
-def create_mysql_repository(
+def create_mysql_repository(  # pragma: no cover
     self,
     settings,
     user,

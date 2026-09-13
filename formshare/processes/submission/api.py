@@ -1873,8 +1873,10 @@ def update_record_with_id(request, user, schema, table, rowuuid, data):
     for a_key in key_array:
         data.pop(a_key, None)
 
-    for a_key in data.keys():
-        if not field_is_editable(a_key):
+    # field_is_editable answers "true" or "false" for the grid, so it is
+    # compared as such; and the dict cannot shrink while being iterated
+    for a_key in list(data.keys()):
+        if field_is_editable(a_key) == "false":
             data.pop(a_key, None)
 
     fields_not_found = []

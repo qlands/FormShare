@@ -733,7 +733,15 @@ def check_jxform_file(
                 attachments,
             )
             return 20, message
-        if p.returncode == 21:
+        # Codes 21 (two choice lists with the same options) and 29 (a GeoJSON
+        # without properties) are no longer returned by jxformtomysql: since
+        # schema format 3.0 identical lists share a lookup, and an empty
+        # feature is a row without a description. Code 2 (a table with more
+        # than 60 selects) went with the index slots that limit cost, and
+        # code 35 (an "or other" select) cannot come out because pyxform
+        # rewrites the select before the checker sees it. The handlers stay
+        # for a report written by an older checker.
+        if p.returncode == 21:  # pragma: no cover
             log.error(
                 ". Error: "
                 + str(p.returncode)
@@ -1160,7 +1168,7 @@ def check_jxform_file(
                 attachments,
             )
             return 28, message
-        if p.returncode == 29:
+        if p.returncode == 29:  # pragma: no cover
             message = "The following GeoJSON file does not have properties: \n"
             root = etree.fromstring(stdout)
             files_with_problems = root.findall(".//file")
@@ -1242,7 +1250,7 @@ def check_jxform_file(
                 attachments,
             )
             return 32, message
-        if p.returncode == 2:
+        if p.returncode == 2:  # pragma: no cover
             log.error(
                 ". Error: "
                 + str(p.returncode)
@@ -1424,7 +1432,7 @@ def check_jxform_file(
             )
             return 34, message
 
-        if p.returncode == 35:
+        if p.returncode == 35:  # pragma: no cover
             message = _(
                 'Your ODK form uses select or multi-select variables with "or other." '
                 'Using "or other" is a bad practice because FormShare would need to assume the code '

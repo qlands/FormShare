@@ -697,8 +697,8 @@ class RegisterView(PublicView):
                     if (
                         self.request.registry.settings.get(
                             "auth.auto_gen_user_id", "False"
-                        )
-                        == "True"
+                        ).lower()
+                        == "true"
                     ):
                         data["user_id"] = new_user_id()
                         # print("User ID is: {}".format(data["user_id"]))
@@ -844,8 +844,11 @@ class RegisterView(PublicView):
                 log.error("Invalid email {}".format(data["user_email"]))
                 self.append_to_errors(self._("Invalid email"))
 
+        # Spelled True in some ini files and true in others; both must agree
+        # with the generation above or the form asks for an id it then
+        # replaces, or hides one it then requires
         if (
-            self.request.registry.settings.get("auth.auto_gen_user_id", "false")
+            self.request.registry.settings.get("auth.auto_gen_user_id", "false").lower()
             == "true"
         ):
             request_user = False

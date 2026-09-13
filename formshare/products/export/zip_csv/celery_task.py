@@ -146,8 +146,9 @@ def internal_build_zip_csv(
         )
 
 
+# Runs in the Celery worker, which coverage does not measure
 @celeryApp.task(bind=True, base=CeleryTask)
-def build_zip_csv(
+def build_zip_csv(  # pragma: no cover
     self,
     settings,
     odk_dir,

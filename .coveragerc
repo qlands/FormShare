@@ -2,6 +2,9 @@
 [run]
 source = formshare
 omit = */utilities/*
+# The suite boots the app again in a subprocess for the settings that are
+# read at startup (tests/steps/settings_at_startup.py); measure it too
+patch = subprocess
 
 [paths]
 source =

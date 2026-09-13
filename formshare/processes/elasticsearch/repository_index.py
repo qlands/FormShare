@@ -1,6 +1,7 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.exceptions import RequestError
+from elasticsearch.exceptions import ConnectionError as ESConnectionError
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 import os
@@ -196,11 +197,13 @@ def create_connection(settings):
     except KeyError:
         use_ssl = False
 
+    # The client takes the prefix as path_prefix, and TLS is a scheme, not
+    # a flag: given url_prefix or use_ssl in the host it refuses to start
+    if use_ssl:
+        scheme = "https"
     cnt_params = {"host": host, "port": port, "scheme": scheme}
     if url_prefix is not None:
-        cnt_params["url_prefix"] = url_prefix
-    if use_ssl:
-        cnt_params["use_ssl"] = use_ssl
+        cnt_params["path_prefix"] = url_prefix
     connection = Elasticsearch(
         [cnt_params],
         basic_auth=(user_name, user_password),
@@ -226,7 +229,7 @@ def index_exists(connection, index_name):
         else:
             return False
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def create_dataset_index(settings):
@@ -277,7 +280,7 @@ def create_dataset_index(settings):
         else:
             connection.close()
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def _get_submission_search_dict(project_id, form_id, submission_id):
@@ -359,7 +362,7 @@ def delete_from_dataset_index(settings, project_id, form_id, submission_id):
             else:
                 raise e
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def delete_dataset_from_index(settings, project_id, form_id):
@@ -381,7 +384,7 @@ def delete_dataset_from_index(settings, project_id, form_id):
             else:
                 raise e
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def delete_dataset_index_by_project(settings, project_id):
@@ -403,7 +406,7 @@ def delete_dataset_index_by_project(settings, project_id):
             else:
                 raise e
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def add_dataset(settings, project_id, form_id, submission_id, data_dict):
@@ -418,7 +421,7 @@ def add_dataset(settings, project_id, form_id, submission_id, data_dict):
                 connection.index(index=index_name, id=submission_id, body=data_dict)
                 connection.close()
             else:
-                raise RequestError("Cannot connect to ElasticSearch")
+                raise ESConnectionError("Cannot connect to ElasticSearch")
         except Exception as e:  # pragma: no cover
             try:
                 log.error(
@@ -490,7 +493,7 @@ def get_dataset_stats_for_form(settings, project_id, form_id):
             connection.close()
             return 0, None, None
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def get_number_of_datasets_with_gps(settings, project_id, forms):
@@ -509,7 +512,7 @@ def get_number_of_datasets_with_gps(settings, project_id, forms):
                 pass
         connection.close()
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
     return res
 
 
@@ -530,7 +533,7 @@ def get_all_datasets_with_gps(settings, project_id, form_id, size=0):
             connection.close()
             return []
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def get_number_of_datasets_with_gps_in_project(settings, project_id):
@@ -550,7 +553,7 @@ def get_number_of_datasets_with_gps_in_project(settings, project_id):
             connection.close()
             return 0
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def get_datasets_from_form(
@@ -578,7 +581,7 @@ def get_datasets_from_form(
             connection.close()
             return 0, []
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def get_datasets_from_project(settings, project_id, query_from=None, query_size=None):
@@ -602,7 +605,7 @@ def get_datasets_from_project(settings, project_id, query_from=None, query_size=
             connection.close()
             return 0, []
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")
 
 
 def get_dataset_stats_for_project(settings, project_id):
@@ -635,4 +638,4 @@ def get_dataset_stats_for_project(settings, project_id):
             connection.close()
             return 0, None, None, None
     else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        raise ESConnectionError("Cannot connect to ElasticSearch")

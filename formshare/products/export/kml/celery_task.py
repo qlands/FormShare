@@ -244,8 +244,9 @@ def internal_build_kml(
         )
 
 
+# Runs in the Celery worker, which coverage does not measure
 @celeryApp.task(bind=True, base=CeleryTask)
-def build_kml(
+def build_kml(  # pragma: no cover
     self,
     settings,
     form_schema,

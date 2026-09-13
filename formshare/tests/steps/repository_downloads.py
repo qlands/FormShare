@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
 from .sql import get_form_details, store_task_status, get_last_task, delete_products
+from .config_switches import settings_set_to
 
 
 def t_e_s_t_repository_downloads(test_object):
@@ -502,9 +503,9 @@ def t_e_s_t_repository_downloads(test_object):
         "xlsx_public_export",
     )
 
-    # Generate public XLSX
+    # Generate public XLSX, with the multiselect and lookup sheets
     res = test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
+        "/user/{}/project/{}/form/{}/generate/public_xlsx?multiselects=1&lookups=1".format(
             test_object.randonLogin, test_object.project, test_object.formID
         ),
         status=302,
@@ -598,14 +599,24 @@ def t_e_s_t_repository_downloads(test_object):
         status=404,
     )
 
-    # Private public XLSX
+    # Private public XLSX, with the multiselect and lookup sheets
     res = test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/generate/private_xlsx".format(
+        "/user/{}/project/{}/form/{}/generate/private_xlsx?multiselects=1&lookups=1".format(
             test_object.randonLogin, test_object.project, test_object.formID
         ),
         status=302,
     )
     assert "FS_error" not in res.headers
+
+    # A platform that allows no unpublishable Excel files refuses another
+    with settings_set_to({"max_products": "0"}):
+        res = test_object.testapp.get(
+            "/user/{}/project/{}/form/{}/generate/private_xlsx".format(
+                test_object.randonLogin, test_object.project, test_object.formID
+            ),
+            status=302,
+        )
+        assert "FS_error" in res.headers
 
     # Download a private zip csv for a project that does not exist goes tot 404
     test_object.testapp.get(
@@ -731,6 +742,17 @@ def t_e_s_t_repository_downloads(test_object):
         ),
         {
             "export_type": "ZIP_CSV",
+        },
+        status=302,
+    )
+
+    # Call export to ZIP JSON
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "export_type": "ZIP_JSON",
         },
         status=302,
     )
@@ -1380,4 +1402,77 @@ def t_e_s_t_repository_downloads(test_object):
 
     mimic_celery_kml_process()
     mimic_celery_media_process()
+
+    # The builders as the worker calls them, with what the requests above
+    # cannot ask for: an Excel file with its cells formatted, and a schema
+    # that is not there, so that MySQLToXLSX and the ZIP builders fail
+    from formshare.products.export.xlsx.celery_task import internal_build_xlsx
+    from formshare.products.export.zip_csv.celery_task import internal_build_zip_csv
+    from formshare.products.export.zip_json.celery_task import (
+        internal_build_zip_json,
+    )
+
+    form_details = get_form_details(
+        test_object.server_config, test_object.projectID, test_object.formID
+    )
+    odk_dir = test_object.server_config["repository.path"] + "/odk"
+    encryption_key = test_object.server_config["auth.opaque"]
+    formatted = dict(test_object.server_config)
+    formatted["export.excel.with.format"] = "True"
+    xlsx_file = test_object.working_dir + "/{}.xlsx".format(uuid.uuid4())
+    internal_build_xlsx(
+        formatted,
+        odk_dir,
+        form_details["form_schema"],
+        form_details["form_createxmlfile"],
+        encryption_key,
+        xlsx_file,
+        True,
+        "en",
+        1,
+        True,
+        True,
+    )
+    assert os.path.isfile(xlsx_file)
+
+    failed_file = test_object.working_dir + "/{}.failed".format(uuid.uuid4())
+    for build in [
+        lambda: internal_build_xlsx(
+            test_object.server_config,
+            odk_dir,
+            "no_such_schema",
+            form_details["form_createxmlfile"],
+            encryption_key,
+            failed_file,
+            True,
+            "en",
+        ),
+        lambda: internal_build_zip_csv(
+            test_object.server_config,
+            odk_dir,
+            "no_such_schema",
+            test_object.formID,
+            form_details["form_createxmlfile"],
+            encryption_key,
+            failed_file,
+            True,
+            "en",
+        ),
+        lambda: internal_build_zip_json(
+            test_object.server_config,
+            odk_dir,
+            "no_such_schema",
+            test_object.formID,
+            form_details["form_createxmlfile"],
+            encryption_key,
+            failed_file,
+            True,
+            "en",
+        ),
+    ]:
+        try:
+            build()
+        except Exception:
+            pass
+        assert not os.path.isfile(failed_file)
     print("Testing repository downloads step 3 finished")

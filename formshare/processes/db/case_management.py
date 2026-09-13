@@ -94,7 +94,7 @@ def _quoted(identifier):
 
 
 def build_list_select(
-    schema, table, label_column, columns, filter_sql=None, limit=None
+    schema, table, label_column, columns, filter_sql=None, limit=None, active=1
 ):
     """The SELECT that generates a published list.
 
@@ -122,8 +122,18 @@ def build_list_select(
     sql = "SELECT {} FROM {}.{}".format(
         ",".join(select_parts), _quoted(schema), _quoted(table)
     )
+    # _active decides which rows the list carries. Every data table has it
+    # (default 1), so a list serves active rows unless it was defined for the
+    # inactive ones -- which is how one follow-up sees active cases while
+    # another list sees the deactivated ones. active=None leaves it out
+    # entirely, for the rare list that wants both.
+    where = []
+    if active is not None:
+        where.append("_active = {}".format(int(active)))
     if filter_sql:
-        sql = sql + " WHERE " + filter_sql
+        where.append(filter_sql)
+    if where:
+        sql = sql + " WHERE " + " AND ".join(where)
     sql = sql + " ORDER BY rowuuid"
     if limit is not None:
         # The sample download: enough rows to design a form against,
@@ -359,6 +369,7 @@ def generate_published_list_file(request, list_data, out_path):
             list_data["label_column"],
             columns,
             list_data.get("filter_sql"),
+            active=list_data.get("list_active", 1),
         )
         rows = request.dbsession.execute(sql).fetchall()
         write_list_csv(headers, rows, out_path)

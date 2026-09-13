@@ -32,6 +32,16 @@
                         {{ _('Every list carries name (the row identity) and label. The columns below are served in addition, in this order.') }}
                     </p>
                     <div class="hr-line-dashed"></div>
+                    <h3>{{ _('Rows to serve') }}</h3>
+                    <form method="post" class="form-inline">
+                        {{ form.secure_form(request) }}
+                        <select name="list_active" class="form-control" style="min-width: 200px">
+                            <option value="1" {% if listData.list_active == 1 %}selected{% endif %}>{{ _('Active cases') }}</option>
+                            <option value="0" {% if listData.list_active == 0 %}selected{% endif %}>{{ _('Inactive cases') }}</option>
+                        </select>
+                        <button type="submit" name="change_active" value="1" class="btn btn-white">{{ _('Change') }}</button>
+                    </form>
+                    <div class="hr-line-dashed"></div>
                     <h3>{{ _('Label') }}</h3>
                     <form method="post" class="form-inline">
                         {{ form.secure_form(request) }}

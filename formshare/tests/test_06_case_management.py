@@ -66,8 +66,11 @@ def test_columns_keep_their_order_and_aliases():
 
 
 def test_membership_filter_lands_in_the_where():
-    sql, _ = cm.build_list_select("FS_abc", "maintable", "hh_name", [], "_active = 1")
-    assert " WHERE _active = 1 " in sql
+    # active is on by default, so a filter is ANDed after it.
+    sql, _ = cm.build_list_select(
+        "FS_abc", "maintable", "hh_name", [], "status = 'open'"
+    )
+    assert " WHERE _active = 1 AND status = 'open' " in sql
 
 
 def test_rows_are_ordered_by_rowuuid():
@@ -416,3 +419,32 @@ def test_the_source_form_is_seen_as_having_consumers(db_request):
     cm.sync_form_consumers(db_request, "p", "tool2", _two_list_fields())
     assert cm.source_form_has_consumers(db_request, "p", "tool1") is True
     assert cm.source_form_has_consumers(db_request, "p", "tool2") is False
+
+
+# ---------------------------------------------------------------------------
+# Active / inactive rows (2026-09-13): a list serves one or the other
+# ---------------------------------------------------------------------------
+
+
+def test_a_list_serves_active_rows_by_default():
+    sql, _ = cm.build_list_select("FS_abc", "maintable", "hh_name", [])
+    assert " WHERE _active = 1 " in sql
+
+
+def test_a_list_can_serve_inactive_rows():
+    sql, _ = cm.build_list_select("FS_abc", "maintable", "hh_name", [], active=0)
+    assert " WHERE _active = 0 " in sql
+
+
+def test_active_and_a_filter_combine():
+    sql, _ = cm.build_list_select(
+        "FS_abc", "maintable", "hh_name", [], "status = 'open'", active=1
+    )
+    assert " WHERE _active = 1 AND status = 'open' " in sql
+
+
+def test_active_none_serves_both():
+    """The rare list that wants active and inactive together."""
+    sql, _ = cm.build_list_select("FS_abc", "maintable", "hh_name", [], active=None)
+    assert "_active" not in sql
+    assert sql.endswith(" ORDER BY rowuuid")

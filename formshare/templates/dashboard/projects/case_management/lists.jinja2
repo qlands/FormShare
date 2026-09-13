@@ -29,6 +29,7 @@
                                 <th>{{ _('Source form') }}</th>
                                 <th>{{ _('Source table') }}</th>
                                 <th>{{ _('Label column') }}</th>
+                                <th>{{ _('Rows') }}</th>
                                 <th>{{ _('Edition') }}</th>
                                 <th>{{ _('Last generated') }}</th>
                                 <th>{{ _('Actions') }}</th>
@@ -41,6 +42,7 @@
                                     <td>{{ a_list.source_form }}</td>
                                     <td>{{ a_list.source_table }}</td>
                                     <td>{{ a_list.label_column }}</td>
+                                    <td>{% if a_list.list_active == 0 %}{{ _('Inactive') }}{% else %}{{ _('Active') }}{% endif %}</td>
                                     <td>{{ a_list.list_seq }}</td>
                                     <td>{% if a_list.list_lastgen %}{{ a_list.list_lastgen }}{% else %}{{ _('Never') }}{% endif %}</td>
                                     <td>

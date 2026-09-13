@@ -119,6 +119,7 @@ class AddPublishedListView(ListSection):
                     self._("Select the form, the table and the label column")
                 )
             else:
+                list_active = 0 if list_data.get("list_active") == "0" else 1
                 added, message = add_published_list(
                     self.request,
                     project_id,
@@ -130,6 +131,7 @@ class AddPublishedListView(ListSection):
                         "source_form": source_form,
                         "source_table": source_table,
                         "label_column": label_column,
+                        "list_active": list_active,
                     },
                 )
                 if added:
@@ -195,6 +197,19 @@ class EditPublishedListView(ListSection):
                 ]
                 updated, message = set_list_columns(
                     self.request, project_id, list_id, current
+                )
+                if not updated:
+                    self.append_to_errors(message)
+                else:
+                    self.returnRawViewResult = True
+                    return HTTPFound(self.request.url)
+            if "change_active" in post_data.keys():
+                list_active = 0 if post_data.get("list_active") == "0" else 1
+                updated, message = update_published_list(
+                    self.request,
+                    project_id,
+                    list_id,
+                    {"list_active": list_active},
                 )
                 if not updated:
                     self.append_to_errors(message)
@@ -315,6 +330,7 @@ class SampleListView(ListSection):
                 columns,
                 list_data.get("filter_sql"),
                 limit=10,
+                active=list_data.get("list_active", 1),
             )
             rows = self.request.dbsession.execute(sql).fetchall()
         except Exception as e:

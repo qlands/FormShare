@@ -29,6 +29,7 @@ import re
 from formshare.models import (
     PublishedList,
     PublishedListColumn,
+    ListConsumer,
     Odkform,
     DictTable,
     DictField,
@@ -54,6 +55,14 @@ __all__ = [
     "get_list_source_schema",
     "get_form_data_tables",
     "get_table_columns",
+    "detect_consumers",
+    "sync_form_consumers",
+    "get_form_consumers",
+    "set_case_link",
+    "get_case_link_consumer",
+    "get_case_link_source",
+    "get_consumer_sources",
+    "source_form_has_consumers",
     "generate_published_list_file",
 ]
 
@@ -84,7 +93,9 @@ def _quoted(identifier):
     return "`" + identifier + "`"
 
 
-def build_list_select(schema, table, label_column, columns, filter_sql=None):
+def build_list_select(
+    schema, table, label_column, columns, filter_sql=None, limit=None
+):
     """The SELECT that generates a published list.
 
     :param schema: the source repository schema
@@ -114,6 +125,10 @@ def build_list_select(schema, table, label_column, columns, filter_sql=None):
     if filter_sql:
         sql = sql + " WHERE " + filter_sql
     sql = sql + " ORDER BY rowuuid"
+    if limit is not None:
+        # The sample download: enough rows to design a form against,
+        # never the study.
+        sql = sql + " LIMIT {}".format(int(limit))
     return sql, headers
 
 
@@ -132,9 +147,17 @@ def list_is_stale(lastgen, *change_dates):
 
 
 def write_list_csv(headers, rows, file_name):
-    """Writes the generated rows as the CSV a device downloads."""
+    """Writes the generated rows as the CSV a device downloads.
+
+    Every field is enclosed in double quotes (2026-09-13): data can carry
+    commas, and always-quoting means no consumer -- device, spreadsheet, the
+    Go generator that will replace this writer -- ever has to guess. An
+    embedded quote is doubled, per RFC 4180. The Go generator must produce
+    this byte for byte (rstools.md section 2.2), or the swap would churn
+    every list's hash for nothing.
+    """
     with open(file_name, "w", newline="") as outfile:
-        writer = csv.writer(outfile)
+        writer = csv.writer(outfile, quoting=csv.QUOTE_ALL)
         writer.writerow(headers)
         for a_row in rows:
             writer.writerow(["" if a_value is None else a_value for a_value in a_row])
@@ -159,7 +182,7 @@ def add_published_list(request, project_id, list_data):
     new_list = PublishedList(**mapped_data)
     try:
         request.dbsession.add(new_list)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
         request.dbsession.rollback()
@@ -179,7 +202,7 @@ def update_published_list(request, project_id, list_id, list_data):
         request.dbsession.query(PublishedList).filter(
             PublishedList.project_id == project_id
         ).filter(PublishedList.list_id == list_id).update(mapped_data)
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
         request.dbsession.rollback()
@@ -196,7 +219,7 @@ def delete_published_list(request, project_id, list_id):
         request.dbsession.query(PublishedList).filter(
             PublishedList.project_id == project_id
         ).filter(PublishedList.list_id == list_id).delete()
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
         request.dbsession.rollback()
@@ -247,7 +270,7 @@ def set_list_columns(request, project_id, list_id, columns):
                     column_order=an_index,
                 )
             )
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
         request.dbsession.rollback()
@@ -347,7 +370,7 @@ def generate_published_list_file(request, list_data, out_path):
                 "list_lastgen": datetime.datetime.now(),
             }
         )
-        request.dbsession.flush()
+        request.dbsession.commit()
         return True, ""
     except Exception as e:
         log.error(
@@ -356,3 +379,242 @@ def generate_published_list_file(request, list_data, out_path):
             )
         )
         return False, str(e)
+
+
+# ---------------------------------------------------------------------------
+# Consumers: the forms that read a list, and which reference is the case link
+# ---------------------------------------------------------------------------
+
+
+def detect_consumers(maintable_fields, published_lists):
+    """Which registry lists a form consumes, from its maintable fields.
+
+    A form consumes a list when one of its ``select_one_from_file`` fields
+    (``selecttype`` 3 in create.xml) names that list's file. The match is by
+    file name, which is the whole coupling between a form and a list.
+
+    :param maintable_fields: get_fields_from_table_in_file(create_file, "maintable")
+    :param published_lists: get_project_published_lists(...)
+    :return: [{list_id, list_filename, selector_field}, ...]
+    """
+    by_filename = {a_list["list_filename"]: a_list for a_list in published_lists}
+    consumers = []
+    for a_field in maintable_fields:
+        if a_field.get("selecttype") != "3":
+            continue
+        a_list = by_filename.get(a_field.get("externalfilename", ""))
+        if a_list is None:
+            continue
+        consumers.append(
+            {
+                "list_id": a_list["list_id"],
+                "list_filename": a_list["list_filename"],
+                "selector_field": a_field["name"],
+            }
+        )
+    return consumers
+
+
+def sync_form_consumers(request, project_id, form_id, maintable_fields):
+    """Reconciles the stored consumers of a form with what it now references.
+
+    Adds newly referenced lists, drops references the form no longer makes,
+    and updates the detected selector column, all without disturbing a
+    case-link choice already made. When the form consumes exactly one list
+    and none is marked the case link, that one is marked automatically -- the
+    common single-list follow-up needs no decision.
+    """
+    published = get_project_published_lists(request, project_id)
+    detected = detect_consumers(maintable_fields, published)
+    detected_ids = {a_consumer["list_id"] for a_consumer in detected}
+    existing = {
+        a_row["list_id"]: a_row
+        for a_row in get_form_consumers(request, project_id, form_id)
+    }
+    try:
+        # Drop references the form no longer makes.
+        for list_id in existing:
+            if list_id not in detected_ids:
+                request.dbsession.query(ListConsumer).filter(
+                    ListConsumer.list_project == project_id
+                ).filter(ListConsumer.list_id == list_id).filter(
+                    ListConsumer.consumer_project == project_id
+                ).filter(
+                    ListConsumer.consumer_form == form_id
+                ).delete()
+        # Add or update the ones it makes.
+        for a_consumer in detected:
+            if a_consumer["list_id"] in existing:
+                request.dbsession.query(ListConsumer).filter(
+                    ListConsumer.list_project == project_id
+                ).filter(ListConsumer.list_id == a_consumer["list_id"]).filter(
+                    ListConsumer.consumer_project == project_id
+                ).filter(
+                    ListConsumer.consumer_form == form_id
+                ).update(
+                    {"selector_field": a_consumer["selector_field"]}
+                )
+            else:
+                request.dbsession.add(
+                    ListConsumer(
+                        list_project=project_id,
+                        list_id=a_consumer["list_id"],
+                        consumer_project=project_id,
+                        consumer_form=form_id,
+                        consumer_role="reads",
+                        selector_field=a_consumer["selector_field"],
+                        consumer_is_link=0,
+                    )
+                )
+        request.dbsession.flush()
+        # Auto-mark the case link when there is exactly one consumer and no
+        # choice has been made.
+        current = get_form_consumers(request, project_id, form_id)
+        if len(current) == 1 and not any(
+            int(a_row["consumer_is_link"] or 0) == 1 for a_row in current
+        ):
+            set_case_link(request, project_id, form_id, current[0]["list_id"])
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while syncing consumers of form {} in project {}".format(
+                str(e), form_id, project_id
+            )
+        )
+        return False, str(e)
+
+
+def get_form_consumers(request, project_id, form_id):
+    res = (
+        request.dbsession.query(ListConsumer)
+        .filter(ListConsumer.consumer_project == project_id)
+        .filter(ListConsumer.consumer_form == form_id)
+        .all()
+    )
+    return map_from_schema(res)
+
+
+def set_case_link(request, project_id, form_id, list_id):
+    """Marks one consumer as the case link and clears the others.
+
+    The case link is the list whose rows the form is about: it gets the
+    foreign key and the membership trigger at repository build. A form has at
+    most one.
+    """
+    try:
+        request.dbsession.query(ListConsumer).filter(
+            ListConsumer.consumer_project == project_id
+        ).filter(ListConsumer.consumer_form == form_id).update({"consumer_is_link": 0})
+        request.dbsession.query(ListConsumer).filter(
+            ListConsumer.consumer_project == project_id
+        ).filter(ListConsumer.consumer_form == form_id).filter(
+            ListConsumer.list_id == list_id
+        ).update(
+            {"consumer_is_link": 1, "consumer_role": "updates"}
+        )
+        request.dbsession.flush()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while setting the case link of form {} in project {}".format(
+                str(e), form_id, project_id
+            )
+        )
+        return False, str(e)
+
+
+def get_case_link_consumer(request, project_id, form_id):
+    """The consumer marked as the case link, or None."""
+    res = (
+        request.dbsession.query(ListConsumer)
+        .filter(ListConsumer.consumer_project == project_id)
+        .filter(ListConsumer.consumer_form == form_id)
+        .filter(ListConsumer.consumer_is_link == 1)
+        .first()
+    )
+    if res is None:
+        return None
+    return map_from_schema(res)
+
+
+def get_case_link_source(request, project_id, form_id):
+    """The (schema, table) a form's case link points at, or None.
+
+    Resolves the case-link consumer to its list, the list to its source form,
+    and that form to its built repository schema. None when there is no case
+    link or the source repository is not built.
+    """
+    consumer = get_case_link_consumer(request, project_id, form_id)
+    if consumer is None:
+        return None
+    a_list = get_published_list(request, consumer["list_project"], consumer["list_id"])
+    if a_list is None:
+        return None
+    res = (
+        request.dbsession.query(Odkform.form_schema)
+        .filter(Odkform.project_id == a_list["source_project"])
+        .filter(Odkform.form_id == a_list["source_form"])
+        .first()
+    )
+    if res is None or res[0] is None or res[0] == "":
+        return None
+    return res[0], a_list["source_table"]
+
+
+def get_consumer_sources(request, project_id, form_id):
+    """Every list a form consumes, resolved to its source table and role.
+
+    Returns [{selector_field, source_schema, source_table, is_link}], one per
+    consumer whose source repository is built. The repository build retypes
+    each selector to the source key and adds a foreign key; the case link one
+    additionally gets the membership trigger.
+    """
+    result = []
+    for consumer in get_form_consumers(request, project_id, form_id):
+        a_list = get_published_list(
+            request, consumer["list_project"], consumer["list_id"]
+        )
+        if a_list is None:
+            continue
+        res = (
+            request.dbsession.query(Odkform.form_schema)
+            .filter(Odkform.project_id == a_list["source_project"])
+            .filter(Odkform.form_id == a_list["source_form"])
+            .first()
+        )
+        if res is None or res[0] is None or res[0] == "":
+            continue
+        if not consumer["selector_field"]:
+            continue
+        result.append(
+            {
+                "selector_field": consumer["selector_field"],
+                "source_schema": res[0],
+                "source_table": a_list["source_table"],
+                "is_link": int(consumer["consumer_is_link"] or 0) == 1,
+            }
+        )
+    return result
+
+
+def source_form_has_consumers(request, source_project, source_form):
+    """Whether any list sourced from this form is consumed by a form.
+
+    The delete guard reads this: a source form cannot be deleted while a
+    follow-up links to a list it feeds, the same reason its foreign key uses
+    ON DELETE RESTRICT.
+    """
+    res = (
+        request.dbsession.query(ListConsumer)
+        .join(
+            PublishedList,
+            (ListConsumer.list_project == PublishedList.project_id)
+            & (ListConsumer.list_id == PublishedList.list_id),
+        )
+        .filter(PublishedList.source_project == source_project)
+        .filter(PublishedList.source_form == source_form)
+        .all()
+    )
+    return len(res) > 0

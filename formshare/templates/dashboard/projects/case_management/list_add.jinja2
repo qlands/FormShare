@@ -3,7 +3,20 @@
 
 {% block titlesection %}{{ _("Publish a list") }}{% endblock titlesection %}
 
-{% block breadcrumbs %}{% endblock breadcrumbs %}
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','select2' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','select2' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% set crumb_current = _('Publish a list') %}
+    {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_lists.jinja2' %}
+{% endblock breadcrumbs %}
 
 {% block maincontent %}
     <div class="row">
@@ -34,7 +47,7 @@
                         <div class="form-group row">
                             <label class="col-sm-2 col-form-label">{{ _('Source form') }}</label>
                             <div class="col-sm-10">
-                                <select name="source_form" class="form-control" id="source_form">
+                                <select name="source_form" class="form-control" id="source_form" style="width: 100%">
                                     <option value="">{{ _('Select a form with a repository') }}</option>
                                     {% for a_form in forms %}
                                         <option value="{{ a_form.form_id }}">{{ a_form.form_name }}</option>
@@ -45,14 +58,18 @@
                         <div class="form-group row">
                             <label class="col-sm-2 col-form-label">{{ _('Source table') }}</label>
                             <div class="col-sm-10">
-                                <input type="text" name="source_table" class="form-control" value="{{ listData.source_table or 'maintable' }}">
-                                <span class="form-text m-b-none">{{ _('maintable, or the table of a repeat.') }}</span>
+                                <select name="source_table" class="form-control" id="source_table" style="width: 100%">
+                                    <option value="">{{ _('Select the form first') }}</option>
+                                </select>
+                                <span class="form-text m-b-none">{{ _('maintable holds one row per submission; the table of a repeat holds one row per repeat entry.') }}</span>
                             </div>
                         </div>
                         <div class="form-group row">
                             <label class="col-sm-2 col-form-label">{{ _('Label column') }}</label>
                             <div class="col-sm-10">
-                                <input type="text" name="label_column" class="form-control" value="{{ listData.label_column }}">
+                                <select name="label_column" class="form-control" id="label_column" style="width: 100%">
+                                    <option value="">{{ _('Select the table first') }}</option>
+                                </select>
                                 <span class="form-text m-b-none">{{ _('The column whose value names each case on the device.') }}</span>
                             </div>
                         </div>
@@ -65,3 +82,58 @@
         </div>
     </div>
 {% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            $("#source_form").select2();
+            $("#source_table").select2();
+            $("#label_column").select2();
+
+            var tables_url = '{{ request.route_url('project_form_tables_api', userid=userid, projcode=projcode, formid='__FORM__') }}';
+            var fields_url = '{{ request.route_url('project_table_fields_api', userid=userid, projcode=projcode, formid='__FORM__', tablename='__TABLE__') }}';
+
+            $('#source_form').change(function () {
+                var form_id = $(this).val();
+                var table_combo = $('#source_table');
+                table_combo.empty();
+                $('#label_column').empty();
+                if (form_id === '') {
+                    table_combo.append(new Option("{{ _('Select the form first') }}", ''));
+                    return;
+                }
+                $.getJSON(tables_url.replace('__FORM__', encodeURIComponent(form_id)), function (data) {
+                    table_combo.append(new Option('', ''));
+                    $.each(data.tables, function (index, a_table) {
+                        var label = a_table.table_name;
+                        if (a_table.table_desc) {
+                            label = a_table.table_name + ' (' + a_table.table_desc + ')';
+                        }
+                        table_combo.append(new Option(label, a_table.table_name));
+                    });
+                    table_combo.trigger('change.select2');
+                });
+            });
+
+            $('#source_table').change(function () {
+                var form_id = $('#source_form').val();
+                var table_name = $(this).val();
+                var field_combo = $('#label_column');
+                field_combo.empty();
+                if (form_id === '' || table_name === '') {
+                    return;
+                }
+                $.getJSON(
+                    fields_url.replace('__FORM__', encodeURIComponent(form_id)).replace('__TABLE__', encodeURIComponent(table_name)),
+                    function (data) {
+                        field_combo.append(new Option('', ''));
+                        $.each(data.fields, function (index, a_field) {
+                            field_combo.append(new Option(a_field, a_field));
+                        });
+                        field_combo.trigger('change.select2');
+                    });
+            });
+        });
+    </script>
+{% endblock scripts %}

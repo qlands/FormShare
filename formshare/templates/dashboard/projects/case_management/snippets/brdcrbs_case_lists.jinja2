@@ -1,0 +1,26 @@
+<div class="col-sm-12">
+    <h2>{% if crumb_current is defined %}{{ crumb_current }}{% else %}{{ _('Published lists') }}{% endif %}</h2>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("dashboard",userid=activeUser.login) }}">{{ _('Dashboard') }}</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("projects",userid=activeUser.id) }}">{{ _('Projects') }}</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("project_details",userid=userid,projcode=projcode) }}">{{ projectDetails.project_name }}</a>
+        </li>
+        {% if crumb_current is defined %}
+            <li class="breadcrumb-item">
+                <a href="{{ request.route_url("project_case_lists",userid=userid,projcode=projcode) }}">{{ _('Published lists') }}</a>
+            </li>
+            <li class="breadcrumb-item active">
+                <strong>{{ crumb_current }}</strong>
+            </li>
+        {% else %}
+            <li class="breadcrumb-item active">
+                <strong>{{ _('Published lists') }}</strong>
+            </li>
+        {% endif %}
+    </ol>
+</div>

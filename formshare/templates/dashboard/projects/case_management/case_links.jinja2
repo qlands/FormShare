@@ -1,0 +1,63 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Links to lists") }}{% endblock titlesection %}
+
+{% block breadcrumbs %}
+    {% set crumb_current = _('Links to lists') %}
+    {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_lists.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-lg-12">
+            {% block form_errors %}
+                {{ form.display_errors(errors) }}
+            {% endblock form_errors %}
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h2>{{ _('Links to lists') }} — {{ formData.form_name }}</h2>
+                    <p>
+                        {{ _('This form reads the published lists below. Choose which one is the case link: the list whose rows this form follows up. When the repository is built, the case link becomes a foreign key with a membership check, so a submission can only reference a row that exists in that list. The other lists stay as read-only references.') }}
+                    </p>
+                    {% if not hasCreateXml %}
+                        <div class="alert alert-warning">{{ _('Upload the form before setting its links.') }}</div>
+                    {% elif consumers %}
+                        <form method="post">
+                            {{ form.secure_form(request) }}
+                            <table class="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th>{{ _('Case link') }}</th>
+                                    <th>{{ _('List file') }}</th>
+                                    <th>{{ _('Selector variable') }}</th>
+                                    <th>{{ _('Role') }}</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for a_consumer in consumers %}
+                                    <tr>
+                                        <td>
+                                            <input type="radio" name="list_id" value="{{ a_consumer.list_id }}" {% if a_consumer.consumer_is_link == 1 %}checked{% endif %}>
+                                        </td>
+                                        <td><code>{{ a_consumer.list_id }}</code></td>
+                                        <td>{{ a_consumer.selector_field }}</td>
+                                        <td>{% if a_consumer.consumer_is_link == 1 %}<b>{{ _('Case link') }}</b>{% else %}{{ _('Reads') }}{% endif %}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            <button type="submit" name="case_link" value="1" class="btn btn-primary">{{ _('Save the case link') }}</button>
+                            <a class="btn btn-white" href="{{ request.route_url('project_case_lists', userid=userid, projcode=projcode) }}">{{ _('Back to the lists') }}</a>
+                        </form>
+                        {% if caseLink is none %}
+                            <div class="alert alert-info m-t">{{ _('No case link chosen yet. Until one is set, this form will reference the lists but its rows will not be tied to a specific list.') }}</div>
+                        {% endif %}
+                    {% else %}
+                        <p>{{ _('This form does not reference any published list.') }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock maincontent %}

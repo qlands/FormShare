@@ -11,18 +11,34 @@ arrives with the dependency guards of stage 4, because offering it without
 the guards would let a source be deleted out from under its consumers.
 """
 
+import os
+import uuid
+
 from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
+from formshare.middleware.response import FileResponse
 from formshare.processes.db.case_management import (
     add_published_list,
+    build_list_select,
     delete_published_list,
+    get_case_link_consumer,
+    get_form_consumers,
     get_form_data_tables,
     get_list_columns,
+    get_list_source_schema,
     get_project_published_lists,
     get_published_list,
     get_table_columns,
+    set_case_link,
     set_list_columns,
+    sync_form_consumers,
     update_published_list,
     valid_list_filename,
+    write_list_csv,
+)
+from formshare.processes.db.form import get_form_data, get_form_directory
+from formshare.processes.odk.api import (
+    get_fields_from_table_in_file,
+    get_odk_path,
 )
 from formshare.processes.db.form import get_project_forms
 from formshare.processes.db.project import (
@@ -87,6 +103,10 @@ class AddPublishedListView(ListSection):
             source_form = list_data.get("source_form", "")
             source_table = list_data.get("source_table", "")
             label_column = list_data.get("label_column", "")
+            # add, tablesof and fieldsof are path segments under /caselists;
+            # a list with one of those ids would shadow them.
+            if list_id in ("add", "tablesof", "fieldsof"):
+                list_id = ""
             if list_id == "" or not valid_list_filename(file_name):
                 self.append_to_errors(
                     self._(
@@ -224,3 +244,154 @@ class DeletePublishedListView(ListSection):
             return HTTPFound(location=next_page)
         self.append_to_errors(message)
         return HTTPFound(location=next_page, headers={"FS_error": "true"})
+
+
+class FormTablesApiView(ListSection):
+    """The tables of a form, as JSON, for the wizard's cascading combo."""
+
+    def process_view(self):
+        user_id, project_code, project_id, project_details = self.project_or_404()
+        form_id = self.request.matchdict["formid"]
+        self.returnRawViewResult = True
+        return {
+            "tables": [
+                {
+                    "table_name": a_table["table_name"],
+                    "table_desc": a_table["table_desc"],
+                }
+                for a_table in get_form_data_tables(self.request, project_id, form_id)
+            ]
+        }
+
+
+class TableFieldsApiView(ListSection):
+    """The columns of a table, as JSON, for the label and column combos."""
+
+    def process_view(self):
+        user_id, project_code, project_id, project_details = self.project_or_404()
+        form_id = self.request.matchdict["formid"]
+        table_name = self.request.matchdict["tablename"]
+        self.returnRawViewResult = True
+        return {
+            "fields": [
+                a_field["field_name"]
+                for a_field in get_table_columns(
+                    self.request, project_id, form_id, table_name
+                )
+            ]
+        }
+
+
+class SampleListView(ListSection):
+    """A ten-row sample of a published list, to design forms against."""
+
+    def process_view(self):
+        user_id, project_code, project_id, project_details = self.project_or_404()
+        list_id = self.request.matchdict["listid"]
+        list_data = get_published_list(self.request, project_id, list_id)
+        if list_data is None:
+            raise HTTPNotFound
+        self.returnRawViewResult = True
+        next_page = self.request.route_url(
+            "project_case_lists", userid=user_id, projcode=project_code
+        )
+        schema = get_list_source_schema(self.request, list_data)
+        if schema is None or schema == "":
+            self.add_error(
+                self._(
+                    "The source form has no repository yet, so there is no data to sample"
+                )
+            )
+            return HTTPFound(location=next_page, headers={"FS_error": "true"})
+        columns = [
+            (a_column["column_name"], a_column["column_as"])
+            for a_column in get_list_columns(self.request, project_id, list_id)
+        ]
+        try:
+            sql, headers = build_list_select(
+                schema,
+                list_data["source_table"],
+                list_data["label_column"],
+                columns,
+                list_data.get("filter_sql"),
+                limit=10,
+            )
+            rows = self.request.dbsession.execute(sql).fetchall()
+        except Exception as e:
+            self.add_error(str(e))
+            return HTTPFound(location=next_page, headers={"FS_error": "true"})
+        repository_path = self.request.registry.settings["repository.path"]
+        temp_dir = os.path.join(repository_path, *["tmp"])
+        if not os.path.exists(temp_dir):
+            os.makedirs(temp_dir)
+        csv_file = os.path.join(temp_dir, str(uuid.uuid4()) + ".csv")
+        write_list_csv(headers, rows, csv_file)
+        response = FileResponse(
+            csv_file, request=self.request, content_type="text/csv", cache_max_age=0
+        )
+        response.content_disposition = 'attachment; filename="{}"'.format(
+            list_data["list_filename"]
+        )
+        return response
+
+
+class CaseLinksView(ListSection):
+    """Which published list a follow-up form links its rows to.
+
+    A form can consume several lists (a cascade: pick a school, then a staff
+    member of it). Exactly one is the *case link* -- the list whose rows the
+    form is about -- and it is that link which becomes a foreign key and a
+    membership trigger when the repository is built. The others are read-only
+    references. Open this before building the repository.
+    """
+
+    def _create_xml(self, project_id, form_id):
+        directory = get_form_directory(self.request, project_id, form_id)
+        if directory is None:
+            return None
+        create_xml = os.path.join(
+            get_odk_path(self.request),
+            *["forms", directory, "repository", "create.xml"]
+        )
+        if not os.path.exists(create_xml):
+            return None
+        return create_xml
+
+    def process_view(self):
+        user_id, project_code, project_id, project_details = self.project_or_404()
+        form_id = self.request.matchdict["formid"]
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+        # Reconcile the stored consumers with what the form references now, so
+        # the page reflects the uploaded form even if it changed.
+        create_xml = self._create_xml(project_id, form_id)
+        if create_xml is not None:
+            sync_form_consumers(
+                self.request,
+                project_id,
+                form_id,
+                get_fields_from_table_in_file(create_xml, "maintable"),
+            )
+        if self.request.method == "POST":
+            post_data = self.get_post_dict()
+            if "case_link" in post_data.keys():
+                list_id = post_data.get("list_id", "")
+                if list_id != "":
+                    changed, message = set_case_link(
+                        self.request, project_id, form_id, list_id
+                    )
+                    if not changed:
+                        self.append_to_errors(message)
+                    else:
+                        self.returnRawViewResult = True
+                        return HTTPFound(self.request.url)
+        return {
+            "projectDetails": project_details,
+            "userid": user_id,
+            "projcode": project_code,
+            "formData": form_data,
+            "consumers": get_form_consumers(self.request, project_id, form_id),
+            "caseLink": get_case_link_consumer(self.request, project_id, form_id),
+            "hasCreateXml": create_xml is not None,
+        }

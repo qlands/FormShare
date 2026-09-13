@@ -78,6 +78,7 @@ from formshare.processes.db import (
     get_case_creator_forms,
 )
 from formshare.processes.elasticsearch.record_index import delete_form_records
+from formshare.processes.db.case_management import source_form_has_consumers
 from formshare.processes.elasticsearch.repository_index import (
     delete_dataset_from_index,
     get_number_of_datasets_with_gps,
@@ -1828,6 +1829,21 @@ class DeleteForm(PrivateView):
                 next_page = self.request.params.get("next") or self.request.route_url(
                     "project_details", userid=user_id, projcode=project_code
                 )
+
+                # A form whose data feeds a published list that another form
+                # links to cannot be deleted: dropping its schema would strand
+                # the follow-up's foreign key. The database refuses it anyway
+                # (ON DELETE RESTRICT); this says so before trying.
+                if source_form_has_consumers(self.request, project_id, form_id):
+                    self.add_error(
+                        self._(
+                            "This form feeds a published list that another form "
+                            "links to. Remove that link or delete the other form "
+                            "first."
+                        )
+                    )
+                    self.returnRawViewResult = True
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
                 continue_delete = True
                 message = ""

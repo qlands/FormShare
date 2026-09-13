@@ -78,6 +78,10 @@ from formshare.views.case_management import (
     AddPublishedListView,
     EditPublishedListView,
     DeletePublishedListView,
+    FormTablesApiView,
+    TableFieldsApiView,
+    SampleListView,
+    CaseLinksView,
 )
 from formshare.views.form import (
     FormDetails,
@@ -433,6 +437,42 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/caselists/{listid}/delete",
             DeletePublishedListView,
             None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_case_list_sample",
+            "/user/{userid}/project/{projcode}/caselists/{listid}/sample",
+            SampleListView,
+            None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_form_tables_api",
+            "/user/{userid}/project/{projcode}/caselists/tablesof/{formid}",
+            FormTablesApiView,
+            "json",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_table_fields_api",
+            "/user/{userid}/project/{projcode}/caselists/fieldsof/{formid}/{tablename}",
+            TableFieldsApiView,
+            "json",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "form_case_links",
+            "/user/{userid}/project/{projcode}/form/{formid}/caselinks",
+            CaseLinksView,
+            "dashboard/projects/case_management/case_links.jinja2",
         )
     )
 

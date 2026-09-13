@@ -3,7 +3,9 @@
 
 {% block titlesection %}{{ _("Published lists") }}{% endblock titlesection %}
 
-{% block breadcrumbs %}{% endblock breadcrumbs %}
+{% block breadcrumbs %}
+    {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_lists.jinja2' %}
+{% endblock breadcrumbs %}
 
 {% block maincontent %}
     <div class="row">
@@ -43,10 +45,8 @@
                                     <td>{% if a_list.list_lastgen %}{{ a_list.list_lastgen }}{% else %}{{ _('Never') }}{% endif %}</td>
                                     <td>
                                         <a class="btn btn-xs btn-white" href="{{ request.route_url('project_case_list_edit', userid=userid, projcode=projcode, listid=a_list.list_id) }}">{{ _('Edit') }}</a>
-                                        <form method="post" style="display: inline" action="{{ request.route_url('project_case_list_delete', userid=userid, projcode=projcode, listid=a_list.list_id) }}">
-                                            {{ form.secure_form(request) }}
-                                            <button type="submit" class="btn btn-xs btn-danger">{{ _('Delete') }}</button>
-                                        </form>
+                                        <a class="btn btn-xs btn-white" href="{{ request.route_url('project_case_list_sample', userid=userid, projcode=projcode, listid=a_list.list_id) }}"><i class="fas fa-download"></i> {{ _('Sample CSV') }}</a>
+                                        <a urn="{{ request.route_url('project_case_list_delete', userid=userid, projcode=projcode, listid=a_list.list_id) }}" class="btn btn-xs btn-danger remove_list"><i class="fas fa-trash"></i> {{ _('Delete') }}</a>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -60,3 +60,42 @@
         </div>
     </div>
 {% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            $('.remove_list').click(function () {
+                var action_url = $( this ).attr('urn');
+                swal({
+                        title: "{{ _('Are you sure?') }}",
+                        text: "{{ _('Forms that reference this file will stop receiving fresh data.') }}",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, delete it!') }}",
+                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', action_url);
+                            form.style.display = 'hidden';
+
+                            var i = document.createElement("input");
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
+
+                            document.body.appendChild(form);
+                            $("#busy").show();
+                            form.submit();
+                        }
+                    });
+            });
+        });
+    </script>
+{% endblock scripts %}

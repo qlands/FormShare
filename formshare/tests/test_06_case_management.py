@@ -569,13 +569,20 @@ def test_an_inactive_case_link_keeps_the_fk_but_skips_the_trigger():
 # ---------------------------------------------------------------------------
 
 
-def test_project_is_longitudinal_when_it_publishes_a_list(db_request):
+def test_project_is_longitudinal_when_a_published_list_is_used(db_request):
+    # Lists exist, but until a form references one the project is not yet
+    # running a longitudinal workflow.
+    assert cm.project_is_longitudinal(db_request, "p") is False
+    cm.sync_form_consumers(db_request, "p", "tool2", _two_list_fields())
     assert cm.project_is_longitudinal(db_request, "p") is True
     assert cm.project_is_longitudinal(db_request, "no_such_project") is False
 
 
-def test_form_creates_cases_when_it_is_a_list_source(db_request):
-    # tool1 sources both lists; tool2 sources none.
+def test_form_creates_cases_when_its_list_is_used(db_request):
+    # tool1 sources both lists, but only once a form uses one does it create
+    # cases; tool2 sources none.
+    assert cm.form_creates_cases(db_request, "p", "tool1") is False
+    cm.sync_form_consumers(db_request, "p", "tool2", _two_list_fields())
     assert cm.form_creates_cases(db_request, "p", "tool1") is True
     assert cm.form_creates_cases(db_request, "p", "tool2") is False
 

@@ -641,12 +641,20 @@ def source_form_has_consumers(request, source_project, source_form):
 
 
 def project_is_longitudinal(request, project_id):
-    """Whether a project runs a longitudinal workflow -- i.e. it publishes at
-    least one list. Consumption is not required: a project that produces a
-    list is longitudinal whether or not any form consumes it yet.
+    """Whether a project runs a longitudinal workflow: it publishes a list
+    that some form uses.
+
+    "Used" means a form references the list; whether that form's repository is
+    built ("consumed") or not does not matter. A list nobody references does
+    not make the project longitudinal.
     """
     return (
-        request.dbsession.query(PublishedList.list_id)
+        request.dbsession.query(ListConsumer.list_id)
+        .join(
+            PublishedList,
+            (ListConsumer.list_project == PublishedList.project_id)
+            & (ListConsumer.list_id == PublishedList.list_id),
+        )
         .filter(PublishedList.project_id == project_id)
         .first()
         is not None
@@ -654,13 +662,19 @@ def project_is_longitudinal(request, project_id):
 
 
 def form_creates_cases(request, project_id, form_id):
-    """Whether a form is the source of a published list -- it produces cases.
+    """Whether a form produces a published list that some form uses.
 
-    True as soon as a list is published from this form's data, consumed or
-    not.
+    The form is the source of a list, and a form references that list --
+    whether that consumer's repository is built or not. A list published from
+    this form that nobody references does not count.
     """
     return (
-        request.dbsession.query(PublishedList.list_id)
+        request.dbsession.query(ListConsumer.list_id)
+        .join(
+            PublishedList,
+            (ListConsumer.list_project == PublishedList.project_id)
+            & (ListConsumer.list_id == PublishedList.list_id),
+        )
         .filter(PublishedList.source_project == project_id)
         .filter(PublishedList.source_form == form_id)
         .first()

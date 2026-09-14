@@ -134,7 +134,10 @@ class ProjectDetailsView(ProjectsView):
         forms = get_project_forms(self.request, user_id, project_id)
         active_forms = 0
         inactive_forms = 0
+        has_forms_with_repository = False
         for form in forms:
+            if form["form_schema"] is not None:
+                has_forms_with_repository = True
             if form["form_accsub"] == 1:
                 active_forms = active_forms + 1
             else:
@@ -165,6 +168,7 @@ class ProjectDetailsView(ProjectsView):
             "withgps": get_number_of_datasets_with_gps_in_project(
                 self.request.registry.settings, project_id
             ),
+            "has_forms_with_repository": has_forms_with_repository,
         }
 
 

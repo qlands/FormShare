@@ -72,6 +72,7 @@ __all__ = [
     "form_consumes_cases",
     "list_has_active_consumers",
     "generate_published_list_file",
+    "project_has_lists",
 ]
 
 # The file name is the entire coupling between the registry and the form
@@ -261,6 +262,18 @@ def get_published_list(request, project_id, list_id):
     return map_from_schema(res)
 
 
+def project_has_lists(request, project_id):
+    res = (
+        request.dbsession.query(PublishedList)
+        .filter(PublishedList.project_id == project_id)
+        .order_by(PublishedList.list_createdate)
+        .first()
+    )
+    if res is None:
+        return False
+    return True
+
+
 def get_project_published_lists(request, project_id):
     res = (
         request.dbsession.query(PublishedList)
@@ -268,7 +281,12 @@ def get_project_published_lists(request, project_id):
         .order_by(PublishedList.list_createdate)
         .all()
     )
-    return map_from_schema(res)
+    res = map_from_schema(res)
+    for a_list in res:
+        a_list["has_active_consumers"] = list_has_active_consumers(
+            request, project_id, a_list["list_id"]
+        )
+    return res
 
 
 def set_list_columns(request, project_id, list_id, columns):

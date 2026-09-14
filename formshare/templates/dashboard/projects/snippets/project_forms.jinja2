@@ -32,7 +32,11 @@
                                         {# Case management is a capability of every project, not a
                                            project type: the section sits empty until the first list
                                            is published (docs/formshare_case_management/). #}
-                                        <button id="case_lists" type="button" onclick="location.href='{{ request.route_url('project_case_lists', userid=projectDetails.owner, projcode=projectDetails.project_code) }}';" class="btn btn-block btn-outline btn-info">{{ _('Published lists') }}</button>
+                                        {% if projectData.project_case == 0 %}
+                                            {% if has_forms_with_repository %}
+                                                <button id="case_lists" type="button" onclick="location.href='{{ request.route_url('project_case_lists', userid=projectDetails.owner, projcode=projectDetails.project_code) }}';" class="btn btn-block btn-outline btn-info">{{ _('Published lists') }}</button>
+                                            {% endif %}
+                                        {% endif %}
                                     {% endblock published_lists_button %}
                                     {% if projectData.project_case == 0 %}
                                         {% block project_form_upload_button %}

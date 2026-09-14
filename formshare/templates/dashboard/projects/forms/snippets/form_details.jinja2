@@ -126,11 +126,13 @@
         {# Before the repository is built is the moment to say which published
            list this form follows up, if any. The page self-explains when the
            form references none. docs/formshare_case_management/ #}
-        <div class="row">
-            <div class="col-lg-12 text-right" style="margin-bottom: 10px">
-                <a class="btn btn-sm btn-outline btn-info" href="{{ request.route_url('form_case_links', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-link"></i> {{ _('Links to lists') }}</a>
+        {% if projectDetails.total_forms_with_repository > 0 and projectDetails.has_lists %}
+            <div class="row">
+                <div class="col-lg-12 text-right" style="margin-bottom: 10px">
+                    <a class="btn btn-sm btn-outline btn-info" href="{{ request.route_url('form_case_links', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-link"></i> {{ _('Links to lists') }}</a>
+                </div>
             </div>
-        </div>
+        {% endif %}
     {% endif %}
     {% if formDetails.form_schema == None and formDetails.form_reptask == None and formDetails.form_mergetask == None and projectDetails.access_type < 4 and (formassistants|length > 0 or formgroups|length > 0)%}
         {% if formDetails.maximum_reached == True %}

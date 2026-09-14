@@ -34,6 +34,7 @@ from formshare.processes.db.case_management import (
     update_published_list,
     valid_list_filename,
     write_list_csv,
+    list_has_active_consumers,
 )
 from formshare.processes.db.form import get_form_data, get_form_directory
 from formshare.processes.odk.api import (
@@ -75,6 +76,8 @@ class ListSection(PrivateView):
             raise HTTPNotFound
         project_details = get_project_details(self.request, project_id)
         project_details["access_type"] = access_type
+        if project_details["project_case"] == 1:
+            raise HTTPNotFound
         return user_id, project_code, project_id, project_details
 
 
@@ -241,6 +244,11 @@ class EditPublishedListView(ListSection):
 
 
 class DeletePublishedListView(ListSection):
+    def __init__(self, request):
+        ListSection.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+
     def process_view(self):
         user_id, project_code, project_id, project_details = self.project_or_404()
         if self.request.method != "POST":
@@ -248,6 +256,8 @@ class DeletePublishedListView(ListSection):
         list_id = self.request.matchdict["listid"]
         list_data = get_published_list(self.request, project_id, list_id)
         if list_data is None:
+            raise HTTPNotFound
+        if list_has_active_consumers(self.request, project_id, list_id):
             raise HTTPNotFound
         self.returnRawViewResult = True
         deleted, message = delete_published_list(self.request, project_id, list_id)

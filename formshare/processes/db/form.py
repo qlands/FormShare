@@ -37,6 +37,10 @@ from formshare.processes.db.assistant import (
     get_assistant_data_for_user,
     get_assistant_data_with_uuid,
 )
+from formshare.processes.db.case_management import (
+    form_creates_cases,
+    form_consumes_cases,
+)
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_form,
 )
@@ -1043,6 +1047,12 @@ def get_project_forms(request, user, project):
     for form in forms:
         form["pubby"] = get_creator_data(request, form["form_pubby"])
         color = ColorHash(form["form_id"])
+        form["creates_cases"] = form_creates_cases(
+            request, form["project_id"], form["form_id"]
+        )
+        form["consumes_cases"] = form_consumes_cases(
+            request, form["project_id"], form["form_id"]
+        )
         if form["form_hexcolor"] is None:
             form["_xid_color"] = color.hex
         else:

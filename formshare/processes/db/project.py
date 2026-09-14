@@ -16,6 +16,10 @@ from formshare.models import (
 )
 from formshare.processes.db.form import get_by_details, get_form_data
 from formshare.processes.db.user import get_user_name
+from formshare.processes.db.case_management import (
+    project_is_longitudinal,
+    project_has_lists,
+)
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
 )
@@ -883,11 +887,22 @@ def get_project_code_from_id(request, user, project_id):
     return None
 
 
-def get_forms_number(request, project):
-    total = (
-        request.dbsession.query(Odkform).filter(Odkform.project_id == project).count()
-    )
-    return total
+def get_forms_number(request, project, with_repository=False):
+    if with_repository:
+        total = (
+            request.dbsession.query(Odkform)
+            .filter(Odkform.project_id == project)
+            .filter(Odkform.form_schema != None)
+            .count()
+        )
+        return total
+    else:
+        total = (
+            request.dbsession.query(Odkform)
+            .filter(Odkform.project_id == project)
+            .count()
+        )
+        return total
 
 
 def get_number_of_case_creators(request, project):
@@ -1204,6 +1219,9 @@ def get_user_projects(request, user, logged_user):
         )
         project["total_case_creators_with_repository"] = (
             get_number_of_case_creators_with_repository(request, project["project_id"])
+        )
+        project["is_longitudinal"] = project_is_longitudinal(
+            request, project["project_id"]
         )
         project["case_form"] = get_case_form(request, project["project_id"])
         project["case_schema"] = get_case_schema(request, project["project_id"])
@@ -1681,6 +1699,10 @@ def get_extended_project_details(request, user, project_id):
         request, project["project_id"], form
     )
     project["total_forms"] = get_forms_number(request, project["project_id"])
+    project["total_forms_with_repository"] = get_forms_number(
+        request, project["project_id"], True
+    )
+    project["has_lists"] = project_has_lists(request, project["project_id"])
     project["owner"] = get_project_owner(request, project["project_id"])
     project["total_case_creators"] = get_number_of_case_creators(
         request, project["project_id"]

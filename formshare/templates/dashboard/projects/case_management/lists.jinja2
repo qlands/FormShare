@@ -48,7 +48,9 @@
                                     <td>
                                         <a class="btn btn-xs btn-white" href="{{ request.route_url('project_case_list_edit', userid=userid, projcode=projcode, listid=a_list.list_id) }}">{{ _('Edit') }}</a>
                                         <a class="btn btn-xs btn-white" href="{{ request.route_url('project_case_list_sample', userid=userid, projcode=projcode, listid=a_list.list_id) }}"><i class="fas fa-download"></i> {{ _('Sample CSV') }}</a>
-                                        <a urn="{{ request.route_url('project_case_list_delete', userid=userid, projcode=projcode, listid=a_list.list_id) }}" class="btn btn-xs btn-danger remove_list"><i class="fas fa-trash"></i> {{ _('Delete') }}</a>
+                                        {% if a_list.has_active_consumers == False %}
+                                            <a style="color: white" urn="{{ request.route_url('project_case_list_delete', userid=userid, projcode=projcode, listid=a_list.list_id) }}" class="btn btn-xs btn-danger remove_list"><i class="fas fa-trash"></i> {{ _('Delete') }}</a>
+                                        {% endif %}
                                     </td>
                                 </tr>
                             {% endfor %}

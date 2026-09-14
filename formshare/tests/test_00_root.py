@@ -68,6 +68,7 @@ from .steps.projects import t_e_s_t_projects, t_e_s_t_delete_projects
 from .steps.repository import t_e_s_t_repository
 from .steps.repository_downloads import t_e_s_t_repository_downloads
 from .steps.case_lists import t_e_s_t_case_lists
+from .steps.case_journey import t_e_s_t_case_journey
 from .steps.repository_tasks import t_e_s_t_repository_tasks
 from .steps.root import t_e_s_t_root
 from .steps.support_zip_file import t_e_s_t_support_zip_file
@@ -231,6 +232,8 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_repository_downloads(self.test_object)
             print("Testing published case lists")
             t_e_s_t_case_lists(self.test_object)
+            print("Testing the case-management journey")
+            t_e_s_t_case_journey(self.test_object)
             print("Testing partners")
             t_e_s_t_partners(self.test_object)
             time.sleep(60)

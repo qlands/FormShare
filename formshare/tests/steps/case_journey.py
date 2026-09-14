@@ -18,8 +18,11 @@ the _active-aware membership trigger. This is feature 5 -- a follow-up whose
 rows hang off a repeat table in another form -- proven end to end.
 """
 
+import io
 import os
+import re
 import time
+import uuid
 
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
@@ -104,6 +107,73 @@ def _column_type(config, schema, table, column):
         engine.dispose()
 
 
+def _one_roster_pair(config, schema):
+    """A (worker rowuuid, parent school rowuuid) pair from Tool 1's roster."""
+    engine = _engine(config)
+    try:
+        r = engine.execute(
+            "SELECT rowuuid, root_rowuuid FROM {}.roster "
+            "WHERE root_rowuuid IS NOT NULL LIMIT 1".format(schema)
+        ).fetchone()
+        return (r[0], r[1]) if r else (None, None)
+    finally:
+        engine.dispose()
+
+
+def _maintable_count(config, schema):
+    engine = _engine(config)
+    try:
+        return engine.execute(
+            "SELECT COUNT(*) FROM {}.maintable".format(schema)
+        ).fetchone()[0]
+    finally:
+        engine.dispose()
+
+
+def _worker_of(config, schema2, schema1, worker_id):
+    """The worker_name reached by joining Tool 2's row to Tool 1's roster."""
+    engine = _engine(config)
+    try:
+        r = engine.execute(
+            "SELECT r.worker_name FROM {}.maintable m "
+            "JOIN {}.roster r ON r.rowuuid = m.worker_id "
+            "WHERE m.worker_id = %s".format(schema2, schema1),
+            (worker_id,),
+        ).fetchone()
+        return r[0] if r else None
+    finally:
+        engine.dispose()
+
+
+def _write_tool2_submission(resources, working_dir, centre_id, worker_id):
+    """Patch the example Tool 2 XML with a chosen case and a fresh id."""
+    with io.open(
+        os.path.join(resources, "tool2_submission.xml"), encoding="utf-8"
+    ) as a_file:
+        xml = a_file.read()
+    xml = re.sub(
+        r"<centre_id>[^<]*</centre_id>",
+        "<centre_id>{}</centre_id>".format(centre_id),
+        xml,
+    )
+    xml = re.sub(
+        r"<worker_id>[^<]*</worker_id>",
+        "<worker_id>{}</worker_id>".format(worker_id),
+        xml,
+    )
+    xml = re.sub(
+        r"<instanceID>[^<]*</instanceID>",
+        "<instanceID>uuid:{}</instanceID>".format(uuid.uuid4()),
+        xml,
+    )
+    out = os.path.join(
+        working_dir, "tool2_submission_{}.xml".format(uuid.uuid4().hex[:8])
+    )
+    with io.open(out, "w", encoding="utf-8") as a_file:
+        a_file.write(xml)
+    return out
+
+
 def _maintable_membership_trigger(config, schema):
     """The BEFORE INSERT trigger body on maintable that checks a case link."""
     engine = _engine(config)
@@ -160,6 +230,29 @@ def t_e_s_t_case_journey(test_object):
     schema1 = _wait_for_build(test_object, TOOL1)
     assert schema1 is not None, "Tool 1 repository did not build"
     assert _has_table(test_object.server_config, schema1, "roster"), "no roster table"
+
+    # A real submission: one school and its staff roster. The roster rows get
+    # server-minted rowuuids, which is what the roster list will serve and what
+    # a follow-up will reference.
+    res = testapp.post(
+        "/user/{}/project/{}/push_json".format(login, project),
+        status=201,
+        upload_files=[
+            (
+                "filetoupload",
+                os.path.join(resources, "tool1_submission.json"),
+            )
+        ],
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+    assert "FS_error" not in res.headers
+    assert (
+        _maintable_count(test_object.server_config, schema1) == 1
+    ), "school not stored"
+    worker_id, centre_id = _one_roster_pair(test_object.server_config, schema1)
+    assert worker_id and centre_id, "roster did not populate"
 
     # --- Two published lists from Tool 1 -----------------------------------
     school_label = _pick_text_column(test_object.server_config, schema1, "maintable")
@@ -284,6 +377,45 @@ def t_e_s_t_case_journey(test_object):
         t for t in triggers if "roster" in t and "_active" in t and "worker_id" in t
     ]
     assert membership, "no membership trigger on the case link"
+
+    # A real follow-up on a worker that exists: it stores and joins back to
+    # the roster row Tool 1 created.
+    before = _maintable_count(test_object.server_config, schema2)
+    valid = _write_tool2_submission(
+        resources, test_object.working_dir, centre_id, worker_id
+    )
+    res = testapp.post(
+        "/user/{}/project/{}/push".format(login, project),
+        status=201,
+        upload_files=[("filetoupload", valid)],
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+    assert "FS_error" not in res.headers
+    assert _maintable_count(test_object.server_config, schema2) == before + 1
+    assert (
+        _worker_of(test_object.server_config, schema2, schema1, worker_id) is not None
+    ), "the follow-up did not join back to the roster"
+
+    # A follow-up on a worker that does not exist: the membership trigger
+    # refuses it, so no row is stored. (The push may report any status; what
+    # matters is that the row never lands.)
+    after_valid = _maintable_count(test_object.server_config, schema2)
+    bogus = _write_tool2_submission(
+        resources, test_object.working_dir, centre_id, str(uuid.uuid4())
+    )
+    testapp.post(
+        "/user/{}/project/{}/push".format(login, project),
+        status="*",
+        upload_files=[("filetoupload", bogus)],
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+    assert (
+        _maintable_count(test_object.server_config, schema2) == after_valid
+    ), "a follow-up on a non-existent worker was stored"
 
     # The delete guard: Tool 1 feeds lists Tool 2 links to, so it cannot be
     # deleted -- the database would refuse it, and so does the app, first.

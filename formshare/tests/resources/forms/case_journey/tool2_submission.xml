@@ -1,0 +1,231 @@
+<data xmlns:ev="http://www.w3.org/2001/xml-events"
+xmlns:orx="http://openrosa.org/xforms"
+xmlns:odk="http://www.opendatakit.org/xforms"
+xmlns:h="http://www.w3.org/1999/xhtml"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:jr="http://openrosa.org/javarosa"
+xmlns="http://www.w3.org/2002/xforms" id="ecce_tool2"
+version="20260910">
+<start>2026-09-13T18:43:36.250-04:00</start>
+<end>2026-09-13T18:47:10.194-04:00</end>
+<today>2026-09-13</today>
+<enum_id>Fhf</enum_id>
+<team_id>Fhf</team_id>
+<g0_consent>
+<consent_note />
+<consent_language>english</consent_language>
+<consent_form_serial>Fhh</consent_form_serial>
+<consent_obtained>yes</consent_obtained>
+</g0_consent>
+<g1>
+<g1_purpose />
+<s1>
+<g_s1_1>
+<s1_note />
+<centre_id>4235a1bc-e182-4d8d-a857-4db655263dc4</centre_id>
+<centre_school>AUNT RACHEAL N.S</centre_school>
+<centre_district>Buikwe</centre_district>
+<centre_subcounty>SSI</centre_subcounty>
+<centre_parish>LUGALA</centre_parish>
+<centre_display />
+<centre_confirm>yes</centre_confirm>
+<worker_id>01438f95-8b0d-4868-85ec-a645a15b8def</worker_id>
+<form_key>
+4235a1bc-e182-4d8d-a857-4db655263dc4-01438f95-8b0d-4868-85ec-a645a15b8def</form_key>
+<roster_eligible_n>2</roster_eligible_n>
+<selection_probability_pct>100</selection_probability_pct>
+<selection_probability_display />
+</g_s1_1>
+<g_s1_role>
+<main_role>preprimary_teacher</main_role>
+<other_roles>management_admin teaching_other_class</other_roles>
+<age_groups>u1</age_groups>
+</g_s1_role>
+<g_s1_background>
+<nationality>ugandan</nationality>
+<s1_8_note />
+<disability_types>seeing</disability_types>
+</g_s1_background>
+<g_s1_languages>
+<languages_confident>english luganda</languages_confident>
+<language_most_often>english</language_most_often>
+</g_s1_languages>
+</s1>
+<s2>
+<g_s2_education>
+<highest_education>primary</highest_education>
+<highest_teaching_qual>short_nonformal</highest_teaching_qual>
+<ecce_focus>mainly_ecce</ecce_focus>
+</g_s2_education>
+<g_s2_institution>
+<s2_4_note />
+<institution_name>Hh</institution_name>
+<institution_location>Yy</institution_location>
+<institution_accreditation>accredited</institution_accreditation>
+<institution_year_completed>2025</institution_year_completed>
+<institution_duration_months>2.0</institution_duration_months>
+</g_s2_institution>
+<g_s2_programme>
+<programme_financing>self_funded</programme_financing>
+<practicum>yes</practicum>
+</g_s2_programme>
+<g_s2_practicum>
+<s2_7_note />
+<practicum_duration_weeks />
+<practicum_setting />
+<practicum_supervision_quality />
+</g_s2_practicum>
+<g_s2_preservice>
+<preservice_adequacy />
+<s2_9_note />
+<preparation_strengths />
+<preparation_gaps>inclusion_referral
+health_safety_safeguarding</preparation_gaps>
+</g_s2_preservice>
+</s2>
+<s3>
+<g_s3_awareness>
+<aware_registration_reqs>yes</aware_registration_reqs>
+<eligible_to_register>yes</eligible_to_register>
+</g_s3_awareness>
+<g_s3_status>
+<professional_status>application_submitted</professional_status>
+<registration_barriers>travel_distance</registration_barriers>
+<registration_cost />
+</g_s3_status>
+<g_s3_pathway>
+<aware_career_pathway>partly</aware_career_pathway>
+<upgrade_attempt>applied_not_enrolled</upgrade_attempt>
+<upgrade_support_needed>nearby_programme
+paid_study_leave</upgrade_support_needed>
+</g_s3_pathway>
+</s3>
+<s4>
+<g_s4_employment>
+<employment_arrangement>permanent_contract</employment_arrangement>
+<job_category>yes_copy</job_category>
+</g_s4_employment>
+<g_s4_pay>
+<pay_frequency>weekly</pay_frequency>
+<exact_pay_amount />
+<pay_band>under_100k</pay_band>
+<last_pay_received />
+<pay_periods_paid_full_ontime />
+<salary_owed>yes</salary_owed>
+<salary_owed_amount>5588.0</salary_owed_amount>
+</g_s4_pay>
+<g_s4_benefits>
+<cash_allowances>transport</cash_allowances>
+<benefits>housing paid_annual_leave</benefits>
+</g_s4_benefits>
+<g_s4_income>
+<additional_income>no</additional_income>
+</g_s4_income>
+</s4>
+<s5>
+<g_s5_hours>
+<s5_1_note />
+<hours_direct_work_children>2.0</hours_direct_work_children>
+<hours_planning_prep>2.0</hours_planning_prep>
+<hours_records_admin>2.0</hours_records_admin>
+<hours_cleaning_feeding_other>2.0</hours_cleaning_feeding_other>
+<hours_meetings_parent_engagement>
+2.0</hours_meetings_parent_engagement>
+<hours_unpaid_after_hours>2.0</hours_unpaid_after_hours>
+</g_s5_hours>
+<g_s5_schedule>
+<days_per_week>2</days_per_week>
+<months_per_year>2</months_per_year>
+<children_present />
+</g_s5_schedule>
+<g_s5_conditions>
+<regular_break>always</regular_break>
+<s5_6_note />
+<facility_classroom_space>
+seriously_inadequate</facility_classroom_space>
+<facility_outdoor_play_space>
+seriously_inadequate</facility_outdoor_play_space>
+<facility_toilets_sanitation>
+seriously_inadequate</facility_toilets_sanitation>
+<facility_water_supply>partly_adequate</facility_water_supply>
+<facility_materials>seriously_inadequate</facility_materials>
+<facility_furniture>partly_adequate</facility_furniture>
+</g_s5_conditions>
+<g_s5_absence>
+<paid_time_off_use>yes_always</paid_time_off_use>
+<days_missed_4weeks />
+<pay_deduction_absence>yes</pay_deduction_absence>
+</g_s5_absence>
+<g_s5_duties_safety>
+<duties_outside_role_frequency>
+about_weekly</duties_outside_role_frequency>
+<safety_incident>yes</safety_incident>
+<safety_incident_category>
+unsafe_conditions</safety_incident_category>
+</g_s5_duties_safety>
+</s5>
+<s6>
+<g_s6_intro>
+<induction_received>structured</induction_received>
+<cpd_participated>no</cpd_participated>
+</g_s6_intro>
+<g_s6_barriers>
+<cpd_selection_criteria>rotation
+assigned_management</cpd_selection_criteria>
+<cpd_barriers_worker />
+</g_s6_barriers>
+</s6>
+<s7>
+<s7_note />
+<comp_plan_activities>with_support</comp_plan_activities>
+<comp_play_based_pedagogy>with_support</comp_play_based_pedagogy>
+<comp_language_literacy_numeracy>
+with_support</comp_language_literacy_numeracy>
+<comp_observe_document>with_support</comp_observe_document>
+<comp_inclusion_referral>with_support</comp_inclusion_referral>
+<comp_responsive_care>with_support</comp_responsive_care>
+<comp_health_safety_safeguarding>
+with_support</comp_health_safety_safeguarding>
+<comp_family_engagement>need_training</comp_family_engagement>
+<comp_reflective_practice>with_support</comp_reflective_practice>
+<urgent_training_needs>observe_document language_literacy_numeracy
+health_safety_safeguarding</urgent_training_needs>
+</s7>
+<s8>
+<curriculum_awareness>no</curriculum_awareness>
+<ncdc_pilot_worker>no</ncdc_pilot_worker>
+</s8>
+<s9>
+<obs_count_exact />
+<psych_safety />
+<s9_gap_note />
+</s9>
+<s10>
+<g_s10_entry>
+<entry_reasons>transition_role employment_near_home</entry_reasons>
+<job_satisfaction />
+<emotional_exhaustion />
+</g_s10_entry>
+<g_s10_valued>
+<s10_4_note />
+<valued_by_management>rarely_valued</valued_by_management>
+<valued_by_colleagues>rarely_valued</valued_by_colleagues>
+<valued_by_parents>rarely_valued</valued_by_parents>
+<valued_by_community>rarely_valued</valued_by_community>
+<valued_by_authorities>rarely_valued</valued_by_authorities>
+</g_s10_valued>
+<g_s10_retention>
+<voice_mechanism>yes_limited</voice_mechanism>
+<professional_membership>yes</professional_membership>
+<retention_likelihood />
+<desired_changes />
+</g_s10_retention>
+</s10>
+<s11>
+<additional_comments>Ghc</additional_comments>
+</s11>
+</g1>
+<meta>
+<instanceID>uuid:2bc669d9-1bc0-4d4e-8db1-d19fe49c2f85</instanceID>
+</meta>
+</data>

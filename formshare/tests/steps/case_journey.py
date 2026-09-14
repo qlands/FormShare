@@ -417,6 +417,18 @@ def t_e_s_t_case_journey(test_object):
         _maintable_count(test_object.server_config, schema2) == after_valid
     ), "a follow-up on a non-existent worker was stored"
 
+    # A published list a built form consumes cannot be deleted: the foreign
+    # key and membership trigger depend on its source. The route refuses it
+    # (404) and the list stays.
+    testapp.post(
+        "/user/{}/project/{}/caselists/{}/delete".format(login, project, "roster"),
+        status=404,
+    )
+    res = testapp.get(
+        "/user/{}/project/{}/caselists".format(login, project), status=200
+    )
+    test_object.root.assertIn(b"roster.csv", res.body)
+
     # The delete guard: Tool 1 feeds lists Tool 2 links to, so it cannot be
     # deleted -- the database would refuse it, and so does the app, first.
     res = testapp.post(
@@ -426,3 +438,28 @@ def t_e_s_t_case_journey(test_object):
     assert "FS_error" in res.headers
     # Tool 1 is still there.
     assert _has_table(test_object.server_config, schema1, "maintable")
+
+    # The published-lists workflow is for non-case projects only. On a classic
+    # case project (project_case = 1) every registry route is 404.
+    classic = "journey_classic"
+    res = testapp.post(
+        "/user/{}/projects/add".format(login),
+        {
+            "project_id": str(uuid.uuid4()),
+            "project_code": classic,
+            "project_name": "Classic case project",
+            "project_abstract": "",
+            "project_icon": "",
+            "project_hexcolor": "",
+            "project_case": "1",
+            "project_formlist_auth": 1,
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    testapp.get("/user/{}/project/{}/caselists".format(login, classic), status=404)
+    testapp.get("/user/{}/project/{}/caselists/add".format(login, classic), status=404)
+    testapp.get(
+        "/user/{}/project/{}/caselists/tablesof/{}".format(login, classic, TOOL1),
+        status=404,
+    )

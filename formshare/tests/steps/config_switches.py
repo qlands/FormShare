@@ -152,7 +152,7 @@ def t_e_s_t_config_switches(test_object):
         assert "FS_error" in res.headers
 
     # The health page reports a full disk
-    with settings_set_to({"max_disk_usage": "0"}):
+    with settings_set_to({"max_disk_usage": "-1"}):
         testapp.get("/health", status=500)
 
     # Password recovery is off without a mail server, unless the deployment

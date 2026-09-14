@@ -67,6 +67,10 @@ __all__ = [
     "get_consumer_sources",
     "apply_link_attributes",
     "source_form_has_consumers",
+    "project_is_longitudinal",
+    "form_creates_cases",
+    "form_consumes_cases",
+    "list_has_active_consumers",
     "generate_published_list_file",
 ]
 
@@ -634,6 +638,75 @@ def source_form_has_consumers(request, source_project, source_form):
         .all()
     )
     return len(res) > 0
+
+
+def project_is_longitudinal(request, project_id):
+    """Whether a project runs a longitudinal workflow -- i.e. it publishes at
+    least one list. Consumption is not required: a project that produces a
+    list is longitudinal whether or not any form consumes it yet.
+    """
+    return (
+        request.dbsession.query(PublishedList.list_id)
+        .filter(PublishedList.project_id == project_id)
+        .first()
+        is not None
+    )
+
+
+def form_creates_cases(request, project_id, form_id):
+    """Whether a form is the source of a published list -- it produces cases.
+
+    True as soon as a list is published from this form's data, consumed or
+    not.
+    """
+    return (
+        request.dbsession.query(PublishedList.list_id)
+        .filter(PublishedList.source_project == project_id)
+        .filter(PublishedList.source_form == form_id)
+        .first()
+        is not None
+    )
+
+
+def form_consumes_cases(request, project_id, form_id):
+    """Whether a form consumes a published list -- it uses cases.
+
+    True if the form references any published list, whether that reference is
+    the case link or an auxiliary read, and whether or not its repository is
+    built.
+    """
+    return (
+        request.dbsession.query(ListConsumer.list_id)
+        .filter(ListConsumer.consumer_project == project_id)
+        .filter(ListConsumer.consumer_form == form_id)
+        .first()
+        is not None
+    )
+
+
+def list_has_active_consumers(request, project_id, list_id):
+    """Whether a list has a consumer whose repository is built.
+
+    An "active" consumer is one that is actually wired into the schema: its
+    form has a repository, so the foreign key (and, for the case link, the
+    membership trigger) to this list's source exist. A consumer detected at
+    upload but not yet built does not count -- nothing depends on the list in
+    the database yet. This is what makes a list's source risky to change.
+    """
+    return (
+        request.dbsession.query(ListConsumer.consumer_form)
+        .join(
+            Odkform,
+            (ListConsumer.consumer_project == Odkform.project_id)
+            & (ListConsumer.consumer_form == Odkform.form_id),
+        )
+        .filter(ListConsumer.list_project == project_id)
+        .filter(ListConsumer.list_id == list_id)
+        .filter(Odkform.form_schema.isnot(None))
+        .filter(Odkform.form_schema != "")
+        .first()
+        is not None
+    )
 
 
 def apply_link_attributes(root, sources, key_types):

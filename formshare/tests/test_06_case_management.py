@@ -562,3 +562,43 @@ def test_an_inactive_case_link_keeps_the_fk_but_skips_the_trigger():
     table = root.find(".//table[@name='maintable']")
     assert table.get("case_followup") is None
     assert root.find(".//field[@name='worker_id']").get("rtable") == "FS_src.roster"
+
+
+# ---------------------------------------------------------------------------
+# Predicate helpers: is a project/form/list part of a longitudinal workflow
+# ---------------------------------------------------------------------------
+
+
+def test_project_is_longitudinal_when_it_publishes_a_list(db_request):
+    assert cm.project_is_longitudinal(db_request, "p") is True
+    assert cm.project_is_longitudinal(db_request, "no_such_project") is False
+
+
+def test_form_creates_cases_when_it_is_a_list_source(db_request):
+    # tool1 sources both lists; tool2 sources none.
+    assert cm.form_creates_cases(db_request, "p", "tool1") is True
+    assert cm.form_creates_cases(db_request, "p", "tool2") is False
+
+
+def test_form_consumes_cases_when_it_references_a_list(db_request):
+    assert cm.form_consumes_cases(db_request, "p", "tool2") is False
+    cm.sync_form_consumers(db_request, "p", "tool2", _two_list_fields())
+    assert cm.form_consumes_cases(db_request, "p", "tool2") is True
+    # the source form is not a consumer
+    assert cm.form_consumes_cases(db_request, "p", "tool1") is False
+
+
+def test_list_has_active_consumers_only_once_the_consumer_is_built(db_request):
+    from formshare.models.formshare import Odkform
+
+    cm.sync_form_consumers(db_request, "p", "tool2", _two_list_fields())
+    # tool2 consumes the roster list but has no repository yet
+    assert cm.list_has_active_consumers(db_request, "p", "roster") is False
+    # build tool2: now the consumer is wired into the schema
+    db_request.dbsession.query(Odkform).filter(Odkform.form_id == "tool2").update(
+        {"form_schema": "FS_tool2"}
+    )
+    db_request.dbsession.flush()
+    assert cm.list_has_active_consumers(db_request, "p", "roster") is True
+    # a list no form consumes at all
+    assert cm.list_has_active_consumers(db_request, "p", "no_such_list") is False

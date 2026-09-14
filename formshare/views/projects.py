@@ -344,6 +344,7 @@ class EditProjectView(ProjectsView):
 
         if self.request.method == "POST":
             project_details = self.get_post_dict()
+            project_details["total_forms"] = total_forms
             project_details["project_public"] = 0
 
             if "project_case" in project_details.keys():

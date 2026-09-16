@@ -3503,6 +3503,27 @@ def create_repository(
             store_file_in_directory(
                 request, project, form, media_file.file_name, target_dir
             )
+        # A published list is regenerated from its source on every manifest
+        # pull, so the attached copy is only a snapshot. Handing that snapshot
+        # to jxformtomysql makes RSTools freeze it into a lookup table
+        # (lkp<selector>) and point the selector at it -- wrong twice over: the
+        # list is dynamic, and the case link needs the selector to reference
+        # the *source* table's rowuuid, not a copy. A header-only file keeps
+        # the select external (selecttype 3, no lookup), which is the state
+        # apply_registry_links expects and the state a placeholder gives.
+        # Only the build's temp copy is truncated; the stored attachment the
+        # device downloads is untouched.
+        registry_files = {
+            a_list["list_filename"]
+            for a_list in get_project_published_lists(request, project)
+        }
+        for a_name in registry_files:
+            a_copy = os.path.join(target_dir, a_name)
+            if os.path.exists(a_copy):
+                with io.open(a_copy, "r", encoding="utf-8") as list_copy:
+                    header = list_copy.readline()
+                with io.open(a_copy, "w", encoding="utf-8") as list_copy:
+                    list_copy.write(header)
         path = os.path.join(odk_dir, *["tmp", tmp_uid, "*.*"])
         files = glob.glob(path)
         if files:

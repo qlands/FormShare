@@ -609,3 +609,42 @@ def test_list_has_active_consumers_only_once_the_consumer_is_built(db_request):
     assert cm.list_has_active_consumers(db_request, "p", "roster") is True
     # a list no form consumes at all
     assert cm.list_has_active_consumers(db_request, "p", "no_such_list") is False
+
+
+def test_the_link_lands_on_the_maintable_not_a_same_named_lookup_column():
+    """The tosin failure: the served roster.csv carried a column named
+    worker_id, RSTools froze the CSV into lkpworker_id, and that lookup's
+    same-named field came first in document order. The link must land on
+    maintable.worker_id and leave the lookup column alone."""
+    from lxml import etree
+
+    root = etree.fromstring(
+        "<XMLSchemaStructure><tables>"
+        "<table name='lkpworker_id'>"
+        "<field name='worker_id_cod' type='varchar'/>"
+        "<field name='worker_id' type='varchar'/>"
+        "</table>"
+        "<table name='maintable'>"
+        "<field name='worker_id' type='int'/>"
+        "</table>"
+        "</tables></XMLSchemaStructure>"
+    )
+    ok, message = cm.apply_link_attributes(
+        root,
+        [
+            {
+                "selector_field": "worker_id",
+                "source_schema": "FS_src",
+                "source_table": "roster",
+                "is_link": True,
+                "list_active": 1,
+            }
+        ],
+        {"FS_src.roster": ("varchar", "80")},
+    )
+    assert ok, message
+    main_field = root.find(".//table[@name='maintable']/field[@name='worker_id']")
+    lookup_field = root.find(".//table[@name='lkpworker_id']/field[@name='worker_id']")
+    assert main_field.get("rtable") == "FS_src.roster"
+    assert main_field.get("type") == "varchar"
+    assert lookup_field.get("rtable") is None

@@ -770,7 +770,13 @@ def apply_link_attributes(root, sources, key_types):
         if key is None:
             return False, "No key type for {}".format(ref)
         key_type, key_size = key
-        field = root.find(".//field[@name='" + a_source["selector_field"] + "']")
+        # Scoped to the maintable on purpose. A registry-served CSV can carry a
+        # column named after the selector (the tosin roster serves one called
+        # worker_id), and if RSTools has frozen that CSV into a lookup table the
+        # lookup carries a same-named field that comes first in document
+        # order; an unscoped find stamped the foreign key on it and the build
+        # failed with 1452 inserting the lookup rows.
+        field = table.find("field[@name='" + a_source["selector_field"] + "']")
         if field is None:
             return False, "The selector field {} was not found in create.xml".format(
                 a_source["selector_field"]

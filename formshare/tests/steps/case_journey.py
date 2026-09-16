@@ -292,6 +292,16 @@ def t_e_s_t_case_journey(test_object):
         status=302,
     )
     assert "FS_error" not in res.headers
+    # A served column named after the selector itself, as the tosin roster
+    # does (its worker_id column holds the worker's name). This is the shape
+    # that, frozen into a lookup table, once caught the link on the wrong
+    # field.
+    res = testapp.post(
+        "/user/{}/project/{}/caselists/{}/edit".format(login, project, "roster"),
+        {"add_column": "1", "column_name": worker_label, "column_as": "worker_id"},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
 
     # --- The wizard's JSON endpoints and the sample download ---------------
     res = testapp.get(
@@ -351,6 +361,18 @@ def t_e_s_t_case_journey(test_object):
     )
     assert "FS_error" not in res.headers
 
+    # Pull Tool 2's manifest first, as a device would: the placeholders are
+    # replaced by the real generated lists, rows and all. Building with those
+    # attached is the production path -- and the one where RSTools used to
+    # freeze each list into a lookup table and the link landed on it.
+    testapp.get(
+        "/user/{}/project/{}/{}/manifest".format(login, project, TOOL2),
+        status=200,
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+
     # --- Build Tool 2: the FKs and the membership trigger are created ------
     testapp.post(
         "/user/{}/project/{}/form/{}/repository/create".format(login, project, TOOL2),
@@ -370,6 +392,11 @@ def t_e_s_t_case_journey(test_object):
         _column_type(test_object.server_config, schema2, "maintable", "worker_id")
         == "varchar(80)"
     )
+
+    # No list was frozen into a lookup table: the build handed RSTools
+    # header-only copies of the registry-served files.
+    assert not _has_table(test_object.server_config, schema2, "lkpworker_id")
+    assert not _has_table(test_object.server_config, schema2, "lkpcentre_id")
 
     # The case link carries the _active-aware membership trigger.
     triggers = _maintable_membership_trigger(test_object.server_config, schema2)

@@ -18,6 +18,7 @@ the _active-aware membership trigger. This is feature 5 -- a follow-up whose
 rows hang off a repeat table in another form -- proven end to end.
 """
 
+import hashlib
 import io
 import json
 import os
@@ -228,6 +229,19 @@ def _pull_manifest(test_object, login, project, form_id):
             FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
         ),
     ).body
+
+
+def _manifest_hash(manifest, file_name):
+    """The md5 the manifest advertises for a file -- what ODK Collect compares
+    with its local copy to decide the form has an update."""
+    found = re.search(
+        r"<filename>{}</filename>\s*<hash>md5:([^<]*)</hash>".format(
+            re.escape(file_name)
+        ),
+        manifest.decode("utf-8"),
+    )
+    assert found, manifest
+    return found.group(1)
 
 
 def _served_file(test_object, manifest, file_name):
@@ -631,8 +645,9 @@ def t_e_s_t_case_journey(test_object):
         test_object.server_config, test_object.projectID, "roster"
     )
     assert roster_seq >= 1 and roster_gen is not None
-    # Nothing changed: a pull leaves the edition and the stamp alone.
-    _pull_manifest(test_object, login, project, TOOL2)
+    # Nothing changed: a pull leaves the edition, the stamp and the hash alone.
+    manifest = _pull_manifest(test_object, login, project, TOOL2)
+    roster_hash = _manifest_hash(manifest, "roster.csv")
     assert _list_edition(
         test_object.server_config, test_object.projectID, "roster"
     ) == (roster_seq, roster_gen)
@@ -674,6 +689,19 @@ def t_e_s_t_case_journey(test_object):
     header = served.decode("utf-8").splitlines()[0]
     assert "worker_uuid" in header, header
     assert _csv_data_rows(served) >= 1, served
+    # The same pull advertises the new hash -- ODK Collect flags a form as
+    # updated when a manifest hash differs from its local file -- and it is
+    # the hash of what the device then downloads.
+    new_hash = _manifest_hash(manifest, "roster.csv")
+    assert new_hash != roster_hash, "the manifest kept the old hash"
+    assert new_hash == hashlib.md5(served).hexdigest()
+    # A further pull with nothing changed keeps that hash and the edition.
+    again = _pull_manifest(test_object, login, project, TOOL2)
+    assert _manifest_hash(again, "roster.csv") == new_hash
+    assert (
+        _list_edition(test_object.server_config, test_object.projectID, "roster")[0]
+        == roster_seq + 1
+    )
 
     # A published list a built form consumes cannot be deleted: the foreign
     # key and membership trigger depend on its source. The route refuses it

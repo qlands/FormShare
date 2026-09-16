@@ -103,7 +103,14 @@ def _quoted(identifier):
 
 
 def build_list_select(
-    schema, table, label_column, columns, filter_sql=None, limit=None, active=1
+    schema,
+    table,
+    label_column,
+    columns,
+    filter_sql=None,
+    limit=None,
+    active=1,
+    key_column=None,
 ):
     """The SELECT that generates a published list.
 
@@ -116,10 +123,21 @@ def build_list_select(
 
     ``name`` is always rowuuid and always first; ``label`` always second.
     """
-    select_parts = [
-        "rowuuid AS name",
-        "{} AS label".format(_quoted(label_column)),
-    ]
+    # A row list is keyed by the source row's rowuuid: one row per source row,
+    # linkable as a case. A value list is keyed by a column -- a list of
+    # districts pulled from a table of schools -- so name is that column's
+    # value, DISTINCT collapses the repeats, and there is no rowuuid: it
+    # cannot be a case link, there being nothing unique to foreign-key to.
+    if key_column:
+        select_parts = [
+            "{} AS name".format(_quoted(key_column)),
+            "{} AS label".format(_quoted(label_column)),
+        ]
+    else:
+        select_parts = [
+            "rowuuid AS name",
+            "{} AS label".format(_quoted(label_column)),
+        ]
     headers = ["name", "label"]
     for column_name, column_as in columns:
         alias = column_as or column_name
@@ -128,8 +146,11 @@ def build_list_select(
             raise ValueError("Duplicated column: {}".format(alias))
         select_parts.append("{} AS {}".format(_quoted(column_name), _quoted(alias)))
         headers.append(alias)
-    sql = "SELECT {} FROM {}.{}".format(
-        ",".join(select_parts), _quoted(schema), _quoted(table)
+    sql = "SELECT {}{} FROM {}.{}".format(
+        "DISTINCT " if key_column else "",
+        ",".join(select_parts),
+        _quoted(schema),
+        _quoted(table),
     )
     # _active decides which rows the list carries. Every data table has it
     # (default 1), so a list serves active rows unless it was defined for the
@@ -143,7 +164,8 @@ def build_list_select(
         where.append(filter_sql)
     if where:
         sql = sql + " WHERE " + " AND ".join(where)
-    sql = sql + " ORDER BY rowuuid"
+    # A value list has no rowuuid to order by; its values order it instead.
+    sql = sql + (" ORDER BY name" if key_column else " ORDER BY rowuuid")
     if limit is not None:
         # The sample download: enough rows to design a form against,
         # never the study.
@@ -396,6 +418,7 @@ def generate_published_list_file(request, list_data, out_path):
             columns,
             list_data.get("filter_sql"),
             active=list_data.get("list_active", 1),
+            key_column=list_data.get("list_key_column"),
         )
         rows = request.dbsession.execute(sql).fetchall()
         write_list_csv(headers, rows, out_path)
@@ -510,6 +533,8 @@ def sync_form_consumers(request, project_id, form_id, maintable_fields):
         if len(current) == 1 and not any(
             int(a_row["consumer_is_link"] or 0) == 1 for a_row in current
         ):
+            # A lone value-list consumer (a district filter) is not a follow-up
+            # of anything; set_case_link refuses it, quietly here.
             set_case_link(request, project_id, form_id, current[0]["list_id"])
         return True, ""
     except Exception as e:
@@ -537,8 +562,12 @@ def set_case_link(request, project_id, form_id, list_id):
 
     The case link is the list whose rows the form is about: it gets the
     foreign key and the membership trigger at repository build. A form has at
-    most one.
+    most one, and it must be a row list -- a value list (distinct districts
+    from a table of schools) has no rowuuid to link to.
     """
+    a_list = get_published_list(request, project_id, list_id)
+    if a_list is not None and a_list.get("list_key_column"):
+        return False, "A value list cannot be the case link: it has no row identity"
     try:
         request.dbsession.query(ListConsumer).filter(
             ListConsumer.consumer_project == project_id
@@ -625,13 +654,17 @@ def get_consumer_sources(request, project_id, form_id):
             continue
         if not consumer["selector_field"]:
             continue
+        key_column = a_list.get("list_key_column") or None
         result.append(
             {
                 "selector_field": consumer["selector_field"],
                 "source_schema": res[0],
                 "source_table": a_list["source_table"],
-                "is_link": int(consumer["consumer_is_link"] or 0) == 1,
+                # A value list has no rowuuid to link to, whatever was stored.
+                "is_link": int(consumer["consumer_is_link"] or 0) == 1
+                and not key_column,
                 "list_active": int(a_list.get("list_active", 1) or 0),
+                "key_column": key_column,
             }
         )
     return result
@@ -766,9 +799,10 @@ def apply_link_attributes(root, sources, key_types):
         return False, "Main table was not found in create.xml"
     for a_source in sources:
         ref = a_source["source_schema"] + "." + a_source["source_table"]
-        key = key_types.get(ref)
+        key_column = a_source.get("key_column") or "rowuuid"
+        key = key_types.get(ref + "." + key_column)
         if key is None:
-            return False, "No key type for {}".format(ref)
+            return False, "No key type for {}.{}".format(ref, key_column)
         key_type, key_size = key
         # Scoped to the maintable on purpose. A registry-served CSV can carry a
         # column named after the selector (the tosin roster serves one called
@@ -783,6 +817,12 @@ def apply_link_attributes(root, sources, key_types):
             )
         field.set("type", key_type)
         field.set("size", str(key_size))
+        if a_source.get("key_column"):
+            # A value list: the selector holds a value (a district name), so it
+            # only needs the key column's type -- RSTools emits int for an
+            # external select -- and no foreign key: the key is neither unique
+            # nor a rowuuid, and the list is a filter driver, not a case.
+            continue
         field.set("rtable", ref)
         field.set("rfield", "rowuuid")
         field.set("rname", "fk_" + str(uuid.uuid4()).replace("-", "_"))

@@ -468,8 +468,8 @@ def _linked_root(sources):
 
     root = etree.fromstring(_CREATE_XML)
     key_types = {
-        "FS_src.maintable": ("varchar", "80"),
-        "FS_src.roster": ("varchar", "80"),
+        "FS_src.maintable.rowuuid": ("varchar", "80"),
+        "FS_src.roster.rowuuid": ("varchar", "80"),
     }
     ok, message = cm.apply_link_attributes(root, sources, key_types)
     assert ok, message
@@ -640,7 +640,7 @@ def test_the_link_lands_on_the_maintable_not_a_same_named_lookup_column():
                 "list_active": 1,
             }
         ],
-        {"FS_src.roster": ("varchar", "80")},
+        {"FS_src.roster.rowuuid": ("varchar", "80")},
     )
     assert ok, message
     main_field = root.find(".//table[@name='maintable']/field[@name='worker_id']")
@@ -648,3 +648,98 @@ def test_the_link_lands_on_the_maintable_not_a_same_named_lookup_column():
     assert main_field.get("rtable") == "FS_src.roster"
     assert main_field.get("type") == "varchar"
     assert lookup_field.get("rtable") is None
+
+
+# ---------------------------------------------------------------------------
+# Value lists (2026-09-16): a list keyed by a column -- districts from schools
+# ---------------------------------------------------------------------------
+
+
+def test_a_value_list_serves_each_distinct_value_once_as_name():
+    sql, headers = cm.build_list_select(
+        "FS_abc", "maintable", "centre_district", [], key_column="centre_district"
+    )
+    assert sql.startswith("SELECT DISTINCT `centre_district` AS name,")
+    assert "rowuuid" not in sql
+    assert sql.endswith(" ORDER BY name")
+    assert headers == ["name", "label"]
+
+
+def test_a_value_list_still_serves_only_active_rows():
+    sql, _ = cm.build_list_select(
+        "FS_abc", "maintable", "centre_district", [], key_column="centre_district"
+    )
+    assert " WHERE _active = 1 " in sql
+
+
+def test_a_row_list_is_unchanged_by_the_value_list_feature():
+    sql, _ = cm.build_list_select("FS_abc", "maintable", "hh_name", [])
+    assert sql.startswith("SELECT rowuuid AS name,")
+    assert "DISTINCT" not in sql
+    assert sql.endswith(" ORDER BY rowuuid")
+
+
+def test_a_value_list_consumer_is_retyped_but_never_linked():
+    """The selector holds a district name, so it needs the key column's type
+    (RSTools emits int for an external select) and nothing else: no foreign
+    key -- the key is neither unique nor a rowuuid -- and no trigger."""
+    from lxml import etree
+
+    root = etree.fromstring(
+        "<XMLSchemaStructure><tables><table name='maintable'>"
+        "<field name='district_filter' type='int'/>"
+        "</table></tables></XMLSchemaStructure>"
+    )
+    ok, message = cm.apply_link_attributes(
+        root,
+        [
+            {
+                "selector_field": "district_filter",
+                "source_schema": "FS_src",
+                "source_table": "maintable",
+                "is_link": True,  # even if someone stored it, it cannot link
+                "list_active": 1,
+                "key_column": "centre_district",
+            }
+        ],
+        {"FS_src.maintable.centre_district": ("text", "65535")},
+    )
+    assert ok, message
+    field = root.find(".//field[@name='district_filter']")
+    assert field.get("type") == "text"
+    assert field.get("rtable") is None
+    assert root.find(".//table[@name='maintable']").get("case_followup") is None
+
+
+def _publish_districts(db_request):
+    from formshare.models.formshare import PublishedList
+
+    db_request.dbsession.add(
+        PublishedList(
+            project_id="p",
+            list_id="districts",
+            list_filename="districts.csv",
+            list_format="csv",
+            source_project="p",
+            source_form="tool1",
+            source_table="maintable",
+            label_column="centre_district",
+            list_key_column="centre_district",
+        )
+    )
+    db_request.dbsession.flush()
+
+
+def test_a_value_list_cannot_become_the_case_link(db_request):
+    _publish_districts(db_request)
+    fields = [_select_field("district_filter", "districts.csv")]
+    cm.sync_form_consumers(db_request, "p", "tool2", fields)
+    # A lone value-list consumer is not auto-linked...
+    assert cm.get_case_link_consumer(db_request, "p", "tool2") is None
+    # ...and cannot be linked on purpose either.
+    ok, message = cm.set_case_link(db_request, "p", "tool2", "districts")
+    assert ok is False and "value list" in message
+    # The build sees the key column and no link.
+    sources = cm.get_consumer_sources(db_request, "p", "tool2")
+    assert sources[0]["key_column"] == "centre_district"
+    assert sources[0]["is_link"] is False

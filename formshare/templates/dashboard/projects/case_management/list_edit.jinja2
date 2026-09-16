@@ -32,6 +32,19 @@
                         {{ _('Every list carries name (the row identity) and label. The columns below are served in addition, in this order.') }}
                     </p>
                     <div class="hr-line-dashed"></div>
+                    <h3>{{ _('Key') }}</h3>
+                    <form method="post" class="form-inline">
+                        {{ form.secure_form(request) }}
+                        <select name="list_key_column" id="list_key_column" class="form-control" style="min-width: 250px">
+                            <option value="" {% if not listData.list_key_column %}selected{% endif %}>{{ _('Each row (keyed by its rowuuid)') }}</option>
+                            {% for a_column in tableColumns %}
+                                <option value="{{ a_column.field_name }}" {% if a_column.field_name == listData.list_key_column %}selected{% endif %}>{{ a_column.field_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" name="change_key" value="1" class="btn btn-white">{{ _('Change the key') }}</button>
+                        <span class="form-text m-b-none">{{ _('A column key serves each distinct value once; such a list cannot be a case link.') }}</span>
+                    </form>
+                    <div class="hr-line-dashed"></div>
                     <h3>{{ _('Rows to serve') }}</h3>
                     <form method="post" class="form-inline">
                         {{ form.secure_form(request) }}
@@ -106,6 +119,7 @@
         $(document).ready(function() {
             $("#label_column").select2();
             $("#column_name").select2();
+            $("#list_key_column").select2();
         });
     </script>
 {% endblock scripts %}

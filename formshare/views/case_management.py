@@ -123,6 +123,9 @@ class AddPublishedListView(ListSection):
                 )
             else:
                 list_active = 0 if list_data.get("list_active") == "0" else 1
+                key_column = (
+                    str(list_data.get("list_key_column", "") or "").strip() or None
+                )
                 added, message = add_published_list(
                     self.request,
                     project_id,
@@ -135,6 +138,7 @@ class AddPublishedListView(ListSection):
                         "source_table": source_table,
                         "label_column": label_column,
                         "list_active": list_active,
+                        "list_key_column": key_column,
                     },
                 )
                 if added:
@@ -206,6 +210,32 @@ class EditPublishedListView(ListSection):
                 else:
                     self.returnRawViewResult = True
                     return HTTPFound(self.request.url)
+            if "change_key" in post_data.keys():
+                key_column = (
+                    str(post_data.get("list_key_column", "") or "").strip() or None
+                )
+                # A built consumer's foreign key (or lack of one) was shaped by
+                # the key; switching a row list to a value list under it, or
+                # back, would leave the schema disagreeing with the list.
+                if list_has_active_consumers(self.request, project_id, list_id):
+                    self.append_to_errors(
+                        self._(
+                            "The key cannot change while a form with a repository "
+                            "uses this list"
+                        )
+                    )
+                else:
+                    updated, message = update_published_list(
+                        self.request,
+                        project_id,
+                        list_id,
+                        {"list_key_column": key_column},
+                    )
+                    if not updated:
+                        self.append_to_errors(message)
+                    else:
+                        self.returnRawViewResult = True
+                        return HTTPFound(self.request.url)
             if "change_active" in post_data.keys():
                 list_active = 0 if post_data.get("list_active") == "0" else 1
                 updated, message = update_published_list(
@@ -341,6 +371,7 @@ class SampleListView(ListSection):
                 list_data.get("filter_sql"),
                 limit=10,
                 active=list_data.get("list_active", 1),
+                key_column=list_data.get("list_key_column"),
             )
             rows = self.request.dbsession.execute(sql).fetchall()
         except Exception as e:
@@ -412,12 +443,20 @@ class CaseLinksView(ListSection):
                     else:
                         self.returnRawViewResult = True
                         return HTTPFound(self.request.url)
+        consumers = get_form_consumers(self.request, project_id, form_id)
+        for a_consumer in consumers:
+            a_list = get_published_list(
+                self.request, a_consumer["list_project"], a_consumer["list_id"]
+            )
+            # A value list (distinct districts) has no row identity and cannot
+            # be the case link; the page offers no radio for it.
+            a_consumer["is_value_list"] = bool(a_list and a_list.get("list_key_column"))
         return {
             "projectDetails": project_details,
             "userid": user_id,
             "projcode": project_code,
             "formData": form_data,
-            "consumers": get_form_consumers(self.request, project_id, form_id),
+            "consumers": consumers,
             "caseLink": get_case_link_consumer(self.request, project_id, form_id),
             "hasCreateXml": create_xml is not None,
         }

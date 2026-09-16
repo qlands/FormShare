@@ -952,6 +952,7 @@ class PublishedList(Base):
     geometry_column = Column(Unicode(120))
     list_filter_mode = Column(Unicode(20), server_default=text("'all'"))
     list_active = Column(INTEGER, server_default=text("'1'"))
+    list_key_column = Column(Unicode(120))
     list_lastgen = Column(DateTime)
     list_seq = Column(INTEGER, server_default=text("'0'"))
     list_createdate = Column(DateTime)

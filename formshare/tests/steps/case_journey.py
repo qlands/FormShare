@@ -19,6 +19,7 @@ rows hang off a repeat table in another form -- proven end to end.
 """
 
 import io
+import json
 import os
 import re
 import time
@@ -145,6 +146,26 @@ def _worker_of(config, schema2, schema1, worker_id):
         engine.dispose()
 
 
+def _write_second_school(resources, working_dir):
+    """The example Tool 1 submission as a different school in the same
+    district: a fresh instance id, a fresh primary key, another name."""
+    with io.open(
+        os.path.join(resources, "tool1_submission.json"), encoding="utf-8"
+    ) as a_file:
+        data = json.load(a_file)
+    data["_uuid"] = str(uuid.uuid4())
+    data["g0_consent/consent_form_serial"] = "second-" + uuid.uuid4().hex[:8]
+    data["g1/s1/centre_school"] = "SECOND SCHOOL, SAME DISTRICT"
+    out = os.path.join(working_dir, "tool1_second_school.json")
+    with io.open(out, "w", encoding="utf-8") as a_file:
+        json.dump(data, a_file)
+    return out
+
+
+def _csv_data_rows(body):
+    return len([l for l in body.decode("utf-8").splitlines() if l.strip()]) - 1
+
+
 def _write_tool2_submission(resources, working_dir, centre_id, worker_id):
     """Patch the example Tool 2 XML with a chosen case and a fresh id."""
     with io.open(
@@ -254,6 +275,24 @@ def t_e_s_t_case_journey(test_object):
     worker_id, centre_id = _one_roster_pair(test_object.server_config, schema1)
     assert worker_id and centre_id, "roster did not populate"
 
+    # A second school in the same district, so a list of districts has
+    # something to deduplicate.
+    res = testapp.post(
+        "/user/{}/project/{}/push_json".format(login, project),
+        status=201,
+        upload_files=[
+            (
+                "filetoupload",
+                _write_second_school(resources, test_object.working_dir),
+            )
+        ],
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+    assert "FS_error" not in res.headers
+    assert _maintable_count(test_object.server_config, schema1) == 2
+
     # --- Two published lists from Tool 1 -----------------------------------
     school_label = _pick_text_column(test_object.server_config, schema1, "maintable")
     worker_label = _pick_text_column(test_object.server_config, schema1, "roster")
@@ -302,6 +341,38 @@ def t_e_s_t_case_journey(test_object):
         status=302,
     )
     assert "FS_error" not in res.headers
+
+    # A value list: the districts of the schools, keyed by the district
+    # itself. Two schools share one district, so the list serves it once
+    # while the school list serves two rows -- name is the district's value,
+    # which is what a choice_filter on centre_district compares against.
+    res = testapp.post(
+        "/user/{}/project/{}/caselists/add".format(login, project),
+        {
+            "list_id": "district_list",
+            "list_filename": "district_list.csv",
+            "source_form": TOOL1,
+            "source_table": "maintable",
+            "label_column": "centre_district",
+            "list_key_column": "centre_district",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.get(
+        "/user/{}/project/{}/caselists/{}/sample".format(
+            login, project, "district_list"
+        ),
+        status=200,
+    )
+    assert _csv_data_rows(res.body) == 1, res.body
+    res = testapp.get(
+        "/user/{}/project/{}/caselists/{}/sample".format(
+            login, project, "centre_lists"
+        ),
+        status=200,
+    )
+    assert _csv_data_rows(res.body) == 2, res.body
 
     # --- The wizard's JSON endpoints and the sample download ---------------
     res = testapp.get(

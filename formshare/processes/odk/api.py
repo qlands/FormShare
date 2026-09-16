@@ -3370,19 +3370,27 @@ def apply_registry_links(request, project, form, create_xml_file, create_file):
     # Read the rowuuid type of each distinct source once. rowuuid is a control
     # column RSTools writes, not a form field, so it is read from the built
     # source schema rather than the dictionary.
+    # Keyed by schema.table.column: rowuuid for a row list, the key column for
+    # a value list (whose selector holds a value and only needs its type).
     key_types = {}
     for a_source in sources:
         ref = a_source["source_schema"] + "." + a_source["source_table"]
-        if ref not in key_types:
+        key_column = a_source.get("key_column") or "rowuuid"
+        cache_key = ref + "." + key_column
+        if cache_key not in key_types:
             key_row = request.dbsession.execute(
                 "SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH "
                 "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = :s "
-                "AND TABLE_NAME = :t AND COLUMN_NAME = 'rowuuid'",
-                {"s": a_source["source_schema"], "t": a_source["source_table"]},
+                "AND TABLE_NAME = :t AND COLUMN_NAME = :c",
+                {
+                    "s": a_source["source_schema"],
+                    "t": a_source["source_table"],
+                    "c": key_column,
+                },
             ).fetchone()
             if key_row is None:
-                return 1, "The source table {} has no rowuuid column".format(ref)
-            key_types[ref] = (key_row[0], str(key_row[1] or 80))
+                return 1, "The source table {} has no {} column".format(ref, key_column)
+            key_types[cache_key] = (key_row[0], str(key_row[1] or 80))
     # The foreign keys enforce existence (MySQL 1452) and protect the source
     # (ON DELETE RESTRICT); the active case link additionally gets a membership
     # trigger. All of it is create.xml attributes, realised by one

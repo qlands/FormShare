@@ -39,6 +39,8 @@
                                         <td>
                                             {% if a_consumer.is_value_list %}
                                                 <span class="text-muted" title="{{ _('A value list has no row identity and cannot be the case link') }}">&mdash;</span>
+                                            {% elif linksLocked %}
+                                                {% if a_consumer.consumer_is_link == 1 %}<i class="fas fa-link"></i>{% else %}<span class="text-muted">&mdash;</span>{% endif %}
                                             {% else %}
                                                 <input type="radio" name="list_id" value="{{ a_consumer.list_id }}" {% if a_consumer.consumer_is_link == 1 %}checked{% endif %}>
                                             {% endif %}
@@ -50,7 +52,11 @@
                                 {% endfor %}
                                 </tbody>
                             </table>
-                            <button type="submit" name="case_link" value="1" class="btn btn-primary">{{ _('Save the case link') }}</button>
+                            {% if linksLocked %}
+                                <div class="alert alert-info">{{ lockReason }}</div>
+                            {% else %}
+                                <button type="submit" name="case_link" value="1" class="btn btn-primary">{{ _('Save the case link') }}</button>
+                            {% endif %}
                             <a class="btn btn-white" href="{{ request.route_url('project_case_lists', userid=userid, projcode=projcode) }}">{{ _('Back to the lists') }}</a>
                         </form>
                         {% if caseLink is none %}

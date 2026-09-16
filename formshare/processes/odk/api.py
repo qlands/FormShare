@@ -30,6 +30,7 @@ from formshare.processes.db import (
     list_is_stale,
     update_media_lastgen,
     get_case_link_consumer,
+    inherit_consumers,
     get_consumer_sources,
     apply_link_attributes,
     sync_form_consumers,
@@ -3423,6 +3424,55 @@ def apply_registry_links(request, project, form, create_xml_file, create_file):
             stdout.decode() + " - " + stderr.decode() + " - " + " ".join(args),
         )
     return 0, ""
+
+
+def link_merge_child(
+    request, project, old_form, new_form, new_create_file, new_create_sql
+):
+    """Gives a new version the list links of the version it replaces, in the
+    create.xml that mergeversions is about to compare.
+
+    The repository a new version merges into was built on its parent's links:
+    the selectors were retyped to the source's rowuuid and given a foreign
+    key, and the case link's selector carries the membership trigger. The
+    fresh jxformtomysql run that precedes a merge knows none of that and
+    emits the same selectors as plain ints, and mergeversions -- which
+    compares the two files field by field -- refuses the type change. Applying
+    the links to the new file first makes the two shapes agree, which is what
+    the classic case block in check_merge does for a classic follow-up.
+
+    Both check_merge (the verdict on the form's page) and RepositoryMergeForm
+    (the merge itself) regenerate the file, so both call this. The consumers
+    are inherited first (a no-op after AddNewForm did it at upload) and synced
+    to the fields the new version actually has; a version that dropped or
+    changed its case link is refused with the reason, because merging it
+    would strand the trigger on a column the form no longer fills, or leave
+    the form pointing at rows the schema does not guard.
+
+    Returns (0, "") or (1, translated message).
+    docs/formshare_case_management/formshare.md section 3.6b.
+    """
+    _ = request.translate
+    inherit_consumers(request, project, old_form, new_form)
+    sync_form_consumers(
+        request,
+        project,
+        new_form,
+        get_fields_from_table_in_file(new_create_file, "maintable"),
+    )
+    parent_link = get_case_link_consumer(request, project, old_form)
+    child_link = get_case_link_consumer(request, project, new_form)
+    if parent_link is not None and (
+        child_link is None or child_link["list_id"] != parent_link["list_id"]
+    ):
+        return 1, _(
+            "The new version must select its cases from the same list as the "
+            'version it replaces ("{}"), which is its case link. A new version '
+            "cannot change the case link."
+        ).format(parent_link["list_id"])
+    return apply_registry_links(
+        request, project, new_form, new_create_file, new_create_sql
+    )
 
 
 def create_repository(

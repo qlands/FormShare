@@ -67,6 +67,7 @@ __all__ = [
     "get_consumer_sources",
     "apply_link_attributes",
     "source_form_has_consumers",
+    "inherit_consumers",
     "project_is_longitudinal",
     "form_creates_cases",
     "form_consumes_cases",
@@ -689,6 +690,48 @@ def source_form_has_consumers(request, source_project, source_form):
         .all()
     )
     return len(res) > 0
+
+
+def inherit_consumers(request, project_id, parent_form, child_form):
+    """Gives a new version the list links of the version it will replace.
+
+    A merge child keeps its parent's consumers -- the same lists, the same
+    case link -- because the repository it will merge into was built on them:
+    the foreign keys and the membership trigger already exist on the parent's
+    selectors, and mergeversions has to see the same shape on both sides.
+    Rows the child already has are left alone; the selector column is taken
+    from the parent and refreshed by the next sync against the child's own
+    create.xml, which is where a renamed selector shows up.
+    """
+    existing = {
+        a_row["list_id"]
+        for a_row in get_form_consumers(request, project_id, child_form)
+    }
+    try:
+        for a_row in get_form_consumers(request, project_id, parent_form):
+            if a_row["list_id"] in existing:
+                continue
+            request.dbsession.add(
+                ListConsumer(
+                    list_project=a_row["list_project"],
+                    list_id=a_row["list_id"],
+                    consumer_project=project_id,
+                    consumer_form=child_form,
+                    consumer_role=a_row["consumer_role"],
+                    selector_field=a_row["selector_field"],
+                    consumer_is_link=a_row["consumer_is_link"],
+                )
+            )
+        request.dbsession.commit()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while inheriting consumers from {} to {} in project {}".format(
+                str(e), parent_form, child_form, project_id
+            )
+        )
+        return False, str(e)
 
 
 def project_is_longitudinal(request, project_id):

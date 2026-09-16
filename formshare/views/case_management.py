@@ -430,11 +430,30 @@ class CaseLinksView(ListSection):
                 form_id,
                 get_fields_from_table_in_file(create_xml, "maintable"),
             )
+        # The links are fixed once the schema depends on them: a form with a
+        # repository has its foreign keys and trigger already, and a new
+        # version being merged keeps the links of the version it replaces.
+        links_locked = bool(form_data.get("form_schema")) or bool(
+            form_data.get("parent_form")
+        )
+        if form_data.get("parent_form"):
+            lock_reason = self._(
+                "This is a new version of {}: it keeps that version's links, "
+                "and a merge cannot change them."
+            ).format(form_data["parent_form"])
+        elif links_locked:
+            lock_reason = self._(
+                "This form has a repository: its links are built into the schema."
+            )
+        else:
+            lock_reason = ""
         if self.request.method == "POST":
             post_data = self.get_post_dict()
             if "case_link" in post_data.keys():
                 list_id = post_data.get("list_id", "")
-                if list_id != "":
+                if links_locked:
+                    self.append_to_errors(lock_reason)
+                elif list_id != "":
                     changed, message = set_case_link(
                         self.request, project_id, form_id, list_id
                     )
@@ -459,4 +478,6 @@ class CaseLinksView(ListSection):
             "consumers": consumers,
             "caseLink": get_case_link_consumer(self.request, project_id, form_id),
             "hasCreateXml": create_xml is not None,
+            "linksLocked": links_locked,
+            "lockReason": lock_reason,
         }

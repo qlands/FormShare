@@ -166,8 +166,50 @@ def _csv_data_rows(body):
     return len([l for l in body.decode("utf-8").splitlines() if l.strip()]) - 1
 
 
-def _write_tool2_submission(resources, working_dir, centre_id, worker_id):
-    """Patch the example Tool 2 XML with a chosen case and a fresh id."""
+def _merge_check(config, project_id, form_id):
+    """(form_abletomerge, form_mergerrors) -- -1 while the check is pending."""
+    engine = _engine(config)
+    try:
+        r = engine.execute(
+            "SELECT form_abletomerge, form_mergerrors FROM odkform "
+            "WHERE project_id=%s AND form_id=%s",
+            (project_id, form_id),
+        ).fetchone()
+        return (r[0], r[1]) if r else (None, None)
+    finally:
+        engine.dispose()
+
+
+def _merge_errors_on_page(body):
+    """The refusals the form's page shows: a refusal is not stored, only a pass."""
+    text = body.decode("utf-8")
+    start = text.find("<textarea readonly")
+    if start == -1:
+        return "no merge errors shown on the page"
+    start = text.find(">", start) + 1
+    return text[start : text.find("</textarea>", start)].strip()
+
+
+def _case_link_of(config, project_id, form_id):
+    engine = _engine(config)
+    try:
+        r = engine.execute(
+            "SELECT list_id FROM listconsumer WHERE consumer_project=%s "
+            "AND consumer_form=%s AND consumer_is_link=1",
+            (project_id, form_id),
+        ).fetchone()
+        return r[0] if r else None
+    finally:
+        engine.dispose()
+
+
+def _write_tool2_submission(
+    resources, working_dir, centre_id, worker_id, form_id=None, version=None
+):
+    """Patch the example Tool 2 XML with a chosen case, a fresh id and a fresh
+    primary key (consent_form_serial: a reused one is a duplicate row, not a
+    second follow-up) -- and, for a merged version, with that version's form
+    id and version."""
     with io.open(
         os.path.join(resources, "tool2_submission.xml"), encoding="utf-8"
     ) as a_file:
@@ -187,6 +229,15 @@ def _write_tool2_submission(resources, working_dir, centre_id, worker_id):
         "<instanceID>uuid:{}</instanceID>".format(uuid.uuid4()),
         xml,
     )
+    xml = re.sub(
+        r"<consent_form_serial>[^<]*</consent_form_serial>",
+        "<consent_form_serial>E4-{}</consent_form_serial>".format(uuid.uuid4().hex[:6]),
+        xml,
+    )
+    if form_id:
+        xml = re.sub(r'id="ecce_tool2"', 'id="{}"'.format(form_id), xml, count=1)
+    if version:
+        xml = re.sub(r'version="[^"]*"', 'version="{}"'.format(version), xml, count=1)
     out = os.path.join(
         working_dir, "tool2_submission_{}.xml".format(uuid.uuid4().hex[:8])
     )
@@ -301,8 +352,8 @@ def t_e_s_t_case_journey(test_object):
     res = testapp.post(
         "/user/{}/project/{}/caselists/add".format(login, project),
         {
-            "list_id": "centre_lists",
-            "list_filename": "centre_lists.csv",
+            "list_id": "centre_list",
+            "list_filename": "centre_list.csv",
             "source_form": TOOL1,
             "source_table": "maintable",
             "label_column": school_label,
@@ -367,9 +418,7 @@ def t_e_s_t_case_journey(test_object):
     )
     assert _csv_data_rows(res.body) == 1, res.body
     res = testapp.get(
-        "/user/{}/project/{}/caselists/{}/sample".format(
-            login, project, "centre_lists"
-        ),
+        "/user/{}/project/{}/caselists/{}/sample".format(login, project, "centre_list"),
         status=200,
     )
     assert _csv_data_rows(res.body) == 2, res.body
@@ -406,7 +455,7 @@ def t_e_s_t_case_journey(test_object):
     assert "FS_error" not in res.headers
     # Attach placeholder media so the form is complete; the registry replaces
     # their content at manifest time.
-    for name in ("centre_lists.csv", "roster.csv"):
+    for name in ("centre_list.csv", "roster.csv"):
         placeholder = os.path.join(test_object.working_dir, name)
         with open(placeholder, "w") as a_file:
             a_file.write("name,label\n")
@@ -423,7 +472,7 @@ def t_e_s_t_case_journey(test_object):
         "/user/{}/project/{}/form/{}/caselinks".format(login, project, TOOL2),
         status=200,
     )
-    test_object.root.assertIn(b"centre_lists", res.body)
+    test_object.root.assertIn(b"centre_list", res.body)
     test_object.root.assertIn(b"roster", res.body)
     res = testapp.post(
         "/user/{}/project/{}/form/{}/caselinks".format(login, project, TOOL2),
@@ -561,3 +610,131 @@ def t_e_s_t_case_journey(test_object):
         "/user/{}/project/{}/caselists/tablesof/{}".format(login, classic, TOOL1),
         status=404,
     )
+
+    # --- A new version of Tool 2 is merged: it keeps its parent's links -----
+    tool2_v6 = "ecce_tool2_v6"
+    res = testapp.post(
+        "/user/{}/project/{}/form/{}/merge".format(login, project, TOOL2),
+        {
+            "for_merging": "",
+            "parent_project": test_object.projectID,
+            "parent_form": TOOL2,
+        },
+        status=302,
+        upload_files=[("xlsx", os.path.join(resources, "tool2_v6.xlsx"))],
+    )
+    assert "FS_error" not in res.headers
+    for name in ("centre_list.csv", "roster.csv"):
+        placeholder = os.path.join(test_object.working_dir, name)
+        with open(placeholder, "w") as a_file:
+            a_file.write("name,label\n")
+        res = testapp.post(
+            "/user/{}/project/{}/form/{}/upload".format(login, project, tool2_v6),
+            status=302,
+            upload_files=[("filetoupload", placeholder)],
+        )
+        assert "FS_error" not in res.headers
+    _assign_assistant(test_object, tool2_v6)
+
+    # The new version inherited the links and cannot change them: roster is
+    # the case link, the page is read-only, a POST is refused.
+    assert (
+        _case_link_of(test_object.server_config, test_object.projectID, tool2_v6)
+        == "roster"
+    )
+    res = testapp.get(
+        "/user/{}/project/{}/form/{}/caselinks".format(login, project, tool2_v6),
+        status=200,
+    )
+    test_object.root.assertIn(b"roster", res.body)
+    test_object.root.assertIn(b"keeps that version", res.body)
+    assert b'type="radio"' not in res.body
+    res = testapp.post(
+        "/user/{}/project/{}/form/{}/caselinks".format(login, project, tool2_v6),
+        {"case_link": "1", "list_id": "centre_list"},
+        status=200,
+    )
+    assert (
+        _case_link_of(test_object.server_config, test_object.projectID, tool2_v6)
+        == "roster"
+    )
+
+    # The merge check runs, synchronously, when the new version's page is
+    # viewed with all its files in place: it re-runs jxformtomysql on the new
+    # version, gives that create.xml the parent's links (link_merge_child) and
+    # compares the two. A pass is stored as form_abletomerge = 1; a refusal is
+    # only shown on the page, so read it from there.
+    res = testapp.get(
+        "/user/{}/project/{}/form/{}".format(login, project, tool2_v6), status=200
+    )
+    verdict, _unused = _merge_check(
+        test_object.server_config, test_object.projectID, tool2_v6
+    )
+    assert int(verdict) == 1, "merge check refused v6: {}".format(
+        _merge_errors_on_page(res.body)
+    )
+
+    # Merge it. The child's create.xml gets the same links before
+    # mergeversions compares it with the parent's.
+    testapp.get(
+        "/user/{}/project/{}/form/{}/merge/into/{}".format(
+            login, project, tool2_v6, TOOL2
+        ),
+        status=200,
+    )
+    res = testapp.post(
+        "/user/{}/project/{}/form/{}/merge/into/{}".format(
+            login, project, tool2_v6, TOOL2
+        ),
+        {"discard_testing_data": ""},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    merged_schema = None
+    for _ in range(60):
+        fd = get_form_details(
+            test_object.server_config, test_object.projectID, tool2_v6
+        )
+        if fd["form_schema"] == schema2:
+            merged_schema = fd["form_schema"]
+            break
+        time.sleep(3)
+    assert (
+        merged_schema == schema2
+    ), "the merge did not hand the schema to the new version"
+
+    # The links survived the merge, on the schema the new version now owns.
+    fks = _foreign_keys(test_object.server_config, schema2, "maintable")
+    assert fks.get("worker_id") == (schema1, "roster", "rowuuid"), fks
+    assert fks.get("centre_id") == (schema1, "maintable", "rowuuid"), fks
+    assert [
+        t
+        for t in _maintable_membership_trigger(test_object.server_config, schema2)
+        if "roster" in t and "_active" in t and "worker_id" in t
+    ], "the membership trigger did not survive the merge"
+    assert (
+        _case_link_of(test_object.server_config, test_object.projectID, tool2_v6)
+        == "roster"
+    )
+
+    # And the merged version takes a follow-up on a real worker, through the
+    # same trigger.
+    before = _maintable_count(test_object.server_config, schema2)
+    merged_submission = _write_tool2_submission(
+        resources,
+        test_object.working_dir,
+        centre_id,
+        worker_id,
+        form_id=tool2_v6,
+        version="20260915v6",
+    )
+    res = testapp.post(
+        "/user/{}/project/{}/push".format(login, project),
+        status=201,
+        upload_files=[("filetoupload", merged_submission)],
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+    assert "FS_error" not in res.headers
+    assert _maintable_count(test_object.server_config, schema2) == before + 1

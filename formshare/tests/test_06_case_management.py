@@ -743,3 +743,35 @@ def test_a_value_list_cannot_become_the_case_link(db_request):
     sources = cm.get_consumer_sources(db_request, "p", "tool2")
     assert sources[0]["key_column"] == "centre_district"
     assert sources[0]["is_link"] is False
+
+
+def test_a_merge_child_inherits_its_parents_links(db_request):
+    from formshare.models.formshare import Odkform
+
+    db_request.dbsession.add(
+        Odkform(
+            project_id="p",
+            form_id="tool2_v6",
+            form_name="Tool2 v6",
+            form_directory="d3",
+            form_pubby="u",
+            parent_form="tool2",
+        )
+    )
+    db_request.dbsession.flush()
+    cm.sync_form_consumers(db_request, "p", "tool2", _two_list_fields())
+    cm.set_case_link(db_request, "p", "tool2", "roster")
+    ok, _ = cm.inherit_consumers(db_request, "p", "tool2", "tool2_v6")
+    assert ok
+    child = {
+        c["list_id"]: c for c in cm.get_form_consumers(db_request, "p", "tool2_v6")
+    }
+    assert set(child) == {"centre_lists", "roster"}
+    assert child["roster"]["consumer_is_link"] == 1
+    assert child["roster"]["selector_field"] == "worker_id"
+    # Idempotent: a second inheritance adds nothing.
+    cm.inherit_consumers(db_request, "p", "tool2", "tool2_v6")
+    assert len(cm.get_form_consumers(db_request, "p", "tool2_v6")) == 2
+    # A sync against the child's own fields keeps the inherited link.
+    cm.sync_form_consumers(db_request, "p", "tool2_v6", _two_list_fields())
+    assert cm.get_case_link_consumer(db_request, "p", "tool2_v6")["list_id"] == "roster"

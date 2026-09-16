@@ -78,7 +78,10 @@ from formshare.processes.db import (
     get_case_creator_forms,
 )
 from formshare.processes.elasticsearch.record_index import delete_form_records
-from formshare.processes.db.case_management import source_form_has_consumers
+from formshare.processes.db.case_management import (
+    source_form_has_consumers,
+    inherit_consumers,
+)
 from formshare.processes.elasticsearch.repository_index import (
     delete_dataset_from_index,
     get_number_of_datasets_with_gps,
@@ -93,6 +96,7 @@ from formshare.processes.odk.api import (
     import_external_data,
     create_repository,
     merge_versions,
+    link_merge_child,
     check_jxform_file,
     describe_ambiguous_selects,
     ambiguous_selects_heading,
@@ -314,6 +318,30 @@ class FormDetails(PrivateView):
                         1,
                         "Main table was not found in {}".format(new_create_file),
                     )
+
+            else:
+                # A registry follow-up. The parent's create.xml carries the
+                # links applied when its repository was built -- the selectors
+                # retyped to the source's rowuuid, their foreign keys, the
+                # membership trigger on the case link -- and the fresh file
+                # jxformtomysql just wrote knows none of it, so mergeversions
+                # would refuse every selector as a type change. Give the new
+                # file the same links first (link_merge_child explains); a
+                # version that dropped or changed its case link is refused
+                # here, with the reason, like any other merge error.
+                new_create_sql = os.path.join(
+                    odk_path, *["forms", new_form_directory, "repository", "create.sql"]
+                )
+                link_code, link_message = link_merge_child(
+                    self.request,
+                    project_id,
+                    old_form_id,
+                    new_form_id,
+                    new_create_file,
+                    new_create_sql,
+                )
+                if link_code != 0:
+                    return 1, json.dumps({"errors": [link_message]})
 
             merged, output = merge_versions(
                 self.request,
@@ -1390,6 +1418,15 @@ class AddNewForm(PrivateView):
 
             if uploaded:
                 new_form_id = message
+                if for_merging:
+                    # A new version keeps the list links of the version it
+                    # replaces: the repository it will merge into was built on
+                    # them. Inherited here so the case-links page shows them
+                    # from the first visit; the merge refuses a version that
+                    # changed the case link.
+                    inherit_consumers(
+                        self.request, project_id, form_data["parent_form"], new_form_id
+                    )
                 if keep_assistants:
                     copied, copied_message = copy_assistants(
                         self.request, project_id, form_data["parent_form"], new_form_id

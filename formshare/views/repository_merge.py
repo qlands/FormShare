@@ -13,7 +13,12 @@ from formshare.processes.db import (
     get_field_details,
 )
 from formshare.processes.email.send_email import send_error_to_technical_team
-from formshare.processes.odk.api import get_odk_path, merge_versions, create_repository
+from formshare.processes.odk.api import (
+    get_odk_path,
+    merge_versions,
+    create_repository,
+    link_merge_child,
+)
 from formshare.processes.odk.processes import get_form_data
 from formshare.products.merge import merge_form
 from formshare.views.classes import PrivateView
@@ -257,6 +262,41 @@ class RepositoryMergeForm(PrivateView):
                             1,
                             "Main table was not found in {}".format(new_create_file),
                         )
+
+                # A new version keeps the list links of the version it replaces
+                # (docs/formshare_case_management/formshare.md, 3.6b): the
+                # repository it merges into was built on them -- the foreign
+                # keys and the membership trigger sit on the parent's selectors
+                # -- and mergeversions compares the two create.xml files field
+                # by field, so the new one must present the same shape. The
+                # classic case block above did this for classic follow-ups;
+                # link_merge_child is the registry's equivalent, and the same
+                # call gave the form's page its verdict (check_merge).
+                if not (
+                    new_form_data["form_case"] == 1
+                    and new_form_data["form_casetype"] > 1
+                ):
+                    new_create_sql = os.path.join(
+                        odk_path,
+                        *[
+                            "forms",
+                            new_form_data["directory"],
+                            "repository",
+                            "create.sql",
+                        ]
+                    )
+                    link_code, link_message = link_merge_child(
+                        self.request,
+                        project_id,
+                        old_form_id,
+                        new_form_id,
+                        new_create_file,
+                        new_create_sql,
+                    )
+                    if link_code != 0:
+                        self.add_error(link_message)
+                        self.returnRawViewResult = True
+                        return HTTPFound(self.request.url, headers={"FS_error": "true"})
 
                 merged, output = merge_versions(
                     self.request,

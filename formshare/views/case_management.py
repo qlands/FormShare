@@ -30,6 +30,7 @@ from formshare.processes.db.case_management import (
     get_table_columns,
     set_case_link,
     set_list_columns,
+    invalidate_list_copies,
     sync_form_consumers,
     update_published_list,
     valid_list_filename,
@@ -177,6 +178,9 @@ class EditPublishedListView(ListSection):
             list_data["source_form"],
             list_data["source_table"],
         )
+        # Every definition change below marks the served copies stale
+        # (invalidate_list_copies): the devices get the new shape on their
+        # next pull, not when the source next receives data.
         if self.request.method == "POST":
             post_data = self.get_post_dict()
             if "add_column" in post_data.keys():
@@ -193,6 +197,7 @@ class EditPublishedListView(ListSection):
                 if not updated:
                     self.append_to_errors(message)
                 else:
+                    invalidate_list_copies(self.request, project_id, list_id)
                     self.returnRawViewResult = True
                     return HTTPFound(self.request.url)
             if "remove_column" in post_data.keys():
@@ -208,6 +213,7 @@ class EditPublishedListView(ListSection):
                 if not updated:
                     self.append_to_errors(message)
                 else:
+                    invalidate_list_copies(self.request, project_id, list_id)
                     self.returnRawViewResult = True
                     return HTTPFound(self.request.url)
             if "change_key" in post_data.keys():
@@ -234,6 +240,7 @@ class EditPublishedListView(ListSection):
                     if not updated:
                         self.append_to_errors(message)
                     else:
+                        invalidate_list_copies(self.request, project_id, list_id)
                         self.returnRawViewResult = True
                         return HTTPFound(self.request.url)
             if "change_active" in post_data.keys():
@@ -247,6 +254,7 @@ class EditPublishedListView(ListSection):
                 if not updated:
                     self.append_to_errors(message)
                 else:
+                    invalidate_list_copies(self.request, project_id, list_id)
                     self.returnRawViewResult = True
                     return HTTPFound(self.request.url)
             if "change_label" in post_data.keys():
@@ -261,6 +269,7 @@ class EditPublishedListView(ListSection):
                     if not updated:
                         self.append_to_errors(message)
                     else:
+                        invalidate_list_copies(self.request, project_id, list_id)
                         self.returnRawViewResult = True
                         return HTTPFound(self.request.url)
         return {

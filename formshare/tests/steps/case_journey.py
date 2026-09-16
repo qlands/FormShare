@@ -24,6 +24,7 @@ import os
 import re
 import time
 import uuid
+from urllib.parse import urlparse
 
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
@@ -188,6 +189,62 @@ def _merge_errors_on_page(body):
         return "no merge errors shown on the page"
     start = text.find(">", start) + 1
     return text[start : text.find("</textarea>", start)].strip()
+
+
+def _list_edition(config, project_id, list_id):
+    """(list_seq, list_lastgen) of a published list: its generated edition."""
+    engine = _engine(config)
+    try:
+        r = engine.execute(
+            "SELECT list_seq, list_lastgen FROM publishedlist "
+            "WHERE project_id=%s AND list_id=%s",
+            (project_id, list_id),
+        ).fetchone()
+        return (r[0], r[1]) if r else (None, None)
+    finally:
+        engine.dispose()
+
+
+def _copy_stamp(config, project_id, form_id, file_name):
+    """file_lastgen of a form's copy of a served list; None = never generated."""
+    engine = _engine(config)
+    try:
+        r = engine.execute(
+            "SELECT file_lastgen FROM mediafile "
+            "WHERE project_id=%s AND form_id=%s AND file_name=%s",
+            (project_id, form_id, file_name),
+        ).fetchone()
+        return r[0] if r else None
+    finally:
+        engine.dispose()
+
+
+def _pull_manifest(test_object, login, project, form_id):
+    """Pull a form's manifest as a device would; returns its body."""
+    return test_object.testapp.get(
+        "/user/{}/project/{}/{}/manifest".format(login, project, form_id),
+        status=200,
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    ).body
+
+
+def _served_file(test_object, manifest, file_name):
+    """Download a manifest entry through its own downloadUrl, as a device."""
+    found = re.search(
+        r"<filename>{}</filename>\s*<hash>[^<]*</hash>\s*"
+        r"<downloadUrl>([^<]*)</downloadUrl>".format(re.escape(file_name)),
+        manifest.decode("utf-8"),
+    )
+    assert found, manifest
+    return test_object.testapp.get(
+        urlparse(found.group(1)).path,
+        status=200,
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    ).body
 
 
 def _case_link_of(config, project_id, form_id):
@@ -563,6 +620,60 @@ def t_e_s_t_case_journey(test_object):
     assert (
         _maintable_count(test_object.server_config, schema2) == after_valid
     ), "a follow-up on a non-existent worker was stored"
+
+    # --- A column added to a list reaches the devices -----------------------
+    # A form's copy is regenerated at manifest time only when stale, and stale
+    # is decided against the source's data; a change to the list's own
+    # definition did not count, so a column added after deployment was served
+    # only once Tool 1 got new data. The edit view now clears the copies'
+    # generation stamp, which the gate reads as "never generated".
+    roster_seq, roster_gen = _list_edition(
+        test_object.server_config, test_object.projectID, "roster"
+    )
+    assert roster_seq >= 1 and roster_gen is not None
+    # Nothing changed: a pull leaves the edition and the stamp alone.
+    _pull_manifest(test_object, login, project, TOOL2)
+    assert _list_edition(
+        test_object.server_config, test_object.projectID, "roster"
+    ) == (roster_seq, roster_gen)
+    assert (
+        _copy_stamp(
+            test_object.server_config, test_object.projectID, TOOL2, "roster.csv"
+        )
+        is not None
+    )
+    res = testapp.post(
+        "/user/{}/project/{}/caselists/{}/edit".format(login, project, "roster"),
+        {"add_column": "1", "column_name": "rowuuid", "column_as": "worker_uuid"},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    # The edit marks the copies stale; the list's own edition moves only when
+    # a copy is actually generated, on the next pull.
+    assert _list_edition(
+        test_object.server_config, test_object.projectID, "roster"
+    ) == (roster_seq, roster_gen)
+    assert (
+        _copy_stamp(
+            test_object.server_config, test_object.projectID, TOOL2, "roster.csv"
+        )
+        is None
+    )
+    manifest = _pull_manifest(test_object, login, project, TOOL2)
+    assert (
+        _list_edition(test_object.server_config, test_object.projectID, "roster")[0]
+        == roster_seq + 1
+    )
+    assert (
+        _copy_stamp(
+            test_object.server_config, test_object.projectID, TOOL2, "roster.csv"
+        )
+        is not None
+    )
+    served = _served_file(test_object, manifest, "roster.csv")
+    header = served.decode("utf-8").splitlines()[0]
+    assert "worker_uuid" in header, header
+    assert _csv_data_rows(served) >= 1, served
 
     # A published list a built form consumes cannot be deleted: the foreign
     # key and membership trigger depend on its source. The route refuses it

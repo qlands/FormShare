@@ -263,6 +263,7 @@ def db_request():
         PublishedList,
         PublishedListColumn,
         ListConsumer,
+        MediaFile,
     )
 
     # The models use MySQL-specific column types; teach SQLite to build them so
@@ -285,6 +286,7 @@ def db_request():
             PublishedList.__table__,
             PublishedListColumn.__table__,
             ListConsumer.__table__,
+            MediaFile.__table__,
         ],
     )
     session = sessionmaker(bind=engine)()
@@ -775,3 +777,44 @@ def test_a_merge_child_inherits_its_parents_links(db_request):
     # A sync against the child's own fields keeps the inherited link.
     cm.sync_form_consumers(db_request, "p", "tool2_v6", _two_list_fields())
     assert cm.get_case_link_consumer(db_request, "p", "tool2_v6")["list_id"] == "roster"
+
+
+def test_a_definition_change_invalidates_every_served_copy(db_request):
+    """Adding a column (or any definition change) clears file_lastgen on
+    every copy of the list in its project -- the stamp the manifest gate reads
+    as "never generated" -- and on nothing else."""
+    from formshare.models.formshare import MediaFile
+
+    stamp = datetime.datetime(2026, 9, 1, 12, 0, 0)
+    copies = [
+        ("p", "tool2", "roster.csv"),
+        ("p", "tool3", "roster.csv"),
+        ("p", "tool2", "centre_lists.csv"),
+        ("q", "tool9", "roster.csv"),
+    ]
+    for an_index, (project, form, name) in enumerate(copies):
+        db_request.dbsession.add(
+            MediaFile(
+                file_id="f{}".format(an_index),
+                project_id=project,
+                form_id=form,
+                file_name=name,
+                file_udate=stamp,
+                file_mimetype="text/csv",
+                file_lastgen=stamp,
+            )
+        )
+    db_request.dbsession.flush()
+
+    done, message = cm.invalidate_list_copies(db_request, "p", "roster")
+    assert done, message
+    stamps = {
+        (a_copy.project_id, a_copy.form_id, a_copy.file_name): a_copy.file_lastgen
+        for a_copy in db_request.dbsession.query(MediaFile)
+    }
+    assert stamps[("p", "tool2", "roster.csv")] is None
+    assert stamps[("p", "tool3", "roster.csv")] is None
+    # Another list's copy and another project's file are untouched.
+    assert stamps[("p", "tool2", "centre_lists.csv")] == stamp
+    assert stamps[("q", "tool9", "roster.csv")] == stamp
+    assert cm.invalidate_list_copies(db_request, "p", "no_such_list")[0] is False

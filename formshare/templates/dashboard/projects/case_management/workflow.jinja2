@@ -8,7 +8,8 @@
     <style>
       #workflow .wf-legend { font-size: 11px; color: #374151; display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 14px; }
       #workflow .wf-legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 6px; }
-      #wf-canvas { position: relative; overflow: auto; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #1f2937; }
+      #wf-canvas { position: relative; overflow: auto; width: 100%; max-width: 100%; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #1f2937; }
+      #wf-sheet { position: relative; }
       .wf-form { position: absolute; background: #f3f5f8; border: 1px solid #94a3b8; border-radius: 10px;
                  padding: 10px 14px 14px; box-sizing: border-box; cursor: move; }
       .wf-form h2 { margin: 0 0 10px; font-size: 13px; font-weight: bold; }
@@ -69,7 +70,7 @@
                         <span><i style="background:#b91c1c"></i>{{ _('the case link: the form is a follow-up of that row, the trigger refuses an inactive or unknown case') }}</span>
                         <span><i style="background:#64748b"></i>{{ _('a repeat and the row it belongs to') }}</span>
                     </div>
-                    <div id="wf-canvas"></div>
+                    <div id="wf-canvas"><div id="wf-sheet"></div></div>
                 </div>
             </div>
         </div>
@@ -90,7 +91,7 @@
       function wfFormId(id) { return "wf_form_" + String(id).replace(/\W/g, "_"); }
 
       function wfRender(model) {
-        const canvas = document.getElementById("wf-canvas");
+        const canvas = document.getElementById("wf-sheet");
         for (const f of model.forms) {
           const el = document.createElement("div");
           el.className = "wf-form";
@@ -142,13 +143,15 @@
           }
           x += c.width + GAP_X;
         }
-        const canvas = document.getElementById("wf-canvas");
-        canvas.style.height = (tallest + 2 * MARGIN) + "px";
-        canvas.style.minWidth = x + "px";
+        // The sheet takes the drawing's size; the canvas around it keeps the
+        // box's width and scrolls.
+        const sheet = document.getElementById("wf-sheet");
+        sheet.style.height = (tallest + 2 * MARGIN) + "px";
+        sheet.style.width = x + "px";
       }
 
       function wfConnect(model) {
-        const instance = jsPlumb.getInstance({ Container: "wf-canvas", Endpoint: "Blank", ConnectionsDetachable: false });
+        const instance = jsPlumb.getInstance({ Container: "wf-sheet", Endpoint: "Blank", ConnectionsDetachable: false });
         const endOf = ref => ref.list ? wfListId(ref.list) : wfFieldId(ref.form, ref.table, ref.field);
         for (const e of model.edges) {
           const repeat = e.kind === "repeat";
@@ -164,7 +167,7 @@
             ]
           });
         }
-        document.querySelectorAll("#wf-canvas .wf-form, #wf-canvas .wf-list").forEach(el => {
+        document.querySelectorAll("#wf-sheet .wf-form, #wf-sheet .wf-list").forEach(el => {
           instance.draggable(el, { containment: true, drag: () => instance.repaintEverything() });
         });
         return instance;

@@ -79,7 +79,7 @@
                             <tbody>
                             {% for a_column in listColumns %}
                                 <tr>
-                                    <td>{{ a_column.column_name }}</td>
+                                    <td>{{ a_column.column_name }}{% if a_column.column_source == 'property' %} <span class="label label-info">{{ _('property') }}</span>{% endif %}</td>
                                     <td>{{ a_column.column_as or a_column.column_name }}</td>
                                     <td>
                                         <form method="post" style="display: inline">
@@ -98,9 +98,18 @@
                     <form method="post" class="form-inline">
                         {{ form.secure_form(request) }}
                         <select name="column_name" id="column_name" class="form-control" style="min-width: 250px">
-                            {% for a_column in tableColumns %}
-                                <option value="{{ a_column.field_name }}">{{ a_column.field_name }}</option>
-                            {% endfor %}
+                            <optgroup label="{{ _('Columns') }}">
+                                {% for a_column in tableColumns %}
+                                    <option value="{{ a_column.field_name }}">{{ a_column.field_name }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            {% if tableProperties %}
+                                <optgroup label="{{ _('Properties') }}">
+                                    {% for a_property in tableProperties %}
+                                        <option value="property:{{ a_property.property_name }}">{{ a_property.property_name }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                            {% endif %}
                         </select>
                         <input type="text" name="column_as" class="form-control" placeholder="{{ _('Served as (optional)') }}">
                         <button type="submit" name="add_column" value="1" class="btn btn-primary">{{ _('Add the column') }}</button>

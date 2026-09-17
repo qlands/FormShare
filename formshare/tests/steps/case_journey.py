@@ -19,6 +19,7 @@ rows hang off a repeat table in another form -- proven end to end.
 """
 
 import hashlib
+import csv
 import io
 import json
 import os
@@ -259,6 +260,39 @@ def _served_file(test_object, manifest, file_name):
             FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
         ),
     ).body
+
+
+def _table_count(config, schema, table):
+    engine = _engine(config)
+    try:
+        return engine.execute(
+            "SELECT COUNT(*) FROM `{}`.`{}`".format(schema, table)
+        ).fetchone()[0]
+    finally:
+        engine.dispose()
+
+
+def _scalar(config, sql):
+    engine = _engine(config)
+    try:
+        return engine.execute(sql).fetchone()[0]
+    finally:
+        engine.dispose()
+
+
+def _triggers_on(config, schema, table):
+    engine = _engine(config)
+    try:
+        return [
+            r[0]
+            for r in engine.execute(
+                "SELECT trigger_name FROM information_schema.triggers "
+                "WHERE trigger_schema=%s AND event_object_table=%s",
+                (schema, table),
+            ).fetchall()
+        ]
+    finally:
+        engine.dispose()
 
 
 def _case_link_of(config, project_id, form_id):
@@ -515,6 +549,141 @@ def t_e_s_t_case_journey(test_object):
         status=200,
     )
     assert res.body.decode("utf-8").splitlines()[0].startswith('"name","label"')
+
+    # --- Properties (feature 2): a typed column beside the roster ----------
+    # Defined from a variable of the table, born with each row through a
+    # trigger, backfilled for the rows that exist, audited like the rest of
+    # the schema, and served by any list of the table.
+    properties = "/user/{}/project/{}/caseproperties".format(login, project)
+    roster_props = properties + "?form={}&table=roster".format(TOOL1)
+    testapp.get(properties, status=200)
+    testapp.get(properties + "?form={}".format(TOOL1), status=200)
+    testapp.get(properties + "?form=no_such_form", status=404)
+    res = testapp.get(roster_props, status=200)
+    test_object.root.assertIn(worker_label.encode("utf-8"), res.body)
+    # A bad name and a column's own name are refused before any DDL.
+    res = testapp.post(
+        roster_props,
+        {
+            "add_property": "1",
+            "property_name": "Bad Name",
+            "source_column": worker_label,
+        },
+        status=302,
+    )
+    assert "FS_error" in res.headers
+    res = testapp.post(
+        roster_props,
+        {
+            "add_property": "1",
+            "property_name": worker_label,
+            "source_column": worker_label,
+        },
+        status=302,
+    )
+    assert "FS_error" in res.headers
+    res = testapp.post(
+        roster_props,
+        {
+            "add_property": "1",
+            "property_name": "registered_name",
+            "source_column": worker_label,
+            "property_desc": "the name given at registration",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    config = test_object.server_config
+    assert _has_table(config, schema1, "roster_properties")
+    assert _column_type(config, schema1, "roster_properties", "registered_name") == (
+        _column_type(config, schema1, "roster", worker_label)
+    )
+    assert _foreign_keys(config, schema1, "roster_properties").get("rowuuid") == (
+        schema1,
+        "roster",
+        "rowuuid",
+    )
+    roster_rows = _table_count(config, schema1, "roster")
+    assert _table_count(config, schema1, "roster_properties") == roster_rows
+    assert "fs_cm_roster_properties" in _triggers_on(config, schema1, "roster")
+    assert [
+        t
+        for t in _triggers_on(config, schema1, "roster_properties")
+        if t.startswith("audit_")
+    ], "no audit triggers on the properties table"
+    res = testapp.get(roster_props, status=200)
+    test_object.root.assertIn(b"registered_name", res.body)
+
+    # Served by the roster list once added as a column, with its values.
+    res = testapp.post(
+        "/user/{}/project/{}/caselists/{}/edit".format(login, project, "roster"),
+        {"add_column": "1", "column_name": "property:registered_name", "column_as": ""},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.get(
+        "/user/{}/project/{}/caselists/{}/sample".format(login, project, "roster"),
+        status=200,
+    )
+    rows = list(csv.reader(io.StringIO(res.body.decode("utf-8"))))
+    assert rows[0][-1] == "registered_name", rows[0]
+    assert len(rows) > 1 and all(r[-1] for r in rows[1:]), rows
+
+    # Not deletable while a list serves it.
+    res = testapp.post(
+        roster_props,
+        {"delete_property": "1", "property_name": "registered_name"},
+        status=302,
+    )
+    assert "FS_error" in res.headers
+    assert _has_table(config, schema1, "roster_properties")
+
+    # A new school's workers get their property row from the trigger, and the
+    # audit log records the properties table like any other.
+    res = testapp.post(
+        "/user/{}/project/{}/push_json".format(login, project),
+        status=201,
+        upload_files=[
+            ("filetoupload", _write_second_school(resources, test_object.working_dir))
+        ],
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+    assert "FS_error" not in res.headers
+    assert _table_count(config, schema1, "roster") > roster_rows
+    assert _scalar(
+        config,
+        "SELECT COUNT(*) FROM `{s}`.`roster` r JOIN `{s}`.`roster_properties` p "
+        "ON p.rowuuid = r.rowuuid WHERE p.`registered_name` <=> r.`{c}`".format(
+            s=schema1, c=worker_label
+        ),
+    ) == _table_count(config, schema1, "roster")
+    assert (
+        _scalar(
+            config,
+            "SELECT COUNT(*) FROM `{}`.`audit_log` "
+            "WHERE audit_table = 'roster_properties'".format(schema1),
+        )
+        > 0
+    )
+
+    # Removed from the list it can go; with the last property the table and
+    # the creation trigger go too.
+    res = testapp.post(
+        "/user/{}/project/{}/caselists/{}/edit".format(login, project, "roster"),
+        {"remove_column": "1", "column_name": "registered_name"},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        roster_props,
+        {"delete_property": "1", "property_name": "registered_name"},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    assert not _has_table(config, schema1, "roster_properties")
+    assert "fs_cm_roster_properties" not in _triggers_on(config, schema1, "roster")
 
     # --- Tool 2: the follow-up that consumes both lists --------------------
     res = testapp.post(

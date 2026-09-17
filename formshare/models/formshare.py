@@ -1019,6 +1019,40 @@ class ListConsumer(Base):
     odkform = relationship("Odkform")
 
 
+class TableProperty(Base):
+    """A property of a source table (feature 2).
+
+    A typed column of <table>_properties, a table FormShare keeps beside the
+    source table, 1:1 on rowuuid, outside the RSTools contract. The type is
+    the source variable's, taken from the dictionary at definition; the
+    variable named in property_source fills the property when the row is
+    born (the creation trigger), and follow-up actions (feature 3) set it
+    afterwards. docs/formshare_case_management/formshare.md sections 2.3, 3.1.
+    """
+
+    __tablename__ = "tableproperty"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "form_id"],
+            ["odkform.project_id", "odkform.form_id"],
+            ondelete="CASCADE",
+        ),
+    )
+
+    project_id = Column(Unicode(64), primary_key=True, nullable=False)
+    form_id = Column(Unicode(120), primary_key=True, nullable=False)
+    table_name = Column(Unicode(120), primary_key=True, nullable=False)
+    property_name = Column(Unicode(120), primary_key=True, nullable=False)
+    property_type = Column(Unicode(64), nullable=False)
+    property_size = Column(INTEGER, server_default=text("'0'"))
+    property_decsize = Column(INTEGER, server_default=text("'0'"))
+    property_desc = Column(Unicode(500))
+    property_source = Column(Unicode(120))
+    property_cdate = Column(DateTime)
+
+    odkform = relationship("Odkform")
+
+
 class CookieConsent(Base):
     __tablename__ = "cookieconsent"
 

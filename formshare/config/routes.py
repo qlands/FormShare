@@ -84,6 +84,7 @@ from formshare.views.case_management import (
     CaseLinksView,
     WorkflowDiagramView,
     WorkflowModelApiView,
+    PropertiesView,
 )
 from formshare.views.form import (
     FormDetails,
@@ -484,6 +485,15 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/workflow/model",
             WorkflowModelApiView,
             "json",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_case_properties",
+            "/user/{userid}/project/{projcode}/caseproperties",
+            PropertiesView,
+            "dashboard/projects/case_management/properties.jinja2",
         )
     )
 

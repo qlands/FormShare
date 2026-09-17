@@ -1,0 +1,115 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Properties") }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','select2' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','select2' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% set crumb_current = _('Properties') %}
+    {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_lists.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-lg-12">
+            {% block form_errors %}
+                {{ form.display_errors(errors) }}
+            {% endblock form_errors %}
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h2>{{ _('Properties') }}</h2>
+                    <p>
+                        {{ _('A property is a typed column FormShare keeps beside a table of a form, one value per row. It is born with the row, from the variable you choose here, and the rows that already exist get it too. Any list published from the table can serve it, and a follow-up form will be able to set it.') }}
+                    </p>
+                    <div class="form-inline">
+                        <select id="form_id" class="form-control" style="min-width: 300px">
+                            <option value="">{{ _('Select a form') }}</option>
+                            {% for a_form in forms %}
+                                <option value="{{ a_form.form_id }}" {% if a_form.form_id == formId %}selected{% endif %}>{{ a_form.form_name }} ({{ a_form.form_id }})</option>
+                            {% endfor %}
+                        </select>
+                        <select id="table_name" class="form-control" style="min-width: 250px" {% if not formId %}disabled{% endif %}>
+                            <option value="">{{ _('Select a table') }}</option>
+                            {% for a_table in tables %}
+                                <option value="{{ a_table.table_name }}" {% if a_table.table_name == tableName %}selected{% endif %}>{{ a_table.table_name }}{% if a_table.table_desc %} &#8212; {{ a_table.table_desc }}{% endif %}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if formId and tableName %}
+                        <hr class="hr-line-dashed">
+                        <h3>{{ _('Properties of') }} {{ tableName }}</h3>
+                        {% if properties %}
+                            <table class="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th>{{ _('Property') }}</th>
+                                    <th>{{ _('Type') }}</th>
+                                    <th>{{ _('Fed at creation by') }}</th>
+                                    <th>{{ _('Description') }}</th>
+                                    <th>{{ _('Actions') }}</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for a_property in properties %}
+                                    <tr>
+                                        <td>{{ a_property.property_name }}</td>
+                                        <td>{{ a_property.property_type }}{% if a_property.property_size %}({{ a_property.property_size }}{% if a_property.property_decsize %},{{ a_property.property_decsize }}{% endif %}){% endif %}</td>
+                                        <td>{{ a_property.property_source or '' }}</td>
+                                        <td>{{ a_property.property_desc or '' }}</td>
+                                        <td>
+                                            <form method="post" style="display: inline">
+                                                {{ form.secure_form(request) }}
+                                                <input type="hidden" name="property_name" value="{{ a_property.property_name }}">
+                                                <button type="submit" name="delete_property" value="1" class="btn btn-xs btn-danger">{{ _('Delete') }}</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p>{{ _('This table has no properties yet.') }}</p>
+                        {% endif %}
+                        <form method="post" class="form-inline">
+                            {{ form.secure_form(request) }}
+                            <input type="text" name="property_name" class="form-control" placeholder="{{ _('Property name') }}" style="min-width: 200px">
+                            <select name="source_column" id="source_column" class="form-control" style="min-width: 250px">
+                                {% for a_column in tableColumns %}
+                                    <option value="{{ a_column.field_name }}">{{ a_column.field_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="text" name="property_desc" class="form-control" placeholder="{{ _('Description (optional)') }}" style="min-width: 250px">
+                            <button type="submit" name="add_property" value="1" class="btn btn-primary">{{ _('Add the property') }}</button>
+                        </form>
+                        <p class="help-block">{{ _('The property takes the type of the variable that feeds it.') }}</p>
+                    {% endif %}
+                    <div class="hr-line-dashed"></div>
+                    <a class="btn btn-white" href="{{ request.route_url('project_case_lists', userid=userid, projcode=projcode) }}">{{ _('Back to the lists') }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function() {
+            var base = "{{ request.route_url('project_case_properties', userid=userid, projcode=projcode) }}";
+            $("#form_id").select2();
+            $("#table_name").select2();
+            $("#source_column").select2();
+            $("#form_id").on("change", function() {
+                location.href = base + "?form=" + encodeURIComponent($(this).val());
+            });
+            $("#table_name").on("change", function() {
+                location.href = base + "?form=" + encodeURIComponent($("#form_id").val()) + "&table=" + encodeURIComponent($(this).val());
+            });
+        });
+    </script>
+{% endblock maincontent %}

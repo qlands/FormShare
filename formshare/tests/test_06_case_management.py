@@ -1056,3 +1056,88 @@ def test_the_workflow_model_folds_versions_ranks_the_chain_and_reads_the_schema(
         and "DISTINCT centre_school" in lists_by_id["centre_list2"]["kind"]
     )
     assert lists_by_id["roster"]["columns"] == ["worker_name → worker_id", "eligible"]
+
+
+def test_properties_ddl_creates_the_table_once_and_adds_columns_after():
+    """The first property creates <table>_properties, keyed and foreign-keyed
+    on rowuuid with the source column's charset and collation; the next ones
+    add a column of the source variable's exact type."""
+    create = cm.properties_ddl(
+        "FS_s",
+        "roster",
+        "registered_name",
+        "text",
+        True,
+        "utf8mb3",
+        "utf8mb3_general_ci",
+    )
+    assert create == (
+        "CREATE TABLE `FS_s`.`roster_properties` (rowuuid VARCHAR(80) CHARACTER SET "
+        "utf8mb3 COLLATE utf8mb3_general_ci NOT NULL, `registered_name` text, "
+        "_lastupdate DATETIME NULL, PRIMARY KEY (rowuuid), "
+        "CONSTRAINT `fk_roster_properties` FOREIGN KEY (rowuuid) "
+        "REFERENCES `FS_s`.`roster` (rowuuid) ON DELETE CASCADE) ENGINE=InnoDB"
+    )
+    assert cm.properties_ddl(
+        "FS_s", "roster", "eligible_flag", "varchar(128)", False, "x", "y"
+    ) == (
+        "ALTER TABLE `FS_s`.`roster_properties` ADD COLUMN `eligible_flag` varchar(128)"
+    )
+
+
+def test_the_creation_trigger_copies_every_mapped_variable_and_is_deterministic():
+    name, sql = cm.creation_trigger_sql(
+        "FS_s",
+        "roster",
+        [("registered_name", "worker_name"), ("eligible_flag", "eligible")],
+    )
+    assert name == "fs_cm_roster_properties"
+    assert sql == (
+        "CREATE TRIGGER `FS_s`.`fs_cm_roster_properties` AFTER INSERT ON `FS_s`.`roster` "
+        "FOR EACH ROW INSERT INTO `FS_s`.`roster_properties` (rowuuid, `registered_name`, "
+        "`eligible_flag`) VALUES (NEW.rowuuid, NEW.`worker_name`, NEW.`eligible`) "
+        "ON DUPLICATE KEY UPDATE `registered_name` = NEW.`worker_name`, "
+        "`eligible_flag` = NEW.`eligible`"
+    )
+    # nothing fed at creation: the trigger is dropped, not created
+    assert cm.creation_trigger_sql("FS_s", "roster", []) == (
+        "fs_cm_roster_properties",
+        None,
+    )
+
+
+def test_the_backfill_gives_every_existing_row_a_property_row_then_its_value():
+    first, second = cm.backfill_sql("FS_s", "roster", "registered_name", "worker_name")
+    assert first == (
+        "INSERT IGNORE INTO `FS_s`.`roster_properties` (rowuuid) "
+        "SELECT rowuuid FROM `FS_s`.`roster`"
+    )
+    assert second == (
+        "UPDATE `FS_s`.`roster_properties` p JOIN `FS_s`.`roster` t "
+        "ON t.rowuuid = p.rowuuid SET p.`registered_name` = t.`worker_name`"
+    )
+
+
+def test_a_served_property_joins_the_properties_table_and_a_plain_list_does_not():
+    sql, headers = cm.build_list_select(
+        "FS_s",
+        "roster",
+        "worker_name",
+        [("eligible", None, "table"), ("registered_name", "reg_name", "property")],
+    )
+    assert headers == ["name", "label", "eligible", "reg_name"]
+    assert sql == (
+        "SELECT t.rowuuid AS name,t.`worker_name` AS label,t.`eligible` AS `eligible`,"
+        "p.`registered_name` AS `reg_name` FROM `FS_s`.`roster` AS t "
+        "LEFT JOIN `FS_s`.`roster_properties` AS p ON p.rowuuid = t.rowuuid "
+        "WHERE t._active = 1 ORDER BY t.rowuuid"
+    )
+    # without a property the SELECT is what it always was: no alias, no join
+    plain, plain_headers = cm.build_list_select(
+        "FS_s", "roster", "worker_name", [("eligible", None)]
+    )
+    assert plain == (
+        "SELECT rowuuid AS name,`worker_name` AS label,`eligible` AS `eligible` "
+        "FROM `FS_s`.`roster` WHERE _active = 1 ORDER BY rowuuid"
+    )
+    assert plain_headers == ["name", "label", "eligible"]

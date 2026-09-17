@@ -29,6 +29,7 @@ from formshare.models.formshare import (
     CaseLookUp,
     PublishedList,
     PublishedListColumn,
+    TableProperty,
     ListConsumer,
     Partner,
     PartnerProject,

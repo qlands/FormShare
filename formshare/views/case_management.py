@@ -37,6 +37,9 @@ from formshare.processes.db.case_management import (
     write_list_csv,
     list_has_active_consumers,
     get_project_workflow,
+    get_table_properties,
+    add_table_property,
+    delete_table_property,
 )
 from formshare.processes.db.form import get_form_data, get_form_directory
 from formshare.processes.odk.api import (
@@ -192,11 +195,21 @@ class EditPublishedListView(ListSection):
             if "add_column" in post_data.keys():
                 column_name = post_data.get("column_name", "")
                 column_as = str(post_data.get("column_as", "") or "").strip()
+                # A property is offered as "property:<name>": it is served
+                # from <table>_properties rather than from the table.
+                column_source = "table"
+                if column_name.startswith("property:"):
+                    column_name = column_name[len("property:") :]
+                    column_source = "property"
                 current = [
-                    (a_column["column_name"], a_column["column_as"], "table")
+                    (
+                        a_column["column_name"],
+                        a_column["column_as"],
+                        a_column["column_source"],
+                    )
                     for a_column in get_list_columns(self.request, project_id, list_id)
                 ]
-                current.append((column_name, column_as or None, "table"))
+                current.append((column_name, column_as or None, column_source))
                 updated, message = set_list_columns(
                     self.request, project_id, list_id, current
                 )
@@ -209,7 +222,11 @@ class EditPublishedListView(ListSection):
             if "remove_column" in post_data.keys():
                 column_name = post_data.get("column_name", "")
                 current = [
-                    (a_column["column_name"], a_column["column_as"], "table")
+                    (
+                        a_column["column_name"],
+                        a_column["column_as"],
+                        a_column["column_source"],
+                    )
                     for a_column in get_list_columns(self.request, project_id, list_id)
                     if a_column["column_name"] != column_name
                 ]
@@ -285,6 +302,12 @@ class EditPublishedListView(ListSection):
             "listData": list_data,
             "listColumns": get_list_columns(self.request, project_id, list_id),
             "tableColumns": table_columns,
+            "tableProperties": get_table_properties(
+                self.request,
+                list_data["source_project"],
+                list_data["source_form"],
+                list_data["source_table"],
+            ),
         }
 
 
@@ -374,7 +397,11 @@ class SampleListView(ListSection):
             )
             return HTTPFound(location=next_page, headers={"FS_error": "true"})
         columns = [
-            (a_column["column_name"], a_column["column_as"])
+            (
+                a_column["column_name"],
+                a_column["column_as"],
+                a_column.get("column_source") or "table",
+            )
             for a_column in get_list_columns(self.request, project_id, list_id)
         ]
         try:
@@ -527,3 +554,83 @@ class WorkflowModelApiView(ListSection):
             project_id,
             {"code": project_code, "name": project_details["project_name"]},
         )
+
+
+class PropertiesView(ListSection):
+    """Properties of a source table (feature 2): defined here, fed at
+    creation from a variable of the table, served by any list of it."""
+
+    def process_view(self):
+        user_id, project_code, project_id, project_details = self.project_or_404()
+        forms = [
+            a_form
+            for a_form in get_project_forms(self.request, user_id, project_id)
+            if a_form.get("form_schema")
+        ]
+        form_id = self.request.params.get("form", "")
+        table_name = self.request.params.get("table", "")
+        if form_id and form_id not in [a_form["form_id"] for a_form in forms]:
+            raise HTTPNotFound
+        tables = (
+            get_form_data_tables(self.request, project_id, form_id) if form_id else []
+        )
+        if table_name and table_name not in [t["table_name"] for t in tables]:
+            raise HTTPNotFound
+        here = self.request.route_url(
+            "project_case_properties",
+            userid=user_id,
+            projcode=project_code,
+            _query={"form": form_id, "table": table_name},
+        )
+        if self.request.method == "POST" and form_id and table_name:
+            post_data = self.get_post_dict()
+            if "add_property" in post_data.keys():
+                added, message = add_table_property(
+                    self.request,
+                    project_id,
+                    form_id,
+                    table_name,
+                    post_data.get("property_name", ""),
+                    post_data.get("source_column", ""),
+                    str(post_data.get("property_desc", "") or "").strip(),
+                    self.user.login,
+                )
+                if added:
+                    self.returnRawViewResult = True
+                    return HTTPFound(location=here)
+                self.add_error(message)
+                self.returnRawViewResult = True
+                return HTTPFound(location=here, headers={"FS_error": "true"})
+            if "delete_property" in post_data.keys():
+                deleted, message = delete_table_property(
+                    self.request,
+                    project_id,
+                    form_id,
+                    table_name,
+                    post_data.get("property_name", ""),
+                )
+                if deleted:
+                    self.returnRawViewResult = True
+                    return HTTPFound(location=here)
+                self.add_error(message)
+                self.returnRawViewResult = True
+                return HTTPFound(location=here, headers={"FS_error": "true"})
+        return {
+            "projectDetails": project_details,
+            "userid": user_id,
+            "projcode": project_code,
+            "forms": forms,
+            "formId": form_id,
+            "tableName": table_name,
+            "tables": tables,
+            "tableColumns": (
+                get_table_columns(self.request, project_id, form_id, table_name)
+                if form_id and table_name
+                else []
+            ),
+            "properties": (
+                get_table_properties(self.request, project_id, form_id, table_name)
+                if form_id and table_name
+                else []
+            ),
+        }

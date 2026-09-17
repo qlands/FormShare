@@ -25,6 +25,10 @@ import csv
 import datetime
 import logging
 import re
+from subprocess import Popen, PIPE
+import tempfile
+import shutil
+import os
 import uuid
 
 from lxml import etree
@@ -34,6 +38,7 @@ from formshare.models import (
     PublishedListColumn,
     ListConsumer,
     MediaFile,
+    TableProperty,
     Odkform,
     DictTable,
     DictField,
@@ -76,6 +81,16 @@ __all__ = [
     "project_has_workflow",
     "build_workflow_model",
     "get_project_workflow",
+    "properties_table",
+    "properties_ddl",
+    "creation_trigger_sql",
+    "backfill_sql",
+    "get_table_properties",
+    "property_sources_of",
+    "property_is_served",
+    "add_table_property",
+    "delete_table_property",
+    "inherit_properties",
     "generate_published_list_file",
     "project_has_lists",
 ]
@@ -122,12 +137,18 @@ def build_list_select(
     :param schema: the source repository schema
     :param table: maintable or a repeat table
     :param label_column: the column served as ``label``
-    :param columns: [(column_name, column_as), ...] extra columns, in order
+    :param columns: [(column_name, column_as[, source]), ...] extra columns,
+        in order; source is "table" (the default) or "property", a column of
+        <table>_properties, joined 1:1 on rowuuid
     :param filter_sql: optional membership WHERE fragment, UI-built
     :return: (sql, headers) -- headers in CSV order
 
     ``name`` is always rowuuid and always first; ``label`` always second.
     """
+    # A property column joins <table>_properties; the join and the aliases
+    # appear only then, so a list without properties reads as before.
+    uses_properties = any(len(col) > 2 and col[2] == "property" for col in columns)
+    t = "t." if uses_properties else ""
     # A row list is keyed by the source row's rowuuid: one row per source row,
     # linkable as a case. A value list is keyed by a column -- a list of
     # districts pulled from a table of schools -- so name is that column's
@@ -135,27 +156,35 @@ def build_list_select(
     # cannot be a case link, there being nothing unique to foreign-key to.
     if key_column:
         select_parts = [
-            "{} AS name".format(_quoted(key_column)),
-            "{} AS label".format(_quoted(label_column)),
+            "{}{} AS name".format(t, _quoted(key_column)),
+            "{}{} AS label".format(t, _quoted(label_column)),
         ]
     else:
         select_parts = [
-            "rowuuid AS name",
-            "{} AS label".format(_quoted(label_column)),
+            "{}rowuuid AS name".format(t),
+            "{}{} AS label".format(t, _quoted(label_column)),
         ]
     headers = ["name", "label"]
-    for column_name, column_as in columns:
+    for col in columns:
+        column_name, column_as = col[0], col[1]
+        prefix = "p." if len(col) > 2 and col[2] == "property" else t
         alias = column_as or column_name
         if alias in headers:
             # name and label are taken; a duplicate alias would shift the CSV.
             raise ValueError("Duplicated column: {}".format(alias))
-        select_parts.append("{} AS {}".format(_quoted(column_name), _quoted(alias)))
+        select_parts.append(
+            "{}{} AS {}".format(prefix, _quoted(column_name), _quoted(alias))
+        )
         headers.append(alias)
-    sql = "SELECT {}{} FROM {}.{}".format(
+    source = "{}.{}".format(_quoted(schema), _quoted(table))
+    if uses_properties:
+        source += " AS t LEFT JOIN {}.{} AS p ON p.rowuuid = t.rowuuid".format(
+            _quoted(schema), _quoted(properties_table(table))
+        )
+    sql = "SELECT {}{} FROM {}".format(
         "DISTINCT " if key_column else "",
         ",".join(select_parts),
-        _quoted(schema),
-        _quoted(table),
+        source,
     )
     # _active decides which rows the list carries. Every data table has it
     # (default 1), so a list serves active rows unless it was defined for the
@@ -164,13 +193,13 @@ def build_list_select(
     # entirely, for the rare list that wants both.
     where = []
     if active is not None:
-        where.append("_active = {}".format(int(active)))
+        where.append("{}_active = {}".format(t, int(active)))
     if filter_sql:
         where.append(filter_sql)
     if where:
         sql = sql + " WHERE " + " AND ".join(where)
     # A value list has no rowuuid to order by; its values order it instead.
-    sql = sql + (" ORDER BY name" if key_column else " ORDER BY rowuuid")
+    sql = sql + (" ORDER BY name" if key_column else " ORDER BY {}rowuuid".format(t))
     if limit is not None:
         # The sample download: enough rows to design a form against,
         # never the study.
@@ -451,7 +480,11 @@ def generate_published_list_file(request, list_data, out_path):
     if schema is None or schema == "":
         return False, "The source form has no repository"
     columns = [
-        (a_column["column_name"], a_column["column_as"])
+        (
+            a_column["column_name"],
+            a_column["column_as"],
+            a_column.get("column_source") or "table",
+        )
         for a_column in get_list_columns(
             request, list_data["project_id"], list_data["list_id"]
         )
@@ -1343,3 +1376,470 @@ def get_project_workflow(request, project_id, project):
         triggers,
         request.translate,
     )
+
+
+# ---------------------------------------------------------------------------
+# Properties (feature 2): a typed column beside the source table, born with
+# the row, served by any list of the table.
+# docs/formshare_case_management/formshare.md sections 2.3 and 3.1.
+
+_PROPERTY_NAME = re.compile(r"^[a-z][a-z0-9_]{0,60}$")
+# Column types a property cannot hold: nothing spatial, structured or binary.
+_UNSTORABLE_TYPES = ("geometry", "point", "linestring", "polygon", "json", "blob")
+
+
+def properties_table(table_name):
+    return table_name + "_properties"
+
+
+def properties_ddl(
+    schema,
+    table_name,
+    property_name,
+    column_type,
+    create_table,
+    key_charset,
+    key_collation,
+):
+    """CREATE <table>_properties with its first property, or ADD COLUMN.
+
+    FormShare's own table, outside the RSTools contract: not in create.xml,
+    unknown to mergeversions and the exporters, and that boundary is the
+    point. rowuuid is both the key and a foreign key to the source row, ON
+    DELETE CASCADE, so a property row never outlives its case; it is
+    declared with the source column's charset and collation because InnoDB
+    refuses a key between strings that differ in either. The property's own
+    type is the source column's COLUMN_TYPE, verbatim, so what the creation
+    trigger copies always fits. _lastupdate is there because RSTools' audit
+    triggers set it on every update, as on every data table, and it doubles
+    as the row's change stamp.
+    """
+    props = "{}.{}".format(_quoted(schema), _quoted(properties_table(table_name)))
+    if create_table:
+        return (
+            "CREATE TABLE {} (rowuuid VARCHAR(80) CHARACTER SET {} COLLATE {} NOT NULL, "
+            "{} {}, _lastupdate DATETIME NULL, PRIMARY KEY (rowuuid), "
+            "CONSTRAINT {} FOREIGN KEY (rowuuid) "
+            "REFERENCES {}.{} (rowuuid) ON DELETE CASCADE) ENGINE=InnoDB"
+        ).format(
+            props,
+            key_charset,
+            key_collation,
+            _quoted(property_name),
+            column_type,
+            _quoted("fk_" + properties_table(table_name)),
+            _quoted(schema),
+            _quoted(table_name),
+        )
+    return "ALTER TABLE {} ADD COLUMN {} {}".format(
+        props, _quoted(property_name), column_type
+    )
+
+
+def creation_trigger_sql(schema, table_name, mappings):
+    """The AFTER INSERT trigger that gives a new source row its property row.
+
+    mappings: [(property_name, source_column)] -- the properties fed at
+    creation. One statement, so it loads through the driver; named
+    deterministically (fs_cm_<table>_properties) and dropped and recreated on
+    every change, so it can never drift from the definitions. Returns
+    (name, sql) with sql None when nothing is fed at creation.
+    """
+    name = "fs_cm_{}_properties".format(table_name)
+    if not mappings:
+        return name, None
+    props = ", ".join(_quoted(p) for p, _ in mappings)
+    values = ", ".join("NEW." + _quoted(c) for _, c in mappings)
+    updates = ", ".join(
+        "{} = NEW.{}".format(_quoted(p), _quoted(c)) for p, c in mappings
+    )
+    # The trigger name carries the schema too: MySQL refuses (1435) a trigger
+    # whose name is in the session's default database while its table is not.
+    sql = (
+        "CREATE TRIGGER {}.{} AFTER INSERT ON {}.{} FOR EACH ROW "
+        "INSERT INTO {}.{} (rowuuid, {}) VALUES (NEW.rowuuid, {}) "
+        "ON DUPLICATE KEY UPDATE {}"
+    ).format(
+        _quoted(schema),
+        _quoted(name),
+        _quoted(schema),
+        _quoted(table_name),
+        _quoted(schema),
+        _quoted(properties_table(table_name)),
+        props,
+        values,
+        updates,
+    )
+    return name, sql
+
+
+def backfill_sql(schema, table_name, property_name, source_column):
+    """The rows that exist already get the property from its source too: a
+    property row for every source row, then the value copied across."""
+    props = "{}.{}".format(_quoted(schema), _quoted(properties_table(table_name)))
+    src = "{}.{}".format(_quoted(schema), _quoted(table_name))
+    return [
+        "INSERT IGNORE INTO {} (rowuuid) SELECT rowuuid FROM {}".format(props, src),
+        "UPDATE {} p JOIN {} t ON t.rowuuid = p.rowuuid SET p.{} = t.{}".format(
+            props, src, _quoted(property_name), _quoted(source_column)
+        ),
+    ]
+
+
+def get_table_properties(request, project_id, form_id, table_name):
+    res = (
+        request.dbsession.query(TableProperty)
+        .filter(TableProperty.project_id == project_id)
+        .filter(TableProperty.form_id == form_id)
+        .filter(TableProperty.table_name == table_name)
+        .order_by(TableProperty.property_cdate)
+        .all()
+    )
+    return map_from_schema(res)
+
+
+def property_sources_of(request, project_id, form_id):
+    """{table: [(property, source column)]} for the properties fed at creation."""
+    result = {}
+    for r in (
+        request.dbsession.query(
+            TableProperty.table_name,
+            TableProperty.property_name,
+            TableProperty.property_source,
+        )
+        .filter(TableProperty.project_id == project_id)
+        .filter(TableProperty.form_id == form_id)
+        .filter(TableProperty.property_source.isnot(None))
+        .all()
+    ):
+        result.setdefault(r[0], []).append((r[1], r[2]))
+    return result
+
+
+def property_is_served(request, project_id, form_id, table_name, property_name):
+    """Whether a published list of the table serves the property."""
+    return (
+        request.dbsession.query(PublishedListColumn.list_id)
+        .join(
+            PublishedList,
+            (PublishedList.project_id == PublishedListColumn.project_id)
+            & (PublishedList.list_id == PublishedListColumn.list_id),
+        )
+        .filter(PublishedList.source_project == project_id)
+        .filter(PublishedList.source_form == form_id)
+        .filter(PublishedList.source_table == table_name)
+        .filter(PublishedListColumn.column_source == "property")
+        .filter(PublishedListColumn.column_name == property_name)
+        .first()
+        is not None
+    )
+
+
+def _form_schema(request, project_id, form_id):
+    res = (
+        request.dbsession.query(Odkform.form_schema)
+        .filter(Odkform.project_id == project_id)
+        .filter(Odkform.form_id == form_id)
+        .first()
+    )
+    return res[0] if res else None
+
+
+def _properties_table_exists(request, schema, table_name):
+    return (
+        request.dbsession.execute(
+            "SELECT COUNT(*) FROM information_schema.tables "
+            "WHERE table_schema = :s AND table_name = :t",
+            {"s": schema, "t": properties_table(table_name)},
+        ).fetchone()[0]
+        > 0
+    )
+
+
+def _install_creation_trigger(request, schema, table_name, mappings):
+    name, sql = creation_trigger_sql(schema, table_name, mappings)
+    request.dbsession.execute(
+        "DROP TRIGGER IF EXISTS {}.{}".format(_quoted(schema), _quoted(name))
+    )
+    if sql:
+        request.dbsession.execute(sql)
+
+
+def regenerate_properties_audit(request, schema, table_name):
+    """Audit triggers on <table>_properties, in RSTools' own shape.
+
+    The repository's audit triggers come from createaudittriggers at build
+    time and know nothing of a table created later, so a property's history
+    would be missing and README decision 3 (history = audit + submissions)
+    false. The same utility is re-run scoped to the properties table (-t),
+    into a scratch directory so the build's mysql_create_audit.sql is left
+    alone; its previous triggers on that table (audit_* and the TLU_ one that
+    stamps _lastupdate) are dropped first, because their names are random
+    and a re-run would add a second set. Returns (ok, message).
+    """
+    props = properties_table(table_name)
+    for (name,) in request.dbsession.execute(
+        "SELECT trigger_name FROM information_schema.triggers "
+        "WHERE trigger_schema = :s AND event_object_table = :t "
+        "AND (trigger_name LIKE :a OR trigger_name LIKE :l)",
+        {"s": schema, "t": props, "a": "audit\\_%", "l": "TLU\\_%"},
+    ).fetchall():
+        request.dbsession.execute(
+            "DROP TRIGGER IF EXISTS {}.{}".format(_quoted(schema), _quoted(name))
+        )
+    settings = request.registry.settings
+    tool = os.path.join(
+        settings["odktools.path"],
+        *["utilities", "createAuditTriggers", "createaudittriggers"]
+    )
+    out_dir = tempfile.mkdtemp(prefix="fs_properties_")
+    try:
+        args = [
+            tool,
+            "-H " + settings["mysql.host"],
+            "-P " + settings["mysql.port"],
+            "-u " + settings["mysql.user"],
+            "-p " + settings["mysql.password"],
+            "-s " + schema,
+            "-o " + out_dir,
+            "-t " + props,
+        ]
+        p = Popen(args, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = p.communicate()
+        if p.returncode != 0:
+            return False, "createaudittriggers failed: {}".format(
+                stderr.decode() or stdout.decode()
+            )
+        audit_file = os.path.join(out_dir, "mysql_create_audit.sql")
+        with open(audit_file) as sql_file:
+            proc = Popen(
+                ["mysql", "--defaults-file=" + settings["mysql.cnf"], schema],
+                stdin=sql_file,
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            output, error = proc.communicate()
+        if proc.returncode != 0:
+            return False, "Loading the audit triggers failed: {}".format(error.decode())
+        return True, ""
+    finally:
+        shutil.rmtree(out_dir, ignore_errors=True)
+
+
+def add_table_property(
+    request, project_id, form_id, table_name, property_name, source_column, desc, user
+):
+    """Defines a property of a table, fed at creation from one of its columns.
+
+    In this order, because MySQL commits around DDL: the column (and the
+    table, the first time), the audit triggers, the backfill of the rows that
+    exist, the creation trigger, and only then the registry row. Returns
+    (ok, message).
+    """
+    _ = request.translate
+    property_name = str(property_name or "").strip().lower()
+    source_column = str(source_column or "").strip()
+    if not _PROPERTY_NAME.match(property_name) or property_name in (
+        "rowuuid",
+        "name",
+        "label",
+    ):
+        return False, _(
+            "A property name is lower case, starts with a letter, and uses "
+            "letters, digits and underscores"
+        )
+    schema = _form_schema(request, project_id, form_id)
+    if not schema:
+        return False, _("The form has no repository")
+    if any(
+        p["property_name"] == property_name
+        for p in get_table_properties(request, project_id, form_id, table_name)
+    ):
+        return False, _("There is already a property with that name")
+    columns = {
+        c["field_name"]: c
+        for c in get_table_columns(request, project_id, form_id, table_name)
+    }
+    if property_name in columns:
+        # The served CSV would carry two columns of one name, and a filter
+        # naming it could mean either.
+        return False, _("A property cannot be named like a column of the table")
+    field = columns.get(source_column)
+    if field is None:
+        return False, _("The source variable is not a column of the table")
+    column = request.dbsession.execute(
+        "SELECT COLUMN_TYPE, DATA_TYPE FROM information_schema.columns "
+        "WHERE table_schema = :s AND table_name = :t AND column_name = :c",
+        {"s": schema, "t": table_name, "c": source_column},
+    ).fetchone()
+    if column is None:
+        return False, _("The source variable is not a column of the table")
+    if column[1].lower() in _UNSTORABLE_TYPES:
+        return False, _("A {} column cannot be a property").format(column[1])
+    key = request.dbsession.execute(
+        "SELECT CHARACTER_SET_NAME, COLLATION_NAME FROM information_schema.columns "
+        "WHERE table_schema = :s AND table_name = :t AND column_name = 'rowuuid'",
+        {"s": schema, "t": table_name},
+    ).fetchone()
+    if key is None:
+        return False, _("The table has no rowuuid column")
+    mappings = [
+        (p["property_name"], p["property_source"])
+        for p in get_table_properties(request, project_id, form_id, table_name)
+        if p["property_source"]
+    ] + [(property_name, source_column)]
+    try:
+        request.dbsession.execute(
+            properties_ddl(
+                schema,
+                table_name,
+                property_name,
+                column[0],
+                not _properties_table_exists(request, schema, table_name),
+                key[0],
+                key[1],
+            )
+        )
+        # Audit first, so the backfill is recorded under the owner who
+        # defined the property, like any office edit; the regenerated update
+        # trigger knows the new column before its values are written.
+        audited, message = regenerate_properties_audit(request, schema, table_name)
+        if not audited:
+            return False, message
+        request.dbsession.execute("SET @odktools_current_user = :u", {"u": user})
+        for sql in backfill_sql(schema, table_name, property_name, source_column):
+            request.dbsession.execute(sql)
+        request.dbsession.execute("SET @odktools_current_user = NULL")
+        _install_creation_trigger(request, schema, table_name, mappings)
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while adding property {} to {}.{} of form {} in project {}".format(
+                str(e), property_name, schema, table_name, form_id, project_id
+            )
+        )
+        return False, str(e)
+    try:
+        request.dbsession.add(
+            TableProperty(
+                project_id=project_id,
+                form_id=form_id,
+                table_name=table_name,
+                property_name=property_name,
+                property_type=field["field_type"],
+                property_size=field.get("field_size") or 0,
+                property_decsize=field.get("field_decsize") or 0,
+                property_desc=(desc or "")[:500] or None,
+                property_source=source_column,
+                property_cdate=datetime.datetime.now(),
+            )
+        )
+        request.dbsession.commit()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while recording property {} of {}.{}".format(
+                str(e), property_name, form_id, table_name
+            )
+        )
+        return False, str(e)
+
+
+def delete_table_property(request, project_id, form_id, table_name, property_name):
+    """Removes a property: refused while a list serves it; otherwise the
+    column goes, and with the last property the table and its triggers."""
+    _ = request.translate
+    if property_is_served(request, project_id, form_id, table_name, property_name):
+        return False, _(
+            "A published list serves this property. Remove it from the list first."
+        )
+    schema = _form_schema(request, project_id, form_id)
+    if not schema:
+        return False, _("The form has no repository")
+    remaining = [
+        p
+        for p in get_table_properties(request, project_id, form_id, table_name)
+        if p["property_name"] != property_name
+    ]
+    props = "{}.{}".format(_quoted(schema), _quoted(properties_table(table_name)))
+    try:
+        if remaining:
+            request.dbsession.execute(
+                "ALTER TABLE {} DROP COLUMN {}".format(props, _quoted(property_name))
+            )
+            _install_creation_trigger(
+                request,
+                schema,
+                table_name,
+                [
+                    (p["property_name"], p["property_source"])
+                    for p in remaining
+                    if p["property_source"]
+                ],
+            )
+            audited, message = regenerate_properties_audit(request, schema, table_name)
+            if not audited:
+                return False, message
+        else:
+            _install_creation_trigger(request, schema, table_name, [])
+            request.dbsession.execute("DROP TABLE IF EXISTS {}".format(props))
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while deleting property {} of {}.{}".format(
+                str(e), property_name, schema, table_name
+            )
+        )
+        return False, str(e)
+    try:
+        request.dbsession.query(TableProperty).filter(
+            TableProperty.project_id == project_id
+        ).filter(TableProperty.form_id == form_id).filter(
+            TableProperty.table_name == table_name
+        ).filter(
+            TableProperty.property_name == property_name
+        ).delete()
+        request.dbsession.commit()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        return False, str(e)
+
+
+def inherit_properties(request, project_id, parent_form, child_form):
+    """A new version keeps its parent's property definitions: the table and
+    the trigger live in the schema it will own, and the definitions must
+    follow. Copies the parent's rows to the child, skipping any it has."""
+    existing = {
+        (p.table_name, p.property_name)
+        for p in request.dbsession.query(
+            TableProperty.table_name, TableProperty.property_name
+        )
+        .filter(TableProperty.project_id == project_id)
+        .filter(TableProperty.form_id == child_form)
+        .all()
+    }
+    for p in (
+        request.dbsession.query(TableProperty)
+        .filter(TableProperty.project_id == project_id)
+        .filter(TableProperty.form_id == parent_form)
+        .all()
+    ):
+        if (p.table_name, p.property_name) in existing:
+            continue
+        request.dbsession.add(
+            TableProperty(
+                project_id=project_id,
+                form_id=child_form,
+                table_name=p.table_name,
+                property_name=p.property_name,
+                property_type=p.property_type,
+                property_size=p.property_size,
+                property_decsize=p.property_decsize,
+                property_desc=p.property_desc,
+                property_source=p.property_source,
+                property_cdate=p.property_cdate,
+            )
+        )
+    request.dbsession.commit()

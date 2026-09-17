@@ -58,6 +58,7 @@ __all__ = [
     "IExportGenerator",
     "IFileStorage",
     "ICeleryTask",
+    "IFeature",
 ]
 
 
@@ -2396,6 +2397,18 @@ class IAuthenticationPolicy(Interface):
         AuthTktAuthenticationPolicy, "policy_name"
         """
         raise NotImplementedError("create_policy must be implemented in subclasses")
+
+
+class IFeature(Interface):
+    """
+    Plugin into the definition checkout of features
+    """
+
+    def feature_exist(self, feature_code):
+        """Called by FormShare so plugins can add new roles.
+        This function must return True or False if the feature exists.
+        """
+        raise NotImplementedError("feature_exist must be implemented in subclasses")
 
 
 class IRoles(Interface):

@@ -286,6 +286,17 @@ def get_timezone_offset(request, timezone_code):
 
 
 @core_helper
+def feature_exists(feature_code):
+    res = False
+    # Call connected plugins to see if the feature has been implemented
+    for plugin in p.PluginImplementations(p.IFeature):
+        plugin_result = plugin.feature_exist(feature_code)
+        if res is False:
+            res = plugin_result
+    return res
+
+
+@core_helper
 def pluralize(noun, size, locale="en"):
     """
     The function calls connected plugins to expand the pluralize capabilities of FormShare

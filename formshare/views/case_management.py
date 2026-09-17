@@ -50,6 +50,7 @@ from formshare.processes.db.project import (
     get_project_id_from_name,
 )
 from formshare.views.classes import PrivateView
+from formshare.plugins.helpers import feature_exists
 
 
 class ListSection(PrivateView):
@@ -63,6 +64,10 @@ class ListSection(PrivateView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+
+        if not feature_exists("workflows"):
+            raise HTTPNotFound
+
         if self.activeProject.get("project_id", None) == project_id:
             self.set_active_menu("assistants")
         else:

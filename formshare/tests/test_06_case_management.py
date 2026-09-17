@@ -1141,3 +1141,12 @@ def test_a_served_property_joins_the_properties_table_and_a_plain_list_does_not(
         "FROM `FS_s`.`roster` WHERE _active = 1 ORDER BY rowuuid"
     )
     assert plain_headers == ["name", "label", "eligible"]
+
+
+def test_a_source_form_names_the_lists_it_feeds_for_the_delete_guard(db_request):
+    """Before a consumer exists the consumer guard is silent, yet the source's
+    foreign key would still refuse the delete: the lists are named instead."""
+    fed = cm.lists_fed_by_form(db_request, "p", "tool1")
+    assert [a_list["list_id"] for a_list in fed] == ["centre_lists", "roster"]
+    assert fed[0]["list_filename"] == "centre_lists.csv"
+    assert cm.lists_fed_by_form(db_request, "p", "tool2") == []

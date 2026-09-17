@@ -78,6 +78,7 @@ __all__ = [
     "form_creates_cases",
     "form_consumes_cases",
     "list_has_active_consumers",
+    "lists_fed_by_form",
     "project_has_workflow",
     "build_workflow_model",
     "get_project_workflow",
@@ -768,6 +769,26 @@ def source_form_has_consumers(request, source_project, source_form):
         .all()
     )
     return len(res) > 0
+
+
+def lists_fed_by_form(request, source_project, source_form):
+    """The published lists, in any project, whose source is this form.
+
+    The delete guard reads this after source_form_has_consumers: a form that
+    feeds a list cannot be deleted even while nothing consumes the list yet,
+    because the registry's foreign key on the source (fk_publishedlist_
+    source_odkform, no cascade) refuses it -- the lists go first.
+    """
+    res = (
+        request.dbsession.query(
+            PublishedList.project_id, PublishedList.list_id, PublishedList.list_filename
+        )
+        .filter(PublishedList.source_project == source_project)
+        .filter(PublishedList.source_form == source_form)
+        .order_by(PublishedList.list_id)
+        .all()
+    )
+    return [{"project_id": r[0], "list_id": r[1], "list_filename": r[2]} for r in res]
 
 
 def inherit_consumers(request, project_id, parent_form, child_form):

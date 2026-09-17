@@ -550,6 +550,16 @@ def t_e_s_t_case_journey(test_object):
     )
     assert res.body.decode("utf-8").splitlines()[0].startswith('"name","label"')
 
+    # A form that feeds published lists nobody consumes yet cannot be deleted
+    # either: the lists go first. The registry's foreign key on the source
+    # would refuse it anyway; the page says so instead of failing.
+    res = testapp.post(
+        "/user/{}/project/{}/form/{}/delete".format(login, project, TOOL1),
+        status=302,
+    )
+    assert "FS_error" in res.headers
+    assert _has_table(test_object.server_config, schema1, "maintable")
+
     # --- Properties (feature 2): a typed column beside the roster ----------
     # Defined from a variable of the table, born with each row through a
     # trigger, backfilled for the rows that exist, audited like the rest of

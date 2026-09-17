@@ -1626,22 +1626,17 @@ def delete_form(request, project, form):
     )
     if blocked[0] == 0:
         this_form_schema = get_form_schema(request, project, form)
-        if this_form_schema is not None:
-            if form_has_parent(request, project, form):
-                deleted = delete_form_by_database(request, this_form_schema)
-                return True, deleted, ""
-            else:
-                form_directory = get_form_directory(request, project, form)
-                request.dbsession.query(Odkform).filter(
-                    Odkform.project_id == project
-                ).filter(Odkform.form_id == form).delete()
-
-        else:
-            form_directory = get_form_directory(request, project, form)
+        if this_form_schema is not None and form_has_parent(request, project, form):
+            deleted = delete_form_by_database(request, this_form_schema)
+            return True, deleted, ""
+        form_directory = get_form_directory(request, project, form)
+        # The delete itself is inside the try: a foreign key that refuses it
+        # (a published list still fed by the form) is an answer for the page,
+        # not a server error.
+        try:
             request.dbsession.query(Odkform).filter(
                 Odkform.project_id == project
             ).filter(Odkform.form_id == form).delete()
-        try:
             request.dbsession.commit()
             return (
                 True,

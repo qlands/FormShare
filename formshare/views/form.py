@@ -80,6 +80,7 @@ from formshare.processes.db import (
 from formshare.processes.elasticsearch.record_index import delete_form_records
 from formshare.processes.db.case_management import (
     source_form_has_consumers,
+    lists_fed_by_form,
     inherit_consumers,
 )
 from formshare.processes.elasticsearch.repository_index import (
@@ -1878,6 +1879,20 @@ class DeleteForm(PrivateView):
                             "links to. Remove that link or delete the other form "
                             "first."
                         )
+                    )
+                    self.returnRawViewResult = True
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
+                # A form that feeds a published list nobody consumes yet is
+                # refused too: the registry keeps a foreign key on the source
+                # (no cascade), so the lists go first. Without this the
+                # database refused it as a 500 (2026-09-17, formshare.app).
+                fed = lists_fed_by_form(self.request, project_id, form_id)
+                if fed:
+                    self.add_error(
+                        self._(
+                            "This form feeds the published lists {}. Delete "
+                            "the lists first."
+                        ).format(", ".join(a_list["list_id"] for a_list in fed))
                     )
                     self.returnRawViewResult = True
                     return HTTPFound(location=next_page, headers={"FS_error": "true"})

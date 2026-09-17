@@ -36,6 +36,7 @@ from formshare.processes.db.case_management import (
     valid_list_filename,
     write_list_csv,
     list_has_active_consumers,
+    get_project_workflow,
 )
 from formshare.processes.db.form import get_form_data, get_form_directory
 from formshare.processes.odk.api import (
@@ -490,3 +491,34 @@ class CaseLinksView(ListSection):
             "linksLocked": links_locked,
             "lockReason": lock_reason,
         }
+
+
+class WorkflowDiagramView(ListSection):
+    """The longitudinal workflow of the project, drawn from the registry and
+    the built schemas (docs/formshare_case_management/formshare.md 3.9)."""
+
+    def process_view(self):
+        user_id, project_code, project_id, project_details = self.project_or_404()
+        return {
+            "projectDetails": project_details,
+            "userid": user_id,
+            "projcode": project_code,
+            "workflow": get_project_workflow(
+                self.request,
+                project_id,
+                {"code": project_code, "name": project_details["project_name"]},
+            ),
+        }
+
+
+class WorkflowModelApiView(ListSection):
+    """The same model as JSON, for anything else that wants to draw it."""
+
+    def process_view(self):
+        user_id, project_code, project_id, project_details = self.project_or_404()
+        self.returnRawViewResult = True
+        return get_project_workflow(
+            self.request,
+            project_id,
+            {"code": project_code, "name": project_details["project_name"]},
+        )

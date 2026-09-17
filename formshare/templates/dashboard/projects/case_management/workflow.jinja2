@@ -1,0 +1,179 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Workflow diagram") }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    <style>
+      #workflow .wf-legend { font-size: 11px; color: #374151; display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 14px; }
+      #workflow .wf-legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 6px; }
+      #wf-canvas { position: relative; overflow: auto; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #1f2937; }
+      .wf-form { position: absolute; background: #f3f5f8; border: 1px solid #94a3b8; border-radius: 10px;
+                 padding: 10px 14px 14px; box-sizing: border-box; cursor: move; }
+      .wf-form h2 { margin: 0 0 10px; font-size: 13px; font-weight: bold; }
+      .wf-form h2 small { display: block; font-weight: normal; color: #4b5563; font-size: 10px; margin-top: 2px; }
+      .wf-tables { display: flex; flex-direction: column; gap: 22px; align-items: stretch; }
+      .wf-table { background: #fff; border: 1px solid #64748b; min-width: 210px; }
+      .wf-th { padding: 4px 8px; font-weight: bold; border-bottom: 1px solid #64748b; }
+      .wf-th small { font-weight: normal; font-size: 9px; margin-left: 6px; color: #4b5563; }
+      .wf-table .wf-th { background: #dbe4f0; }
+      .wf-row { display: grid; grid-template-columns: max-content 1fr; }
+      .wf-row > div { padding: 3px 8px; border-bottom: 1px solid #cbd5e1; }
+      .wf-row > div:first-child { border-right: 1px solid #cbd5e1; }
+      .wf-row:last-child > div { border-bottom: none; }
+      .wf-row.reads { color: #1d4ed8; }
+      .wf-row.link { color: #b91c1c; }
+      .wf-row.reads > div:first-child, .wf-row.link > div:first-child { font-weight: bold; }
+      .wf-list { position: absolute; background: #fffbeb; border: 1px solid #a16207; width: 300px; box-sizing: border-box; cursor: move; }
+      .wf-list .wf-th { background: #fde68a; border-bottom-color: #a16207; }
+      .wf-list .wf-row > div { border-color: #e5d3a1; }
+      .wf-list.value { background: #ecfdf5; }
+      .wf-list.value .wf-th { background: #a7f3d0; }
+      .wf-list.value .wf-row > div { border-color: #a7d7c0; }
+      .wf-lbl { background: rgba(255,255,255,.92); padding: 1px 5px; font-size: 10px; border-radius: 3px; white-space: nowrap; text-align: center; line-height: 1.25; }
+      .wf-lbl-publishes { color: #a16207; }
+      .wf-lbl-reads { color: #1d4ed8; }
+      .wf-lbl-link { color: #b91c1c; }
+      .wf-lbl-repeat { color: #64748b; }
+      #wf-canvas .jtk-connector { z-index: 1; }
+      #wf-canvas .jtk-overlay { z-index: 2; }
+    </style>
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsPlumb/2.15.6/js/jsplumb.min.js"></script>
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% set crumb_current = _('Workflow diagram') %}
+    {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_lists.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-lg-12">
+            {% block form_errors %}
+                {{ form.display_errors(errors) }}
+            {% endblock form_errors %}
+            <div class="ibox" id="workflow">
+                <div class="ibox-content">
+                    <h2>{{ _('Workflow diagram') }}</h2>
+                    <p>
+                        {{ _('The longitudinal workflow as built: the forms, the lists they publish, the forms that consume them, and the links the schemas enforce. Drag a box to rearrange; the lines follow.') }}
+                    </p>
+                    <div class="wf-legend">
+                        <span><i style="background:#a16207"></i>{{ _("a table publishes a list, regenerated on a device's manifest pull when stale") }}</span>
+                        <span><i style="background:#1d4ed8"></i>{{ _('a form reads a list: selector retyped to the source key, foreign key for a row list') }}</span>
+                        <span><i style="background:#b91c1c"></i>{{ _('the case link: the form is a follow-up of that row, the trigger refuses an inactive or unknown case') }}</span>
+                        <span><i style="background:#64748b"></i>{{ _('a repeat and the row it belongs to') }}</span>
+                    </div>
+                    <div id="wf-canvas"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+      // The model comes from get_project_workflow; the page only draws it.
+      // Nodes are placed in columns by rank -- the forms of rank r, then the
+      // lists of rank r + 0.5 -- each column centred on the tallest, and
+      // jsPlumb draws the edges between the field rows and the list cards.
+      const WF_MODEL = {{ workflow|tojson }};
+      const WF_COLORS = { publishes: "#a16207", reads: "#1d4ed8", link: "#b91c1c", repeat: "#64748b" };
+
+      function wfEsc(s) {
+        return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+      }
+      function wfFieldId(form, table, field) { return "wf_f_" + [form, table, field].join("__").replace(/\W/g, "_"); }
+      function wfListId(id) { return "wf_l_" + String(id).replace(/\W/g, "_"); }
+      function wfFormId(id) { return "wf_form_" + String(id).replace(/\W/g, "_"); }
+
+      function wfRender(model) {
+        const canvas = document.getElementById("wf-canvas");
+        for (const f of model.forms) {
+          const el = document.createElement("div");
+          el.className = "wf-form";
+          el.id = wfFormId(f.id);
+          el.innerHTML = "<h2>" + wfEsc(f.name) + "<small>" + wfEsc(f.id) + " · " + wfEsc("{{ _('version') }}") + " " + wfEsc(f.version) +
+            " · " + (f.schema ? wfEsc("{{ _('schema') }}") + " " + wfEsc(f.schema) : wfEsc("{{ _('no repository yet') }}")) + "</small></h2><div class=\"wf-tables\"></div>";
+          const tables = el.querySelector(".wf-tables");
+          for (const t of f.tables) {
+            const te = document.createElement("div");
+            te.className = "wf-table";
+            te.innerHTML = "<div class=\"wf-th\">" + wfEsc(t.name) + (t.desc && t.name !== "maintable" ? "<small>" + wfEsc(t.desc) + "</small>" : "") + "</div>" +
+              t.fields.map(fl => "<div class=\"wf-row " + wfEsc(fl.kind) + "\" id=\"" + wfFieldId(f.id, t.name, fl.name) + "\"><div>" +
+                wfEsc(fl.name) + "</div><div>" + wfEsc(fl.desc) + "</div></div>").join("");
+            tables.appendChild(te);
+          }
+          canvas.appendChild(el);
+        }
+        for (const l of model.lists) {
+          const el = document.createElement("div");
+          el.className = "wf-list" + (l.value_list ? " value" : "");
+          el.id = wfListId(l.id);
+          el.innerHTML = "<div class=\"wf-th\">" + wfEsc(l.filename) + "<small>" + wfEsc("{{ _('list') }}") + " " + wfEsc(l.id) + "</small></div>" +
+            "<div class=\"wf-row\"><div>" + wfEsc("{{ _('from') }}") + "</div><div>" + wfEsc(l.source_form) + " · " + wfEsc(l.source_table) + "</div></div>" +
+            "<div class=\"wf-row\"><div>" + wfEsc("{{ _('kind') }}") + "</div><div>" + wfEsc(l.kind) + "</div></div>" +
+            "<div class=\"wf-row\"><div>" + wfEsc("{{ _('label') }}") + "</div><div>" + wfEsc(l.label) + "</div></div>" +
+            "<div class=\"wf-row\"><div>" + wfEsc("{{ _('columns') }}") + "</div><div>" + (l.columns.length ? l.columns.map(wfEsc).join("<br>") : "—") + "</div></div>";
+          canvas.appendChild(el);
+        }
+      }
+
+      function wfLayout(model) {
+        const GAP_X = 190, GAP_Y = 36, MARGIN = 24, LEFT = 90;  // LEFT leaves room for a repeat's curve
+        const ranks = [...new Set(model.forms.map(f => f.rank).concat(model.lists.map(l => l.rank)))].sort((a, b) => a - b);
+        const columns = ranks.map(r => {
+          const nodes = model.forms.filter(f => f.rank === r).map(f => document.getElementById(wfFormId(f.id)))
+            .concat(model.lists.filter(l => l.rank === r).map(l => document.getElementById(wfListId(l.id))));
+          const height = nodes.reduce((h, el) => h + el.offsetHeight, 0) + GAP_Y * (nodes.length - 1);
+          const width = Math.max(...nodes.map(el => el.offsetWidth));
+          return { nodes, height, width };
+        });
+        const tallest = Math.max(0, ...columns.map(c => c.height));
+        let x = LEFT;
+        for (const c of columns) {
+          let y = MARGIN + (tallest - c.height) / 2;
+          for (const el of c.nodes) {
+            el.style.left = x + "px";
+            el.style.top = Math.round(y) + "px";
+            y += el.offsetHeight + GAP_Y;
+          }
+          x += c.width + GAP_X;
+        }
+        const canvas = document.getElementById("wf-canvas");
+        canvas.style.height = (tallest + 2 * MARGIN) + "px";
+        canvas.style.minWidth = x + "px";
+      }
+
+      function wfConnect(model) {
+        const instance = jsPlumb.getInstance({ Container: "wf-canvas", Endpoint: "Blank", ConnectionsDetachable: false });
+        const endOf = ref => ref.list ? wfListId(ref.list) : wfFieldId(ref.form, ref.table, ref.field);
+        for (const e of model.edges) {
+          const repeat = e.kind === "repeat";
+          instance.connect({
+            source: endOf(e.from),
+            target: endOf(e.to),
+            anchors: repeat ? ["Left", "Left"] : ["Right", "Left"],
+            connector: ["Bezier", { curviness: repeat ? 50 : 80 }],
+            paintStyle: { stroke: WF_COLORS[e.kind], strokeWidth: e.kind === "link" ? 3 : 2, dashstyle: repeat ? "4 3" : "0" },
+            overlays: [
+              ["Arrow", { location: 1, width: 11, length: 11, foldback: 0.8 }],
+              ["Label", { label: wfEsc(e.label).replace(/\n/g, "<br>"), cssClass: "wf-lbl wf-lbl-" + e.kind, location: e.kind === "publishes" ? 0.5 : 0.42 }]
+            ]
+          });
+        }
+        document.querySelectorAll("#wf-canvas .wf-form, #wf-canvas .wf-list").forEach(el => {
+          instance.draggable(el, { containment: true, drag: () => instance.repaintEverything() });
+        });
+        return instance;
+      }
+
+      jsPlumb.ready(() => {
+        wfRender(WF_MODEL);
+        wfLayout(WF_MODEL);
+        wfConnect(WF_MODEL);
+      });
+    </script>
+{% endblock maincontent %}

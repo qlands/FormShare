@@ -12,6 +12,7 @@ from datetime import datetime
 import formshare.plugins as p
 import qrcode
 from formshare.processes.color_hash import ColorHash
+from formshare.processes.db.case_management import project_has_workflow
 from formshare.processes.db import (
     add_project,
     modify_project,
@@ -169,6 +170,10 @@ class ProjectDetailsView(ProjectsView):
                 self.request.registry.settings, project_id
             ),
             "has_forms_with_repository": has_forms_with_repository,
+            # The diagram button appears once a workflow is in place: a list
+            # a built form consumes, so two schemas are linked.
+            "has_workflow": has_forms_with_repository
+            and project_has_workflow(self.request, project_id),
         }
 
 

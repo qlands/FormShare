@@ -564,6 +564,11 @@ def t_e_s_t_case_journey(test_object):
         ),
     )
 
+    # No workflow yet: Tool 2 consumes the lists but is not built, so nothing
+    # links two schemas and the project page offers no diagram.
+    res = testapp.get("/user/{}/project/{}".format(login, project), status=200)
+    assert b"Workflow diagram" not in res.body
+
     # --- Build Tool 2: the FKs and the membership trigger are created ------
     testapp.post(
         "/user/{}/project/{}/form/{}/repository/create".format(login, project, TOOL2),
@@ -576,6 +581,28 @@ def t_e_s_t_case_journey(test_object):
     fks = _foreign_keys(test_object.server_config, schema2, "maintable")
     # The case link: worker_id is a child of Tool 1's roster (a repeat table).
     assert fks.get("worker_id") == (schema1, "roster", "rowuuid"), fks
+
+    # --- The workflow diagram: offered once two schemas are linked ----------
+    res = testapp.get("/user/{}/project/{}".format(login, project), status=200)
+    test_object.root.assertIn(b"Workflow diagram", res.body)
+    res = testapp.get("/user/{}/project/{}/workflow".format(login, project), status=200)
+    test_object.root.assertIn(b"jsplumb.min.js", res.body)
+    test_object.root.assertIn(b"worker_id", res.body)
+    # Kept on disk so the drawing can be looked at after the run.
+    with open(
+        os.path.join(test_object.working_dir, "workflow_page.html"), "wb"
+    ) as page:
+        page.write(res.body)
+    res = testapp.get(
+        "/user/{}/project/{}/workflow/model".format(login, project), status=200
+    )
+    model = res.json
+    ranks = {f["id"]: f["rank"] for f in model["forms"]}
+    assert ranks[TOOL1] == 0 and ranks[TOOL2] == 1, ranks
+    link_edges = [e for e in model["edges"] if e["kind"] == "link"]
+    assert [e["to"]["field"] for e in link_edges] == ["worker_id"], link_edges
+    assert "must be _active" in link_edges[0]["label"], link_edges[0]["label"]
+    assert {l["id"]: l["rank"] for l in model["lists"]}["roster"] == 0.5
     # The auxiliary: centre_id references Tool 1's maintable.
     assert fks.get("centre_id") == (schema1, "maintable", "rowuuid"), fks
     # The selectors were retyped from int to the rowuuid type.
@@ -745,6 +772,7 @@ def t_e_s_t_case_journey(test_object):
     assert "FS_error" not in res.headers
     testapp.get("/user/{}/project/{}/caselists".format(login, classic), status=404)
     testapp.get("/user/{}/project/{}/caselists/add".format(login, classic), status=404)
+    testapp.get("/user/{}/project/{}/workflow".format(login, classic), status=404)
     testapp.get(
         "/user/{}/project/{}/caselists/tablesof/{}".format(login, classic, TOOL1),
         status=404,

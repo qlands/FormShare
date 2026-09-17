@@ -35,6 +35,9 @@
                                         {% if projectData.project_case == 0 %}
                                             {% if has_forms_with_repository %}
                                                 <button id="case_lists" type="button" onclick="location.href='{{ request.route_url('project_case_lists', userid=projectDetails.owner, projcode=projectDetails.project_code) }}';" class="btn btn-block btn-outline btn-info">{{ _('Published lists') }}</button>
+                                                {% if has_workflow is defined and has_workflow %}
+                                                    <button id="workflow_diagram" type="button" onclick="location.href='{{ request.route_url('project_workflow', userid=projectDetails.owner, projcode=projectDetails.project_code) }}';" class="btn btn-block btn-outline btn-info">{{ _('Workflow diagram') }}</button>
+                                                {% endif %}
                                             {% endif %}
                                         {% endif %}
                                     {% endblock published_lists_button %}

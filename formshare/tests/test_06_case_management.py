@@ -818,3 +818,241 @@ def test_a_definition_change_invalidates_every_served_copy(db_request):
     assert stamps[("p", "tool2", "centre_lists.csv")] == stamp
     assert stamps[("q", "tool9", "roster.csv")] == stamp
     assert cm.invalidate_list_copies(db_request, "p", "no_such_list")[0] is False
+
+
+def test_the_workflow_model_folds_versions_ranks_the_chain_and_reads_the_schema():
+    """The diagram's model: a merged-away version and its consumers fold into
+    the version that owns the schema, forms are ranked along the chain, only
+    tables that take part are shown, and the edge labels come from the built
+    schema (foreign key rule, membership trigger), not from the registry."""
+    forms = [
+        {
+            "form_id": "tool1",
+            "form_name": "Tool 1",
+            "form_version": "8",
+            "form_schema": "FS_11111111_a",
+            "parent_form": None,
+            "form_pkey": "form_key",
+        },
+        {
+            "form_id": "tool2",
+            "form_name": "Tool 2",
+            "form_version": "5",
+            "form_schema": "FS_22222222_b",
+            "parent_form": None,
+            "form_pkey": "form_key",
+        },
+        {
+            "form_id": "tool2_v6",
+            "form_name": "Tool 2",
+            "form_version": "6",
+            "form_schema": "FS_22222222_b",
+            "parent_form": "tool2",
+            "form_pkey": "form_key",
+        },
+        {
+            "form_id": "tool3",
+            "form_name": "Tool 3",
+            "form_version": "4",
+            "form_schema": None,
+            "parent_form": None,
+            "form_pkey": "form_key",
+        },
+    ]
+    lists = [
+        {
+            "list_id": "centre_list",
+            "list_filename": "centre_list.csv",
+            "source_form": "tool1",
+            "source_table": "maintable",
+            "label_column": "centre_school",
+            "list_key_column": None,
+        },
+        {
+            "list_id": "roster",
+            "list_filename": "roster.csv",
+            "source_form": "tool1",
+            "source_table": "roster",
+            "label_column": "worker_name",
+            "list_key_column": None,
+        },
+        {
+            "list_id": "centre_list2",
+            "list_filename": "centre_list2.csv",
+            "source_form": "tool2",
+            "source_table": "maintable",
+            "label_column": "centre_school",
+            "list_key_column": "centre_school",
+        },
+    ]
+    list_columns = [
+        {"list_id": "roster", "column_name": "worker_name", "column_as": "worker_id"},
+        {"list_id": "roster", "column_name": "eligible", "column_as": None},
+    ]
+    consumers = [
+        {
+            "list_id": "centre_list",
+            "consumer_form": "tool2",
+            "consumer_role": "reads",
+            "selector_field": "centre_id",
+            "consumer_is_link": 0,
+        },
+        {
+            "list_id": "roster",
+            "consumer_form": "tool2",
+            "consumer_role": "updates",
+            "selector_field": "worker_id",
+            "consumer_is_link": 1,
+        },
+        {
+            "list_id": "centre_list",
+            "consumer_form": "tool2_v6",
+            "consumer_role": "reads",
+            "selector_field": "centre_id",
+            "consumer_is_link": 0,
+        },
+        {
+            "list_id": "roster",
+            "consumer_form": "tool2_v6",
+            "consumer_role": "updates",
+            "selector_field": "worker_id",
+            "consumer_is_link": 1,
+        },
+        {
+            "list_id": "centre_list2",
+            "consumer_form": "tool3",
+            "consumer_role": "reads",
+            "selector_field": "centre_id",
+            "consumer_is_link": 0,
+        },
+    ]
+    tables = [
+        {
+            "form_id": "tool1",
+            "table_name": "maintable",
+            "parent_table": None,
+            "table_desc": "Main",
+        },
+        {
+            "form_id": "tool1",
+            "table_name": "roster",
+            "parent_table": "maintable",
+            "table_desc": "Staff",
+        },
+        {
+            "form_id": "tool1",
+            "table_name": "ext_visits",
+            "parent_table": "maintable",
+            "table_desc": "Visits",
+        },
+        {
+            "form_id": "tool2_v6",
+            "table_name": "maintable",
+            "parent_table": None,
+            "table_desc": "Main",
+        },
+        {
+            "form_id": "tool2_v6",
+            "table_name": "cpd",
+            "parent_table": "maintable",
+            "table_desc": "CPD",
+        },
+    ]
+    fks = [
+        {
+            "s": "FS_22222222_b",
+            "t": "maintable",
+            "c": "centre_id",
+            "rs": "FS_11111111_a",
+            "rt": "maintable",
+            "rc": "rowuuid",
+            "rule": "RESTRICT",
+        },
+        {
+            "s": "FS_22222222_b",
+            "t": "maintable",
+            "c": "worker_id",
+            "rs": "FS_11111111_a",
+            "rt": "roster",
+            "rc": "rowuuid",
+            "rule": "RESTRICT",
+        },
+    ]
+    triggers = [
+        {
+            "s": "FS_22222222_b",
+            "t": "maintable",
+            "body": "BEGIN SELECT COUNT(*) INTO rowcount FROM FS_11111111_a.roster WHERE _active = 1 AND rowuuid = new.worker_id; END",
+        }
+    ]
+    model = cm.build_workflow_model(
+        {"code": "dd", "name": "ECCE"},
+        forms,
+        lists,
+        list_columns,
+        consumers,
+        tables,
+        fks,
+        triggers,
+    )
+
+    by_id = {f["id"]: f for f in model["forms"]}
+    assert list(by_id) == ["tool1", "tool2_v6", "tool3"]  # v5 folded into v6
+    assert [by_id[k]["rank"] for k in by_id] == [0, 1, 2]
+    assert [t["name"] for t in by_id["tool1"]["tables"]] == [
+        "maintable",
+        "roster",
+    ]  # ext_visits takes no part
+    assert [x["name"] for x in by_id["tool1"]["tables"][1]["fields"]] == [
+        "rowuuid",
+        "parent_rowuuid",
+    ]
+    assert [x["name"] for x in by_id["tool2_v6"]["tables"][0]["fields"]] == [
+        "rowuuid",
+        "form_key",
+        "centre_id",
+        "worker_id",
+    ]
+    assert by_id["tool3"]["schema"] is None and [
+        t["name"] for t in by_id["tool3"]["tables"]
+    ] == ["maintable"]
+
+    kinds = {}
+    for e in model["edges"]:
+        kinds.setdefault(e["kind"], []).append(e)
+    assert len(kinds["publishes"]) == 3 and len(kinds["repeat"]) == 1
+    assert kinds["repeat"][0]["from"] == {
+        "form": "tool1",
+        "table": "roster",
+        "field": "parent_rowuuid",
+    }
+    (link,) = kinds["link"]
+    assert link["to"] == {
+        "form": "tool2_v6",
+        "table": "maintable",
+        "field": "worker_id",
+    }
+    assert (
+        link["label"]
+        == "case link\nFK ON DELETE RESTRICT\ntrigger: roster.rowuuid must be _active"
+    )
+    reads = {e["to"]["form"]: e["label"] for e in kinds["reads"]}
+    assert reads["tool2_v6"] == "reads\nFK ON DELETE RESTRICT"
+    assert reads["tool3"] == "reads"  # no repository yet: nothing to say about a key
+    # centre_list2 is published by the version that owns the schema now
+    assert kinds["publishes"][-1]["from"] == {
+        "form": "tool2_v6",
+        "table": "maintable",
+        "field": "rowuuid",
+    }
+
+    lists_by_id = {l["id"]: l for l in model["lists"]}
+    assert (
+        lists_by_id["roster"]["rank"] == 0.5
+        and lists_by_id["centre_list2"]["rank"] == 1.5
+    )
+    assert (
+        lists_by_id["centre_list2"]["value_list"]
+        and "DISTINCT centre_school" in lists_by_id["centre_list2"]["kind"]
+    )
+    assert lists_by_id["roster"]["columns"] == ["worker_name → worker_id", "eligible"]

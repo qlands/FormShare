@@ -73,6 +73,9 @@ __all__ = [
     "form_creates_cases",
     "form_consumes_cases",
     "list_has_active_consumers",
+    "project_has_workflow",
+    "build_workflow_model",
+    "get_project_workflow",
     "generate_published_list_file",
     "project_has_lists",
 ]
@@ -920,3 +923,423 @@ def apply_link_attributes(root, sources, key_types):
             table.set("selector_field", a_source["selector_field"])
             table.set("block_trigger", "T" + str(uuid.uuid4()).replace("-", "_"))
     return True, ""
+
+
+# ---------------------------------------------------------------------------
+# The workflow diagram: what the registry and the schemas say about a project,
+# as one model a page can draw (docs/formshare_case_management/formshare.md
+# section 3.9).
+
+
+def project_has_workflow(request, project_id):
+    """Whether a workflow is in place: a list of the project has a consumer
+    whose repository is built, so at least two schemas are linked and the
+    list can no longer be deleted (list_has_active_consumers, per list)."""
+    return (
+        request.dbsession.query(ListConsumer.consumer_form)
+        .join(
+            Odkform,
+            (ListConsumer.consumer_project == Odkform.project_id)
+            & (ListConsumer.consumer_form == Odkform.form_id),
+        )
+        .filter(ListConsumer.list_project == project_id)
+        .filter(Odkform.form_schema.isnot(None))
+        .filter(Odkform.form_schema != "")
+        .first()
+        is not None
+    )
+
+
+def build_workflow_model(
+    project,
+    forms,
+    lists,
+    list_columns,
+    consumers,
+    tables,
+    fks,
+    triggers,
+    translate=None,
+):
+    """The longitudinal workflow of a project, as data for a page to draw.
+
+    Pure: every input is a list of dicts the caller read, so it can be checked
+    without a database. The shape is what the page's script expects:
+
+    forms   the current version of each form (a merged-away version is folded
+            into the one that owns its schema, and so are its consumers) with
+            the tables that take part -- a table that publishes a list or
+            holds a selector; the main table alone when none does -- and their
+            fields: rowuuid, a repeat's parent_rowuuid, the primary key, the
+            selectors with their role. "rank" is the form's column: 0 for a
+            form that consumes nothing, else one more than the forms whose
+            lists it consumes, which lays the chain out left to right.
+    lists   a published list with what it serves; "rank" is source + 0.5.
+    edges   publishes (table field -> list), reads and link (list -> selector,
+            labelled from the schema: the foreign key rule and the membership
+            trigger, read from the built schema rather than the registry) and
+            repeat (a repeat's parent_rowuuid -> its parent's rowuuid).
+    """
+    _ = translate or (lambda s: s)
+    schema_owner = {}
+    for f in forms:
+        if f["form_schema"]:
+            schema_owner[f["form_schema"]] = f["form_id"]  # the newest version
+    form_by_id = {f["form_id"]: f for f in forms}
+
+    def current_of(form_id):
+        f = form_by_id.get(form_id)
+        if f and f["form_schema"]:
+            return schema_owner[f["form_schema"]]
+        return form_id
+
+    fk_by_field = {(fk["s"], fk["t"], fk["c"]): fk for fk in fks}
+    trigger_by_field = {}
+    for t in triggers:
+        m = re.search(
+            r"FROM (\w+)\.(\w+) WHERE _active = 1 AND (\w+) = new\.(\w+)", t["body"]
+        )
+        if m:
+            trigger_by_field[(t["s"], t["t"], m.group(4))] = {
+                "rt": m.group(2),
+                "rc": m.group(3),
+            }
+    consumers_of = {}
+    for c in consumers:
+        mine = consumers_of.setdefault(current_of(c["consumer_form"]), [])
+        if not any(
+            m["list_id"] == c["list_id"] and m["selector_field"] == c["selector_field"]
+            for m in mine
+        ):
+            mine.append(c)
+    list_by_id = {l["list_id"]: l for l in lists}
+    published_by = {}
+    for l in lists:
+        published_by.setdefault(current_of(l["source_form"]), []).append(l)
+    columns_of = {}
+    for c in list_columns:
+        columns_of.setdefault(c["list_id"], []).append(
+            c["column_name"] + (" → " + c["column_as"] if c["column_as"] else "")
+        )
+
+    rank = {}
+
+    def rank_of(form_id, seen=()):
+        if form_id in rank:
+            return rank[form_id]
+        if form_id in seen:
+            return 0
+        sources = [
+            current_of(list_by_id[c["list_id"]]["source_form"])
+            for c in consumers_of.get(form_id, [])
+            if c["list_id"] in list_by_id
+        ]
+        sources = [s for s in sources if s != form_id]
+        rank[form_id] = (
+            0
+            if not sources
+            else 1 + max(rank_of(s, seen + (form_id,)) for s in sources)
+        )
+        return rank[form_id]
+
+    model = {"project": project, "forms": [], "lists": [], "edges": []}
+    current_forms = [
+        f
+        for f in forms
+        if not f["form_schema"] or schema_owner[f["form_schema"]] == f["form_id"]
+    ]
+    for f in current_forms:
+        fid = f["form_id"]
+        published = published_by.get(fid, [])
+        my_consumers = consumers_of.get(fid, [])
+        form_tables = [t for t in tables if t["form_id"] == fid] or [
+            {
+                "form_id": fid,
+                "table_name": "maintable",
+                "parent_table": None,
+                "table_desc": "",
+            }
+        ]
+        taking_part = {l["source_table"] for l in published}
+        if my_consumers:
+            taking_part.add("maintable")
+        form_tables = [t for t in form_tables if t["table_name"] in taking_part] or [
+            t for t in form_tables if t["table_name"] == "maintable"
+        ]
+        shown = {t["table_name"] for t in form_tables}
+        form_tables.sort(
+            key=lambda t: (
+                t["parent_table"] is not None,
+                t["table_name"] != "maintable",
+                t["table_name"],
+            )
+        )
+        out_tables = []
+        for t in form_tables:
+            name = t["table_name"]
+            fields = [
+                {"name": "rowuuid", "desc": _("identity of a row"), "kind": "identity"}
+            ]
+            if t["parent_table"]:
+                fields.append(
+                    {
+                        "name": "parent_rowuuid",
+                        "desc": _("the {} row it belongs to").format(t["parent_table"]),
+                        "kind": "parent",
+                    }
+                )
+            if name == "maintable" and f.get("form_pkey"):
+                fields.append(
+                    {"name": f["form_pkey"], "desc": _("primary key"), "kind": "pkey"}
+                )
+            if name == "maintable":
+                for c in my_consumers:
+                    fields.append(
+                        {
+                            "name": c["selector_field"],
+                            "desc": (
+                                _("case link")
+                                if c["consumer_is_link"]
+                                else _(c["consumer_role"])
+                            )
+                            + " ← "
+                            + c["list_id"],
+                            "kind": "link" if c["consumer_is_link"] else "reads",
+                        }
+                    )
+            parent = t["parent_table"] if t["parent_table"] in shown else None
+            out_tables.append(
+                {
+                    "name": name,
+                    "desc": t.get("table_desc") or "",
+                    "parent": parent,
+                    "fields": fields,
+                }
+            )
+            if parent:
+                model["edges"].append(
+                    {
+                        "kind": "repeat",
+                        "label": _("repeat of"),
+                        "from": {"form": fid, "table": name, "field": "parent_rowuuid"},
+                        "to": {"form": fid, "table": parent, "field": "rowuuid"},
+                    }
+                )
+        model["forms"].append(
+            {
+                "id": fid,
+                "name": f["form_name"],
+                "version": f["form_version"],
+                "schema": f["form_schema"][3:11] if f["form_schema"] else None,
+                "rank": rank_of(fid),
+                "tables": out_tables,
+            }
+        )
+        for c in my_consumers:
+            key = (f["form_schema"], "maintable", c["selector_field"])
+            fk, trig = fk_by_field.get(key), trigger_by_field.get(key)
+            if c["consumer_is_link"]:
+                parts = [_("case link")]
+                if fk:
+                    parts.append(_("FK ON DELETE {}").format(fk["rule"]))
+                if trig:
+                    parts.append(
+                        _("trigger: {}.{} must be _active").format(
+                            trig["rt"], trig["rc"]
+                        )
+                    )
+            else:
+                parts = [_(c["consumer_role"])]
+                if fk:
+                    parts.append(_("FK ON DELETE {}").format(fk["rule"]))
+                elif f["form_schema"]:
+                    parts.append(_("value only, no FK"))
+            model["edges"].append(
+                {
+                    "kind": "link" if c["consumer_is_link"] else "reads",
+                    "label": "\n".join(parts),
+                    "from": {"list": c["list_id"]},
+                    "to": {
+                        "form": fid,
+                        "table": "maintable",
+                        "field": c["selector_field"],
+                    },
+                }
+            )
+    for l in lists:
+        source = current_of(l["source_form"])
+        model["lists"].append(
+            {
+                "id": l["list_id"],
+                "filename": l["list_filename"],
+                "source_form": l["source_form"],
+                "source_table": l["source_table"],
+                "value_list": bool(l.get("list_key_column")),
+                "kind": (
+                    _("value list: DISTINCT {}").format(l["list_key_column"])
+                    if l.get("list_key_column")
+                    else _("row list: name = rowuuid")
+                ),
+                "label": l["label_column"],
+                "columns": columns_of.get(l["list_id"], []),
+                "rank": rank_of(source) + 0.5,
+            }
+        )
+        model["edges"].append(
+            {
+                "kind": "publishes",
+                "label": _("publishes"),
+                "from": {
+                    "form": source,
+                    "table": l["source_table"],
+                    "field": "rowuuid",
+                },
+                "to": {"list": l["list_id"]},
+            }
+        )
+    return model
+
+
+def get_project_workflow(request, project_id, project):
+    """Reads what build_workflow_model needs and builds the model."""
+    forms = [
+        {
+            "form_id": r.form_id,
+            "form_name": r.form_name,
+            "form_version": r.form_version,
+            "form_schema": r.form_schema,
+            "parent_form": r.parent_form,
+            "form_pkey": r.form_pkey,
+        }
+        for r in request.dbsession.query(
+            Odkform.form_id,
+            Odkform.form_name,
+            Odkform.form_version,
+            Odkform.form_schema,
+            Odkform.parent_form,
+            Odkform.form_pkey,
+        )
+        .filter(Odkform.project_id == project_id)
+        .order_by(Odkform.form_cdate)
+        .all()
+    ]
+    lists = [
+        {
+            "list_id": r.list_id,
+            "list_filename": r.list_filename,
+            "source_form": r.source_form,
+            "source_table": r.source_table,
+            "label_column": r.label_column,
+            "list_key_column": r.list_key_column,
+        }
+        for r in request.dbsession.query(
+            PublishedList.list_id,
+            PublishedList.list_filename,
+            PublishedList.source_form,
+            PublishedList.source_table,
+            PublishedList.label_column,
+            PublishedList.list_key_column,
+        )
+        .filter(PublishedList.project_id == project_id)
+        .order_by(PublishedList.list_createdate)
+        .all()
+    ]
+    list_columns = [
+        {"list_id": r.list_id, "column_name": r.column_name, "column_as": r.column_as}
+        for r in request.dbsession.query(
+            PublishedListColumn.list_id,
+            PublishedListColumn.column_name,
+            PublishedListColumn.column_as,
+        )
+        .filter(PublishedListColumn.project_id == project_id)
+        .order_by(PublishedListColumn.list_id, PublishedListColumn.column_order)
+        .all()
+    ]
+    consumers = [
+        {
+            "list_id": r.list_id,
+            "consumer_form": r.consumer_form,
+            "consumer_role": r.consumer_role,
+            "selector_field": r.selector_field,
+            "consumer_is_link": r.consumer_is_link,
+        }
+        for r in request.dbsession.query(
+            ListConsumer.list_id,
+            ListConsumer.consumer_form,
+            ListConsumer.consumer_role,
+            ListConsumer.selector_field,
+            ListConsumer.consumer_is_link,
+        )
+        .filter(ListConsumer.list_project == project_id)
+        .all()
+    ]
+    tables = [
+        {
+            "form_id": r.form_id,
+            "table_name": r.table_name,
+            "parent_table": r.parent_table,
+            "table_desc": r.table_desc,
+        }
+        for r in request.dbsession.query(
+            DictTable.form_id,
+            DictTable.table_name,
+            DictTable.parent_table,
+            DictTable.table_desc,
+        )
+        .filter(DictTable.project_id == project_id)
+        .filter(~DictTable.table_name.like("lkp%"))
+        .filter(~DictTable.table_name.like("%\\_msel\\_%"))
+        .order_by(DictTable.form_id, DictTable.table_name)
+        .all()
+    ]
+    schemas = sorted({f["form_schema"] for f in forms if f["form_schema"]})
+    fks, triggers = [], []
+    if schemas:
+        params = {"s{}".format(i): s for i, s in enumerate(schemas)}
+        in_list = ", ".join(":" + k for k in params)
+        fks = [
+            {
+                "s": r[0],
+                "t": r[1],
+                "c": r[2],
+                "rs": r[3],
+                "rt": r[4],
+                "rc": r[5],
+                "rule": r[6],
+            }
+            for r in request.dbsession.execute(
+                "SELECT k.constraint_schema, k.table_name, k.column_name, "
+                "k.referenced_table_schema, k.referenced_table_name, "
+                "k.referenced_column_name, r.delete_rule "
+                "FROM information_schema.key_column_usage k "
+                "JOIN information_schema.referential_constraints r "
+                "ON r.constraint_schema = k.constraint_schema "
+                "AND r.constraint_name = k.constraint_name "
+                "WHERE k.referenced_table_schema IN ({}) "
+                "AND k.constraint_schema <> k.referenced_table_schema".format(in_list),
+                params,
+            ).fetchall()
+        ]
+        trigger_params = dict(params, pattern="%is inactive or does not exist%")
+        triggers = [
+            {"s": r[0], "t": r[1], "body": r[2]}
+            for r in request.dbsession.execute(
+                "SELECT trigger_schema, event_object_table, action_statement "
+                "FROM information_schema.triggers "
+                "WHERE trigger_schema IN ({}) AND action_statement LIKE :pattern".format(
+                    in_list
+                ),
+                trigger_params,
+            ).fetchall()
+        ]
+    return build_workflow_model(
+        project,
+        forms,
+        lists,
+        list_columns,
+        consumers,
+        tables,
+        fks,
+        triggers,
+        request.translate,
+    )

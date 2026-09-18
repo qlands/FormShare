@@ -28,7 +28,7 @@
                 <div class="ibox-content">
                     <h2>{{ _('Properties') }}</h2>
                     <p>
-                        {{ _('A property is a typed column FormShare keeps beside a table that a published list draws from, one value per row: what a follow-up will set on the case it selected, and what the list can serve back. It is born with the row, from the variable you choose here, and the rows that already exist get it too. Only the tables your lists draw from are offered.') }}
+                        {{ _('A property is a typed column FormShare keeps beside a table that a published list draws from, one value per row: what a follow-up will set on the case it selected, and what the list can serve back. Every row, existing or new, starts at the default you give here. Only the tables your lists draw from are offered.') }}
                     </p>
                     <div class="form-inline">
                         <select id="form_id" class="form-control" style="min-width: 300px">
@@ -53,7 +53,7 @@
                                 <tr>
                                     <th>{{ _('Property') }}</th>
                                     <th>{{ _('Type') }}</th>
-                                    <th>{{ _('Fed at creation by') }}</th>
+                                    <th>{{ _('Default') }}</th>
                                     <th>{{ _('Description') }}</th>
                                     <th>{{ _('Actions') }}</th>
                                 </tr>
@@ -62,8 +62,8 @@
                                 {% for a_property in properties %}
                                     <tr>
                                         <td>{{ a_property.property_name }}</td>
-                                        <td>{{ a_property.property_type }}{% if a_property.property_size %}({{ a_property.property_size }}{% if a_property.property_decsize %},{{ a_property.property_decsize }}{% endif %}){% endif %}</td>
-                                        <td>{{ a_property.property_source or '' }}</td>
+                                        <td>{{ propertyTypes|selectattr(0, 'equalto', a_property.property_type)|map(attribute=1)|first or a_property.property_type }}</td>
+                                        <td>{% if a_property.property_default is none %}<i>NULL</i>{% else %}{{ a_property.property_default }}{% endif %}</td>
                                         <td>{{ a_property.property_desc or '' }}</td>
                                         <td>
                                             <form method="post" style="display: inline">
@@ -82,15 +82,19 @@
                         <form method="post" class="form-inline">
                             {{ form.secure_form(request) }}
                             <input type="text" name="property_name" class="form-control" placeholder="{{ _('Property name') }}" style="min-width: 200px">
-                            <select name="source_column" id="source_column" class="form-control" style="min-width: 250px">
-                                {% for a_column in tableColumns %}
-                                    <option value="{{ a_column.field_name }}">{{ a_column.field_name }}</option>
+                            <select name="property_type" id="property_type" class="form-control" style="min-width: 160px">
+                                {% for code, label in propertyTypes %}
+                                    <option value="{{ code }}">{{ label }}</option>
                                 {% endfor %}
                             </select>
+                            <input type="text" name="property_default" class="form-control" placeholder="{{ _('Default (empty = NULL)') }}" style="min-width: 220px">
                             <input type="text" name="property_desc" class="form-control" placeholder="{{ _('Description (optional)') }}" style="min-width: 250px">
                             <button type="submit" name="add_property" value="1" class="btn btn-primary">{{ _('Add the property') }}</button>
                         </form>
-                        <p class="help-block">{{ _('The property takes the type of the variable that feeds it.') }}</p>
+                        <p class="help-block">
+                            {{ _('The default is checked against the type. A date is YYYY-MM-DD, a date and time YYYY-MM-DD HH:MM:SS; a geopoint is latitude, longitude, altitude and accuracy separated by spaces; a trace or shape lists geopoints separated by semicolons.') }}
+                            {{ _('The server time now is') }} <strong>{{ serverTime }}</strong>.
+                        </p>
                     {% endif %}
                     <div class="hr-line-dashed"></div>
                     <a class="btn btn-white" href="{{ request.route_url('project_case_lists', userid=userid, projcode=projcode) }}">{{ _('Back to the lists') }}</a>
@@ -103,7 +107,7 @@
             var base = "{{ request.route_url('project_case_properties', userid=userid, projcode=projcode) }}";
             $("#form_id").select2();
             $("#table_name").select2();
-            $("#source_column").select2();
+            $("#property_type").select2({minimumResultsForSearch: -1});
             $("#form_id").on("change", function() {
                 location.href = base + "?form=" + encodeURIComponent($(this).val());
             });

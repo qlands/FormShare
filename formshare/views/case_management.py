@@ -11,6 +11,7 @@ arrives with the dependency guards of stage 4, because offering it without
 the guards would let a source be deleted out from under its consumers.
 """
 
+import datetime
 import os
 import uuid
 
@@ -39,6 +40,7 @@ from formshare.processes.db.case_management import (
     get_project_workflow,
     get_table_properties,
     get_list_source_tables,
+    PROPERTY_TYPES,
     add_table_property,
     delete_table_property,
 )
@@ -602,7 +604,8 @@ class PropertiesView(ListSection):
                     form_id,
                     table_name,
                     post_data.get("property_name", ""),
-                    post_data.get("source_column", ""),
+                    post_data.get("property_type", ""),
+                    post_data.get("property_default", ""),
                     str(post_data.get("property_desc", "") or "").strip(),
                     self.user.login,
                 )
@@ -634,11 +637,9 @@ class PropertiesView(ListSection):
             "formId": form_id,
             "tableName": table_name,
             "tables": tables,
-            "tableColumns": (
-                get_table_columns(self.request, project_id, form_id, table_name)
-                if form_id and table_name
-                else []
-            ),
+            "propertyTypes": [(code, label) for code, label, _ in PROPERTY_TYPES],
+            # For reference beside the default box: what the server calls now.
+            "serverTime": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "properties": (
                 get_table_properties(self.request, project_id, form_id, table_name)
                 if form_id and table_name

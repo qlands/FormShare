@@ -23,6 +23,7 @@ them are thin.
 
 import csv
 import datetime
+import decimal
 import logging
 import re
 from subprocess import Popen, PIPE
@@ -82,13 +83,19 @@ __all__ = [
     "project_has_workflow",
     "build_workflow_model",
     "get_project_workflow",
+    "PROPERTY_TYPES",
+    "property_type_label",
+    "validate_property_default",
+    "default_clause",
+    "geometry_expression",
     "properties_table",
+    "property_columns_ddl",
     "properties_ddl",
+    "drop_property_ddl",
     "creation_trigger_sql",
     "backfill_sql",
     "get_list_source_tables",
     "get_table_properties",
-    "property_sources_of",
     "property_is_served",
     "add_table_property",
     "delete_table_property",
@@ -1402,23 +1409,223 @@ def get_project_workflow(request, project_id, project):
 
 # ---------------------------------------------------------------------------
 # Properties (feature 2): a typed column beside the source table, born with
-# the row, served by any list of the table.
-# docs/formshare_case_management/formshare.md sections 2.3 and 3.1.
+# the row at its default, set by the workflow, served by any list of the
+# table. docs/formshare_case_management/formshare.md sections 2.3 and 3.1.
 
 _PROPERTY_NAME = re.compile(r"^[a-z][a-z0-9_]{0,60}$")
-# Column types a property cannot hold: nothing spatial, structured or binary.
-_UNSTORABLE_TYPES = ("geometry", "point", "linestring", "polygon", "json", "blob")
+
+# The types a property can have and the MySQL column each becomes. The three
+# geo types are stored as RSTools stores the matching ODK answers: a geopoint
+# as its "lat lon alt acc" text, a trace or a shape as text with a geometry
+# MySQL derives beside it (JXFormToMySQL's appendAnswerGeometry), so a value a
+# follow-up copies from its own geo variable always fits.
+PROPERTY_TYPES = [
+    ("string", "String", "varchar(255)"),
+    ("integer", "Integer", "int"),
+    ("decimal", "Decimal", "decimal(10,3)"),
+    ("date", "Date", "date"),
+    ("datetime", "DateTime", "datetime"),
+    ("geopoint", "GeoPoint", "varchar(80)"),
+    ("geotrace", "GeoTrace", "text"),
+    ("geoshape", "GeoShape", "text"),
+]
+_COLUMN_TYPE = {code: column for code, _, column in PROPERTY_TYPES}
+_GEO_TWIN = ("geotrace", "geoshape")
+
+
+def property_type_label(code):
+    return {c: label for c, label, _ in PROPERTY_TYPES}.get(code, code)
+
+
+def _valid_point(text):
+    parts = text.split()
+    if len(parts) < 2 or len(parts) > 4:
+        return False
+    try:
+        numbers = [float(part) for part in parts]
+    except ValueError:
+        return False
+    return -90 <= numbers[0] <= 90 and -180 <= numbers[1] <= 180
+
+
+def validate_property_default(property_type, value, translate=None):
+    """Checks a default against its type; returns (ok, value, message).
+
+    Empty is NULL. A number must be one; a date is YYYY-MM-DD and a datetime
+    YYYY-MM-DD HH:MM:SS, both real dates (so 0, AAA and 2026-02-30 are
+    refused); a geopoint is "latitude longitude [altitude [accuracy]]", a
+    geotrace at least two such points joined by semicolons, a geoshape at
+    least four, closing on its first. The value comes back normalised.
+    """
+    _ = translate or (lambda s: s)
+    value = (value or "").strip()
+    if value == "":
+        return True, None, ""
+    if property_type == "string":
+        if len(value) > 255:
+            return False, None, _("A string default holds at most 255 characters")
+        return True, value, ""
+    if property_type == "integer":
+        if (
+            not re.match(r"^[+-]?\d+$", value)
+            or not -2147483648 <= int(value) <= 2147483647
+        ):
+            return False, None, _("{} is not an integer").format(value)
+        return True, str(int(value)), ""
+    if property_type == "decimal":
+        m = re.match(r"^([+-]?\d+)(?:\.(\d+))?$", value)
+        if m is None:
+            return False, None, _("{} is not a decimal number").format(value)
+        if len(m.group(2) or "") > 3 or len(m.group(1).lstrip("+-")) > 7:
+            return (
+                False,
+                None,
+                _(
+                    "A decimal default has at most 7 digits before the point and 3 after"
+                ),
+            )
+        return (
+            True,
+            (
+                str(decimal.Decimal(value).normalize())
+                if "." in value
+                else str(int(value))
+            ),
+            "",
+        )
+    if property_type == "date":
+        try:
+            if not re.match(r"^\d{4}-\d{2}-\d{2}$", value):
+                raise ValueError
+            datetime.date.fromisoformat(value)
+        except ValueError:
+            return False, None, _("{} is not a date: use YYYY-MM-DD").format(value)
+        return True, value, ""
+    if property_type == "datetime":
+        try:
+            datetime.datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return (
+                False,
+                None,
+                _("{} is not a date and time: use YYYY-MM-DD HH:MM:SS").format(value),
+            )
+        return True, value, ""
+    if property_type == "geopoint":
+        if not _valid_point(value):
+            return (
+                False,
+                None,
+                _(
+                    "A geopoint is latitude, longitude, altitude and accuracy separated by spaces"
+                ),
+            )
+        return True, " ".join(value.split()), ""
+    if property_type in _GEO_TWIN:
+        points = [p.strip() for p in value.split(";") if p.strip()]
+        if len(points) < 2 or not all(_valid_point(p) for p in points):
+            return (
+                False,
+                None,
+                _("A trace or shape is at least two geopoints separated by semicolons"),
+            )
+        if property_type == "geoshape" and (
+            len(points) < 4 or points[0].split()[:2] != points[-1].split()[:2]
+        ):
+            return (
+                False,
+                None,
+                _("A shape is at least four geopoints, the last repeating the first"),
+            )
+        return True, ";".join(" ".join(p.split()) for p in points), ""
+    return False, None, _("Unknown property type {}").format(property_type)
+
+
+def _sql_literal(value):
+    return "'" + value.replace("\\", "\\\\").replace("'", "''") + "'"
+
+
+def default_clause(property_type, value):
+    """The DEFAULT of a property column. A text column takes its default as
+    an expression, in parentheses, which MySQL allows from 8.0.13."""
+    if value is None:
+        return "DEFAULT NULL"
+    if property_type in ("integer", "decimal"):
+        return "DEFAULT " + value
+    if property_type in _GEO_TWIN:
+        return "DEFAULT (" + _sql_literal(value) + ")"
+    return "DEFAULT " + _sql_literal(value)
+
+
+def _points_to_wkt(column):
+    # JXFormToMySQL's odkPointsToWkt, verbatim: the ODK text -- points of
+    # "lat lon alt acc" joined by semicolons, or pipes once stored -- as the
+    # coordinate list WKT wants.
+    return (
+        "REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(" + _quoted(column) + ","
+        "'^[[:space:];|]+|[[:space:];|]+$',''),"
+        "'([-0-9.]+)[[:space:]]+([-0-9.]+)[[:space:]]+[-0-9.]+[[:space:]]+[-0-9.]+','$1 $2'),"
+        "'[[:space:]]*[;|][[:space:]]*',',')"
+    )
+
+
+def geometry_expression(column, closed):
+    """JXFormToMySQL's odkGeometryExpression, verbatim: the guarded expression
+    a trace's or shape's geometry column is derived from -- NULL for anything
+    ST_GeomFromText could not read, the text itself kept beside it."""
+    wkt = _points_to_wkt(column)
+    shaped = (
+        wkt
+        + " REGEXP '^[-0-9.]+ [-0-9.]+(,[-0-9.]+ [-0-9.]+)"
+        + ("{3,}" if closed else "+")
+        + "$'"
+    )
+    if closed:
+        shaped += (
+            " AND SUBSTRING_INDEX("
+            + wkt
+            + ",',',1) = SUBSTRING_INDEX("
+            + wkt
+            + ",',',-1)"
+        )
+    body = (
+        "ST_GeomFromText(CONCAT('POLYGON((', " + wkt + ", '))'),4326)"
+        if closed
+        else "ST_GeomFromText(CONCAT('LINESTRING(', " + wkt + ", ')'),4326)"
+    )
+    return "CASE WHEN " + shaped + " THEN " + body + " ELSE NULL END"
 
 
 def properties_table(table_name):
     return table_name + "_properties"
 
 
+def property_columns_ddl(property_name, property_type, default):
+    """The column definitions a property adds: one, or two for a trace or a
+    shape, whose geometry MySQL derives and nothing ever writes."""
+    columns = [
+        "{} {} {}".format(
+            _quoted(property_name),
+            _COLUMN_TYPE[property_type],
+            default_clause(property_type, default),
+        )
+    ]
+    if property_type in _GEO_TWIN:
+        columns.append(
+            "{} geometry GENERATED ALWAYS AS ({}) STORED SRID 4326".format(
+                _quoted(property_name + "_geom"),
+                geometry_expression(property_name, property_type == "geoshape"),
+            )
+        )
+    return columns
+
+
 def properties_ddl(
     schema,
     table_name,
     property_name,
-    column_type,
+    property_type,
+    default,
     create_table,
     key_charset,
     key_collation,
@@ -1430,57 +1637,51 @@ def properties_ddl(
     point. rowuuid is both the key and a foreign key to the source row, ON
     DELETE CASCADE, so a property row never outlives its case; it is
     declared with the source column's charset and collation because InnoDB
-    refuses a key between strings that differ in either. The property's own
-    type is the source column's COLUMN_TYPE, verbatim, so what the creation
-    trigger copies always fits. _lastupdate is there because RSTools' audit
-    triggers set it on every update, as on every data table, and it doubles
-    as the row's change stamp.
+    refuses a key between strings that differ in either. _lastupdate is there
+    because RSTools' audit triggers set it on every update, as on every data
+    table, and it doubles as the row's change stamp. The property's DEFAULT
+    is what every row, existing or new, starts with.
     """
     props = "{}.{}".format(_quoted(schema), _quoted(properties_table(table_name)))
+    columns = property_columns_ddl(property_name, property_type, default)
     if create_table:
         return (
             "CREATE TABLE {} (rowuuid VARCHAR(80) CHARACTER SET {} COLLATE {} NOT NULL, "
-            "{} {}, _lastupdate DATETIME NULL, PRIMARY KEY (rowuuid), "
+            "{}, _lastupdate DATETIME NULL, PRIMARY KEY (rowuuid), "
             "CONSTRAINT {} FOREIGN KEY (rowuuid) "
             "REFERENCES {}.{} (rowuuid) ON DELETE CASCADE) ENGINE=InnoDB"
         ).format(
             props,
             key_charset,
             key_collation,
-            _quoted(property_name),
-            column_type,
+            ", ".join(columns),
             _quoted("fk_" + properties_table(table_name)),
             _quoted(schema),
             _quoted(table_name),
         )
-    return "ALTER TABLE {} ADD COLUMN {} {}".format(
-        props, _quoted(property_name), column_type
+    return "ALTER TABLE {} {}".format(
+        props, ", ".join("ADD COLUMN " + column for column in columns)
     )
 
 
-def creation_trigger_sql(schema, table_name, mappings):
-    """The AFTER INSERT trigger that gives a new source row its property row.
+def drop_property_ddl(schema, table_name, property_name, property_type):
+    props = "{}.{}".format(_quoted(schema), _quoted(properties_table(table_name)))
+    drops = []
+    if property_type in _GEO_TWIN:
+        drops.append("DROP COLUMN " + _quoted(property_name + "_geom"))
+    drops.append("DROP COLUMN " + _quoted(property_name))
+    return "ALTER TABLE {} {}".format(props, ", ".join(drops))
 
-    mappings: [(property_name, source_column)] -- the properties fed at
-    creation. One statement, so it loads through the driver; named
-    deterministically (fs_cm_<table>_properties) and dropped and recreated on
-    every change, so it can never drift from the definitions. Returns
-    (name, sql) with sql None when nothing is fed at creation.
-    """
+
+def creation_trigger_sql(schema, table_name):
+    """The AFTER INSERT trigger that gives a new source row its property row,
+    at the defaults. One statement, so it loads through the driver; named
+    deterministically (fs_cm_<table>_properties) and with its schema, or
+    MySQL refuses it (1435) when the session's database is another."""
     name = "fs_cm_{}_properties".format(table_name)
-    if not mappings:
-        return name, None
-    props = ", ".join(_quoted(p) for p, _ in mappings)
-    values = ", ".join("NEW." + _quoted(c) for _, c in mappings)
-    updates = ", ".join(
-        "{} = NEW.{}".format(_quoted(p), _quoted(c)) for p, c in mappings
-    )
-    # The trigger name carries the schema too: MySQL refuses (1435) a trigger
-    # whose name is in the session's default database while its table is not.
     sql = (
         "CREATE TRIGGER {}.{} AFTER INSERT ON {}.{} FOR EACH ROW "
-        "INSERT INTO {}.{} (rowuuid, {}) VALUES (NEW.rowuuid, {}) "
-        "ON DUPLICATE KEY UPDATE {}"
+        "INSERT IGNORE INTO {}.{} (rowuuid) VALUES (NEW.rowuuid)"
     ).format(
         _quoted(schema),
         _quoted(name),
@@ -1488,24 +1689,18 @@ def creation_trigger_sql(schema, table_name, mappings):
         _quoted(table_name),
         _quoted(schema),
         _quoted(properties_table(table_name)),
-        props,
-        values,
-        updates,
     )
     return name, sql
 
 
-def backfill_sql(schema, table_name, property_name, source_column):
-    """The rows that exist already get the property from its source too: a
-    property row for every source row, then the value copied across."""
-    props = "{}.{}".format(_quoted(schema), _quoted(properties_table(table_name)))
-    src = "{}.{}".format(_quoted(schema), _quoted(table_name))
-    return [
-        "INSERT IGNORE INTO {} (rowuuid) SELECT rowuuid FROM {}".format(props, src),
-        "UPDATE {} p JOIN {} t ON t.rowuuid = p.rowuuid SET p.{} = t.{}".format(
-            props, src, _quoted(property_name), _quoted(source_column)
-        ),
-    ]
+def backfill_sql(schema, table_name):
+    """The rows that exist already get their property row, at the defaults."""
+    return "INSERT IGNORE INTO {}.{} (rowuuid) SELECT rowuuid FROM {}.{}".format(
+        _quoted(schema),
+        _quoted(properties_table(table_name)),
+        _quoted(schema),
+        _quoted(table_name),
+    )
 
 
 def get_table_properties(request, project_id, form_id, table_name):
@@ -1539,24 +1734,6 @@ def get_list_source_tables(request, project_id):
         .all()
     ):
         result.setdefault(r[0], []).append(r[1])
-    return result
-
-
-def property_sources_of(request, project_id, form_id):
-    """{table: [(property, source column)]} for the properties fed at creation."""
-    result = {}
-    for r in (
-        request.dbsession.query(
-            TableProperty.table_name,
-            TableProperty.property_name,
-            TableProperty.property_source,
-        )
-        .filter(TableProperty.project_id == project_id)
-        .filter(TableProperty.form_id == form_id)
-        .filter(TableProperty.property_source.isnot(None))
-        .all()
-    ):
-        result.setdefault(r[0], []).append((r[1], r[2]))
     return result
 
 
@@ -1600,12 +1777,12 @@ def _properties_table_exists(request, schema, table_name):
     )
 
 
-def _install_creation_trigger(request, schema, table_name, mappings):
-    name, sql = creation_trigger_sql(schema, table_name, mappings)
+def _install_creation_trigger(request, schema, table_name, install):
+    name, sql = creation_trigger_sql(schema, table_name)
     request.dbsession.execute(
         "DROP TRIGGER IF EXISTS {}.{}".format(_quoted(schema), _quoted(name))
     )
-    if sql:
+    if install:
         request.dbsession.execute(sql)
 
 
@@ -1671,18 +1848,26 @@ def regenerate_properties_audit(request, schema, table_name):
 
 
 def add_table_property(
-    request, project_id, form_id, table_name, property_name, source_column, desc, user
+    request,
+    project_id,
+    form_id,
+    table_name,
+    property_name,
+    property_type,
+    default,
+    desc,
+    user,
 ):
-    """Defines a property of a table, fed at creation from one of its columns.
+    """Defines a property of a table: a type, a default, a description.
 
     In this order, because MySQL commits around DDL: the column (and the
-    table, the first time), the audit triggers, the backfill of the rows that
-    exist, the creation trigger, and only then the registry row. Returns
-    (ok, message).
+    table, the first time), the audit triggers, the property rows of the
+    rows that exist -- at the defaults, under the owner's name -- the
+    creation trigger, and only then the registry row. Returns (ok, message).
     """
     _ = request.translate
     property_name = str(property_name or "").strip().lower()
-    source_column = str(source_column or "").strip()
+    property_type = str(property_type or "").strip().lower()
     if not _PROPERTY_NAME.match(property_name) or property_name in (
         "rowuuid",
         "name",
@@ -1692,34 +1877,24 @@ def add_table_property(
             "A property name is lower case, starts with a letter, and uses "
             "letters, digits and underscores"
         )
+    if property_type not in _COLUMN_TYPE:
+        return False, _("Select the type of the property")
+    valid, default, message = validate_property_default(property_type, default, _)
+    if not valid:
+        return False, message
     schema = _form_schema(request, project_id, form_id)
     if not schema:
         return False, _("The form has no repository")
-    if any(
-        p["property_name"] == property_name
-        for p in get_table_properties(request, project_id, form_id, table_name)
-    ):
+    existing = get_table_properties(request, project_id, form_id, table_name)
+    if any(p["property_name"] == property_name for p in existing):
         return False, _("There is already a property with that name")
-    columns = {
-        c["field_name"]: c
+    if property_name in {
+        c["field_name"]
         for c in get_table_columns(request, project_id, form_id, table_name)
-    }
-    if property_name in columns:
+    } or property_name.endswith("_geom"):
         # The served CSV would carry two columns of one name, and a filter
-        # naming it could mean either.
+        # naming it could mean either; _geom is the geometry twin's suffix.
         return False, _("A property cannot be named like a column of the table")
-    field = columns.get(source_column)
-    if field is None:
-        return False, _("The source variable is not a column of the table")
-    column = request.dbsession.execute(
-        "SELECT COLUMN_TYPE, DATA_TYPE FROM information_schema.columns "
-        "WHERE table_schema = :s AND table_name = :t AND column_name = :c",
-        {"s": schema, "t": table_name, "c": source_column},
-    ).fetchone()
-    if column is None:
-        return False, _("The source variable is not a column of the table")
-    if column[1].lower() in _UNSTORABLE_TYPES:
-        return False, _("A {} column cannot be a property").format(column[1])
     key = request.dbsession.execute(
         "SELECT CHARACTER_SET_NAME, COLLATION_NAME FROM information_schema.columns "
         "WHERE table_schema = :s AND table_name = :t AND column_name = 'rowuuid'",
@@ -1727,34 +1902,28 @@ def add_table_property(
     ).fetchone()
     if key is None:
         return False, _("The table has no rowuuid column")
-    mappings = [
-        (p["property_name"], p["property_source"])
-        for p in get_table_properties(request, project_id, form_id, table_name)
-        if p["property_source"]
-    ] + [(property_name, source_column)]
     try:
         request.dbsession.execute(
             properties_ddl(
                 schema,
                 table_name,
                 property_name,
-                column[0],
+                property_type,
+                default,
                 not _properties_table_exists(request, schema, table_name),
                 key[0],
                 key[1],
             )
         )
         # Audit first, so the backfill is recorded under the owner who
-        # defined the property, like any office edit; the regenerated update
-        # trigger knows the new column before its values are written.
+        # defined the property, like any office edit.
         audited, message = regenerate_properties_audit(request, schema, table_name)
         if not audited:
             return False, message
         request.dbsession.execute("SET @odktools_current_user = :u", {"u": user})
-        for sql in backfill_sql(schema, table_name, property_name, source_column):
-            request.dbsession.execute(sql)
+        request.dbsession.execute(backfill_sql(schema, table_name))
         request.dbsession.execute("SET @odktools_current_user = NULL")
-        _install_creation_trigger(request, schema, table_name, mappings)
+        _install_creation_trigger(request, schema, table_name, True)
     except Exception as e:
         request.dbsession.rollback()
         log.error(
@@ -1770,11 +1939,9 @@ def add_table_property(
                 form_id=form_id,
                 table_name=table_name,
                 property_name=property_name,
-                property_type=field["field_type"],
-                property_size=field.get("field_size") or 0,
-                property_decsize=field.get("field_decsize") or 0,
+                property_type=property_type,
+                property_default=default,
                 property_desc=(desc or "")[:500] or None,
-                property_source=source_column,
                 property_cdate=datetime.datetime.now(),
             )
         )
@@ -1801,32 +1968,26 @@ def delete_table_property(request, project_id, form_id, table_name, property_nam
     schema = _form_schema(request, project_id, form_id)
     if not schema:
         return False, _("The form has no repository")
-    remaining = [
-        p
-        for p in get_table_properties(request, project_id, form_id, table_name)
-        if p["property_name"] != property_name
-    ]
+    properties = get_table_properties(request, project_id, form_id, table_name)
+    this_one = next(
+        (p for p in properties if p["property_name"] == property_name), None
+    )
+    if this_one is None:
+        return False, _("The property does not exist")
+    remaining = [p for p in properties if p["property_name"] != property_name]
     props = "{}.{}".format(_quoted(schema), _quoted(properties_table(table_name)))
     try:
         if remaining:
             request.dbsession.execute(
-                "ALTER TABLE {} DROP COLUMN {}".format(props, _quoted(property_name))
-            )
-            _install_creation_trigger(
-                request,
-                schema,
-                table_name,
-                [
-                    (p["property_name"], p["property_source"])
-                    for p in remaining
-                    if p["property_source"]
-                ],
+                drop_property_ddl(
+                    schema, table_name, property_name, this_one["property_type"]
+                )
             )
             audited, message = regenerate_properties_audit(request, schema, table_name)
             if not audited:
                 return False, message
         else:
-            _install_creation_trigger(request, schema, table_name, [])
+            _install_creation_trigger(request, schema, table_name, False)
             request.dbsession.execute("DROP TABLE IF EXISTS {}".format(props))
     except Exception as e:
         request.dbsession.rollback()
@@ -1879,10 +2040,8 @@ def inherit_properties(request, project_id, parent_form, child_form):
                 table_name=p.table_name,
                 property_name=p.property_name,
                 property_type=p.property_type,
-                property_size=p.property_size,
-                property_decsize=p.property_decsize,
+                property_default=p.property_default,
                 property_desc=p.property_desc,
-                property_source=p.property_source,
                 property_cdate=p.property_cdate,
             )
         )

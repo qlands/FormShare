@@ -1058,63 +1058,106 @@ def test_the_workflow_model_folds_versions_ranks_the_chain_and_reads_the_schema(
     assert lists_by_id["roster"]["columns"] == ["worker_name → worker_id", "eligible"]
 
 
+def test_a_default_is_checked_against_its_type():
+    """Empty is NULL; a number must be one; dates are real dates in the two
+    formats; the geo types are ODK's textual forms."""
+    ok = cm.validate_property_default
+    assert ok("integer", "  ") == (True, None, "")
+    assert ok("integer", "42") == (True, "42", "")
+    assert ok("integer", "AAA")[0] is False
+    assert ok("integer", "1.5")[0] is False
+    assert ok("decimal", "12.345") == (True, "12.345", "")
+    assert ok("decimal", "AAA")[0] is False
+    assert ok("decimal", "1.2345")[0] is False  # decimal(10,3)
+    assert ok("date", "2026-09-17") == (True, "2026-09-17", "")
+    assert ok("date", "0")[0] is False
+    assert ok("date", "AAA")[0] is False
+    assert ok("date", "2026-02-30")[0] is False
+    assert ok("datetime", "2026-09-17 08:30:00") == (True, "2026-09-17 08:30:00", "")
+    assert ok("datetime", "0")[0] is False
+    assert ok("datetime", "2026-09-17")[0] is False
+    assert ok("string", "x" * 255)[0] is True
+    assert ok("string", "x" * 256)[0] is False
+    assert ok("geopoint", "0.31 32.58 1200 5") == (True, "0.31 32.58 1200 5", "")
+    assert ok("geopoint", "95 32")[0] is False
+    assert ok("geotrace", "0.31 32.58;0.32 32.59")[0] is True
+    assert ok("geotrace", "0.31 32.58")[0] is False
+    assert ok("geoshape", "0 0;0 1;1 1;0 0")[0] is True
+    assert ok("geoshape", "0 0;0 1;1 1;1 0")[0] is False  # not closed
+    assert ok("nonsense", "1")[0] is False
+
+
 def test_properties_ddl_creates_the_table_once_and_adds_columns_after():
     """The first property creates <table>_properties, keyed and foreign-keyed
     on rowuuid with the source column's charset and collation; the next ones
-    add a column of the source variable's exact type."""
+    add a column of the type's MySQL shape, with the default every row
+    starts at; a trace or shape carries RSTools' derived geometry beside it."""
     create = cm.properties_ddl(
         "FS_s",
         "roster",
-        "registered_name",
-        "text",
+        "risk_factor",
+        "integer",
+        "0",
         True,
         "utf8mb3",
         "utf8mb3_general_ci",
     )
     assert create == (
         "CREATE TABLE `FS_s`.`roster_properties` (rowuuid VARCHAR(80) CHARACTER SET "
-        "utf8mb3 COLLATE utf8mb3_general_ci NOT NULL, `registered_name` text, "
+        "utf8mb3 COLLATE utf8mb3_general_ci NOT NULL, `risk_factor` int DEFAULT 0, "
         "_lastupdate DATETIME NULL, PRIMARY KEY (rowuuid), "
         "CONSTRAINT `fk_roster_properties` FOREIGN KEY (rowuuid) "
         "REFERENCES `FS_s`.`roster` (rowuuid) ON DELETE CASCADE) ENGINE=InnoDB"
     )
     assert cm.properties_ddl(
-        "FS_s", "roster", "eligible_flag", "varchar(128)", False, "x", "y"
+        "FS_s", "roster", "next_visit", "date", None, False, "x", "y"
     ) == (
-        "ALTER TABLE `FS_s`.`roster_properties` ADD COLUMN `eligible_flag` varchar(128)"
+        "ALTER TABLE `FS_s`.`roster_properties` ADD COLUMN `next_visit` date DEFAULT NULL"
     )
+    assert cm.properties_ddl(
+        "FS_s", "roster", "status", "string", "it's new", False, "x", "y"
+    ) == (
+        "ALTER TABLE `FS_s`.`roster_properties` ADD COLUMN `status` varchar(255) DEFAULT 'it''s new'"
+    )
+    route = cm.properties_ddl(
+        "FS_s", "roster", "route", "geotrace", None, False, "x", "y"
+    )
+    assert route.startswith(
+        "ALTER TABLE `FS_s`.`roster_properties` ADD COLUMN `route` text DEFAULT NULL, "
+        "ADD COLUMN `route_geom` geometry GENERATED ALWAYS AS (CASE WHEN "
+    )
+    assert route.endswith(") STORED SRID 4326")
+    assert "LINESTRING(" in route and "POLYGON((" not in route
+    assert "POLYGON((" in cm.geometry_expression("area", True)
+    assert cm.drop_property_ddl("FS_s", "roster", "route", "geotrace") == (
+        "ALTER TABLE `FS_s`.`roster_properties` DROP COLUMN `route_geom`, DROP COLUMN `route`"
+    )
+    assert cm.drop_property_ddl("FS_s", "roster", "risk_factor", "integer") == (
+        "ALTER TABLE `FS_s`.`roster_properties` DROP COLUMN `risk_factor`"
+    )
+    assert dict((c, t) for c, _, t in cm.PROPERTY_TYPES) == {
+        "string": "varchar(255)",
+        "integer": "int",
+        "decimal": "decimal(10,3)",
+        "date": "date",
+        "datetime": "datetime",
+        "geopoint": "varchar(80)",
+        "geotrace": "text",
+        "geoshape": "text",
+    }
 
 
-def test_the_creation_trigger_copies_every_mapped_variable_and_is_deterministic():
-    name, sql = cm.creation_trigger_sql(
-        "FS_s",
-        "roster",
-        [("registered_name", "worker_name"), ("eligible_flag", "eligible")],
-    )
+def test_the_creation_trigger_and_the_backfill_give_a_row_its_defaults():
+    name, sql = cm.creation_trigger_sql("FS_s", "roster")
     assert name == "fs_cm_roster_properties"
     assert sql == (
         "CREATE TRIGGER `FS_s`.`fs_cm_roster_properties` AFTER INSERT ON `FS_s`.`roster` "
-        "FOR EACH ROW INSERT INTO `FS_s`.`roster_properties` (rowuuid, `registered_name`, "
-        "`eligible_flag`) VALUES (NEW.rowuuid, NEW.`worker_name`, NEW.`eligible`) "
-        "ON DUPLICATE KEY UPDATE `registered_name` = NEW.`worker_name`, "
-        "`eligible_flag` = NEW.`eligible`"
+        "FOR EACH ROW INSERT IGNORE INTO `FS_s`.`roster_properties` (rowuuid) "
+        "VALUES (NEW.rowuuid)"
     )
-    # nothing fed at creation: the trigger is dropped, not created
-    assert cm.creation_trigger_sql("FS_s", "roster", []) == (
-        "fs_cm_roster_properties",
-        None,
-    )
-
-
-def test_the_backfill_gives_every_existing_row_a_property_row_then_its_value():
-    first, second = cm.backfill_sql("FS_s", "roster", "registered_name", "worker_name")
-    assert first == (
+    assert cm.backfill_sql("FS_s", "roster") == (
         "INSERT IGNORE INTO `FS_s`.`roster_properties` (rowuuid) "
         "SELECT rowuuid FROM `FS_s`.`roster`"
-    )
-    assert second == (
-        "UPDATE `FS_s`.`roster_properties` p JOIN `FS_s`.`roster` t "
-        "ON t.rowuuid = p.rowuuid SET p.`registered_name` = t.`worker_name`"
     )
 
 

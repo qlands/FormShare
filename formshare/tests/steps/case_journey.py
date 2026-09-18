@@ -571,9 +571,9 @@ def t_e_s_t_case_journey(test_object):
     assert _has_table(test_object.server_config, schema1, "maintable")
 
     # --- Properties (feature 2): a typed column beside the roster ----------
-    # Defined from a variable of the table, born with each row through a
-    # trigger, backfilled for the rows that exist, audited like the rest of
-    # the schema, and served by any list of the table.
+    # Defined by a type and a default, born with each row through a trigger,
+    # given to the rows that exist, audited like the rest of the schema, and
+    # served by any list of the table.
     properties = "/user/{}/project/{}/caseproperties".format(login, project)
     roster_props = properties + "?form={}&table=roster".format(TOOL1)
     res = testapp.get(
@@ -589,44 +589,58 @@ def t_e_s_t_case_journey(test_object):
     testapp.get(properties + "?form={}&table=ext_visits".format(TOOL1), status=404)
     testapp.get(properties + "?form=no_such_form", status=404)
     res = testapp.get(roster_props, status=200)
-    test_object.root.assertIn(worker_label.encode("utf-8"), res.body)
-    # A bad name and a column's own name are refused before any DDL.
-    res = testapp.post(
-        roster_props,
+    test_object.root.assertIn(b"The server time now is", res.body)
+    # A bad name, a column's own name, and a default the type refuses.
+    for bad in (
         {
-            "add_property": "1",
             "property_name": "Bad Name",
-            "source_column": worker_label,
+            "property_type": "integer",
+            "property_default": "",
         },
-        status=302,
-    )
-    assert "FS_error" in res.headers
-    res = testapp.post(
-        roster_props,
         {
-            "add_property": "1",
             "property_name": worker_label,
-            "source_column": worker_label,
+            "property_type": "integer",
+            "property_default": "",
         },
-        status=302,
-    )
-    assert "FS_error" in res.headers
+        {
+            "property_name": "risk_factor",
+            "property_type": "integer",
+            "property_default": "AAA",
+        },
+        {
+            "property_name": "next_visit",
+            "property_type": "date",
+            "property_default": "0",
+        },
+        {
+            "property_name": "next_visit",
+            "property_type": "datetime",
+            "property_default": "2026-09-17",
+        },
+        {
+            "property_name": "risk_factor",
+            "property_type": "nonsense",
+            "property_default": "",
+        },
+    ):
+        res = testapp.post(roster_props, dict(bad, add_property="1"), status=302)
+        assert "FS_error" in res.headers, bad
+    config = test_object.server_config
+    assert not _has_table(config, schema1, "roster_properties")
     res = testapp.post(
         roster_props,
         {
             "add_property": "1",
-            "property_name": "registered_name",
-            "source_column": worker_label,
-            "property_desc": "the name given at registration",
+            "property_name": "risk_factor",
+            "property_type": "integer",
+            "property_default": "0",
+            "property_desc": "raised by each follow-up",
         },
         status=302,
     )
     assert "FS_error" not in res.headers
-    config = test_object.server_config
     assert _has_table(config, schema1, "roster_properties")
-    assert _column_type(config, schema1, "roster_properties", "registered_name") == (
-        _column_type(config, schema1, "roster", worker_label)
-    )
+    assert _column_type(config, schema1, "roster_properties", "risk_factor") == "int"
     assert _foreign_keys(config, schema1, "roster_properties").get("rowuuid") == (
         schema1,
         "roster",
@@ -634,19 +648,51 @@ def t_e_s_t_case_journey(test_object):
     )
     roster_rows = _table_count(config, schema1, "roster")
     assert _table_count(config, schema1, "roster_properties") == roster_rows
+    assert (
+        _scalar(
+            config,
+            "SELECT COUNT(*) FROM `{}`.`roster_properties` WHERE risk_factor = 0".format(
+                schema1
+            ),
+        )
+        == roster_rows
+    ), "the rows that exist did not get the default"
     assert "fs_cm_roster_properties" in _triggers_on(config, schema1, "roster")
     assert [
         t
         for t in _triggers_on(config, schema1, "roster_properties")
         if t.startswith("audit_")
     ], "no audit triggers on the properties table"
+    # A second property, a date with no default, joins the same table.
+    res = testapp.post(
+        roster_props,
+        {
+            "add_property": "1",
+            "property_name": "next_visit",
+            "property_type": "date",
+            "property_default": "",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    assert _column_type(config, schema1, "roster_properties", "next_visit") == "date"
+    assert (
+        _scalar(
+            config,
+            "SELECT COUNT(*) FROM `{}`.`roster_properties` WHERE next_visit IS NULL".format(
+                schema1
+            ),
+        )
+        == roster_rows
+    )
     res = testapp.get(roster_props, status=200)
-    test_object.root.assertIn(b"registered_name", res.body)
+    test_object.root.assertIn(b"risk_factor", res.body)
+    test_object.root.assertIn(b"next_visit", res.body)
 
-    # Served by the roster list once added as a column, with its values.
+    # Served by the roster list once added as a column, at its default.
     res = testapp.post(
         "/user/{}/project/{}/caselists/{}/edit".format(login, project, "roster"),
-        {"add_column": "1", "column_name": "property:registered_name", "column_as": ""},
+        {"add_column": "1", "column_name": "property:risk_factor", "column_as": ""},
         status=302,
     )
     assert "FS_error" not in res.headers
@@ -655,20 +701,21 @@ def t_e_s_t_case_journey(test_object):
         status=200,
     )
     rows = list(csv.reader(io.StringIO(res.body.decode("utf-8"))))
-    assert rows[0][-1] == "registered_name", rows[0]
-    assert len(rows) > 1 and all(r[-1] for r in rows[1:]), rows
+    assert rows[0][-1] == "risk_factor", rows[0]
+    assert len(rows) > 1 and all(r[-1] == "0" for r in rows[1:]), rows
 
     # Not deletable while a list serves it.
     res = testapp.post(
         roster_props,
-        {"delete_property": "1", "property_name": "registered_name"},
+        {"delete_property": "1", "property_name": "risk_factor"},
         status=302,
     )
     assert "FS_error" in res.headers
     assert _has_table(config, schema1, "roster_properties")
 
-    # A new school's workers get their property row from the trigger, and the
-    # audit log records the properties table like any other.
+    # A new school's workers get their property row, at the defaults, from
+    # the trigger, and the audit log records the properties table like any
+    # other.
     res = testapp.post(
         "/user/{}/project/{}/push_json".format(login, project),
         status=201,
@@ -684,8 +731,8 @@ def t_e_s_t_case_journey(test_object):
     assert _scalar(
         config,
         "SELECT COUNT(*) FROM `{s}`.`roster` r JOIN `{s}`.`roster_properties` p "
-        "ON p.rowuuid = r.rowuuid WHERE p.`registered_name` <=> r.`{c}`".format(
-            s=schema1, c=worker_label
+        "ON p.rowuuid = r.rowuuid WHERE p.risk_factor = 0 AND p.next_visit IS NULL".format(
+            s=schema1
         ),
     ) == _table_count(config, schema1, "roster")
     assert (
@@ -697,17 +744,25 @@ def t_e_s_t_case_journey(test_object):
         > 0
     )
 
-    # Removed from the list it can go; with the last property the table and
-    # the creation trigger go too.
+    # Removed from the list it can go; the other one keeps the table; with
+    # the last property the table and the creation trigger go too.
     res = testapp.post(
         "/user/{}/project/{}/caselists/{}/edit".format(login, project, "roster"),
-        {"remove_column": "1", "column_name": "registered_name"},
+        {"remove_column": "1", "column_name": "risk_factor"},
         status=302,
     )
     assert "FS_error" not in res.headers
     res = testapp.post(
         roster_props,
-        {"delete_property": "1", "property_name": "registered_name"},
+        {"delete_property": "1", "property_name": "risk_factor"},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    assert _has_table(config, schema1, "roster_properties")
+    assert _column_type(config, schema1, "roster_properties", "risk_factor") is None
+    res = testapp.post(
+        roster_props,
+        {"delete_property": "1", "property_name": "next_visit"},
         status=302,
     )
     assert "FS_error" not in res.headers

@@ -7,9 +7,9 @@ Create Date: 2026-09-17
 Feature 2 of docs/formshare_case_management/: a property is a typed column of
 <table>_properties, a table FormShare creates beside the source table in the
 repository, 1:1 on rowuuid. This is the registry row that names it, records
-the type inherited from the source variable, and the variable that fills it
-when the row is born. The repository table itself is DDL run when the first
-property is defined, outside the RSTools contract.
+its type and the default every row starts with. The repository table itself is DDL run when the first
+property is defined, outside the RSTools contract. A property is defined by
+a type and a default -- state the workflow writes, not a copy of a variable.
 """
 
 import sqlalchemy as sa
@@ -29,18 +29,9 @@ def upgrade():
         sa.Column("form_id", sa.Unicode(length=120), nullable=False),
         sa.Column("table_name", sa.Unicode(length=120), nullable=False),
         sa.Column("property_name", sa.Unicode(length=120), nullable=False),
-        sa.Column("property_type", sa.Unicode(length=64), nullable=False),
-        sa.Column(
-            "property_size", sa.Integer(), server_default=sa.text("'0'"), nullable=True
-        ),
-        sa.Column(
-            "property_decsize",
-            sa.Integer(),
-            server_default=sa.text("'0'"),
-            nullable=True,
-        ),
+        sa.Column("property_type", sa.Unicode(length=20), nullable=False),
+        sa.Column("property_default", sa.Unicode(length=255), nullable=True),
         sa.Column("property_desc", sa.Unicode(length=500), nullable=True),
-        sa.Column("property_source", sa.Unicode(length=120), nullable=True),
         sa.Column("property_cdate", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(
             ["project_id", "form_id"],

@@ -32,7 +32,6 @@ from formshare.processes.db import (
     get_case_link_consumer,
     inherit_consumers,
     inherit_properties,
-    property_sources_of,
     get_consumer_sources,
     apply_link_attributes,
     sync_form_consumers,
@@ -3457,20 +3456,6 @@ def link_merge_child(
     _ = request.translate
     inherit_consumers(request, project, old_form, new_form)
     inherit_properties(request, project, old_form, new_form)
-    # The creation trigger of every table with properties reads the columns
-    # that feed them on each insert, so a new version cannot drop one.
-    for table_name, sources in property_sources_of(request, project, old_form).items():
-        fields = {
-            f["name"]
-            for f in get_fields_from_table_in_file(new_create_file, table_name)
-        }
-        for property_name, source_column in sources:
-            if fields and source_column not in fields:
-                return 1, _(
-                    "The new version has no column {} in table {}, which feeds "
-                    "the property {} when a row is created. A new version "
-                    "cannot drop a property's source."
-                ).format(source_column, table_name, property_name)
     sync_form_consumers(
         request,
         project,

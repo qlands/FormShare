@@ -450,6 +450,16 @@ def t_e_s_t_case_journey(test_object):
     assert _maintable_count(test_object.server_config, schema1) == 2
 
     # --- Two published lists from Tool 1 -----------------------------------
+    # No list yet: no Properties button, and the properties page offers no
+    # form, since a property belongs only on a table a list draws from.
+    res = testapp.get(
+        "/user/{}/project/{}/caselists".format(login, project), status=200
+    )
+    assert b"caseproperties" not in res.body
+    testapp.get(
+        "/user/{}/project/{}/caseproperties?form={}".format(login, project, TOOL1),
+        status=404,
+    )
     school_label = _pick_text_column(test_object.server_config, schema1, "maintable")
     worker_label = _pick_text_column(test_object.server_config, schema1, "roster")
     assert school_label and worker_label
@@ -566,8 +576,17 @@ def t_e_s_t_case_journey(test_object):
     # the schema, and served by any list of the table.
     properties = "/user/{}/project/{}/caseproperties".format(login, project)
     roster_props = properties + "?form={}&table=roster".format(TOOL1)
+    res = testapp.get(
+        "/user/{}/project/{}/caselists".format(login, project), status=200
+    )
+    test_object.root.assertIn(b"caseproperties", res.body)
     testapp.get(properties, status=200)
-    testapp.get(properties + "?form={}".format(TOOL1), status=200)
+    res = testapp.get(properties + "?form={}".format(TOOL1), status=200)
+    # Tool 1's lists draw from maintable and roster; ext_visits, which no
+    # list serves, is not offered and cannot be reached.
+    test_object.root.assertIn(b'value="roster"', res.body)
+    assert b'value="ext_visits"' not in res.body
+    testapp.get(properties + "?form={}&table=ext_visits".format(TOOL1), status=404)
     testapp.get(properties + "?form=no_such_form", status=404)
     res = testapp.get(roster_props, status=200)
     test_object.root.assertIn(worker_label.encode("utf-8"), res.body)

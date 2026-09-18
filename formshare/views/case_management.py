@@ -38,6 +38,7 @@ from formshare.processes.db.case_management import (
     list_has_active_consumers,
     get_project_workflow,
     get_table_properties,
+    get_list_source_tables,
     add_table_property,
     delete_table_property,
 )
@@ -562,17 +563,27 @@ class PropertiesView(ListSection):
 
     def process_view(self):
         user_id, project_code, project_id, project_details = self.project_or_404()
+        # Only the tables a published list draws from can carry properties:
+        # a property is what a follow-up sets on a case it selected from a
+        # list, so a table no list serves has nothing to gain from one.
+        sources = get_list_source_tables(self.request, project_id)
         forms = [
             a_form
             for a_form in get_project_forms(self.request, user_id, project_id)
-            if a_form.get("form_schema")
+            if a_form.get("form_schema") and a_form["form_id"] in sources
         ]
         form_id = self.request.params.get("form", "")
         table_name = self.request.params.get("table", "")
         if form_id and form_id not in [a_form["form_id"] for a_form in forms]:
             raise HTTPNotFound
         tables = (
-            get_form_data_tables(self.request, project_id, form_id) if form_id else []
+            [
+                a_table
+                for a_table in get_form_data_tables(self.request, project_id, form_id)
+                if a_table["table_name"] in sources[form_id]
+            ]
+            if form_id
+            else []
         )
         if table_name and table_name not in [t["table_name"] for t in tables]:
             raise HTTPNotFound

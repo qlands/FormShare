@@ -86,6 +86,7 @@ __all__ = [
     "properties_ddl",
     "creation_trigger_sql",
     "backfill_sql",
+    "get_list_source_tables",
     "get_table_properties",
     "property_sources_of",
     "property_is_served",
@@ -1517,6 +1518,28 @@ def get_table_properties(request, project_id, form_id, table_name):
         .all()
     )
     return map_from_schema(res)
+
+
+def get_list_source_tables(request, project_id):
+    """The tables of this project's forms that a published list draws from:
+    {form_id: [table_name, ...]}, each list once.
+
+    A property exists to steer a workflow -- a patient's risk factor set by
+    each follow-up -- so it belongs only on a table that a list serves; a
+    table no list draws from has no follow-up to feed it or read it. A list
+    whose source is another project's form is left to that project.
+    """
+    result = {}
+    for r in (
+        request.dbsession.query(PublishedList.source_form, PublishedList.source_table)
+        .filter(PublishedList.project_id == project_id)
+        .filter(PublishedList.source_project == project_id)
+        .distinct()
+        .order_by(PublishedList.source_form, PublishedList.source_table)
+        .all()
+    ):
+        result.setdefault(r[0], []).append(r[1])
+    return result
 
 
 def property_sources_of(request, project_id, form_id):

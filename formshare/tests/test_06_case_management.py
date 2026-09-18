@@ -1150,3 +1150,11 @@ def test_a_source_form_names_the_lists_it_feeds_for_the_delete_guard(db_request)
     assert [a_list["list_id"] for a_list in fed] == ["centre_lists", "roster"]
     assert fed[0]["list_filename"] == "centre_lists.csv"
     assert cm.lists_fed_by_form(db_request, "p", "tool2") == []
+
+
+def test_only_the_tables_a_list_draws_from_can_carry_properties(db_request):
+    """The fixture publishes two lists from tool1 (maintable and roster) and
+    none from tool2: tool2 is not offered, and each table appears once."""
+    assert cm.get_list_source_tables(db_request, "p") == {
+        "tool1": ["maintable", "roster"]
+    }

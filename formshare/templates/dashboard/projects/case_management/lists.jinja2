@@ -20,7 +20,9 @@
                         {{ _('A published list is a real-time file generated from the data of a form and sent to the devices as a form attachment. A follow-up form uses it with select_one_from_file, naming the file exactly as it appears here.') }}
                     </p>
                     <a class="btn btn-primary" href="{{ request.route_url('project_case_list_add', userid=userid, projcode=projcode) }}">{{ _('Publish a new list') }}</a>
-                    <a class="btn btn-white" href="{{ request.route_url('project_case_properties', userid=userid, projcode=projcode) }}">{{ _('Properties') }}</a>
+                    {% if lists %}
+                        <a class="btn btn-white" href="{{ request.route_url('project_case_properties', userid=userid, projcode=projcode) }}">{{ _('Properties') }}</a>
+                    {% endif %}
                     <hr class="hr-line-dashed">
                     {% if lists %}
                         <table class="table table-striped">

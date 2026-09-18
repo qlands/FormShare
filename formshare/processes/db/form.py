@@ -1125,10 +1125,20 @@ def get_project_forms(request, user, project):
     return forms
 
 
-def get_all_project_forms(request, project_id):
-    res = (
-        request.dbsession.query(Odkform).filter(Odkform.project_id == project_id).all()
-    )
+def get_all_project_forms(request, project_id, active=False):
+    if not active:
+        res = (
+            request.dbsession.query(Odkform)
+            .filter(Odkform.project_id == project_id)
+            .all()
+        )
+    else:
+        res = (
+            request.dbsession.query(Odkform)
+            .filter(Odkform.project_id == project_id)
+            .filter(Odkform.form_accsub == 1)
+            .all()
+        )
     forms = map_from_schema(res)
     return forms
 

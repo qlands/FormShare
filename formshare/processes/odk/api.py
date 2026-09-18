@@ -2573,9 +2573,9 @@ def get_form_list(request, user, project_code, assistant_uuid, api=False):
         if not api:
             forms = get_assistant_forms(request, project_id, assistant_uuid)
         else:
-            forms = get_all_project_forms(request, project_id)
+            forms = get_all_project_forms(request, project_id, True)
     else:
-        forms = get_all_project_forms(request, project_id)
+        forms = get_all_project_forms(request, project_id, True)
     for form in forms:
         path = os.path.join(odk_dir, *["forms", form["form_directory"], "*.json"])
         files = glob.glob(path)

@@ -4001,6 +4001,12 @@ def store_json_file(
             shutil.copyfile(temp_json_file, original_file)
             with open(temp_json_file, "r") as f:
                 submission_data = json.load(f)
+                # The stamp: what FormShare adds to a submission's JSON before
+                # JSONToMySQL. The device library (RSTools kotlinrstools,
+                # Stamp.apply, transcribed in RSTools' tests/golden.py) adds
+                # the same so its mirror holds what the repository holds. A
+                # key added or removed here must be added or removed there
+                # (docs/formshare_case_management/rstools.md, 6.8).
                 submission_data["_submitted_by"] = get_assistant_login(
                     request, assistant_uuid
                 )

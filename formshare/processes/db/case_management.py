@@ -929,15 +929,18 @@ def apply_link_attributes(root, sources, key_types):
 
     For every consumer: retype the selector to the source's rowuuid and add a
     foreign key to ``<source>.<table>(rowuuid)`` ON DELETE RESTRICT. For the
-    one consumer that is the case link *and* serves active rows, also set the
-    maintable attributes RSTools turns into a membership trigger -- it checks
-    the selector exists in the source with ``_active = 1`` and refuses null.
+    one consumer that is the case link, also set the maintable attributes
+    RSTools turns into a membership trigger: it checks the selector exists in
+    the source with the ``_active`` the list serves, and refuses null.
 
-    The active-rows condition matters: RSTools hardcodes ``_active = 1`` in
-    that trigger, so a case link over an *inactive*-serving list would have
-    every selection rejected. Such a link keeps the foreign key (existence)
-    and skips the trigger until RSTools can take the active value as an
-    argument (rstools.md).
+    Which ``_active`` the trigger checks is chosen by ``case_action_type``
+    (rstools.md 6.5, 2026-09-19): ``follow`` asks for 1, ``activate`` for 0.
+    So a link over an active-serving list checks "exists and is active" and
+    one over an inactive-serving list "exists and is inactive" (the message
+    then reads "is already active or does not exist"). ``case_action`` is
+    ``false`` either way: the trigger is a check, never a write -- what a
+    follow-up does to a case is an action (section 3.3), not a side effect
+    of selecting it.
 
     :param root: the parsed create.xml root
     :param sources: get_consumer_sources(...) output
@@ -978,12 +981,17 @@ def apply_link_attributes(root, sources, key_types):
         field.set("rname", "fk_" + str(uuid.uuid4()).replace("-", "_"))
         field.set("rlookup", "false")
         field.set("on_delete", "RESTRICT")
-        if a_source["is_link"] and int(a_source.get("list_active", 1)) == 1:
+        if a_source["is_link"]:
             table.set("case_followup", "true")
             table.set("creator_table", ref)
             table.set("creator_field", "rowuuid")
             table.set("selector_field", a_source["selector_field"])
             table.set("block_trigger", "T" + str(uuid.uuid4()).replace("-", "_"))
+            table.set(
+                "case_action_type",
+                "follow" if int(a_source.get("list_active", 1)) == 1 else "activate",
+            )
+            table.set("case_action", "false")
     return True, ""
 
 
@@ -1058,13 +1066,19 @@ def build_workflow_model(
     fk_by_field = {(fk["s"], fk["t"], fk["c"]): fk for fk in fks}
     trigger_by_field = {}
     for t in triggers:
+        # RSTools quotes the identifiers since 378c792 (2026-09-19) and wrote
+        # them bare before; both shapes are read. The _active it checks is 1
+        # for a follow-up over active rows and 0 over inactive ones.
         m = re.search(
-            r"FROM (\w+)\.(\w+) WHERE _active = 1 AND (\w+) = new\.(\w+)", t["body"]
+            r"FROM `?(\w+)`?\.`?(\w+)`? WHERE `?_active`? = (\d) "
+            r"AND `?(\w+)`? = new\.`?(\w+)`?",
+            t["body"],
         )
         if m:
-            trigger_by_field[(t["s"], t["t"], m.group(4))] = {
+            trigger_by_field[(t["s"], t["t"], m.group(5))] = {
                 "rt": m.group(2),
-                "rc": m.group(3),
+                "rc": m.group(4),
+                "active": m.group(3),
             }
     consumers_of = {}
     for c in consumers:
@@ -1206,9 +1220,11 @@ def build_workflow_model(
                     parts.append(_("FK ON DELETE {}").format(fk["rule"]))
                 if trig:
                     parts.append(
-                        _("trigger: {}.{} must be _active").format(
-                            trig["rt"], trig["rc"]
-                        )
+                        (
+                            _("trigger: {}.{} must be _active")
+                            if trig["active"] == "1"
+                            else _("trigger: {}.{} must be inactive")
+                        ).format(trig["rt"], trig["rc"])
                     )
             else:
                 parts = [_(c["consumer_role"])]
@@ -1382,7 +1398,9 @@ def get_project_workflow(request, project_id, project):
                 params,
             ).fetchall()
         ]
-        trigger_params = dict(params, pattern="%is inactive or does not exist%")
+        # "is inactive or does not exist" for a follow-up over active rows,
+        # "is already active or does not exist" over inactive ones.
+        trigger_params = dict(params, pattern="%or does not exist%")
         triggers = [
             {"s": r[0], "t": r[1], "body": r[2]}
             for r in request.dbsession.execute(

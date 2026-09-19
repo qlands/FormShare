@@ -547,9 +547,11 @@ def test_an_auxiliary_link_gets_no_membership_trigger():
     assert root.find(".//field[@name='centre_id']").get("rtable") == "FS_src.maintable"
 
 
-def test_an_inactive_case_link_keeps_the_fk_but_skips_the_trigger():
-    """RSTools hardcodes _active = 1 in the trigger, so a case link over an
-    inactive-serving list would reject every selection; it gets the FK only."""
+def test_an_inactive_case_link_gets_a_trigger_that_checks_for_inactive_rows():
+    """RSTools chooses the _active the membership trigger checks by
+    case_action_type (rstools.md 6.5): a link over an inactive-serving list
+    asks for "activate", so the trigger refuses an active or unknown case;
+    case_action stays false, the trigger being a check and never a write."""
     root = _linked_root(
         [
             {
@@ -562,8 +564,28 @@ def test_an_inactive_case_link_keeps_the_fk_but_skips_the_trigger():
         ]
     )
     table = root.find(".//table[@name='maintable']")
-    assert table.get("case_followup") is None
+    assert table.get("case_followup") == "true"
+    assert table.get("case_action_type") == "activate"
+    assert table.get("case_action") == "false"
     assert root.find(".//field[@name='worker_id']").get("rtable") == "FS_src.roster"
+
+
+def test_an_active_case_link_asks_the_trigger_to_follow():
+    root = _linked_root(
+        [
+            {
+                "selector_field": "worker_id",
+                "source_schema": "FS_src",
+                "source_table": "roster",
+                "is_link": True,
+                "list_active": 1,
+            }
+        ]
+    )
+    table = root.find(".//table[@name='maintable']")
+    assert table.get("case_followup") == "true"
+    assert table.get("case_action_type") == "follow"
+    assert table.get("case_action") == "false"
 
 
 # ---------------------------------------------------------------------------

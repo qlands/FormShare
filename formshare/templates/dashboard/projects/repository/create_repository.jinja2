@@ -110,6 +110,15 @@
                                             {% endfor %}
                                         </UL>
                                     {% endif %}
+                                    {% if result_code == 37 %}
+                                        <h2>{{ _('Your ODK form has options whose value cannot be stored as it is written.') }}</h2>
+                                        {{ _("An option's value is kept exactly as the form has it, so it cannot contain quotes, semicolons, backslashes, tabs, line breaks, or spaces at its ends or doubled. Fix the values below, upload the new version and continue the process.") }}
+                                        <UL>
+                                            {% for anError in option_errors %}
+                                                <LI><span style="color: red">{{ anError }}</span></LI>
+                                            {% endfor %}
+                                        </UL>
+                                    {% endif %}
                                     {% if result_code == 36 %}
                                         <h2>{{ _('Your ODK form has multi-select variables with spaces in their options.') }}</h2>
                                         {{ _('You need to fix the below errors in CSV files, upload the new version and continue the process.') }}

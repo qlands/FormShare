@@ -3,6 +3,11 @@ from formshare.processes.logging.loggerclass import SecretLogger
 import os
 import re
 import uuid
+
+from formshare.processes.option_values import (
+    option_value_problems,
+    option_value_message,
+)
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 from sqlalchemy.orm.session import Session
@@ -503,6 +508,7 @@ def update_lookup_from_csv(
     dataframe,
     lookup_type,
 ):
+    _ = request.translate
     rel_table, rel_field = get_references_from_file(
         request, project_id, form_id, file_name
     )
@@ -541,11 +547,23 @@ def update_lookup_from_csv(
             a_row[a_column] = bindable_value(dataframe[sources[a_column]][ind])
         code = a_row[rel_field]
         if isinstance(code, str):
-            # RSTools stores a code with its apostrophes turned into backticks,
-            # so the lookup holds it that way and this has to ask for it that
-            # way.
-            code = code.replace("'", "`").replace('"', "")
-            a_row[rel_field] = code
+            # A code, and the value of every filter column an answer is
+            # compared with, is kept exactly as the file has it and is
+            # refused when the repository could not keep it so -- the rule
+            # jxformtomysql applies at build (exit 37, rstools.md 8.9). This
+            # used to turn an apostrophe into a backtick and drop a double
+            # quote, which matched the stored answer and not the form.
+            for a_column in identity:
+                problems = option_value_problems(a_row.get(a_column))
+                if problems:
+                    return False, option_value_message(
+                        _,
+                        file_name,
+                        code,
+                        problems,
+                        None if a_column == rel_field else a_column,
+                        None if a_column == rel_field else a_row.get(a_column),
+                    )
             if lookup_type == 2:
                 if code.find(" ") >= 0:
                     return (

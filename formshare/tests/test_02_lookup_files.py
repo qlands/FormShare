@@ -746,3 +746,44 @@ def test_a_temporary_column_is_declared_the_way_rstools_declares_it():
     assert dictionary.sql_column_type(a_field("a", "int", 12)) == "int(12)"
     assert dictionary.sql_column_type(a_field("a", "text")) == "text"
     assert dictionary.sql_column_type(a_field("a", "json")) == "json"
+
+
+def test_a_code_the_repository_cannot_keep_as_written_is_refused(lookup, insert_file):
+    """The rule jxformtomysql applies at build (exit 37) applies to a replaced
+    file too: a code with a semicolon is refused with the same words, and an
+    apostrophe is no longer turned into a backtick behind the owner's back."""
+    lookup("lkpvillages", "villages_cod", [], "name", "label")
+    for bad, problem in (("a;b", "a semicolon"), ("nor'th", "a single quote")):
+        result, message = dictionary.update_lookup_from_csv(
+            FakeRequest(),
+            "auser",
+            "aproject",
+            "aform",
+            "myschema",
+            insert_file("lkpvillages", []),
+            "villages.csv",
+            villages_csv([{"name": bad, "label": "Ntemba"}]),
+            1,
+        )
+        assert result is False, bad
+        assert "cannot be stored as it is written" in message
+        assert problem in message and bad in message
+
+
+def test_a_filter_value_the_repository_cannot_keep_is_refused_too(lookup, insert_file):
+    """A data column a choice_filter compares with is compared exactly as a
+    code is, so it follows the same rule; the message names the column."""
+    lookup("lkpvillages", "villages_cod", ["sub_location"], "name", "label")
+    result, message = dictionary.update_lookup_from_csv(
+        FakeRequest(),
+        "auser",
+        "aproject",
+        "aform",
+        "myschema",
+        insert_file("lkpvillages", []),
+        "villages.csv",
+        villages_csv([{"name": "v001", "label": "Ntemba", "sub_location": " north"}]),
+        1,
+    )
+    assert result is False
+    assert "column sub_location" in message and "white space" in message

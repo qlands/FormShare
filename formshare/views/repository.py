@@ -15,6 +15,7 @@ from formshare.processes.odk.api import (
     create_repository,
     get_odk_path,
     describe_ambiguous_selects,
+    describe_invalid_option_values,
 )
 from formshare.processes.odk.processes import get_form_data
 from formshare.views.classes import PrivateView
@@ -75,6 +76,7 @@ class GenerateRepository(PrivateView):
         result_code = -1
         list_array = []
         select_errors = []
+        option_errors = []
         duplicated_choices = []
         tables_with_name_error = []
         languages = []
@@ -515,6 +517,16 @@ class GenerateRepository(PrivateView):
                                 root = etree.fromstring(message)
                                 select_errors = describe_ambiguous_selects(root, self._)
 
+                            if result_code == 37:  # pragma: no cover
+                                # An option value the repository cannot keep
+                                # as written (rstools.md 8.9); the upload
+                                # check refuses such a form first.
+                                stage = -1
+                                root = etree.fromstring(message)
+                                option_errors = describe_invalid_option_values(
+                                    root, self._
+                                )
+
                             if result_code == 36:  # pragma: no cover
                                 # Multi-select variable with spaces in options
                                 stage = -1
@@ -677,6 +689,7 @@ class GenerateRepository(PrivateView):
                     "result_code": result_code,
                     "list_array": list_array,
                     "select_errors": select_errors,
+                    "option_errors": option_errors,
                     "duplicated_choices": duplicated_choices,
                     "tables_with_name_error": tables_with_name_error,
                     "file_with_error": file_with_error,

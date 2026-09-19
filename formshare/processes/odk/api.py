@@ -19,6 +19,10 @@ import pandas as pd
 import formshare.plugins as plugins
 from bs4 import BeautifulSoup
 from formshare.processes.color_hash import ColorHash
+from formshare.processes.option_values import (
+    invalid_option_values_heading,
+    describe_invalid_option_values,
+)
 from formshare.processes.odk.geojson import (
     check_geojson,
     update_lookup_from_geo_json,
@@ -1056,6 +1060,38 @@ def check_jxform_file(
                 attachments,
             )
             return 36, message
+
+        if p.returncode == 37:
+            # An option value the repository could not keep as written
+            # (rstools.md 8.9): a fault of the form, reported before any
+            # repository exists.
+            log.error(
+                ". Error: "
+                + str(p.returncode)
+                + "-"
+                + stderr.decode()
+                + " while checking PyXForm. Command line: "
+                + " ".join(args)
+            )
+            root = etree.fromstring(stdout)
+            message = (
+                _("FormShare thoroughly checks your ODK for inconsistencies.") + "\n"
+            )
+            message = message + invalid_option_values_heading(_) + "\n"
+            for a_line in describe_invalid_option_values(root, _):
+                message = message + "\t" + a_line + "\n"
+            email_message = "The user {} was not able to upload the form {} in project {}.\n".format(
+                user_id, project_id, form_id
+            )
+            email_message = email_message + message
+            attachments = [xlsx_file]
+            send_error_to_technical_team(
+                request,
+                email_message,
+                "An user is having trouble uploading a form",
+                attachments,
+            )
+            return 37, message
 
         if p.returncode == 7:
             log.error(

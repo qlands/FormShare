@@ -100,6 +100,8 @@ from formshare.processes.odk.api import (
     link_merge_child,
     check_jxform_file,
     describe_ambiguous_selects,
+    invalid_option_values_heading,
+    describe_invalid_option_values,
     ambiguous_selects_heading,
     store_file_in_directory,
     retrieve_form_file_stream,
@@ -671,6 +673,21 @@ class FormDetails(PrivateView):
                 )
                 for a_message in describe_ambiguous_selects(root, self._):
                     txt_message = txt_message + "\t" + a_message + "\n"
+                errors.append(txt_message)
+
+            if created == 37:
+                # An option value the repository cannot keep as written
+                # (rstools.md 8.9). The upload check refuses such a form
+                # first, so a merge check meets it only for a version that
+                # was uploaded before the check existed.
+                root = etree.fromstring(message)
+                txt_message = (
+                    self._("FormShare thoroughly checks your ODK for inconsistencies.")
+                    + "\n"
+                )
+                txt_message = txt_message + invalid_option_values_heading(self._) + "\n"
+                for a_line in describe_invalid_option_values(root, self._):
+                    txt_message = txt_message + "\t" + a_line + "\n"
                 errors.append(txt_message)
 
             if created == 36:

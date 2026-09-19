@@ -186,3 +186,56 @@ def test_several_repeated_options_are_all_named():
 def test_a_report_with_neither_shape_is_empty():
     """Not a crash, and not a heading with nothing under it."""
     assert describe_ambiguous_selects(parse("<XMLResult/>"), translate) == []
+
+
+# ---------------------------------------------------------------------------
+# Exit 37: an option value the repository cannot keep as written (rstools.md 8.9)
+# ---------------------------------------------------------------------------
+
+from formshare.processes.option_values import (  # noqa: E402
+    option_value_problems,
+    describe_invalid_option_values,
+    invalid_option_values_heading,
+)
+
+INVALID_OPTION_VALUES = """<XMLInvalidOptionValues total="5">
+ <invalidOption listName="zones"  variables="zone"  option="nor'th" column=""     value="nor'th" problems="single_quote" source=""/>
+ <invalidOption listName="places" variables="place" option="p001"   column="from" value="nor'th" problems="single_quote" source="places.csv"/>
+ <invalidOption listName="places" variables="place" option="a;b"    column=""     value="a;b"    problems="semicolon,white_space" source=""/>
+</XMLInvalidOptionValues>"""
+
+
+def test_the_rule_names_every_problem_by_rstools_name():
+    assert option_value_problems("v001") == []
+    assert option_value_problems("far away") == []
+    assert option_value_problems(12) == []
+    assert option_value_problems("nor'th") == ["single_quote"]
+    assert option_value_problems('say "hi"') == ["double_quote"]
+    assert option_value_problems("a;b") == ["semicolon"]
+    assert option_value_problems("C:\\temp") == ["backslash"]
+    assert option_value_problems("two\nlines") == ["line_break"]
+    assert option_value_problems("a\tb") == ["tab"]
+    assert option_value_problems(" v001") == ["white_space"]
+    assert option_value_problems("v001 ") == ["white_space"]
+    assert option_value_problems("v  001") == ["white_space"]
+    assert option_value_problems("a;'b' ") == [
+        "single_quote",
+        "semicolon",
+        "white_space",
+    ]
+
+
+def test_the_report_is_read_line_by_line_with_what_it_did_not_list():
+    root = etree.fromstring(INVALID_OPTION_VALUES)
+    lines = describe_invalid_option_values(root, lambda s: s)
+    assert lines == [
+        'Option "nor\'th" of list zones (used by zone): a single quote.',
+        'Option "p001" of list places (file places.csv) (used by place), '
+        'column from = "nor\'th": a single quote.',
+        'Option "a;b" of list places (used by place): a semicolon, '
+        "white space at its ends or doubled.",
+        "... and 2 more.",
+    ]
+    assert "cannot be stored as it is written" in invalid_option_values_heading(
+        lambda s: s
+    )

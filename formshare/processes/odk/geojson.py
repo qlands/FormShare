@@ -1,4 +1,9 @@
 import json
+
+from formshare.processes.option_values import (
+    option_value_problems,
+    option_value_message,
+)
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 from formshare.processes.db.dictionary import (
@@ -208,6 +213,19 @@ def update_lookup_from_geo_json(
             else:
                 a_row[a_column] = bindable_value(properties.get(sources[a_column]))
 
+        # A feature's id and its filter values are kept as written or refused,
+        # as a CSV's codes are (option_values.py, rstools.md 8.9).
+        for a_column in identity:
+            problems = option_value_problems(a_row.get(a_column))
+            if problems:
+                return False, option_value_message(
+                    request.translate,
+                    file_name,
+                    code,
+                    problems,
+                    None if a_column == rel_field else a_column,
+                    None if a_column == rel_field else a_row.get(a_column),
+                )
         key = tuple(str(a_row[a_column]) for a_column in identity)
         if key in seen:
             return False, "You have a duplicated feature in {}: '{}'".format(

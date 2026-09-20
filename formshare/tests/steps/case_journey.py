@@ -952,11 +952,17 @@ def t_e_s_t_case_journey(test_object):
     # SQLite Collect made from roster.csv.
     manifest = _pull_manifest(test_object, login, project, TOOL2)
     entries = _manifest_entries(manifest)
-    # manifest.xml is not among them yet: in check mode jxformtomysql deletes
-    # every output but create.xml and insert.xml (rstools.md 9.2 asks it to
-    # keep the manifest); it appears once the repository is built.
-    for name in ("create.xml", "insert.xml", "properties.xml", "lists.xml"):
+    # All five, before the build: the check keeps manifest.xml since it is
+    # told where to put it (rstools.md 10.1), so a scratch mirror can load.
+    for name in (
+        "create.xml",
+        "insert.xml",
+        "manifest.xml",
+        "properties.xml",
+        "lists.xml",
+    ):
         assert name in entries, (name, entries)
+    etree.fromstring(_served_file(test_object, manifest, "manifest.xml"))
     lists = etree.fromstring(_served_file(test_object, manifest, "lists.xml"))
     by_id = {a_list.get("id"): a_list for a_list in lists.findall("list")}
     assert set(by_id) == {"centre_list", "roster"}, by_id

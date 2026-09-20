@@ -555,7 +555,10 @@ def check_jxform_file(
         "-C " + create_xml_file,
         "-I " + insert_xml_file,
         # The XML-to-table map beside the two files, so a form in testing
-        # has everything a device mirrors it from (formshare.md 3.10).
+        # has everything a device mirrors it from (formshare.md 3.10). In
+        # check mode (-K) the tool keeps it only when told where to put it
+        # (RSTools 67e7de9, rstools.md 10.1); the upload copies it into the
+        # form's directory with the other two.
         "-f " + os.path.join(os.path.dirname(create_xml_file), "manifest.xml"),
         "-t maintable",
         "-v " + primary_key,
@@ -1809,6 +1812,25 @@ def upload_odk_form(
                             shutil.copyfile(survey_file, final_survey)
                             shutil.copyfile(create_file, final_create_xml)
                             shutil.copyfile(insert_file, final_insert_xml)
+                            # The manifest the check kept beside them, since it was told where
+                            # to put it (-f, rstools.md 10.1): a device loads a submission into
+                            # the scratch mirror of a form still in testing through it.
+                            manifest_file = os.path.join(
+                                os.path.dirname(create_file), "manifest.xml"
+                            )
+                            if os.path.exists(manifest_file):
+                                shutil.copyfile(
+                                    manifest_file,
+                                    os.path.join(
+                                        odk_dir,
+                                        *[
+                                            "forms",
+                                            form_directory,
+                                            "repository",
+                                            "manifest.xml",
+                                        ]
+                                    ),
+                                )
                             parent_array = []
                             try:
                                 geo_variables = []
@@ -2328,6 +2350,25 @@ def update_odk_form(
                                     shutil.copyfile(survey_file, final_survey)
                                     shutil.copyfile(create_file, final_create_xml)
                                     shutil.copyfile(insert_file, final_insert_xml)
+                                    # The manifest the check kept beside them, since it was told where
+                                    # to put it (-f, rstools.md 10.1): a device loads a submission into
+                                    # the scratch mirror of a form still in testing through it.
+                                    manifest_file = os.path.join(
+                                        os.path.dirname(create_file), "manifest.xml"
+                                    )
+                                    if os.path.exists(manifest_file):
+                                        shutil.copyfile(
+                                            manifest_file,
+                                            os.path.join(
+                                                odk_dir,
+                                                *[
+                                                    "forms",
+                                                    form_directory,
+                                                    "repository",
+                                                    "manifest.xml",
+                                                ]
+                                            ),
+                                        )
                                     parent_array = []
                                     try:
                                         geo_point_variables = []

@@ -2181,14 +2181,19 @@ def properties_xml(properties_by_table):
 def lists_xml(definitions):
     """The lists.xml of a consuming form (pure).
 
-    One list element per attached published list: its identity, the
-    repository, form and table it draws from, its kind (a row list keyed by
-    rowuuid, or a value list with its key), its label column, the _active it
-    serves, and the SELECT that generates it with the tables spelled
-    symbolically -- what the device runs over its mirror, restricted to the
-    rows a submission produced, to put them into the SQLite Collect made
-    from the CSV. No column map: a device never reads a CSV back (README
-    decision 14). A form that attaches no list serves an empty document.
+    One list element per published list the form is part of, in either
+    role: role="feeds" for a list drawn from one of this form's tables --
+    what the device runs at the form's finalize to put the rows it produced
+    into the SQLite Collect made from the CSV, for every form that attaches
+    the file -- and role="reads" or "updates" for a list this form attaches,
+    with the field that selects from it (selector) and whether that
+    selection is the case link (link), which is what a follow-up's device
+    reads to know which case a submission is about. Either way: the list's
+    identity, the repository, form and table it draws from, its kind (a row
+    list keyed by rowuuid, or a value list with its key), its label column,
+    the _active it serves, and the SELECT that generates it with the tables
+    spelled symbolically. No column map: a device never reads a CSV back
+    (README decision 14). A form in neither role serves an empty document.
     """
     root = etree.Element("XMLLists", version="1.0")
     for d in definitions:
@@ -2197,6 +2202,7 @@ def lists_xml(definitions):
             "list",
             id=d["list_id"],
             file=d["filename"],
+            role=d.get("role") or "feeds",
             kind="value" if d.get("key_column") else "row",
             repository=d["repository"],
             form=d["source_form"],
@@ -2206,6 +2212,9 @@ def lists_xml(definitions):
         )
         if d.get("key_column"):
             a_list.set("key", d["key_column"])
+        if d.get("selector"):
+            a_list.set("selector", d["selector"])
+            a_list.set("link", "true" if d.get("link") else "false")
         etree.SubElement(a_list, "select").text = d["select"]
     return etree.tostring(
         root, pretty_print=True, xml_declaration=True, encoding="UTF-8"

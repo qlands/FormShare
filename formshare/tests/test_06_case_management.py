@@ -1413,6 +1413,9 @@ def test_lists_xml_carries_each_list_and_its_select():
                 "key_column": None,
                 "active": 1,
                 "select": "SELECT rowuuid AS name FROM {source.roster}",
+                "role": "updates",
+                "selector": "worker_id",
+                "link": True,
             },
             {
                 "list_id": "districts",
@@ -1448,9 +1451,17 @@ def test_lists_xml_carries_each_list_and_its_select():
     )
     assert (roster.get("label"), roster.get("active")) == ("worker_name", "1")
     assert roster.findtext("select") == "SELECT rowuuid AS name FROM {source.roster}"
+    # attached by this form, selected through worker_id, and its case link
+    assert (roster.get("role"), roster.get("selector"), roster.get("link")) == (
+        "updates",
+        "worker_id",
+        "true",
+    )
     assert (districts.get("kind"), districts.get("key"), districts.get("active")) == (
         "value",
         "district",
         "0",
     )
+    # fed by this form: no selector, the default role
+    assert (districts.get("role"), districts.get("selector")) == ("feeds", None)
     assert len(etree.fromstring(cm.lists_xml([]))) == 0

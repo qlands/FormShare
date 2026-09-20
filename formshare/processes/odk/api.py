@@ -40,6 +40,7 @@ from formshare.processes.db import (
     properties_xml,
     lists_xml,
     get_list_columns,
+    get_form_consumers,
     build_list_select,
     get_consumer_sources,
     apply_link_attributes,
@@ -2861,22 +2862,20 @@ def get_repository_file_content(request, project_id, form_id, file_name):
 
 
 def get_form_list_definitions(request, project_id, form_id):
-    """The rule behind each published list the form attaches, for lists.xml:
-    the registry row, the source's schema, and the SELECT with symbolic
-    tables. A list whose source has no repository yet is left out; there is
-    no mirror for it on the device either."""
+    """The rule behind each published list the form is part of, for lists.xml:
+    first the lists it feeds (a source table of this form), then the lists it
+    attaches, with the consumer's selector and whether it is the case link.
+    A list whose source has no repository yet is left out; there is no
+    mirror for it on the device either."""
     published = get_project_published_lists(request, project_id)
     if not published:
         return []
-    by_filename = {a_list["list_filename"]: a_list for a_list in published}
     definitions = []
-    for a_file in get_form_files(request, project_id, form_id):
-        a_list = by_filename.get(a_file["file_name"])
-        if a_list is None:
-            continue
+
+    def definition(a_list, role, consumer=None):
         schema = get_list_source_schema(request, a_list)
         if not schema:
-            continue
+            return None
         columns = [
             (c["column_name"], c["column_as"], c.get("column_source") or "table")
             for c in get_list_columns(request, a_list["project_id"], a_list["list_id"])
@@ -2891,19 +2890,40 @@ def get_form_list_definitions(request, project_id, form_id):
             key_column=a_list.get("list_key_column"),
             symbolic=True,
         )
-        definitions.append(
-            {
-                "list_id": a_list["list_id"],
-                "filename": a_list["list_filename"],
-                "repository": schema,
-                "source_form": a_list["source_form"],
-                "source_table": a_list["source_table"],
-                "label_column": a_list["label_column"],
-                "key_column": a_list.get("list_key_column"),
-                "active": a_list.get("list_active", 1),
-                "select": sql,
-            }
+        return {
+            "list_id": a_list["list_id"],
+            "filename": a_list["list_filename"],
+            "role": role,
+            "repository": schema,
+            "source_form": a_list["source_form"],
+            "source_table": a_list["source_table"],
+            "label_column": a_list["label_column"],
+            "key_column": a_list.get("list_key_column"),
+            "active": a_list.get("list_active", 1),
+            "select": sql,
+            "selector": consumer["selector_field"] if consumer else None,
+            "link": bool(consumer["consumer_is_link"]) if consumer else False,
+        }
+
+    for a_list in published:
+        if a_list["source_project"] == project_id and a_list["source_form"] == form_id:
+            d = definition(a_list, "feeds")
+            if d:
+                definitions.append(d)
+    consumers = {
+        c["list_id"]: c for c in get_form_consumers(request, project_id, form_id)
+    }
+    by_filename = {a_list["list_filename"]: a_list for a_list in published}
+    for a_file in get_form_files(request, project_id, form_id):
+        a_list = by_filename.get(a_file["file_name"])
+        if a_list is None:
+            continue
+        consumer = consumers.get(a_list["list_id"])
+        d = definition(
+            a_list, consumer["consumer_role"] if consumer else "reads", consumer
         )
+        if d:
+            definitions.append(d)
     return definitions
 
 

@@ -517,7 +517,8 @@ def t_e_s_t_case_journey(test_object):
         "lists.xml",
     ):
         assert name in entries and entries[name][0].startswith("md5:"), (name, entries)
-    # Tool 1 attaches no list: its lists.xml is a complete, empty document.
+    # Tool 1 attaches no list and, before any list exists, feeds none: its
+    # lists.xml is a complete, empty document.
     assert len(etree.fromstring(_served_file(test_object, manifest, "lists.xml"))) == 0
     create_xml = _served_file(test_object, manifest, "create.xml")
     assert b"<XMLSchemaStructure" in create_xml and b'name="roster"' in create_xml
@@ -976,6 +977,42 @@ def t_e_s_t_case_journey(test_object):
         "row",
         "1",
     )
+    # Tool 2 attaches both: which field selects from each, and that the
+    # roster is its case link -- what its device reads to know which case a
+    # follow-up is about (README decision 14).
+    assert (
+        roster_rule.get("role"),
+        roster_rule.get("selector"),
+        roster_rule.get("link"),
+    ) == (
+        "updates",
+        "worker_id",
+        "true",
+    )
+    assert (by_id["centre_list"].get("role"), by_id["centre_list"].get("selector")) == (
+        "reads",
+        "centre_id",
+    )
+    assert by_id["centre_list"].get("link") == "false"
+    # Tool 1 feeds both: its own lists.xml now names them with role feeds,
+    # which is what its device runs at finalize.
+    tool1_lists = etree.fromstring(
+        _served_file(
+            test_object, _pull_manifest(test_object, login, project, TOOL1), "lists.xml"
+        )
+    )
+    assert {
+        (a.get("id"), a.get("role"), a.get("table"))
+        for a in tool1_lists.findall("list")
+    } == {
+        ("centre_list", "feeds", "maintable"),
+        ("district_list", "feeds", "maintable"),
+        ("roster", "feeds", "roster"),
+    }
+    assert {a.get("id"): a.get("kind") for a in tool1_lists.findall("list")}[
+        "district_list"
+    ] == "value"
+    assert all(a.get("selector") is None for a in tool1_lists.findall("list"))
     assert (
         roster_rule.get("repository"),
         roster_rule.get("form"),

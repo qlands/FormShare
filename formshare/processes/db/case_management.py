@@ -98,6 +98,7 @@ __all__ = [
     "get_table_properties",
     "get_form_properties",
     "properties_xml",
+    "lists_xml",
     "property_is_served",
     "add_table_property",
     "delete_table_property",
@@ -142,6 +143,7 @@ def build_list_select(
     limit=None,
     active=1,
     key_column=None,
+    symbolic=False,
 ):
     """The SELECT that generates a published list.
 
@@ -152,6 +154,10 @@ def build_list_select(
         in order; source is "table" (the default) or "property", a column of
         <table>_properties, joined 1:1 on rowuuid
     :param filter_sql: optional membership WHERE fragment, UI-built
+    :param symbolic: spell the tables as ``{source.<table>}`` rather than
+        ``schema.table`` -- the SELECT a device runs over its mirror
+        (lists.xml, formshare.md 3.10); everything else is the same text,
+        which SQLite accepts as written
     :return: (sql, headers) -- headers in CSV order
 
     ``name`` is always rowuuid and always first; ``label`` always second.
@@ -187,11 +193,14 @@ def build_list_select(
             "{}{} AS {}".format(prefix, _quoted(column_name), _quoted(alias))
         )
         headers.append(alias)
-    source = "{}.{}".format(_quoted(schema), _quoted(table))
+    if symbolic:
+        source = "{source." + table + "}"
+        props = "{source." + properties_table(table) + "}"
+    else:
+        source = "{}.{}".format(_quoted(schema), _quoted(table))
+        props = "{}.{}".format(_quoted(schema), _quoted(properties_table(table)))
     if uses_properties:
-        source += " AS t LEFT JOIN {}.{} AS p ON p.rowuuid = t.rowuuid".format(
-            _quoted(schema), _quoted(properties_table(table))
-        )
+        source += " AS t LEFT JOIN {} AS p ON p.rowuuid = t.rowuuid".format(props)
     sql = "SELECT {}{} FROM {}".format(
         "DISTINCT " if key_column else "",
         ",".join(select_parts),
@@ -2159,6 +2168,45 @@ def properties_xml(properties_by_table):
         etree.SubElement(
             table, "field", name="_lastupdate", type="datetime", size="0", decsize="0"
         )
+    return etree.tostring(
+        root, pretty_print=True, xml_declaration=True, encoding="UTF-8"
+    )
+
+
+# ---------------------------------------------------------------------------
+# lists.xml: the rule behind each list a form attaches, for the device
+# (formshare.md 3.10, kotlincollect.md 4). Served beside create.xml.
+
+
+def lists_xml(definitions):
+    """The lists.xml of a consuming form (pure).
+
+    One list element per attached published list: its identity, the
+    repository, form and table it draws from, its kind (a row list keyed by
+    rowuuid, or a value list with its key), its label column, the _active it
+    serves, and the SELECT that generates it with the tables spelled
+    symbolically -- what the device runs over its mirror, restricted to the
+    rows a submission produced, to put them into the SQLite Collect made
+    from the CSV. No column map: a device never reads a CSV back (README
+    decision 14). A form that attaches no list serves an empty document.
+    """
+    root = etree.Element("XMLLists", version="1.0")
+    for d in definitions:
+        a_list = etree.SubElement(
+            root,
+            "list",
+            id=d["list_id"],
+            file=d["filename"],
+            kind="value" if d.get("key_column") else "row",
+            repository=d["repository"],
+            form=d["source_form"],
+            table=d["source_table"],
+            label=d["label_column"],
+            active="" if d.get("active") is None else str(int(d["active"])),
+        )
+        if d.get("key_column"):
+            a_list.set("key", d["key_column"])
+        etree.SubElement(a_list, "select").text = d["select"]
     return etree.tostring(
         root, pretty_print=True, xml_declaration=True, encoding="UTF-8"
     )

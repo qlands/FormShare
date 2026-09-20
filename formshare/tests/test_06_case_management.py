@@ -1323,3 +1323,134 @@ def test_the_formlist_extension_says_which_mirror_a_form_belongs_to():
         "g1/loc",
     ]
     assert xform.find("{" + FS_XFORMS_NS + "}parent") is None
+
+
+# ---------------------------------------------------------------------------
+# lists.xml: the rule behind a list, run by a device over its mirror
+# ---------------------------------------------------------------------------
+
+import sqlite3  # noqa: E402
+
+
+def test_a_symbolic_select_names_the_tables_the_device_resolves():
+    sql, headers = cm.build_list_select(
+        "FS_s",
+        "roster",
+        "worker_name",
+        [("eligible", None, "table"), ("risk_factor", None, "property")],
+        symbolic=True,
+    )
+    assert sql == (
+        "SELECT t.rowuuid AS name,t.`worker_name` AS label,t.`eligible` AS `eligible`,"
+        "p.`risk_factor` AS `risk_factor` FROM {source.roster} AS t "
+        "LEFT JOIN {source.roster_properties} AS p ON p.rowuuid = t.rowuuid "
+        "WHERE t._active = 1 ORDER BY t.rowuuid"
+    )
+    assert headers == ["name", "label", "eligible", "risk_factor"]
+    plain, _headers = cm.build_list_select(
+        "FS_s", "roster", "worker_name", [("eligible", None)], symbolic=True
+    )
+    assert plain == (
+        "SELECT rowuuid AS name,`worker_name` AS label,`eligible` AS `eligible` "
+        "FROM {source.roster} WHERE _active = 1 ORDER BY rowuuid"
+    )
+
+
+def test_the_select_runs_on_sqlite_over_a_mirror_as_written():
+    """The one claim lists.xml rests on: the server's SELECT, tables resolved,
+    is what a device runs over its SQLite mirror, and it yields rows shaped
+    exactly like the served CSV -- with the properties join, and as a value
+    list with DISTINCT."""
+    db = sqlite3.connect(":memory:")
+    db.executescript(
+        "CREATE TABLE roster (rowuuid TEXT, worker_name TEXT, district TEXT, "
+        "eligible TEXT, _active INTEGER DEFAULT 1);"
+        "CREATE TABLE roster_properties (rowuuid TEXT, risk_factor INTEGER DEFAULT 0);"
+        "INSERT INTO roster VALUES ('u1', 'Juan', 'North', 'yes', 1);"
+        "INSERT INTO roster VALUES ('u2', 'Ana', 'North', 'no', 1);"
+        "INSERT INTO roster VALUES ('u3', 'Gone', 'South', 'yes', 0);"
+        "INSERT INTO roster_properties VALUES ('u1', 3);"
+    )
+
+    def resolve(sql):
+        return sql.replace("{source.roster_properties}", "roster_properties").replace(
+            "{source.roster}", "roster"
+        )
+
+    sql, headers = cm.build_list_select(
+        "FS_s",
+        "roster",
+        "worker_name",
+        [("eligible", None, "table"), ("risk_factor", None, "property")],
+        symbolic=True,
+    )
+    rows = db.execute(resolve(sql)).fetchall()
+    assert headers == ["name", "label", "eligible", "risk_factor"]
+    assert rows == [("u1", "Juan", "yes", 3), ("u2", "Ana", "no", None)]
+    # restricted to what one submission produced, as the device wraps it
+    only = db.execute(
+        "SELECT * FROM ({}) WHERE name IN ('u2')".format(resolve(sql))
+    ).fetchall()
+    assert only == [("u2", "Ana", "no", None)]
+    # a value list: DISTINCT on a column, no identity
+    sql, headers = cm.build_list_select(
+        "FS_s", "roster", "district", [], key_column="district", symbolic=True
+    )
+    assert db.execute(resolve(sql)).fetchall() == [("North", "North")]
+    assert headers == ["name", "label"]
+
+
+def test_lists_xml_carries_each_list_and_its_select():
+    xml = cm.lists_xml(
+        [
+            {
+                "list_id": "roster",
+                "filename": "roster.csv",
+                "repository": "FS_a",
+                "source_form": "tool1",
+                "source_table": "roster",
+                "label_column": "worker_name",
+                "key_column": None,
+                "active": 1,
+                "select": "SELECT rowuuid AS name FROM {source.roster}",
+            },
+            {
+                "list_id": "districts",
+                "filename": "districts.csv",
+                "repository": "FS_a",
+                "source_form": "tool1",
+                "source_table": "maintable",
+                "label_column": "district",
+                "key_column": "district",
+                "active": 0,
+                "select": "SELECT DISTINCT `district` AS name FROM {source.maintable}",
+            },
+        ]
+    )
+    root = etree.fromstring(xml)
+    assert root.tag == "XMLLists" and root.get("version") == "1.0"
+    roster, districts = root.findall("list")
+    assert (
+        roster.get("id"),
+        roster.get("file"),
+        roster.get("kind"),
+        roster.get("key"),
+    ) == (
+        "roster",
+        "roster.csv",
+        "row",
+        None,
+    )
+    assert (roster.get("repository"), roster.get("form"), roster.get("table")) == (
+        "FS_a",
+        "tool1",
+        "roster",
+    )
+    assert (roster.get("label"), roster.get("active")) == ("worker_name", "1")
+    assert roster.findtext("select") == "SELECT rowuuid AS name FROM {source.roster}"
+    assert (districts.get("kind"), districts.get("key"), districts.get("active")) == (
+        "value",
+        "district",
+        "0",
+    )
+    assert len(etree.fromstring(cm.lists_xml([]))) == 0

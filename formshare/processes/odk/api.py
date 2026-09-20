@@ -38,6 +38,9 @@ from formshare.processes.db import (
     inherit_properties,
     get_form_properties,
     properties_xml,
+    lists_xml,
+    get_list_columns,
+    build_list_select,
     get_consumer_sources,
     apply_link_attributes,
     sync_form_consumers,
@@ -551,6 +554,9 @@ def check_jxform_file(
         "-j " + json_file,
         "-C " + create_xml_file,
         "-I " + insert_xml_file,
+        # The XML-to-table map beside the two files, so a form in testing
+        # has everything a device mirrors it from (formshare.md 3.10).
+        "-f " + os.path.join(os.path.dirname(create_xml_file), "manifest.xml"),
         "-t maintable",
         "-v " + primary_key,
         "-e " + os.path.join(os.path.dirname(json_file), *["tmp"]),
@@ -2773,7 +2779,13 @@ def refresh_published_lists(request, project_id, form, form_files):
 # the same files the repository was built from and served here as ordinary
 # manifest attachments: stock clients download and ignore them. These four
 # names are reserved in a manifest.
-REPOSITORY_FILES = ("create.xml", "insert.xml", "manifest.xml", "properties.xml")
+REPOSITORY_FILES = (
+    "create.xml",
+    "insert.xml",
+    "manifest.xml",
+    "properties.xml",
+    "lists.xml",
+)
 # The formList extension, elements a stock parser skips and FormShare Collect
 # reads: which mirror a form belongs to, and which questions are geopoints.
 FS_XFORMS_NS = "https://formshare.org/xforms/extensions"
@@ -2788,10 +2800,15 @@ def get_repository_file_content(request, project_id, form_id, file_name):
     if file_name not in REPOSITORY_FILES:
         return None
     form_data = get_form_data(request, project_id, form_id)
-    if form_data is None or not form_data.get("form_schema"):
+    if form_data is None:
         return None
+    # A form in testing has its files too -- the upload check wrote them --
+    # and a device keeps a scratch mirror of it; the manifest just says no
+    # fs:repository yet.
     if file_name == "properties.xml":
         return properties_xml(get_form_properties(request, project_id, form_id))
+    if file_name == "lists.xml":
+        return lists_xml(get_form_list_definitions(request, project_id, form_id))
     path = os.path.join(
         get_odk_path(request),
         *["forms", form_data["form_directory"], "repository", file_name]
@@ -2800,6 +2817,53 @@ def get_repository_file_content(request, project_id, form_id, file_name):
         return None
     with open(path, "rb") as a_file:
         return a_file.read()
+
+
+def get_form_list_definitions(request, project_id, form_id):
+    """The rule behind each published list the form attaches, for lists.xml:
+    the registry row, the source's schema, and the SELECT with symbolic
+    tables. A list whose source has no repository yet is left out; there is
+    no mirror for it on the device either."""
+    published = get_project_published_lists(request, project_id)
+    if not published:
+        return []
+    by_filename = {a_list["list_filename"]: a_list for a_list in published}
+    definitions = []
+    for a_file in get_form_files(request, project_id, form_id):
+        a_list = by_filename.get(a_file["file_name"])
+        if a_list is None:
+            continue
+        schema = get_list_source_schema(request, a_list)
+        if not schema:
+            continue
+        columns = [
+            (c["column_name"], c["column_as"], c.get("column_source") or "table")
+            for c in get_list_columns(request, a_list["project_id"], a_list["list_id"])
+        ]
+        sql, headers = build_list_select(
+            schema,
+            a_list["source_table"],
+            a_list["label_column"],
+            columns,
+            a_list.get("filter_sql"),
+            active=a_list.get("list_active", 1),
+            key_column=a_list.get("list_key_column"),
+            symbolic=True,
+        )
+        definitions.append(
+            {
+                "list_id": a_list["list_id"],
+                "filename": a_list["list_filename"],
+                "repository": schema,
+                "source_form": a_list["source_form"],
+                "source_table": a_list["source_table"],
+                "label_column": a_list["label_column"],
+                "key_column": a_list.get("list_key_column"),
+                "active": a_list.get("list_active", 1),
+                "select": sql,
+            }
+        )
+    return definitions
 
 
 def get_repository_file(request, project_id, form_id, file_name):

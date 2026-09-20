@@ -26,6 +26,7 @@ from lxml import etree
 import json
 import os
 import re
+import sqlite3
 import time
 import uuid
 from urllib.parse import urlparse
@@ -267,6 +268,23 @@ def _form_list(test_object, login, project):
     }
 
 
+def _sqlite_table_from_create_xml(db, create_xml, table_name):
+    """What the device library does with one table of create.xml: a SQLite
+    table with the same columns, types by affinity, no keys, no triggers."""
+    root = etree.fromstring(create_xml)
+    table = root.find(".//table[@name='{}']".format(table_name))
+    assert table is not None, table_name
+    affinity = {"int": "INTEGER", "integer": "INTEGER", "decimal": "NUMERIC"}
+    columns = []
+    for field in table.findall("field"):
+        if field.get("generatedas"):
+            continue
+        columns.append(
+            "`{}` {}".format(field.get("name"), affinity.get(field.get("type"), "TEXT"))
+        )
+    db.execute("CREATE TABLE `{}` ({})".format(table_name, ", ".join(columns)))
+
+
 def _manifest_hash(manifest, file_name):
     """The md5 the manifest advertises for a file -- what ODK Collect compares
     with its local copy to decide the form has an update."""
@@ -491,8 +509,16 @@ def t_e_s_t_case_journey(test_object):
     # is also the manifest that used to be empty.
     manifest = _pull_manifest(test_object, login, project, TOOL1)
     entries = _manifest_entries(manifest)
-    for name in ("create.xml", "insert.xml", "manifest.xml", "properties.xml"):
+    for name in (
+        "create.xml",
+        "insert.xml",
+        "manifest.xml",
+        "properties.xml",
+        "lists.xml",
+    ):
         assert name in entries and entries[name][0].startswith("md5:"), (name, entries)
+    # Tool 1 attaches no list: its lists.xml is a complete, empty document.
+    assert len(etree.fromstring(_served_file(test_object, manifest, "lists.xml"))) == 0
     create_xml = _served_file(test_object, manifest, "create.xml")
     assert b"<XMLSchemaStructure" in create_xml and b'name="roster"' in create_xml
     etree.fromstring(_served_file(test_object, manifest, "insert.xml"))
@@ -917,6 +943,73 @@ def t_e_s_t_case_journey(test_object):
     # links two schemas and the project page offers no diagram.
     res = testapp.get("/user/{}/project/{}".format(login, project), status=200)
     assert b"Workflow diagram" not in res.body
+
+    # --- lists.xml: the rule behind each list Tool 2 attaches ----------------
+    # Tool 2 is still in testing, and a device keeps a scratch mirror of it
+    # from the same files: they are served before the build, without an
+    # fs:repository. lists.xml names both lists, their source and the SELECT
+    # a device runs over its mirror to put a newly registered worker into the
+    # SQLite Collect made from roster.csv.
+    manifest = _pull_manifest(test_object, login, project, TOOL2)
+    entries = _manifest_entries(manifest)
+    # manifest.xml is not among them yet: in check mode jxformtomysql deletes
+    # every output but create.xml and insert.xml (rstools.md 9.2 asks it to
+    # keep the manifest); it appears once the repository is built.
+    for name in ("create.xml", "insert.xml", "properties.xml", "lists.xml"):
+        assert name in entries, (name, entries)
+    lists = etree.fromstring(_served_file(test_object, manifest, "lists.xml"))
+    by_id = {a_list.get("id"): a_list for a_list in lists.findall("list")}
+    assert set(by_id) == {"centre_list", "roster"}, by_id
+    roster_rule = by_id["roster"]
+    assert (
+        roster_rule.get("file"),
+        roster_rule.get("kind"),
+        roster_rule.get("active"),
+    ) == (
+        "roster.csv",
+        "row",
+        "1",
+    )
+    assert (
+        roster_rule.get("repository"),
+        roster_rule.get("form"),
+        roster_rule.get("table"),
+    ) == (
+        schema1,
+        TOOL1,
+        "roster",
+    )
+    assert roster_rule.get("label") == worker_label
+    select = roster_rule.findtext("select")
+    assert "{source.roster}" in select and "FS_" not in select
+    # The claim the file rests on: a mirror built from the served create.xml,
+    # one locally registered worker in it, and the rule's SELECT over it
+    # yields a row shaped exactly like the served roster.csv.
+    served_roster = csv.reader(
+        io.StringIO(_served_file(test_object, manifest, "roster.csv").decode("utf-8"))
+    )
+    served_header = next(served_roster)
+    tool1_create_xml = _served_file(
+        test_object, _pull_manifest(test_object, login, project, TOOL1), "create.xml"
+    )
+    mirror = sqlite3.connect(":memory:")
+    _sqlite_table_from_create_xml(mirror, tool1_create_xml, "roster")
+    mirror.execute(
+        "INSERT INTO `roster` (`rowuuid`, `{}`, `root_rowuuid`, `parent_rowuuid`, "
+        "`_active`) VALUES ('local-1', 'Registered offline', 'school-1', 'school-1', 1)".format(
+            worker_label
+        )
+    )
+    rows = mirror.execute(
+        "SELECT * FROM ({}) WHERE name IN ('local-1')".format(
+            select.replace("{source.roster}", "`roster`")
+        )
+    )
+    assert [d[0] for d in rows.description] == served_header, served_header
+    (row,) = rows.fetchall()
+    assert row[0] == "local-1" and row[1] == "Registered offline"
+    assert row[served_header.index("school_id")] == "school-1"
+    assert row[served_header.index("worker_id")] == "Registered offline"
 
     # --- Build Tool 2: the FKs and the membership trigger are created ------
     testapp.post(

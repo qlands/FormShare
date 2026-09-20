@@ -14,6 +14,7 @@ from formshare.processes.db import (
 from formshare.processes.odk.api import (
     get_manifest,
     get_media_file,
+    get_repository_file,
     get_form_list,
     get_xml_form,
     store_submission,
@@ -353,6 +354,50 @@ class ODKManifest(ODKView):
                         self.request, user_id, project_code, project_id, form_id
                     )
                 )
+        else:
+            response = Response(status=404)
+            return response
+
+
+class ODKRepositoryFile(ODKView):
+    """A file a device mirrors the repository from -- create.xml, insert.xml,
+    manifest.xml or properties.xml -- under the same access rules as a media
+    file (docs/formshare_case_management/formshare.md 3.10)."""
+
+    def process_view(self):
+        file_name = self.request.matchdict["filename"]
+        form_id = self.request.matchdict["formid"]
+        project_code = self.request.matchdict["projcode"]
+        user_id = self.request.matchdict["userid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is not None:
+            if not project_has_crowdsourcing(self.request, project_id):
+                assistant_uuid = get_odk_assistant_uuid(
+                    self.request, user_id, project_id, self.user
+                )
+                if not self.api:
+                    if is_assistant_active(self.request, assistant_uuid):
+                        if assistant_has_form(
+                            self.request, user_id, project_id, form_id, assistant_uuid
+                        ):
+                            if self.authorize(
+                                get_assistant_password(self.request, assistant_uuid)
+                            ):
+                                return get_repository_file(
+                                    self.request, project_id, form_id, file_name
+                                )
+                            else:
+                                return self.ask_for_credentials()
+                        else:
+                            return self.ask_for_credentials()
+                    else:
+                        return self.ask_for_credentials()
+                else:
+                    return get_repository_file(
+                        self.request, project_id, form_id, file_name
+                    )
+            else:
+                return get_repository_file(self.request, project_id, form_id, file_name)
         else:
             response = Response(status=404)
             return response

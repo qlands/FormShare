@@ -96,6 +96,8 @@ __all__ = [
     "backfill_sql",
     "get_list_source_tables",
     "get_table_properties",
+    "get_form_properties",
+    "properties_xml",
     "property_is_served",
     "add_table_property",
     "delete_table_property",
@@ -2064,3 +2066,99 @@ def inherit_properties(request, project_id, parent_form, child_form):
             )
         )
     request.dbsession.commit()
+
+
+# ---------------------------------------------------------------------------
+# properties.xml: the <table>_properties tables for the device mirror, in
+# create.xml's own vocabulary (rstools.md 5.3 and 6.8). Served in the manifest
+# beside create.xml (formshare.md 3.10).
+
+# The type each property kind takes in the file, as the library reads it: the
+# same shapes the server columns have (PROPERTY_TYPES), spelled the way
+# JXFormToMySQL spells a field.
+_PROPERTIES_XML_TYPES = {
+    "string": ("varchar", "255", "0"),
+    "integer": ("int", "9", "0"),
+    "decimal": ("decimal", "10", "3"),
+    "date": ("date", "0", "0"),
+    "datetime": ("datetime", "0", "0"),
+    "geopoint": ("varchar", "80", "0"),
+    "geotrace": ("text", "0", "0"),
+    "geoshape": ("text", "0", "0"),
+}
+
+
+def get_form_properties(request, project_id, form_id):
+    """{table_name: [property, ...]} for every table of the form that has
+    properties, each list in definition order."""
+    result = {}
+    for p in (
+        request.dbsession.query(TableProperty)
+        .filter(TableProperty.project_id == project_id)
+        .filter(TableProperty.form_id == form_id)
+        .order_by(TableProperty.table_name, TableProperty.property_cdate)
+        .all()
+    ):
+        result.setdefault(p.table_name, []).append(
+            {
+                "property_name": p.property_name,
+                "property_type": p.property_type,
+                "property_default": p.property_default,
+                "property_desc": p.property_desc,
+            }
+        )
+    return result
+
+
+def properties_xml(properties_by_table):
+    """The properties.xml a device builds <table>_properties from (pure).
+
+    An XMLSchemaStructure like create.xml's, one table per source table that
+    has properties, properties="true" on it so the loader knows to give every
+    new source row a property row; rowuuid as the key field, one field per
+    property with its type and, when it has one, its default; _lastupdate
+    listed, never written by the device. Always a complete document: a form
+    with no properties serves an empty <tables/>, so the contract is one
+    file and not a file that may be missing.
+    """
+    root = etree.Element("XMLSchemaStructure", version="3.0")
+    tables = etree.SubElement(root, "tables")
+    for table_name in sorted(properties_by_table):
+        table = etree.SubElement(
+            tables,
+            "table",
+            name=properties_table(table_name),
+            properties="true",
+            desc="Properties of {}".format(table_name),
+        )
+        etree.SubElement(
+            table,
+            "field",
+            name="rowuuid",
+            type="varchar",
+            size="80",
+            decsize="0",
+            key="true",
+        )
+        for p in properties_by_table[table_name]:
+            xml_type, size, decsize = _PROPERTIES_XML_TYPES.get(
+                p["property_type"], ("varchar", "255", "0")
+            )
+            field = etree.SubElement(
+                table,
+                "field",
+                name=p["property_name"],
+                type=xml_type,
+                size=size,
+                decsize=decsize,
+            )
+            if p.get("property_default") is not None:
+                field.set("default", p["property_default"])
+            if p.get("property_desc"):
+                field.set("desc", p["property_desc"])
+        etree.SubElement(
+            table, "field", name="_lastupdate", type="datetime", size="0", decsize="0"
+        )
+    return etree.tostring(
+        root, pretty_print=True, xml_declaration=True, encoding="UTF-8"
+    )

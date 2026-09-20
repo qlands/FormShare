@@ -21,6 +21,8 @@ rows hang off a repeat table in another form -- proven end to end.
 import hashlib
 import csv
 import io
+
+from lxml import etree
 import json
 import os
 import re
@@ -230,6 +232,39 @@ def _pull_manifest(test_object, login, project, form_id):
             FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
         ),
     ).body
+
+
+FS_NS = "https://formshare.org/xforms/extensions"
+OPENROSA_MANIFEST = "{http://openrosa.org/xforms/xformsManifest}"
+OPENROSA_LIST = "{http://openrosa.org/xforms/xformsList}"
+
+
+def _manifest_entries(manifest):
+    """{filename: (hash, downloadUrl)} of a manifest."""
+    root = etree.fromstring(manifest)
+    return {
+        e.findtext(OPENROSA_MANIFEST + "filename"): (
+            e.findtext(OPENROSA_MANIFEST + "hash"),
+            e.findtext(OPENROSA_MANIFEST + "downloadUrl"),
+        )
+        for e in root.findall(OPENROSA_MANIFEST + "mediaFile")
+    }
+
+
+def _form_list(test_object, login, project):
+    """{formID: xform element} of the project's formList, as a device sees it."""
+    body = test_object.testapp.get(
+        "/user/{}/project/{}/formList".format(login, project),
+        status=200,
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    ).body
+    root = etree.fromstring(body)
+    return {
+        x.findtext(OPENROSA_LIST + "formID"): x
+        for x in root.findall(OPENROSA_LIST + "xform")
+    }
 
 
 def _manifest_hash(manifest, file_name):
@@ -448,6 +483,46 @@ def t_e_s_t_case_journey(test_object):
     )
     assert "FS_error" not in res.headers
     assert _maintable_count(test_object.server_config, schema1) == 2
+
+    # --- The device mirror: the build files travel in the manifest ---------
+    # A FormShare Collect device builds a SQLite copy of the repository from
+    # create.xml, insert.xml and manifest.xml, and its properties tables from
+    # properties.xml (formshare.md 3.10). Tool 1 has no media files, so this
+    # is also the manifest that used to be empty.
+    manifest = _pull_manifest(test_object, login, project, TOOL1)
+    entries = _manifest_entries(manifest)
+    for name in ("create.xml", "insert.xml", "manifest.xml", "properties.xml"):
+        assert name in entries and entries[name][0].startswith("md5:"), (name, entries)
+    create_xml = _served_file(test_object, manifest, "create.xml")
+    assert b"<XMLSchemaStructure" in create_xml and b'name="roster"' in create_xml
+    etree.fromstring(_served_file(test_object, manifest, "insert.xml"))
+    etree.fromstring(_served_file(test_object, manifest, "manifest.xml"))
+    props = _served_file(test_object, manifest, "properties.xml")
+    assert b"<tables/>" in props, props
+    assert hashlib.md5(props).hexdigest() == entries["properties.xml"][0][len("md5:") :]
+    props_hash_before = entries["properties.xml"][0]
+    # Only the four names are served through that route.
+    testapp.get(
+        urlparse(entries["create.xml"][1].replace("create.xml", "drop.sql")).path,
+        status=404,
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+    # The formList says which mirror the form belongs to and where its
+    # geopoints are; the stock elements are untouched.
+    tool1_entry = _form_list(test_object, login, project)[TOOL1]
+    assert tool1_entry.findtext("{" + FS_NS + "}repository") == schema1
+    assert tool1_entry.find("{" + FS_NS + "}parent") is None
+    assert tool1_entry.findtext(OPENROSA_LIST + "manifestUrl")
+    stored_geopoints = _scalar(
+        test_object.server_config,
+        "SELECT IFNULL(form_geopoint, '') FROM odkform WHERE project_id = '{}' "
+        "AND form_id = '{}'".format(test_object.projectID, TOOL1),
+    )
+    assert [e.text for e in tool1_entry.findall("{" + FS_NS + "}geopoint")] == [
+        g.strip() for g in stored_geopoints.split(",") if g.strip()
+    ]
 
     # --- Two published lists from Tool 1 -----------------------------------
     # No list yet: no Properties button, and the properties page offers no
@@ -688,6 +763,27 @@ def t_e_s_t_case_journey(test_object):
     res = testapp.get(roster_props, status=200)
     test_object.root.assertIn(b"risk_factor", res.body)
     test_object.root.assertIn(b"next_visit", res.body)
+    # properties.xml now carries the table, with its hash changed in the
+    # manifest so the device rebuilds its mirror on the next pull.
+    manifest = _pull_manifest(test_object, login, project, TOOL1)
+    entries = _manifest_entries(manifest)
+    assert entries["properties.xml"][0] != props_hash_before
+    props = etree.fromstring(_served_file(test_object, manifest, "properties.xml"))
+    (table,) = props.findall("./tables/table")
+    assert (
+        table.get("name") == "roster_properties" and table.get("properties") == "true"
+    )
+    fields = {f.get("name"): f for f in table.findall("field")}
+    assert fields["rowuuid"].get("key") == "true"
+    assert (
+        fields["risk_factor"].get("type"),
+        fields["risk_factor"].get("default"),
+    ) == ("int", "0")
+    assert (fields["next_visit"].get("type"), fields["next_visit"].get("default")) == (
+        "date",
+        None,
+    )
+    assert "_lastupdate" in fields
 
     # Served by the roster list once added as a column, at its default.
     res = testapp.post(
@@ -1055,6 +1151,11 @@ def t_e_s_t_case_journey(test_object):
         )
         assert "FS_error" not in res.headers
     _assign_assistant(test_object, tool2_v6)
+    # In testing, the new version tells the device which form it will merge
+    # into and has no repository of its own yet.
+    v6_entry = _form_list(test_object, login, project)[tool2_v6]
+    assert v6_entry.findtext("{" + FS_NS + "}parent") == TOOL2
+    assert v6_entry.find("{" + FS_NS + "}repository") is None
 
     # The new version inherited the links and cannot change them: roster is
     # the case link, the page is read-only, a POST is refused.
@@ -1122,6 +1223,11 @@ def t_e_s_t_case_journey(test_object):
     assert (
         merged_schema == schema2
     ), "the merge did not hand the schema to the new version"
+    # Merged, it belongs to the repository it merged into: the device keeps
+    # one mirror for both versions.
+    v6_entry = _form_list(test_object, login, project)[tool2_v6]
+    assert v6_entry.findtext("{" + FS_NS + "}repository") == schema2
+    assert v6_entry.find("{" + FS_NS + "}parent") is None
 
     # The links survived the merge, on the schema the new version now owns.
     fks = _foreign_keys(test_object.server_config, schema2, "maintable")

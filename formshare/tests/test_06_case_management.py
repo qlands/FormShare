@@ -1223,3 +1223,103 @@ def test_only_the_tables_a_list_draws_from_can_carry_properties(db_request):
     assert cm.get_list_source_tables(db_request, "p") == {
         "tool1": ["maintable", "roster"]
     }
+
+
+# ---------------------------------------------------------------------------
+# The device mirror: what the server serves (formshare.md 3.10)
+# ---------------------------------------------------------------------------
+
+from lxml import etree  # noqa: E402
+
+
+def test_properties_xml_is_create_xml_vocabulary_with_defaults():
+    """One table per source table, properties="true", rowuuid as the key,
+    each property with its type and default, _lastupdate last; a form with
+    no properties still serves a complete, empty document."""
+    xml = cm.properties_xml(
+        {
+            "roster": [
+                {
+                    "property_name": "risk_factor",
+                    "property_type": "integer",
+                    "property_default": "0",
+                    "property_desc": "raised by each follow-up",
+                },
+                {
+                    "property_name": "route",
+                    "property_type": "geotrace",
+                    "property_default": None,
+                    "property_desc": None,
+                },
+            ]
+        }
+    )
+    root = etree.fromstring(xml)
+    assert root.tag == "XMLSchemaStructure" and root.get("version") == "3.0"
+    (table,) = root.findall("./tables/table")
+    assert table.get("name") == "roster_properties"
+    assert table.get("properties") == "true"
+    fields = [
+        (
+            f.get("name"),
+            f.get("type"),
+            f.get("size"),
+            f.get("decsize"),
+            f.get("default"),
+            f.get("key"),
+        )
+        for f in table.findall("field")
+    ]
+    assert fields == [
+        ("rowuuid", "varchar", "80", "0", None, "true"),
+        ("risk_factor", "int", "9", "0", "0", None),
+        ("route", "text", "0", "0", None, None),
+        ("_lastupdate", "datetime", "0", "0", None, None),
+    ]
+    assert (
+        table.find("field[@name='risk_factor']").get("desc")
+        == "raised by each follow-up"
+    )
+    empty = etree.fromstring(cm.properties_xml({}))
+    assert empty.find("tables") is not None and len(empty.find("tables")) == 0
+
+
+def test_the_formlist_extension_says_which_mirror_a_form_belongs_to():
+    """fs:repository once the form has a schema, fs:parent while a sub-version
+    is in testing, fs:geopoint per geopoint question; rendered in FormShare's
+    namespace beside the stock elements, which keep theirs."""
+    from formshare.processes.odk.api import (
+        formlist_extension,
+        generate_form_list,
+        FS_XFORMS_NS,
+    )
+
+    built = formlist_extension(
+        {"form_schema": "FS_a", "parent_form": None, "form_geopoint": "gps, g1/loc"}
+    )
+    assert built == {"fs:repository": "FS_a", "fs:geopoint": ["gps", "g1/loc"]}
+    assert formlist_extension(
+        {"form_schema": None, "parent_form": "tool2", "form_geopoint": None}
+    ) == {"fs:parent": "tool2"}
+    assert formlist_extension({"form_schema": None, "parent_form": None}) == {}
+
+    entry = {
+        "formID": "tool1",
+        "name": "Tool 1",
+        "version": "1",
+        "hash": "md5:x",
+        "downloadUrl": "u",
+        "manifestUrl": "m",
+    }
+    entry.update(built)
+    root = etree.fromstring(generate_form_list([entry]))
+    openrosa = "{http://openrosa.org/xforms/xformsList}"
+    (xform,) = root.findall(openrosa + "xform")
+    assert xform.findtext(openrosa + "formID") == "tool1"
+    assert xform.findtext(openrosa + "manifestUrl") == "m"
+    assert xform.findtext("{" + FS_XFORMS_NS + "}repository") == "FS_a"
+    assert [e.text for e in xform.findall("{" + FS_XFORMS_NS + "}geopoint")] == [
+        "gps",
+        "g1/loc",
+    ]
+    assert xform.find("{" + FS_XFORMS_NS + "}parent") is None

@@ -36,6 +36,8 @@ from formshare.processes.db import (
     get_case_link_consumer,
     inherit_consumers,
     inherit_properties,
+    get_form_properties,
+    properties_xml,
     get_consumer_sources,
     apply_link_attributes,
     sync_form_consumers,
@@ -2566,13 +2568,21 @@ def update_odk_form(
 
 
 def generate_form_list(project_array):
-    root = etree.Element("xforms", xmlns="http://openrosa.org/xforms/xformsList")
+    """The OpenRosa formList. A key spelled fs:<name> becomes an element in
+    FormShare's namespace, which stock parsers skip; a list value becomes one
+    element per item (fs:geopoint)."""
+    root = etree.Element(
+        "xforms",
+        xmlns="http://openrosa.org/xforms/xformsList",
+        nsmap={"fs": FS_XFORMS_NS},
+    )
     for project in project_array:
         xform_tag = etree.Element("xform")
         for key, value in project.items():
-            atag = etree.Element(key)
-            atag.text = value
-            xform_tag.append(atag)
+            tag = "{" + FS_XFORMS_NS + "}" + key[3:] if key.startswith("fs:") else key
+            for a_value in value if isinstance(value, list) else [value]:
+                atag = etree.SubElement(xform_tag, tag)
+                atag.text = a_value
         root.append(xform_tag)
     return etree.tostring(root, encoding="utf-8")
 
@@ -2629,6 +2639,11 @@ def get_form_list(request, user, project_code, assistant_uuid, api=False):
                     userid=user,
                     projcode=project_code,
                     formid=form["form_id"],
+                )
+                data.update(
+                    formlist_extension(
+                        get_form_data(request, project_id, form["form_id"]) or {}
+                    )
                 )
             prj_list.append(data)
     return generate_form_list(prj_list)
@@ -2751,6 +2766,93 @@ def refresh_published_lists(request, project_id, form, form_files):
             request, project_id, form, a_file["file_name"], datetime.datetime.now()
         )
     return refreshed
+
+
+# The device mirror (docs/formshare_case_management/formshare.md 3.10). A
+# FormShare Collect device keeps a SQLite copy of the repository, built from
+# the same files the repository was built from and served here as ordinary
+# manifest attachments: stock clients download and ignore them. These four
+# names are reserved in a manifest.
+REPOSITORY_FILES = ("create.xml", "insert.xml", "manifest.xml", "properties.xml")
+# The formList extension, elements a stock parser skips and FormShare Collect
+# reads: which mirror a form belongs to, and which questions are geopoints.
+FS_XFORMS_NS = "https://formshare.org/xforms/extensions"
+
+
+def get_repository_file_content(request, project_id, form_id, file_name):
+    """The bytes of one of the files a device mirrors the repository from, or
+    None while the form has no repository. create.xml, insert.xml and
+    manifest.xml are the build's own, as JXFormToMySQL wrote them (create.xml
+    with the registry links applied, section 3.4); properties.xml is made
+    from the registry each time, so a property added an hour ago is in it."""
+    if file_name not in REPOSITORY_FILES:
+        return None
+    form_data = get_form_data(request, project_id, form_id)
+    if form_data is None or not form_data.get("form_schema"):
+        return None
+    if file_name == "properties.xml":
+        return properties_xml(get_form_properties(request, project_id, form_id))
+    path = os.path.join(
+        get_odk_path(request),
+        *["forms", form_data["form_directory"], "repository", file_name]
+    )
+    if not os.path.exists(path):
+        return None
+    with open(path, "rb") as a_file:
+        return a_file.read()
+
+
+def get_repository_file(request, project_id, form_id, file_name):
+    """The response serving a repository file to a device, 404 otherwise."""
+    content = get_repository_file_content(request, project_id, form_id, file_name)
+    if content is None:
+        raise HTTPNotFound
+    return response_stream(io.BytesIO(content), file_name, Response())
+
+
+def repository_manifest_entries(request, user, project, project_id, form):
+    """The manifest entries of the repository files, hashed by content so a
+    merge or a new property changes what the device sees."""
+    entries = []
+    for file_name in REPOSITORY_FILES:
+        content = get_repository_file_content(request, project_id, form, file_name)
+        if content is None:
+            continue
+        entries.append(
+            {
+                "filename": file_name,
+                "hash": "md5:" + md5(content).hexdigest(),
+                "downloadUrl": request.route_url(
+                    "odkrepositoryfile",
+                    userid=user,
+                    projcode=project,
+                    formid=form,
+                    filename=file_name,
+                ),
+            }
+        )
+    return entries
+
+
+def formlist_extension(form_data):
+    """The fs: elements of a form's formList entry (pure): fs:repository, the
+    schema, once the form has one -- forms that share it share the device's
+    mirror; fs:parent, the form it will merge into, while a sub-version is
+    still in testing; fs:geopoint, one per geopoint question, the list
+    store_json_file stamps _geopoint from, so the device stamps the same."""
+    extension = {}
+    if form_data.get("form_schema"):
+        extension["fs:repository"] = form_data["form_schema"]
+    elif form_data.get("parent_form"):
+        extension["fs:parent"] = form_data["parent_form"]
+    geopoints = [
+        g.strip()
+        for g in (form_data.get("form_geopoint") or "").split(",")
+        if g.strip()
+    ]
+    if geopoints:
+        extension["fs:geopoint"] = geopoints
+    return extension
 
 
 def get_manifest(request, user, project, project_id, form):
@@ -3272,9 +3374,14 @@ def get_manifest(request, user, project, project_id, form):
                             ),
                         }
                     )
+        file_array.extend(
+            repository_manifest_entries(request, user, project, project_id, form)
+        )
         return generate_manifest(file_array)
     else:
-        return generate_manifest([])
+        return generate_manifest(
+            repository_manifest_entries(request, user, project, project_id, form)
+        )
 
 
 def get_xml_form(request, project, form):

@@ -135,6 +135,7 @@ from formshare.views.odk import (
     ODKFormList,
     ODKManifest,
     ODKMediaFile,
+    ODKRepositoryFile,
     ODKPushData,
     ODKPushJSONData,
     ODKSubmission,
@@ -1504,6 +1505,15 @@ def load_routes(config, settings):
             "odkmediafile",
             "/user/{userid}/project/{projcode}/{formid}/manifest/mediafile/{fileid}",
             ODKMediaFile,
+            None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "odkrepositoryfile",
+            "/user/{userid}/project/{projcode}/{formid}/manifest/repository/{filename}",
+            ODKRepositoryFile,
             None,
         )
     )

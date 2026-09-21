@@ -1,7 +1,9 @@
-version: 2
+version: 2.1
 
 jobs:
-  py-3.13:
+  # Config 2.1 only takes letters, digits, spaces, "-" and "_" in a job
+  # name, so the dot of py-3.13 had to go
+  py-3-13:
     docker:
       - image: qlands/odktools_circleci:20260920
         environment:
@@ -23,6 +25,10 @@ jobs:
       # - HTTP (no TLS) for client traffic: http://localhost:9200
       # - TLS ONLY for transport (required)
       # - Self-generates transport certs on startup (no docker needed)
+      # - No "ports:" here or on MySQL: the containers of a job share
+      #   one network, so each service answers on localhost as it is.
+      #   Config 2.1 rejects the key, and "cap_add:" with it; 2.0
+      #   accepted both and ignored them
       # ---------------------------------------------------------
       - image: docker.elastic.co/elasticsearch/elasticsearch:9.2.1
         environment:
@@ -66,19 +72,13 @@ jobs:
 
             exec /usr/local/bin/docker-entrypoint.sh;
           '
-        ports:
-          - 9200:9200
 
       # ---------------------------------------------------------
       # MySQL 8.4.7
       # -----------------------------------------------
       - image: mysql:8.4.7
-        cap_add:
-          - SYS_NICE
         environment:
           - MYSQL_ROOT_PASSWORD=circleci
-        ports:
-          - 3306:3306
 
     resource_class: large
     working_directory: ~/work
@@ -228,4 +228,4 @@ workflows:
   version: 2
   build:
     jobs:
-      - py-3.13
+      - py-3-13

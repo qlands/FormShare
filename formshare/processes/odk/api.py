@@ -2619,10 +2619,15 @@ def generate_form_list(project_array):
     """The OpenRosa formList. A key spelled fs:<name> becomes an element in
     FormShare's namespace, which stock parsers skip; a list value becomes one
     element per item (fs:geopoint)."""
+    extended = any(
+        key.startswith("fs:") for project in project_array for key in project
+    )
+    # The namespace is declared only when an element uses it, so the formList
+    # of a project without lists is byte for byte what it was.
     root = etree.Element(
         "xforms",
         xmlns="http://openrosa.org/xforms/xformsList",
-        nsmap={"fs": FS_XFORMS_NS},
+        nsmap={"fs": FS_XFORMS_NS} if extended else None,
     )
     for project in project_array:
         xform_tag = etree.Element("xform")
@@ -2670,6 +2675,7 @@ def get_form_list(request, user, project_code, assistant_uuid, api=False):
             forms = get_all_project_forms(request, project_id, True)
     else:
         forms = get_all_project_forms(request, project_id, True)
+    uses_registry = project_uses_registry(request, project_id)
     for form in forms:
         path = os.path.join(odk_dir, *["forms", form["form_directory"], "*.json"])
         files = glob.glob(path)
@@ -2688,11 +2694,12 @@ def get_form_list(request, user, project_code, assistant_uuid, api=False):
                     projcode=project_code,
                     formid=form["form_id"],
                 )
-                data.update(
-                    formlist_extension(
-                        get_form_data(request, project_id, form["form_id"]) or {}
+                if uses_registry:
+                    data.update(
+                        formlist_extension(
+                            get_form_data(request, project_id, form["form_id"]) or {}
+                        )
                     )
-                )
             prj_list.append(data)
     return generate_form_list(prj_list)
 
@@ -2833,6 +2840,16 @@ REPOSITORY_FILES = (
 FS_XFORMS_NS = "https://formshare.org/xforms/extensions"
 
 
+def project_uses_registry(request, project_id):
+    """Whether the project publishes any list -- the one case in which a
+    device has a mirror to build and a stock client has anything new to
+    download. Everywhere else the wire is exactly what it was: no
+    repository files in the manifest, no fs: elements in the formList, so a
+    team collecting with ODK Collect on an ordinary project sees no "form
+    updated" and downloads nothing on an upgrade (2026-09-21)."""
+    return len(get_project_published_lists(request, project_id)) > 0
+
+
 def get_repository_file_content(request, project_id, form_id, file_name):
     """The bytes of one of the files a device mirrors the repository from, or
     None while the form has no repository. create.xml, insert.xml and
@@ -2840,6 +2857,8 @@ def get_repository_file_content(request, project_id, form_id, file_name):
     with the registry links applied, section 3.4); properties.xml is made
     from the registry each time, so a property added an hour ago is in it."""
     if file_name not in REPOSITORY_FILES:
+        return None
+    if not project_uses_registry(request, project_id):
         return None
     form_data = get_form_data(request, project_id, form_id)
     if form_data is None:
@@ -2939,6 +2958,8 @@ def repository_manifest_entries(request, user, project, project_id, form):
     """The manifest entries of the repository files, hashed by content so a
     merge or a new property changes what the device sees."""
     entries = []
+    if not project_uses_registry(request, project_id):
+        return entries
     for file_name in REPOSITORY_FILES:
         content = get_repository_file_content(request, project_id, form, file_name)
         if content is None:

@@ -502,54 +502,31 @@ def t_e_s_t_case_journey(test_object):
     assert "FS_error" not in res.headers
     assert _maintable_count(test_object.server_config, schema1) == 2
 
-    # --- The device mirror: the build files travel in the manifest ---------
-    # A FormShare Collect device builds a SQLite copy of the repository from
-    # create.xml, insert.xml and manifest.xml, and its properties tables from
-    # properties.xml (formshare.md 3.10). Tool 1 has no media files, so this
-    # is also the manifest that used to be empty.
+    # --- Before any list exists, nothing changes on the wire ----------------
+    # The mirror artefacts and the fs: elements are served only to projects
+    # that publish a list. A project that never does -- a team collecting
+    # with stock ODK Collect -- sees no "form updated" and downloads nothing
+    # after an upgrade.
     manifest = _pull_manifest(test_object, login, project, TOOL1)
     entries = _manifest_entries(manifest)
-    for name in (
+    assert not set(entries) & {
         "create.xml",
         "insert.xml",
         "manifest.xml",
         "properties.xml",
         "lists.xml",
-    ):
-        assert name in entries and entries[name][0].startswith("md5:"), (name, entries)
-    # Tool 1 attaches no list and, before any list exists, feeds none: its
-    # lists.xml is a complete, empty document.
-    assert len(etree.fromstring(_served_file(test_object, manifest, "lists.xml"))) == 0
-    create_xml = _served_file(test_object, manifest, "create.xml")
-    assert b"<XMLSchemaStructure" in create_xml and b'name="roster"' in create_xml
-    etree.fromstring(_served_file(test_object, manifest, "insert.xml"))
-    etree.fromstring(_served_file(test_object, manifest, "manifest.xml"))
-    props = _served_file(test_object, manifest, "properties.xml")
-    assert b"<tables/>" in props, props
-    assert hashlib.md5(props).hexdigest() == entries["properties.xml"][0][len("md5:") :]
-    props_hash_before = entries["properties.xml"][0]
-    # Only the four names are served through that route.
+    }, entries
+    tool1_entry = _form_list(test_object, login, project)[TOOL1]
+    assert not [e for e in tool1_entry if e.tag.startswith("{" + FS_NS + "}")]
     testapp.get(
-        urlparse(entries["create.xml"][1].replace("create.xml", "drop.sql")).path,
+        "/user/{}/project/{}/{}/manifest/repository/create.xml".format(
+            login, project, TOOL1
+        ),
         status=404,
         extra_environ=dict(
             FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
         ),
     )
-    # The formList says which mirror the form belongs to and where its
-    # geopoints are; the stock elements are untouched.
-    tool1_entry = _form_list(test_object, login, project)[TOOL1]
-    assert tool1_entry.findtext("{" + FS_NS + "}repository") == schema1
-    assert tool1_entry.find("{" + FS_NS + "}parent") is None
-    assert tool1_entry.findtext(OPENROSA_LIST + "manifestUrl")
-    stored_geopoints = _scalar(
-        test_object.server_config,
-        "SELECT IFNULL(form_geopoint, '') FROM odkform WHERE project_id = '{}' "
-        "AND form_id = '{}'".format(test_object.projectID, TOOL1),
-    )
-    assert [e.text for e in tool1_entry.findall("{" + FS_NS + "}geopoint")] == [
-        g.strip() for g in stored_geopoints.split(",") if g.strip()
-    ]
 
     # --- Two published lists from Tool 1 -----------------------------------
     # No list yet: no Properties button, and the properties page offers no
@@ -671,6 +648,61 @@ def t_e_s_t_case_journey(test_object):
     )
     assert "FS_error" in res.headers
     assert _has_table(test_object.server_config, schema1, "maintable")
+
+    # --- The device mirror: the build files travel in the manifest ---------
+    # A FormShare Collect device builds a SQLite copy of the repository from
+    # create.xml, insert.xml and manifest.xml, and its properties tables from
+    # properties.xml (formshare.md 3.10). Tool 1 has no media files, so this
+    # is also the manifest that used to be empty.
+    manifest = _pull_manifest(test_object, login, project, TOOL1)
+    entries = _manifest_entries(manifest)
+    for name in (
+        "create.xml",
+        "insert.xml",
+        "manifest.xml",
+        "properties.xml",
+        "lists.xml",
+    ):
+        assert name in entries and entries[name][0].startswith("md5:"), (name, entries)
+    # Tool 1 attaches no list; the three it feeds are the whole of its
+    # lists.xml, each in the feeds role (the rules are checked once Tool 2
+    # attaches them).
+    tool1_lists = etree.fromstring(_served_file(test_object, manifest, "lists.xml"))
+    assert {(a.get("id"), a.get("role")) for a in tool1_lists.findall("list")} == {
+        ("centre_list", "feeds"),
+        ("district_list", "feeds"),
+        ("roster", "feeds"),
+    }, tool1_lists
+    create_xml = _served_file(test_object, manifest, "create.xml")
+    assert b"<XMLSchemaStructure" in create_xml and b'name="roster"' in create_xml
+    etree.fromstring(_served_file(test_object, manifest, "insert.xml"))
+    etree.fromstring(_served_file(test_object, manifest, "manifest.xml"))
+    props = _served_file(test_object, manifest, "properties.xml")
+    assert b"<tables/>" in props, props
+    assert hashlib.md5(props).hexdigest() == entries["properties.xml"][0][len("md5:") :]
+    props_hash_before = entries["properties.xml"][0]
+    # Only the four names are served through that route.
+    testapp.get(
+        urlparse(entries["create.xml"][1].replace("create.xml", "drop.sql")).path,
+        status=404,
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+    # The formList says which mirror the form belongs to and where its
+    # geopoints are; the stock elements are untouched.
+    tool1_entry = _form_list(test_object, login, project)[TOOL1]
+    assert tool1_entry.findtext("{" + FS_NS + "}repository") == schema1
+    assert tool1_entry.find("{" + FS_NS + "}parent") is None
+    assert tool1_entry.findtext(OPENROSA_LIST + "manifestUrl")
+    stored_geopoints = _scalar(
+        test_object.server_config,
+        "SELECT IFNULL(form_geopoint, '') FROM odkform WHERE project_id = '{}' "
+        "AND form_id = '{}'".format(test_object.projectID, TOOL1),
+    )
+    assert [e.text for e in tool1_entry.findall("{" + FS_NS + "}geopoint")] == [
+        g.strip() for g in stored_geopoints.split(",") if g.strip()
+    ]
 
     # --- Properties (feature 2): a typed column beside the roster ----------
     # Defined by a type and a default, born with each row through a trigger,

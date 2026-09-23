@@ -45,7 +45,7 @@
                                                 <input type="radio" name="list_id" value="{{ a_consumer.list_id }}" {% if a_consumer.consumer_is_link == 1 %}checked{% endif %}>
                                             {% endif %}
                                         </td>
-                                        <td><code>{{ a_consumer.list_id }}</code></td>
+                                        <td><code>{{ a_consumer.list_filename or a_consumer.list_id }}</code> <small class="text-muted">{{ a_consumer.list_id }}</small></td>
                                         <td>{{ a_consumer.selector_field }}</td>
                                         <td>{% if a_consumer.is_value_list %}{{ _('Value list (filter)') }}{% elif a_consumer.consumer_is_link == 1 %}<b>{{ _('Case link') }}</b>{% else %}{{ _('Reads') }}{% endif %}</td>
                                     </tr>

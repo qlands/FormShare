@@ -515,6 +515,11 @@ class CaseLinksView(ListSection):
             # A value list (distinct districts) has no row identity and cannot
             # be the case link; the page offers no radio for it.
             a_consumer["is_value_list"] = bool(a_list and a_list.get("list_key_column"))
+            # The file name is what the form's select_one_from_file names and
+            # what the owner recognises; the code is only the registry's key.
+            a_consumer["list_filename"] = (
+                a_list["list_filename"] if a_list else a_consumer["list_id"]
+            )
         return {
             "projectDetails": project_details,
             "userid": user_id,

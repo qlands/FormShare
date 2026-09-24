@@ -712,3 +712,81 @@ def test_golden_triple(name):
     assert result.ok, result.error
     assert changes_of(result.writes, inputs.get("case")) == expected["changes"]
     assert result.log == expected.get("log", [])
+
+
+# ---------------------------------------------------------------------------
+# The engine seam: RSTools' runactions binary (rstools.md 12.5)
+# ---------------------------------------------------------------------------
+
+FAKE_ENGINE = r'''#!/usr/bin/env python3
+"""A stand-in for RSTools' runactions: the protocol, not the engine."""
+import json, sys
+args = dict(zip(sys.argv[1::2], sys.argv[2::2]))
+module = open(args["-m"]).read()
+inputs = json.load(open(args["-i"]))
+if "bad input" in json.dumps(inputs):
+    sys.stderr.write("input.json: no submission")
+    sys.exit(2)
+if "throw" in module:
+    json.dump({"failure": "Error: boom (line 2)", "log": ["before"]}, open(args["-o"], "w"))
+    sys.exit(1)
+case = inputs["case"]
+json.dump({"changes": [{"scope": "source", "table": case["table"] + "_properties", "rowuuid": case["rowuuid"],
+                        "column": "p", "old": str(case["properties"]["p"]), "new": "5"},
+                       {"scope": "source", "table": case["parent"]["table"], "rowuuid": case["parent"]["rowuuid"],
+                        "column": "_active", "old": "1", "new": "0"}],
+           "log": ["ran in the fake engine"]}, open(args["-o"], "w"))
+sys.exit(0)
+'''
+
+
+@pytest.fixture
+def fake_engine(tmp_path):
+    import stat
+
+    path = tmp_path / "runactions"
+    path.write_text(FAKE_ENGINE)
+    path.chmod(path.stat().st_mode | stat.S_IEXEC)
+    return str(path)
+
+
+def test_the_binary_is_used_when_present_and_its_report_applies(fake_engine):
+    from formshare.processes.actions.host import writes_from_changes
+
+    result = run_module(
+        "export default function run(s, api) { api.case.set('p', 5); }",
+        base_input(),
+        engine=fake_engine,
+    )
+    assert result.ok, result.error
+    assert result.log == ["ran in the fake engine"]
+    assert result.changes[0]["new"] == "5"
+    writes = writes_from_changes(result.changes, base_input()["case"])
+    assert writes == [
+        {"scope": "case", "kind": "set", "name": "p", "value": "5"},
+        {"scope": "parent", "kind": "active", "value": 0},
+    ]
+
+
+def test_the_binary_reports_a_failure_and_a_bad_input(fake_engine):
+    result = run_module(
+        "export default function run(s, api) { throw new Error('boom'); }",
+        base_input(),
+        engine=fake_engine,
+    )
+    assert result.error == "Error: boom (line 2)" and result.log == ["before"]
+    result = run_module(
+        "export default function run(s, api) {}",
+        base_input(submission={"values": {"note": "bad input"}}),
+        engine=fake_engine,
+    )
+    assert result.error.startswith("The engine could not read the input")
+
+
+def test_a_missing_binary_means_the_in_process_engine(tmp_path):
+    result = run_module(
+        "export default function run(s, api) { api.log('here'); }",
+        base_input(),
+        engine=str(tmp_path / "nope"),
+    )
+    assert result.ok and result.log == ["here"] and result.changes is None

@@ -24,9 +24,10 @@ values typed as actions-api.md section 6 says.
 """
 
 import json
+import os
 import re
-
-import quickjs
+import subprocess
+import tempfile
 
 __all__ = [
     "RunResult",
@@ -37,7 +38,16 @@ __all__ = [
     "changes_of",
     "lookups_named",
     "PRELUDE",
+    "writes_from_changes",
+    "BINARY",
 ]
+
+# The engine of record (actions-api.md 1; rstools.md 12.5): RSTools' Kotlin
+# host with quickjs-ng, built for Linux and shipped like every other tool.
+# Until it is there, the archived `quickjs` binding on PyPI runs the module
+# in-process, at ES2020. run_module takes the binary's path when the caller
+# has one and falls back to the binding.
+BINARY = os.path.join("utilities", "RunActions", "runactions")
 
 # actions-api.md section 7, the same in every host.
 LIMITS = {"source_bytes": 64 * 1024, "memory_bytes": 16 * 1024 * 1024, "seconds": 0.25}
@@ -58,6 +68,9 @@ class RunResult:
         self.writes = writes
         self.log = log
         self.error = error
+        # The change report when the engine computed it (the binary does);
+        # None when the caller derives it from the writes (changes_of).
+        self.changes = None
 
     @property
     def ok(self):
@@ -244,20 +257,97 @@ def lookups_named(source):
     )
 
 
-def run_module(source, input_data, limits=None):
+def run_module(source, input_data, limits=None, engine=None):
     """Runs the module over the input and returns a RunResult.
 
     :param source: the module text (actions-api.md section 3)
     :param input_data: the input, a dict as this module's docstring shows;
         ``lookups`` holds every list the module may read
     :param limits: LIMITS, or the same keys with other values
+    :param engine: the path of RSTools' runactions binary; None or a path
+        that does not exist means the in-process binding
     """
     limits = dict(LIMITS, **(limits or {}))
     try:
         script = load_module(source)
     except ModuleError as e:
         return RunResult([], [], str(e))
+    if engine and os.path.exists(engine):
+        return _run_binary(engine, source, input_data)
+    return _run_in_process(script, input_data, limits)
 
+
+def _run_binary(engine, source, input_data):
+    """RSTools' host as a subprocess (rstools.md 12.5): the module and the
+    input as files, changes.json back. Exit 0: the report and the log, and
+    the writes when the host lists them; 1: the module failed, the message
+    in the file; 2: the input could not be read. The report alone is
+    enough to apply from (writes_from_changes)."""
+    workdir = tempfile.mkdtemp(prefix="fs_actions_")
+    module_file = os.path.join(workdir, "module.js")
+    input_file = os.path.join(workdir, "input.json")
+    output_file = os.path.join(workdir, "changes.json")
+    try:
+        with open(module_file, "w", encoding="utf-8") as a_file:
+            a_file.write(source)
+        with open(input_file, "w", encoding="utf-8") as a_file:
+            json.dump(input_data, a_file, ensure_ascii=False)
+        process = subprocess.run(
+            [engine, "-m", module_file, "-i", input_file, "-o", output_file],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=30,
+        )
+        output = {}
+        if os.path.exists(output_file):
+            with open(output_file, encoding="utf-8") as a_file:
+                output = json.load(a_file)
+        if process.returncode == 0:
+            result = RunResult(output.get("writes", []), output.get("log", []))
+            result.changes = output.get("changes")
+            return result
+        if process.returncode == 1:
+            return RunResult(
+                [],
+                output.get("log", []),
+                output.get("failure")
+                or process.stderr.decode("utf-8", "replace").strip()
+                or "The module failed",
+            )
+        return RunResult(
+            [],
+            [],
+            "The engine could not read the input: {}".format(
+                process.stderr.decode("utf-8", "replace").strip() or process.returncode
+            ),
+        )
+    except subprocess.TimeoutExpired:
+        return RunResult([], [], "The engine did not answer in 30 seconds")
+    except (OSError, ValueError) as e:
+        return RunResult([], [], "The engine failed: {}".format(e))
+    finally:
+        for name in (module_file, input_file, output_file):
+            try:
+                os.remove(name)
+            except OSError:
+                pass
+        try:
+            os.rmdir(workdir)
+        except OSError:
+            pass
+
+
+def _run_in_process(script, input_data, limits):
+    """The interim engine: the archived quickjs binding, ES2020."""
+    try:
+        import quickjs
+    except ImportError:
+        return RunResult(
+            [],
+            [],
+            "No JavaScript engine is available: RSTools' runactions is not "
+            "installed and the quickjs package is missing",
+        )
     context = quickjs.Context()
     context.set_memory_limit(int(limits["memory_bytes"]))
     context.set_time_limit(float(limits["seconds"]))
@@ -340,3 +430,29 @@ def _same(old, new):
         return float(old) == float(new)
     except (TypeError, ValueError):
         return str(old) == str(new)
+
+
+def writes_from_changes(changes, case):
+    """The writes a change report amounts to, for a host that reports
+    changes but not the writes behind them: the table says whether a name
+    is a property, the rowuuid says whether the row is the case or its
+    parent."""
+    writes = []
+    parent = (case or {}).get("parent") or {}
+    for change in changes or []:
+        scope = (
+            "parent"
+            if change.get("rowuuid") == parent.get("rowuuid") and parent
+            else "case"
+        )
+        table = change.get("table") or ""
+        column = change.get("column")
+        if column == "_active":
+            writes.append(
+                {"scope": scope, "kind": "active", "value": int(change.get("new") or 0)}
+            )
+            continue
+        writes.append(
+            {"scope": scope, "kind": "set", "name": column, "value": change.get("new")}
+        )
+    return writes

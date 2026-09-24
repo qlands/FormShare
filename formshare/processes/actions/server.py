@@ -19,6 +19,7 @@ import datetime
 import decimal
 import json
 import logging
+import os
 import re
 import uuid
 
@@ -26,10 +27,12 @@ from sqlalchemy import text
 
 from formshare.models import ActionRun, DictField, DictTable, map_from_schema
 from formshare.processes.actions.host import (
+    BINARY,
     ModuleError,
     changes_of,
     lookups_named,
     run_module,
+    writes_from_changes,
 )
 from formshare.processes.db.actions import (
     CONTROL_COLUMNS,
@@ -650,6 +653,16 @@ def get_run(request, run_id):
 # ---------------------------------------------------------------------------
 
 
+def engine_path(request):
+    """RSTools' runactions binary under odktools.path, or None while it is
+    not installed, in which case the in-process engine runs."""
+    tools = request.registry.settings.get("odktools.path", "")
+    if not tools:
+        return None
+    path = os.path.join(tools, BINARY)
+    return path if os.path.exists(path) else None
+
+
 def run_for_submission(
     request,
     project_id,
@@ -698,7 +711,7 @@ def run_for_submission(
             [],
         )
     source = inputs.pop("_source")
-    result = run_module(module, inputs)
+    result = run_module(module, inputs, engine=engine_path(request))
     if not result.ok:
         return _finish(
             request,
@@ -713,11 +726,16 @@ def run_for_submission(
             result.log,
         )
     try:
-        changes = changes_of(result.writes, inputs.get("case"))
+        if result.changes is not None:
+            # The engine reported the changes itself (RSTools' host); the
+            # writes to apply are read back from the report.
+            changes = result.changes
+            writes = result.writes or writes_from_changes(changes, inputs.get("case"))
+        else:
+            changes = changes_of(result.writes, inputs.get("case"))
+            writes = result.writes
         plan = (
-            _plan_writes(request, source, inputs.get("case"), result.writes)
-            if changes
-            else []
+            _plan_writes(request, source, inputs.get("case"), writes) if changes else []
         )
     except ModuleError as e:
         return _finish(

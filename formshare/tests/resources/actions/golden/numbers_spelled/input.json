@@ -1,0 +1,74 @@
+{
+ "submission": {
+  "rowuuid": "00000001-0000-4000-8000-000000000001",
+  "values": {
+   "head_name": "Maria",
+   "hh_size": 4
+  },
+  "repeats": {
+   "rpt_trees": [
+    {
+     "rowuuid": "t1",
+     "parent_rowuuid": "00000001-0000-4000-8000-000000000001",
+     "values": {
+      "tree_name": "Mango",
+      "tree_height": 3.5
+     }
+    },
+    {
+     "rowuuid": "t2",
+     "parent_rowuuid": "00000001-0000-4000-8000-000000000001",
+     "values": {
+      "tree_name": "Guava",
+      "tree_height": 2.5
+     }
+    },
+    {
+     "rowuuid": "t3",
+     "parent_rowuuid": "00000001-0000-4000-8000-000000000001",
+     "values": {
+      "tree_name": "Palm",
+      "tree_height": null
+     }
+    }
+   ]
+  },
+  "selections": {
+   "crops": [
+    "c1",
+    "c3"
+   ]
+  },
+  "submitted_by": "tester",
+  "submitted_date": "2026-03-05 08:30:00"
+ },
+ "case": {
+  "table": "maintable",
+  "rowuuid": "00000001-0000-4000-8000-000000000001",
+  "active": true,
+  "values": {
+   "head_name": "Maria",
+   "hh_size": 4
+  },
+  "properties": {
+   "status": "new",
+   "visits": 0,
+   "last_visit": null,
+   "score": 2.5,
+   "note": null
+  },
+  "parent": null
+ },
+ "lookups": {
+  "crop_list": {
+   "c1": {
+    "crop_list_des": "c option 1"
+   },
+   "c3": {
+    "crop_list_des": "c option 3"
+   }
+  }
+ },
+ "now": "2026-03-05 08:30:00",
+ "user": "tester"
+}

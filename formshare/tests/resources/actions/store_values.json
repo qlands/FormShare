@@ -1,0 +1,277 @@
+{
+ "about": "What MySQL holds for a write, by the target's type: the outcome both appliers must give (actions-api.md 5; rstools.md 14). type is what the module sees the target as (integer, double, date, datetime, string, geopoint, geotrace, geoshape); size is a text's characters (0: no limit); decimals are a number's places; digits the digits before its point (0: no limit). stored is the value as the change report spells it, or failure.",
+ "cases": [
+  {
+   "type": "integer",
+   "value": 3,
+   "stored": "3"
+  },
+  {
+   "type": "integer",
+   "value": 3.0,
+   "stored": "3"
+  },
+  {
+   "type": "integer",
+   "value": "4",
+   "stored": "4"
+  },
+  {
+   "type": "integer",
+   "value": " 5 ",
+   "stored": "5"
+  },
+  {
+   "type": "integer",
+   "value": true,
+   "stored": "1"
+  },
+  {
+   "type": "integer",
+   "value": false,
+   "stored": "0"
+  },
+  {
+   "type": "integer",
+   "value": null,
+   "stored": null
+  },
+  {
+   "type": "integer",
+   "value": -7,
+   "stored": "-7"
+  },
+  {
+   "type": "integer",
+   "value": 2.5,
+   "failure": true
+  },
+  {
+   "type": "integer",
+   "value": "2.5",
+   "failure": true
+  },
+  {
+   "type": "integer",
+   "value": "abc",
+   "failure": true
+  },
+  {
+   "type": "integer",
+   "value": "",
+   "failure": true
+  },
+  {
+   "type": "integer",
+   "value": 3000000000,
+   "failure": true,
+   "why": "a MySQL int holds -2147483648 to 2147483647; the device stores it today"
+  },
+  {
+   "type": "integer",
+   "value": 2147483647,
+   "stored": "2147483647"
+  },
+  {
+   "type": "double",
+   "value": 0.6666666666666666,
+   "stored": "0.667",
+   "decimals": 3,
+   "digits": 7
+  },
+  {
+   "type": "double",
+   "value": 2.5,
+   "stored": "2.5",
+   "decimals": 3,
+   "digits": 7
+  },
+  {
+   "type": "double",
+   "value": 3,
+   "stored": "3",
+   "decimals": 3,
+   "digits": 7
+  },
+  {
+   "type": "double",
+   "value": true,
+   "stored": "1",
+   "decimals": 3,
+   "digits": 7
+  },
+  {
+   "type": "double",
+   "value": "1.25",
+   "stored": "1.25",
+   "decimals": 3,
+   "digits": 7
+  },
+  {
+   "type": "double",
+   "value": 0.0625,
+   "stored": "0.062",
+   "decimals": 3,
+   "digits": 7,
+   "why": "half to even on the scaled value"
+  },
+  {
+   "type": "double",
+   "value": 1e-07,
+   "stored": "0",
+   "decimals": 3,
+   "digits": 7
+  },
+  {
+   "type": "double",
+   "value": -1.0005,
+   "stored": "-1",
+   "decimals": 3,
+   "digits": 7
+  },
+  {
+   "type": "double",
+   "value": 9999999.999,
+   "stored": "9999999.999",
+   "decimals": 3,
+   "digits": 7
+  },
+  {
+   "type": "double",
+   "value": 12345678,
+   "failure": true,
+   "decimals": 3,
+   "digits": 7,
+   "why": "decimal(10,3) holds 7 digits before the point; the device stores it today"
+  },
+  {
+   "type": "double",
+   "value": "NaN",
+   "failure": true,
+   "decimals": 3,
+   "digits": 7,
+   "why": "not a number a decimal can hold; the device stores it today"
+  },
+  {
+   "type": "double",
+   "value": "x",
+   "failure": true,
+   "decimals": 3,
+   "digits": 7
+  },
+  {
+   "type": "double",
+   "value": 1.23456,
+   "stored": "1.23",
+   "decimals": 2,
+   "why": "a column keeps its own places"
+  },
+  {
+   "type": "date",
+   "value": "2026-09-24",
+   "stored": "2026-09-24"
+  },
+  {
+   "type": "date",
+   "value": "2026-02-30",
+   "failure": true
+  },
+  {
+   "type": "date",
+   "value": "2026-9-4",
+   "failure": true
+  },
+  {
+   "type": "date",
+   "value": "2026-09-24 10:00:00",
+   "failure": true
+  },
+  {
+   "type": "date",
+   "value": 20260924,
+   "failure": true
+  },
+  {
+   "type": "datetime",
+   "value": "2026-09-24 10:30:00",
+   "stored": "2026-09-24 10:30:00"
+  },
+  {
+   "type": "datetime",
+   "value": "2026-09-24",
+   "failure": true
+  },
+  {
+   "type": "datetime",
+   "value": "2026-9-24 10:30:00",
+   "failure": true
+  },
+  {
+   "type": "datetime",
+   "value": "2026-09-24 24:00:00",
+   "failure": true
+  },
+  {
+   "type": "string",
+   "value": "interviewed",
+   "stored": "interviewed",
+   "size": 255
+  },
+  {
+   "type": "string",
+   "value": true,
+   "stored": "true",
+   "size": 255
+  },
+  {
+   "type": "string",
+   "value": 1e-07,
+   "stored": "1e-7",
+   "size": 255
+  },
+  {
+   "type": "string",
+   "value": 3.0,
+   "stored": "3",
+   "size": 255
+  },
+  {
+   "type": "string",
+   "value": 1e+21,
+   "stored": "1e+21",
+   "size": 255
+  },
+  {
+   "type": "string",
+   "value": "",
+   "stored": "",
+   "size": 255
+  },
+  {
+   "type": "string",
+   "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "failure": true,
+   "size": 255
+  },
+  {
+   "type": "string",
+   "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "stored": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "size": 0,
+   "why": "a text column has no limit here"
+  },
+  {
+   "type": "geopoint",
+   "value": "0.3476 32.5825 1190 5",
+   "stored": "0.3476 32.5825 1190 5",
+   "size": 80
+  },
+  {
+   "type": "geopoint",
+   "value": "somewhere",
+   "failure": true,
+   "size": 80,
+   "why": "checked as a default is (actions-api.md 5); the device only checks the length today"
+  }
+ ]
+}

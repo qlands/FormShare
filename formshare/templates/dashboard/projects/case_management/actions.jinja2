@@ -40,10 +40,10 @@
                     <h2>{{ _('Case actions') }} &mdash; {{ formData.form_name }}</h2>
                     <p>
                         {{ _('What happens to the case each time this form is submitted: a property set, a column changed, the case deactivated or reactivated. The rules run on the server after every submission is stored, and on FormShare Collect at finalize for a case registered on the same device.') }}
-                        {% if source %}
+                        {% if source and not source.own %}
                             {{ _('This form follows up') }} <b>{{ source.table }}</b> {{ _('of') }} <b>{{ source.form }}</b> ({{ _('through') }} <code>{{ source.selector_field }}</code>){% if source.parent_table %}, {{ _('whose parent is') }} <b>{{ source.parent_table }}</b>{% endif %}.
                         {% else %}
-                            <span class="text-danger">{{ _('This form has no case link yet: set it in "Links to lists" before writing rules that act on the case.') }}</span>
+                            <span class="text-warning">{{ _('This form has no case link, so its rules act on its own rows: the case is each submission itself. To act on a case of another form, set the case link in "Links to lists" first.') }}</span>
                         {% endif %}
                     </p>
 

@@ -39,6 +39,7 @@ __all__ = [
     "lookups_named",
     "PRELUDE",
     "writes_from_changes",
+    "js_string",
     "BINARY",
 ]
 
@@ -50,7 +51,14 @@ __all__ = [
 BINARY = os.path.join("utilities", "RunActions", "runactions")
 
 # actions-api.md section 7, the same in every host.
-LIMITS = {"source_bytes": 64 * 1024, "memory_bytes": 16 * 1024 * 1024, "seconds": 0.25}
+LIMITS = {
+    "source_bytes": 64 * 1024,
+    "memory_bytes": 16 * 1024 * 1024,
+    "seconds": 0.25,
+    # A deep recursion must meet the engine's limit before the thread's own
+    # stack runs out; 256 KB is what every host sets (rstools.md 13.2).
+    "stack_bytes": 256 * 1024,
+}
 
 _EXPORT = re.compile(r"^\s*export\s+default\s+(?=function\b)", re.M)
 _RUN = re.compile(r"\bfunction\s+run\s*\(")
@@ -78,125 +86,13 @@ class RunResult:
 
 
 # The JavaScript the host evaluates before the module: builds s and api from
-# the input, collects the writes, and takes away what would make a run
-# depend on where it happens.
-PRELUDE = r"""
-"use strict";
-var __fs = { writes: [], log: [], input: null };
-
-function __fs_row(data) {
-  var row = {};
-  var values = data.values || {};
-  for (var key in values) { if (Object.prototype.hasOwnProperty.call(values, key)) row[key] = values[key]; }
-  var repeats = data.repeats || {};
-  var selections = data.selections || {};
-  Object.defineProperty(row, "rowuuid", { value: data.rowuuid === undefined ? null : data.rowuuid, enumerable: true });
-  Object.defineProperty(row, "parent_rowuuid", { value: data.parent_rowuuid === undefined ? null : data.parent_rowuuid, enumerable: true });
-  Object.defineProperty(row, "repeat", { value: function __fs_repeat (name) {
-    var rows = repeats[name];
-    return rows ? rows.map(__fs_row) : [];
-  }});
-  Object.defineProperty(row, "selected", { value: function __fs_selected (variable, code) {
-    var chosen = selections[variable] || [];
-    return chosen.indexOf(String(code)) >= 0;
-  }});
-  Object.defineProperty(row, "selections", { value: function __fs_selections (variable) {
-    return (selections[variable] || []).slice();
-  }});
-  return row;
-}
-
-function __fs_case(data, scope) {
-  if (!data) return null;
-  var values = data.values || {};
-  var properties = data.properties || {};
-  var obj = {
-    rowuuid: data.rowuuid === undefined ? null : data.rowuuid,
-    table: data.table === undefined ? null : data.table,
-    active: data.active === undefined ? true : !!data.active,
-    parent: scope === "case" ? __fs_case(data.parent, "parent") : null,
-    value: function __fs_value (column) {
-      if (!Object.prototype.hasOwnProperty.call(values, column)) throw new Error("The " + (scope === "parent" ? "parent" : "case") + " has no column " + column);
-      return values[column] === undefined ? null : values[column];
-    },
-    property: function __fs_property (name) {
-      if (!Object.prototype.hasOwnProperty.call(properties, name)) throw new Error("The " + (scope === "parent" ? "parent" : "case") + " has no property " + name);
-      return properties[name] === undefined ? null : properties[name];
-    },
-    set: function __fs_set (name, value) {
-      if (value === undefined) value = null;
-      __fs.writes.push({ scope: scope, kind: "set", name: String(name), value: value });
-    },
-    activate: function __fs_activate () { __fs.writes.push({ scope: scope, kind: "active", value: 1 }); },
-    deactivate: function __fs_deactivate () { __fs.writes.push({ scope: scope, kind: "active", value: 0 }); }
-  };
-  return obj;
-}
-
-function __fs_numbers(rows, column) {
-  var out = [];
-  for (var i = 0; i < rows.length; i++) {
-    var v = rows[i][column];
-    if (v === null || v === undefined || v === "") continue;
-    var n = typeof v === "number" ? v : Number(v);
-    if (isNaN(n)) continue;
-    out.push(n);
-  }
-  return out;
-}
-
-function __fs_days(a, b) {
-  function __fs_parse(text) {
-    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(text));
-    if (!m) throw new Error("Not a date: " + text);
-    return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-  }
-  return Math.floor((__fs_parse(b) - __fs_parse(a)) / 86400000);
-}
-
-function __fs_build(input) {
-  __fs.input = input;
-  var s = __fs_row(input.submission || {});
-  Object.defineProperty(s, "submittedBy", { value: (input.submission || {}).submitted_by || null, enumerable: true });
-  Object.defineProperty(s, "submittedDate", { value: (input.submission || {}).submitted_date || null, enumerable: true });
-  var api = {
-    case: __fs_case(input.case, "case"),
-    now: input.now === undefined ? null : input.now,
-    user: input.user === undefined ? null : input.user,
-    lookup: function __fs_lookup (list, code) {
-      var tables = input.lookups || {};
-      if (!Object.prototype.hasOwnProperty.call(tables, String(list))) throw new Error("The lookup list " + list + " is not available to the module");
-      var found = tables[String(list)][String(code)];
-      return found === undefined ? null : found;
-    },
-    avg: function __fs_avg (rows, column) { var n = __fs_numbers(rows, column); if (!n.length) return null; var t = 0; for (var i = 0; i < n.length; i++) t += n[i]; return t / n.length; },
-    sum: function __fs_sum (rows, column) { var n = __fs_numbers(rows, column); if (!n.length) return null; var t = 0; for (var i = 0; i < n.length; i++) t += n[i]; return t; },
-    count: function __fs_count (rows, column) { var c = 0; for (var i = 0; i < rows.length; i++) { var v = rows[i][column]; if (v !== null && v !== undefined && v !== "") c++; } return c; },
-    min: function __fs_min (rows, column) { var n = __fs_numbers(rows, column); return n.length ? Math.min.apply(null, n) : null; },
-    max: function __fs_max (rows, column) { var n = __fs_numbers(rows, column); return n.length ? Math.max.apply(null, n) : null; },
-    days: __fs_days,
-    log: function __fs_log (message) { __fs.log.push(String(message)); }
-  };
-  return { s: s, api: api };
-}
-
-// Determinism (actions-api.md 7): nothing a run can read from where it runs.
-(function () {
-  var RealDate = Date;
-  var SafeDate = new Proxy(RealDate, {
-    construct: function (target, args) {
-      if (args.length === 0) throw new Error("new Date() without arguments is not available; use api.now");
-      return new target(...args);
-    },
-    apply: function () { throw new Error("Date() is not available; use api.now"); }
-  });
-  globalThis.Date = SafeDate;
-  RealDate.now = function () { throw new Error("Date.now is not available; use api.now"); };
-  Math.random = function () { throw new Error("Math.random is not available"); };
-  globalThis.eval = undefined;
-  globalThis.Function = undefined;
-})();
-"""
+# the input, collects the writes, and takes away what would make a run depend
+# on where it happens. RSTools owns it (kotlinrstools/actions/prelude.js); the
+# file beside this one is a verbatim copy for the interim engine, and a test
+# compares the two whenever RSTools is beside FormShare (rstools.md 13.3).
+PRELUDE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "prelude.js")
+with open(PRELUDE_FILE, encoding="utf-8") as _prelude:
+    PRELUDE = _prelude.read()
 
 
 def load_module(source):
@@ -351,6 +247,7 @@ def _run_in_process(script, input_data, limits):
     context = quickjs.Context()
     context.set_memory_limit(int(limits["memory_bytes"]))
     context.set_time_limit(float(limits["seconds"]))
+    context.set_max_stack_size(int(limits["stack_bytes"]))
     try:
         context.eval(PRELUDE)
         context.eval(
@@ -358,7 +255,9 @@ def _run_in_process(script, input_data, limits):
                 json.dumps(input_data, ensure_ascii=False)
             )
         )
-        context.eval(script)
+        # A module is strict (actions-api.md 3). The directive goes on the
+        # module's first line, so that no line number a failure names moves.
+        context.eval('"use strict";' + script)
         context.eval("run(__fs_built.s, __fs_built.api);")
         raw = context.eval("JSON.stringify({writes: __fs.writes, log: __fs.log})")
     except quickjs.JSException as e:
@@ -415,21 +314,88 @@ def changes_of(writes, case):
                 "table": into,
                 "rowuuid": target.get("rowuuid"),
                 "column": column,
-                "old": None if old is None else str(old),
-                "new": None if new is None else str(new),
+                "old": js_string(old),
+                "new": js_string(new),
             }
         )
     changes.sort(key=lambda c: (c["table"], c["column"]))
     return changes
 
 
+def _number_of(value):
+    """A value as a number the way the Kotlin host reads one: a boolean is
+    1 or 0, a number is itself, a text is a number when it reads as one."""
+    if isinstance(value, bool):
+        return 1.0 if value else 0.0
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).strip()
+    if "_" in text:
+        return None
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
 def _same(old, new):
+    """Whether a write leaves a value as it was: both null, or equal as
+    numbers when both are numbers, or equal as JavaScript text."""
     if old is None or new is None:
         return old is None and new is None
-    try:
-        return float(old) == float(new)
-    except (TypeError, ValueError):
-        return str(old) == str(new)
+    a, b = _number_of(old), _number_of(new)
+    if a is not None and b is not None:
+        return a == b
+    return js_string(old) == js_string(new)
+
+
+def js_string(value):
+    """A value as JavaScript's String() spells it (actions-api.md 9).
+
+    Python's str() differs for three things a module writes: a boolean
+    (True, not true), a whole float (3.0, not 3) and exponents (1e-07 and
+    1e+16, not 1e-7 and 10000000000000000). repr() gives the shortest digits
+    that read back as the float, as JavaScript does; only the layout differs.
+    Taken from rstools.md 13.3, where it agrees with quickjs-ng's own
+    String() on 4,513 numbers.
+    """
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return str(value)
+    if not isinstance(value, float):
+        return str(value)
+    if value != value:
+        return "NaN"
+    if value in (float("inf"), float("-inf")):
+        return "Infinity" if value > 0 else "-Infinity"
+    if value == 0:
+        return "0"
+    text = repr(abs(value))
+    mantissa, _, exponent = text.partition("e")
+    whole, _, fraction = mantissa.partition(".")
+    all_digits = whole + fraction
+    leading = len(all_digits) - len(all_digits.lstrip("0"))
+    point = len(whole) + int(exponent or 0) - leading
+    digits = all_digits.lstrip("0").rstrip("0") or "0"
+    k, n = len(digits), point
+    if k <= n <= 21:
+        body = digits + "0" * (n - k)
+    elif 0 < n <= 21:
+        body = digits[:n] + "." + digits[n:]
+    elif -6 < n <= 0:
+        body = "0." + "0" * -n + digits
+    else:
+        e = n - 1
+        body = (
+            (digits if k == 1 else digits[0] + "." + digits[1:])
+            + "e"
+            + ("+" if e >= 0 else "-")
+            + str(abs(e))
+        )
+    return "-" + body if value < 0 else body
 
 
 def writes_from_changes(changes, case):

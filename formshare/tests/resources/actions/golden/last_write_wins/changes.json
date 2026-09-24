@@ -1,0 +1,36 @@
+{
+ "changes": [
+  {
+   "scope": "source",
+   "table": "maintable",
+   "rowuuid": "H1",
+   "column": "_active",
+   "old": "1",
+   "new": "0"
+  },
+  {
+   "scope": "source",
+   "table": "maintable_properties",
+   "rowuuid": "H1",
+   "column": "closed",
+   "old": null,
+   "new": "no"
+  },
+  {
+   "scope": "source",
+   "table": "maintable_properties",
+   "rowuuid": "H1",
+   "column": "trained_teachers",
+   "old": "2",
+   "new": "4"
+  },
+  {
+   "scope": "source",
+   "table": "teachers",
+   "rowuuid": "T1",
+   "column": "_active",
+   "old": "0",
+   "new": "1"
+  }
+ ]
+}

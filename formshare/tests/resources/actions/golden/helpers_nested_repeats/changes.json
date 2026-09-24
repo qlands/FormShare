@@ -1,0 +1,24 @@
+{
+ "changes": [
+  {
+   "scope": "source",
+   "table": "maintable_properties",
+   "rowuuid": "00000001-0000-4000-8000-000000000001",
+   "column": "score",
+   "old": null,
+   "new": "12.125"
+  },
+  {
+   "scope": "source",
+   "table": "maintable_properties",
+   "rowuuid": "00000001-0000-4000-8000-000000000001",
+   "column": "visits",
+   "old": "0",
+   "new": "3"
+  }
+ ],
+ "log": [
+  "North u1+u3",
+  "2.75 6.625 3 29 P2 0"
+ ]
+}

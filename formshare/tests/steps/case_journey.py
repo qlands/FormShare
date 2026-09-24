@@ -1518,8 +1518,10 @@ def t_e_s_t_case_journey(test_object):
     # only once Tool 1 got new data. The edit view now clears the copies'
     # generation stamp, which the gate reads as "never generated".
     # A pull first: the gate counts a change in the same second as the last
-    # stamp, so the pull that followed the actions above may regenerate once
-    # more; after it the copy is settled.
+    # stamp (the dates it reads are second-grained), so every pull inside the
+    # second of the last write above regenerates. Step past that second, then
+    # pull once; after it the copy is settled.
+    time.sleep(1.1)
     _pull_manifest(test_object, login, project, TOOL2)
     roster_seq, roster_gen = _list_edition(
         test_object.server_config, test_object.projectID, "roster"

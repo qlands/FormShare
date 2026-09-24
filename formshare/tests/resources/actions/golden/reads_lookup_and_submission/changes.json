@@ -1,0 +1,17 @@
+{
+ "changes": [
+  {
+   "scope": "source",
+   "table": "maintable_properties",
+   "rowuuid": "00000001-0000-4000-8000-000000000001",
+   "column": "note",
+   "old": null,
+   "new": "grows cereal"
+  }
+ ],
+ "log": [
+  "{\"crop_list_des\":\"c option 3\",\"crop_list_group\":\"cereal\"}",
+  "null",
+  "00000001-0000-4000-8000-000000000001 | tester | 2026-03-05 08:30:00 | c1+c3 | false | Maria | number | tester"
+ ]
+}

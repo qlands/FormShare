@@ -106,6 +106,8 @@ pytokens==0.4.1
 pytz==2025.2
 -e git+https://github.com/qlands/pyutilib.git@master#egg=pyutilib
 pyxform==4.1.0
+# The interim engine of actions, used only where RSTools' runactions is not
+# installed; archived upstream (rstools.md 12.5, 14.3).
 quickjs==1.19.4
 PyYAML==6.0.3
 qrcode==8.2

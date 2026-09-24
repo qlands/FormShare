@@ -790,3 +790,138 @@ def test_a_missing_binary_means_the_in_process_engine(tmp_path):
         engine=str(tmp_path / "nope"),
     )
     assert result.ok and result.log == ["here"] and result.changes is None
+
+
+# ---------------------------------------------------------------------------
+# What MySQL holds for a write (actions-api.md 5): the table both appliers run
+# ---------------------------------------------------------------------------
+
+
+def test_store_values_table():
+    from formshare.processes.actions.server import store_value, render
+
+    doc = json.load(
+        open(
+            os.path.join(os.path.dirname(GOLDEN), "store_values.json"), encoding="utf-8"
+        )
+    )
+    for case in doc["cases"]:
+        args = (
+            case["type"],
+            case["value"],
+            "property",
+            "p",
+            case.get("size", 0),
+            case.get("decimals", 0),
+            case.get("digits", 0),
+        )
+        if case.get("failure"):
+            with pytest.raises(ModuleError):
+                store_value(*args)
+            continue
+        assert render(store_value(*args)) == case["stored"], case
+
+
+# ---------------------------------------------------------------------------
+# The interim engine answers as runactions does (rstools.md 13.3)
+# ---------------------------------------------------------------------------
+
+SIBLING = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
+RSTOOLS = os.environ.get("FORMSHARE_RSTOOLS_DIR", os.path.join(SIBLING, "RSTools"))
+RUNACTIONS = os.environ.get(
+    "FORMSHARE_RUNACTIONS",
+    os.path.join(RSTOOLS, "build", "utilities", "RunActions", "runactions"),
+)
+ENGINES = [None] + ([RUNACTIONS] if os.path.exists(RUNACTIONS) else [])
+
+
+@pytest.mark.parametrize(
+    "engine", ENGINES, ids=lambda e: "runactions" if e else "interim"
+)
+def test_what_a_module_cannot_reach(engine):
+    """The six places the interim engine used to answer differently."""
+    refused = {
+        "a date's constructor is the clock": "String(new (new Date(0)).constructor())",
+        "a function's constructor evaluates text": '(function () {}).constructor("return 7")()',
+        "the locale": "(1234.5).toLocaleString()",
+        "an undeclared variable (strict mode)": "undeclared_thing = 3",
+    }
+    for what, expression in refused.items():
+        result = run_module(
+            "export default function run(s, api) {\n  api.log(" + expression + ");\n}",
+            base_input(),
+            engine=engine,
+        )
+        assert not result.ok and "(line 2)" in result.error, (what, result.error)
+    for value, spelled in (("true", "true"), ("1e-7", "1e-7"), ("3.0", "3")):
+        result = run_module(
+            "export default function run(s, api) { api.case.set('q', " + value + "); }",
+            base_input(),
+            engine=engine,
+        )
+        report = (
+            result.changes
+            if result.changes is not None
+            else changes_of(result.writes, base_input()["case"])
+        )
+        assert [c["new"] for c in report] == [spelled], (value, report)
+
+
+def test_js_string_is_javascripts_spelling():
+    from formshare.processes.actions.host import js_string
+
+    # A list, not a dict: True, 1 and 1.0 (False, 0, -0.0) are one dict key.
+    spelled = [
+        (True, "true"),
+        (False, "false"),
+        (3.0, "3"),
+        (-0.0, "0"),
+        (1e-7, "1e-7"),
+        (1e21, "1e+21"),
+        (123456789012345680000.0, "123456789012345680000"),
+        (0.1, "0.1"),
+        (1.5e-6, "0.0000015"),
+        (2.5e-7, "2.5e-7"),
+        (float("nan"), "NaN"),
+        (float("-inf"), "-Infinity"),
+        (7, "7"),
+        (None, None),
+        ("x", "x"),
+    ]
+    for value, text in spelled:
+        assert js_string(value) == text, (value, js_string(value))
+
+
+@pytest.mark.skipif(
+    not os.path.exists(os.path.join(RSTOOLS, "kotlinrstools", "actions", "prelude.js")),
+    reason="RSTools is not beside FormShare (set FORMSHARE_RSTOOLS_DIR)",
+)
+def test_the_prelude_is_rstools():
+    """The interim engine runs a copy of RSTools' prelude; a copy goes stale
+    without anyone noticing."""
+    from formshare.processes.actions.host import PRELUDE
+
+    theirs = open(
+        os.path.join(RSTOOLS, "kotlinrstools", "actions", "prelude.js"),
+        encoding="utf-8",
+    ).read()
+    assert PRELUDE == theirs
+
+
+@pytest.mark.skipif(not os.path.exists(RUNACTIONS), reason="runactions is not built")
+@pytest.mark.parametrize("name", golden_names())
+def test_golden_triple_through_runactions(name):
+    folder = os.path.join(GOLDEN, name)
+    program = open(os.path.join(folder, "program.js")).read()
+    inputs = json.load(open(os.path.join(folder, "input.json")))
+    expected = json.load(open(os.path.join(folder, "changes.json")))
+    result = run_module(program, inputs, engine=RUNACTIONS)
+    if "failure" in expected:
+        assert result.error == expected["failure"]
+        return
+    assert result.ok, result.error
+    assert result.changes == expected["changes"]
+    assert changes_of(result.writes, inputs.get("case")) == expected["changes"]
+    assert result.log == expected.get("log", [])

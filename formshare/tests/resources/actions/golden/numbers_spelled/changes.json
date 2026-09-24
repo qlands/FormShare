@@ -1,0 +1,28 @@
+{
+ "changes": [
+  {
+   "scope": "source",
+   "table": "maintable_properties",
+   "rowuuid": "00000001-0000-4000-8000-000000000001",
+   "column": "last_visit",
+   "old": null,
+   "new": "2026-03-05 08:30:00"
+  },
+  {
+   "scope": "source",
+   "table": "maintable_properties",
+   "rowuuid": "00000001-0000-4000-8000-000000000001",
+   "column": "note",
+   "old": null,
+   "new": "0.30000000000000004 1e+21 -0.5"
+  },
+  {
+   "scope": "source",
+   "table": "maintable_properties",
+   "rowuuid": "00000001-0000-4000-8000-000000000001",
+   "column": "visits",
+   "old": "0",
+   "new": "3"
+  }
+ ]
+}

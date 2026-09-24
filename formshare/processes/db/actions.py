@@ -65,6 +65,7 @@ __all__ = [
     "build_catalogue",
     "catalogue_for_querybuilder",
     "case_source_of",
+    "continuations_of",
     "js_type_of",
     "CONTROL_COLUMNS",
 ]
@@ -111,7 +112,7 @@ _NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 def js_type_of(dictionary_type, odk_type=None):
     """The type a rule sees (actions-api.md section 6): integer, double,
     date, datetime or string, from the dictionary's column type."""
-    kind = (dictionary_type or "").lower()
+    kind = (dictionary_type or "").lower().split("(")[0].strip()
     if kind.startswith("int") or kind in ("bigint", "smallint", "tinyint"):
         return "integer"
     if kind in ("decimal", "double", "float", "numeric"):
@@ -492,21 +493,79 @@ def _choices(request, schema, lookup_table, list_name):
     ]
 
 
+def continuations_of(request, project_id, form_id):
+    """{continuation: the table it continues} for a form split across
+    continuation tables (rstools.md 13.4).
+
+    JXFormToMysql splits a table MySQL cannot hold into a chain: maintable,
+    maintable_ext1 and so on, each row of a continuation holding more columns
+    of one row of the table it continues and naming that row in
+    link_rowuuid. The dictionary records every field of every table, so a
+    table with a link_rowuuid field is a continuation, and the table it is
+    nested in (walking up through continuations) is the one it continues.
+    A continuation is never a repeat: its columns belong to the row it
+    continues.
+    """
+    extended = set(
+        a_row[0]
+        for a_row in request.dbsession.query(DictField.table_name)
+        .filter(DictField.project_id == project_id)
+        .filter(DictField.form_id == form_id)
+        .filter(DictField.field_name == "link_rowuuid")
+        .all()
+    )
+    if not extended:
+        return {}
+    parents = {
+        a_table["table_name"]: a_table.get("parent_table")
+        for a_table in _tables_of(request, project_id, form_id)
+    }
+    out = {}
+    for name in extended:
+        parent = parents.get(name)
+        while parent in extended:
+            parent = parents.get(parent)
+        if parent:
+            out[name] = parent
+    return out
+
+
 def case_source_of(request, project_id, form_id):
     """Where the form's case lives: the case link's list and its source
     (project, form, schema, table), the parent table when the source is a
-    repeat, or None when the form follows nothing up."""
+    repeat. A form without a case link acts on its own rows -- each
+    submission's main row is its case (actions-api.md 4.2), as the device
+    does with CaseLink.own() -- and gets ``own: True`` with no selector.
+    None only for a form that does not exist."""
     link = get_case_link_consumer(request, project_id, form_id)
     if link is None:
-        return None
+        form = _form(request, project_id, form_id)
+        if form is None:
+            return None
+        return {
+            "list_id": None,
+            "selector_field": None,
+            "project": project_id,
+            "form": form_id,
+            "schema": form.form_schema,
+            "table": "maintable",
+            "parent_table": None,
+            "own": True,
+        }
     a_list = get_published_list(request, link["list_project"], link["list_id"])
     if a_list is None:
         return None
     schema = get_list_source_schema(request, a_list)
+    extended = continuations_of(
+        request, a_list["source_project"], a_list["source_form"]
+    )
     parent_table = None
     for a_table in _tables_of(request, a_list["source_project"], a_list["source_form"]):
         if a_table["table_name"] == a_list["source_table"]:
             parent_table = a_table.get("parent_table")
+    # A repeat nested in a continuation belongs to the row it continues.
+    while parent_table in extended:
+        parent_table = extended[parent_table]
     return {
         "list_id": a_list["list_id"],
         "selector_field": link["selector_field"],
@@ -515,6 +574,7 @@ def case_source_of(request, project_id, form_id):
         "schema": schema,
         "table": a_list["source_table"],
         "parent_table": parent_table,
+        "own": False,
     }
 
 
@@ -534,8 +594,16 @@ def build_catalogue(request, project_id, form_id):
             return "{}.{}".format(base, name)
         return '{}["{}"]'.format(base, name)
 
-    # This submission: the variables of the main table.
-    for a_field in _fields_of(request, project_id, form_id, "maintable"):
+    extended = continuations_of(request, project_id, form_id)
+    main_fields = _fields_of(request, project_id, form_id, "maintable")
+    for ext_table, continued in sorted(extended.items()):
+        if continued == "maintable":
+            main_fields = main_fields + _fields_of(
+                request, project_id, form_id, ext_table
+            )
+
+    # This submission: the variables of the main table and its continuations.
+    for a_field in main_fields:
         name = a_field["field_name"]
         if name in CONTROL_COLUMNS or name.startswith("_"):
             continue
@@ -603,10 +671,16 @@ def build_catalogue(request, project_id, form_id):
         name = a_table["table_name"]
         if name == "maintable" or a_table.get("table_lkp") or _MSEL.search(name):
             continue
-        if not a_table.get("parent_table"):
+        if not a_table.get("parent_table") or name in extended:
             continue
         columns = {}
-        for a_field in _fields_of(request, project_id, form_id, name):
+        repeat_fields = _fields_of(request, project_id, form_id, name)
+        for ext_table, continued in sorted(extended.items()):
+            if continued == name:
+                repeat_fields = repeat_fields + _fields_of(
+                    request, project_id, form_id, ext_table
+                )
+        for a_field in repeat_fields:
             fname = a_field["field_name"]
             if (
                 fname in CONTROL_COLUMNS

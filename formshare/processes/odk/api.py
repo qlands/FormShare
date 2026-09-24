@@ -519,6 +519,23 @@ def ambiguous_selects_heading(root, translate):
     return _("The following options are duplicated in the ODK you just submitted:")
 
 
+def machine_xml(output):
+    """The XML of a tool's machine output (-o m).
+
+    Since RSTools a2e1e3e (2026-08-05) jxformtomysql prints a note on stdout
+    when it splits a table -- "Note: table maintable was split into 2 tables
+    because it does not fit in a MySQL row." -- before the XML, even with -o m.
+    A form that splits then failed to get a repository (500) and lost its
+    missing-file list and languages at upload. Reported to RSTools, where the
+    fix belongs (rstools.md 14); until it is everywhere, the two parses of a
+    successful run read from the first tag.
+    """
+    if isinstance(output, bytes):
+        output = output.decode("utf-8", "replace")
+    start = output.find("<")
+    return output[start:] if start > 0 else output
+
+
 def check_jxform_file(
     request,
     user_id,
@@ -588,7 +605,7 @@ def check_jxform_file(
     if p.returncode == 0:
         try:
             if not get_languages:
-                root = etree.fromstring(stdout)
+                root = etree.fromstring(machine_xml(stdout))
                 missing_files = root.findall(".//missingFile")
                 for a_file in missing_files:
                     required_files.append(a_file.get("fileName"))
@@ -637,7 +654,7 @@ def check_jxform_file(
 
                 return 0, ""
             else:
-                root = etree.fromstring(stdout)
+                root = etree.fromstring(machine_xml(stdout))
                 languages = root.findall(".//ODKlanguage")
                 if languages:
                     for a_language in languages:
@@ -3907,10 +3924,10 @@ def create_repository(
         if p.returncode == 0:
             if not for_merging:
                 if default_language is None:
-                    root = etree.fromstring(stdout.decode())
+                    root = etree.fromstring(machine_xml(stdout))
                     language_array = root.findall(".//ODKlanguage")
                     if language_array:
-                        return 3, stdout.decode()
+                        return 3, machine_xml(stdout)
 
                 update_form_repository_info(
                     request,

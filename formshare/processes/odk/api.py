@@ -536,6 +536,66 @@ def machine_xml(output):
     return output[start:] if start > 0 else output
 
 
+def output_file_errors(output):
+    """The files an exit 38 of jxformtomysql names, as a list of
+    {"name", "path", "reason"}; empty when the output says none.
+
+    jxformtomysql ends with 38 when a file it was told to write -- create.sql,
+    insert.sql, drop.sql, metadata.sql, the translation file, manifest.xml,
+    create.xml or insert.xml -- cannot be opened or is not written whole, and
+    the first such file ends the run (rstools.md 17.2). Before, the run ended
+    with 0 and the file was simply not there. With -o m the report is an
+    XMLOutputFileError holding a file element: ``name`` is the file by
+    itself, ``path`` as the caller gave it, and ``reason`` the system's words
+    ("Is a directory", "Permission denied", "No space left on device"), or
+    "only part of it could be written" when a write was cut short.
+
+    It is always a fault of the server and never of the form, so the owner is
+    told the name and the reason, and only the technical team the path.
+    """
+    try:
+        root = etree.fromstring(machine_xml(output).encode("utf-8"))
+    except Exception:
+        return []
+    return [
+        {
+            "name": a_file.get("name", ""),
+            "path": a_file.get("path", ""),
+            "reason": a_file.get("reason", ""),
+        }
+        for a_file in root.findall(".//XMLOutputFileError/file")
+    ]
+
+
+def output_file_error_heading(translate):
+    _ = translate
+    return _(
+        "FormShare could not write a file it needs on the server. This is a "
+        "problem with the server, not with your form, and the technical team "
+        "has been told. Please try again later."
+    )
+
+
+def describe_output_file_errors(files, translate):
+    """One line per file for the owner: its name and the system's reason,
+    never the server's path."""
+    _ = translate
+    return [
+        _('The file "{}" could not be written: {}').format(
+            a_file["name"], a_file["reason"]
+        )
+        for a_file in files
+    ]
+
+
+def output_file_error_report(files):
+    """The same files for the technical team, with the path of each."""
+    return "\n".join(
+        "{} could not be written: {}".format(a_file["path"], a_file["reason"])
+        for a_file in files
+    )
+
+
 def check_jxform_file(
     request,
     user_id,
@@ -1518,6 +1578,39 @@ def check_jxform_file(
                 'a text variable to store "other."'
             )
             return 35, message
+
+        if p.returncode == 38:
+            # A file the check writes could not be written (rstools.md 17.2):
+            # one it keeps, or any on a full disk. The server's fault, not the
+            # form's, so the owner is asked to try again and the technical
+            # team gets the path. The check's scratch files are in its own
+            # temporary directory (-e) since the same change, so the web
+            # worker's working directory no longer matters.
+            files = output_file_errors(stdout)
+            log.error(
+                "Error 38 while checking form {} of project {}: {} Command line: {}".format(
+                    form_id,
+                    project_id,
+                    output_file_error_report(files) or stdout.decode(),
+                    " ".join(args),
+                )
+            )
+            message = output_file_error_heading(_) + "\n"
+            for a_line in describe_output_file_errors(files, _):
+                message = message + "\t" + a_line + "\n"
+            send_error_to_technical_team(
+                request,
+                "FormShare could not write a file while checking the form {} of "
+                "project {} for the user {}.\n{}\nCommand line: {}".format(
+                    form_id,
+                    project_id,
+                    user_id,
+                    output_file_error_report(files) or stdout.decode(),
+                    " ".join(args),
+                ),
+                "FormShare could not write a file",
+            )
+            return 38, message
 
         message = (
             ". Error: {}".format(p.returncode)

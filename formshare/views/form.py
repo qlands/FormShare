@@ -105,6 +105,10 @@ from formshare.processes.odk.api import (
     ambiguous_selects_heading,
     store_file_in_directory,
     retrieve_form_file_stream,
+    output_file_errors,
+    output_file_error_heading,
+    output_file_error_report,
+    describe_output_file_errors,
 )
 from formshare.processes.odk.processes import get_form_primary_key, get_form_case_params
 from formshare.processes.storage import (
@@ -690,6 +694,23 @@ class FormDetails(PrivateView):
                     txt_message = txt_message + "\t" + a_line + "\n"
                 errors.append(txt_message)
 
+            if created == 38:
+                # A file of the new version could not be written (rstools.md
+                # 17.2): the server's fault, not the form's. Nothing records
+                # the verdict, so the next visit checks the version again.
+                files = output_file_errors(message)
+                self.report_critical_error(
+                    user_id,
+                    project_id,
+                    new_form_id,
+                    created,
+                    output_file_error_report(files) or message,
+                )
+                txt_message = output_file_error_heading(self._) + "\n"
+                for a_line in describe_output_file_errors(files, self._):
+                    txt_message = txt_message + "\t" + a_line + "\n"
+                errors.append(txt_message)
+
             if created == 36:
                 # Options with spaces used in multi-selects
                 root = etree.fromstring(message)
@@ -912,6 +933,19 @@ class FormDetails(PrivateView):
                 errors.append(message)
             if created == 23:
                 errors.append(message)
+            if not errors:
+                # No branch above knows this code: one RSTools adds, a tool
+                # killed by a signal. The version is refused either way; this
+                # says why rather than showing an empty list of reasons.
+                self.report_critical_error(
+                    user_id, project_id, new_form_id, created, message
+                )
+                errors.append(
+                    self._(
+                        "An unexpected error occurred while processing the merge. "
+                        "An email has been sent to the technical team and they will contact you ASAP."
+                    )
+                )
 
         error_string = json.dumps({"errors": errors})
         # form_data = {"form_abletomerge": 0, "form_mergerrors": error_string}
@@ -4862,7 +4896,7 @@ class FixMergeLanguage(PrivateView):
             create_file = get_form_xml_create_file(self.request, project_id, form_id)
             insert_file = get_form_xml_insert_file(self.request, project_id, form_id)
             form_languages = []
-            check_jxform_file(
+            error, message = check_jxform_file(
                 self.request,
                 user_id,
                 project_id,
@@ -4876,6 +4910,23 @@ class FixMergeLanguage(PrivateView):
                 None,
                 form_languages,
             )
+            if error != 0:
+                # The version passed the check when it was uploaded, so what
+                # fails now is a file attached since, which this check reads
+                # and that one did not, or the server: 38, a file that could
+                # not be written (rstools.md 17.2). Either way the languages
+                # are unknown, and going on would record that it has none.
+                self.add_error(message)
+                self.returnRawViewResult = True
+                return HTTPFound(
+                    location=self.request.route_url(
+                        "form_details",
+                        userid=user_id,
+                        projcode=project_code,
+                        formid=form_id,
+                    ),
+                    headers={"FS_error": "true"},
+                )
 
             default = False
             idx = 0

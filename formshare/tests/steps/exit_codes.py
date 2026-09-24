@@ -8,11 +8,22 @@ checker return that code. The checker still returns them: pyxform rewrites
 "or other" selects before the checker sees them, so code 35 is not among
 these, and codes 2, 21 and 29 are no longer returned at all. Code 37 (an
 option value the repository cannot keep as written) arrived on 2026-09-19.
+
+Code 38 (a file the tool could not write, rstools.md 17.2) is no fault of a
+form: the step makes a file of the repository unwritable instead, and only
+when the installed tool knows the code.
 """
 
 import os
 
 import openpyxl
+
+from .sql import get_form_details
+from .unwritable_output import (
+    make_unwritable,
+    make_writable,
+    tool_reports_unwritable_files,
+)
 
 
 def _form_with_a_bad_option_value(working_dir):
@@ -35,6 +46,84 @@ def _form_with_a_bad_option_value(working_dir):
     path = os.path.join(working_dir, "bad_option_value.xlsx")
     book.save(path)
     return path
+
+
+def _form_to_build(working_dir):
+    """A form with nothing wrong with it, to build a repository for."""
+    book = openpyxl.Workbook()
+    survey = book.active
+    survey.title = "survey"
+    survey.append(["type", "name", "label"])
+    survey.append(["text", "hid", "Household id"])
+    survey.append(["integer", "members", "Members"])
+    settings = book.create_sheet("settings")
+    settings.append(["form_title", "form_id", "version"])
+    settings.append(["Unwritable repository", "unwritable_repository", "1"])
+    path = os.path.join(working_dir, "unwritable_repository.xlsx")
+    book.save(path)
+    return path
+
+
+def _unwritable_repository_file(test_object):
+    """38 on the repository page: the page names the file and the reason,
+    never the server's path, and builds nothing."""
+    login = test_object.randonLogin
+    project = test_object.project
+    testapp = test_object.testapp
+    form_url = "/user/{}/project/{}/form/{}".format(
+        login, project, "unwritable_repository"
+    )
+    res = testapp.post(
+        "/user/{}/project/{}/forms/add".format(login, project),
+        {"form_pkey": "hid"},
+        status=302,
+        upload_files=[("xlsx", _form_to_build(test_object.working_dir))],
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        form_url + "/assistants/add",
+        {
+            "coll_id": "{}|{}|{}".format(
+                test_object.projectID,
+                test_object.assistantLogin,
+                test_object.assistantLoginUUID,
+            ),
+            "coll_can_submit": "1",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    directory = get_form_details(
+        test_object.server_config, test_object.projectID, "unwritable_repository"
+    )["form_directory"]
+    manifest = os.path.join(
+        test_object.server_config["repository.path"],
+        "odk",
+        "forms",
+        directory,
+        "repository",
+        "manifest.xml",
+    )
+    make_unwritable(manifest)
+    try:
+        res = testapp.post(
+            form_url + "/repository/create",
+            {"form_pkey": "hid", "start_stage1": ""},
+            status=200,
+        )
+    finally:
+        make_writable(manifest)
+    assert b"FormShare could not write the files of the repository" in res.body
+    assert b"not with your form" in res.body
+    assert b"manifest.xml" in res.body and b"Is a directory" in res.body
+    assert manifest.encode("utf-8") not in res.body
+    details = get_form_details(
+        test_object.server_config, test_object.projectID, "unwritable_repository"
+    )
+    assert details["form_schema"] is None and details["form_reptask"] is None
+
+    res = testapp.post(form_url + "/delete", status=302)
+    assert "FS_error" not in res.headers
 
 
 def t_e_s_t_exit_codes(test_object):
@@ -105,3 +194,9 @@ def t_e_s_t_exit_codes(test_object):
 
     res = testapp.post(form_url + "/delete", status=302)
     assert "FS_error" not in res.headers
+
+    # 38: a file of the repository could not be written (rstools.md 17.2)
+    if tool_reports_unwritable_files(
+        test_object.server_config["odktools.path"], test_object.working_dir
+    ):
+        _unwritable_repository_file(test_object)

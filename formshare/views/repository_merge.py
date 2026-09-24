@@ -18,6 +18,10 @@ from formshare.processes.odk.api import (
     merge_versions,
     create_repository,
     link_merge_child,
+    output_file_errors,
+    output_file_error_heading,
+    output_file_error_report,
+    describe_output_file_errors,
 )
 from formshare.processes.odk.processes import get_form_data
 from formshare.products.merge import merge_form
@@ -451,12 +455,38 @@ class RepositoryMergeForm(PrivateView):
                         self.returnRawViewResult = True
                         return HTTPFound(self.request.url, headers={"FS_error": "true"})
             else:
-                self.add_error(
-                    self._(
-                        "Unknown error while merging. A message has been sent to the support team and "
-                        "they will contact you ASAP."
-                    )
+                # A version gets here only after check_merge let it through,
+                # so what fails now depends on the server rather than the
+                # form: 38, a file that could not be written (rstools.md
+                # 17.2), or a tool that did not finish. The technical team is
+                # told either way, as the message says.
+                files = output_file_errors(message) if created == 38 else []
+                send_error_to_technical_team(
+                    self.request,
+                    "Error {} while writing the files of form {} to merge it "
+                    "into {} in project {}.\nAccount: {}\n{}".format(
+                        created,
+                        new_form_id,
+                        old_form_id,
+                        project_id,
+                        user_id,
+                        output_file_error_report(files) or message,
+                    ),
                 )
+                if files:
+                    self.add_error(
+                        " ".join(
+                            [output_file_error_heading(self._)]
+                            + describe_output_file_errors(files, self._)
+                        )
+                    )
+                else:  # pragma: no cover
+                    self.add_error(
+                        self._(
+                            "Unknown error while merging. A message has been sent to the support team and "
+                            "they will contact you ASAP."
+                        )
+                    )
                 self.returnRawViewResult = True
                 return HTTPFound(self.request.url, headers={"FS_error": "true"})
 

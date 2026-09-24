@@ -119,6 +119,15 @@
                                             {% endfor %}
                                         </UL>
                                     {% endif %}
+                                    {% if result_code == 38 %}
+                                        <h2>{{ _('FormShare could not write the files of the repository.') }}</h2>
+                                        {{ _('This is a problem with the server, not with your form, and the technical team has been told. Please try again later.') }}
+                                        <UL>
+                                            {% for anError in output_errors %}
+                                                <LI><span style="color: red">{{ anError }}</span></LI>
+                                            {% endfor %}
+                                        </UL>
+                                    {% endif %}
                                     {% if result_code == 36 %}
                                         <h2>{{ _('Your ODK form has multi-select variables with spaces in their options.') }}</h2>
                                         {{ _('You need to fix the below errors in CSV files, upload the new version and continue the process.') }}

@@ -906,6 +906,33 @@ def test_js_string_is_javascripts_spelling():
         assert js_string(value) == text, (value, js_string(value))
 
 
+def test_js_json_is_json_stringify():
+    """How an array or an object a module wrote is named when it is refused:
+    as the device names it, JSON.stringify's spelling (rstools.md 17.1)."""
+    from formshare.processes.actions.host import js_json
+
+    spelled = [
+        ([1e-07], "[1e-7]"),
+        ([1, 2], "[1,2]"),
+        ({"a": 1e21, "b": [True, None, "x"]}, '{"a":1e+21,"b":[true,null,"x"]}'),
+        ([float("nan"), float("inf")], "[null,null]"),
+        ([-0.0, 0.1], "[0,0.1]"),
+        ({"é": "ñ\n"}, '{"é":"ñ\\n"}'),
+        ([], "[]"),
+        ({}, "{}"),
+    ]
+    for value, text in spelled:
+        assert js_json(value) == text, (value, js_json(value))
+
+
+def test_a_refused_array_is_named_as_the_device_names_it():
+    from formshare.processes.actions.server import store_value
+
+    with pytest.raises(ModuleError) as refused:
+        store_value("double", [1e-07], "property", "ratio")
+    assert str(refused.value) == "[1e-7] is not a value for property ratio"
+
+
 @pytest.mark.skipif(
     not os.path.exists(os.path.join(RSTOOLS, "kotlinrstools", "actions", "prelude.js")),
     reason="RSTools is not beside FormShare (set FORMSHARE_RSTOOLS_DIR)",

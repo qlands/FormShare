@@ -35,6 +35,7 @@ from formshare.models import ActionRun, DictField, DictTable, map_from_schema
 from formshare.processes.actions.host import (
     BINARY,
     ModuleError,
+    js_json,
     js_string,
     lookups_named,
     run_module,
@@ -561,13 +562,10 @@ def store_value(js_type, value, what, name, size=0, decimals=0, digits=0):
         return None
     if isinstance(value, (list, dict)):
         # Neither JavaScript's String() of it (1,2 and [object Object]) nor
-        # Python's is anything a module means (rstools.md 15.4 c).
+        # Python's is anything a module means (rstools.md 15.4 c). Named as
+        # JSON.stringify writes it, as the device names it (17.1).
         raise ModuleError(
-            "{} is not a value for {} {}".format(
-                json.dumps(value, separators=(",", ":"), ensure_ascii=False),
-                what,
-                name,
-            )
+            "{} is not a value for {} {}".format(js_json(value), what, name)
         )
     if isinstance(value, bool):
         as_text = (

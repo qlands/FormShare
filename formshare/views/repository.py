@@ -16,6 +16,9 @@ from formshare.processes.odk.api import (
     get_odk_path,
     describe_ambiguous_selects,
     describe_invalid_option_values,
+    describe_output_file_errors,
+    output_file_error_report,
+    output_file_errors,
 )
 from formshare.processes.odk.processes import get_form_data
 from formshare.views.classes import PrivateView
@@ -63,6 +66,7 @@ REPOSITORY_CODES_HANDLED = {
     35,
     36,
     37,
+    38,
 }
 
 
@@ -116,6 +120,7 @@ class GenerateRepository(PrivateView):
         list_array = []
         select_errors = []
         option_errors = []
+        output_errors = []
         unknown_error = False
         duplicated_choices = []
         tables_with_name_error = []
@@ -567,6 +572,24 @@ class GenerateRepository(PrivateView):
                                     root, self._
                                 )
 
+                            if result_code == 38:
+                                # A file of the repository could not be written
+                                # (rstools.md 17.2): the server's fault, not the
+                                # form's. The owner reads the file and the
+                                # reason, the technical team the path.
+                                files = output_file_errors(message)
+                                self.report_critical_error(
+                                    user_id,
+                                    project_id,
+                                    form_id,
+                                    result_code,
+                                    output_file_error_report(files) or message,
+                                )
+                                output_errors = describe_output_file_errors(
+                                    files, self._
+                                )
+                                stage = -1
+
                             if result_code == 36:  # pragma: no cover
                                 # Multi-select variable with spaces in options
                                 stage = -1
@@ -741,6 +764,7 @@ class GenerateRepository(PrivateView):
                     "list_array": list_array,
                     "select_errors": select_errors,
                     "option_errors": option_errors,
+                    "output_errors": output_errors,
                     "unknown_error": unknown_error,
                     "duplicated_choices": duplicated_choices,
                     "tables_with_name_error": tables_with_name_error,

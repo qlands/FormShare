@@ -408,6 +408,31 @@ def js_string(value):
     return "-" + body if value < 0 else body
 
 
+def js_json(value):
+    """A value as JavaScript's JSON.stringify spells it, which is how the
+    device names an array or an object it refuses to store (rstools.md
+    17.1): json.dumps without spaces, but every number as String() spells
+    it -- [1e-7], not [1e-07] -- and one that is not finite as null."""
+    if value is None or isinstance(value, bool):
+        return json.dumps(value)
+    if isinstance(value, (int, float)):
+        if value != value or value in (float("inf"), float("-inf")):
+            return "null"
+        return js_string(value)
+    if isinstance(value, (list, tuple)):
+        return "[" + ",".join(js_json(an_item) for an_item in value) + "]"
+    if isinstance(value, dict):
+        return (
+            "{"
+            + ",".join(
+                json.dumps(str(key), ensure_ascii=False) + ":" + js_json(an_item)
+                for key, an_item in value.items()
+            )
+            + "}"
+        )
+    return json.dumps(str(value), ensure_ascii=False)
+
+
 def writes_from_changes(changes, case):
     """The writes a change report amounts to, for a host that reports
     changes but not the writes behind them: the table says whether a name

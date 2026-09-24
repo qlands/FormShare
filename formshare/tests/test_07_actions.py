@@ -822,6 +822,18 @@ def test_store_values_table():
         assert render(store_value(*args)) == case["stored"], case
 
 
+def test_same_table():
+    from formshare.processes.actions.host import _same
+
+    doc = json.load(
+        open(
+            os.path.join(os.path.dirname(GOLDEN), "store_values.json"), encoding="utf-8"
+        )
+    )
+    for case in doc["same"]:
+        assert _same(case["old"], case["new"], case["numeric"]) is case["same"], case
+
+
 # ---------------------------------------------------------------------------
 # The interim engine answers as runactions does (rstools.md 13.3)
 # ---------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 {
- "about": "What MySQL holds for a write, by the target's type: the outcome both appliers must give (actions-api.md 5; rstools.md 14). type is what the module sees the target as (integer, double, date, datetime, string, geopoint, geotrace, geoshape); size is a text's characters (0: no limit); decimals are a number's places; digits the digits before its point (0: no limit). stored is the value as the change report spells it, or failure.",
+ "about": "What MySQL holds for a write, by the target's type: the outcome both appliers must give (actions-api.md 5; rstools.md 14). type is what the module sees the target as (integer, double, date, datetime, string, geopoint, geotrace, geoshape); size is a text's characters (0: no limit); decimals are a number's places; digits the digits before its point (0: no limit). stored is the value as the change report spells it, or failure. The section same pins when a write leaves a value as it was (actions-api.md 9, rstools.md 15.4 a): numeric says whether the target holds numbers; null means the old value's type says it, as in the engine's report.",
  "cases": [
   {
    "type": "integer",
@@ -272,6 +272,349 @@
    "failure": true,
    "size": 80,
    "why": "checked as a default is (actions-api.md 5); the device only checks the length today"
+  },
+  {
+   "type": "integer",
+   "value": " 7　",
+   "stored": "7",
+   "why": "Python's white space, the no-break and ideographic spaces included"
+  },
+  {
+   "type": "integer",
+   "value": "١٢",
+   "stored": "12",
+   "why": "any script's decimal digits, as float() reads them"
+  },
+  {
+   "type": "integer",
+   "value": "5.",
+   "stored": "5"
+  },
+  {
+   "type": "integer",
+   "value": "1E2",
+   "stored": "100"
+  },
+  {
+   "type": "double",
+   "value": ".5",
+   "stored": "0.5"
+  },
+  {
+   "type": "integer",
+   "value": "1_000",
+   "failure": true
+  },
+  {
+   "type": "integer",
+   "value": "1.5f",
+   "failure": true
+  },
+  {
+   "type": "integer",
+   "value": "0x10",
+   "failure": true
+  },
+  {
+   "type": "integer",
+   "value": "Infinity",
+   "failure": true
+  },
+  {
+   "type": "integer",
+   "value": "-inf",
+   "failure": true
+  },
+  {
+   "type": "integer",
+   "value": "nan",
+   "failure": true
+  },
+  {
+   "type": "integer",
+   "value": "1e",
+   "failure": true
+  },
+  {
+   "type": "integer",
+   "value": ".",
+   "failure": true
+  },
+  {
+   "type": "integer",
+   "value": "true",
+   "failure": true
+  },
+  {
+   "type": "double",
+   "value": 1234567.8905,
+   "stored": "1234567.89",
+   "decimals": 3,
+   "digits": 7,
+   "why": "scaled, it is 1234567890.4999998"
+  },
+  {
+   "type": "double",
+   "value": 9999999.9995,
+   "failure": true,
+   "decimals": 3,
+   "digits": 7,
+   "why": "it rounds to 10000000, beyond seven digits"
+  },
+  {
+   "type": "double",
+   "value": -0.0001,
+   "stored": "0",
+   "decimals": 3
+  },
+  {
+   "type": "double",
+   "value": 1e-07,
+   "stored": "1e-7",
+   "decimals": 10
+  },
+  {
+   "type": "string",
+   "value": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+   "stored": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+   "size": 255,
+   "why": "characters are code points, as len() and MySQL count them"
+  },
+  {
+   "type": "string",
+   "value": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+   "failure": true,
+   "size": 255
+  },
+  {
+   "type": "geopoint",
+   "value": "  0.1   32.5\t1190 5 ",
+   "stored": "0.1 32.5 1190 5",
+   "size": 80
+  },
+  {
+   "type": "geotrace",
+   "value": " 0 0 ; 1  1;;",
+   "stored": "0 0;1 1"
+  },
+  {
+   "type": "geopoint",
+   "value": "   ",
+   "stored": null,
+   "size": 80
+  },
+  {
+   "type": "geopoint",
+   "value": "91 0",
+   "failure": true,
+   "size": 80
+  },
+  {
+   "type": "geopoint",
+   "value": "0 181",
+   "failure": true,
+   "size": 80
+  },
+  {
+   "type": "geopoint",
+   "value": "0 0 0 0 0",
+   "failure": true,
+   "size": 80
+  },
+  {
+   "type": "date",
+   "value": "2026-09-24\n",
+   "failure": true,
+   "why": "a final newline"
+  },
+  {
+   "type": "date",
+   "value": "٢٠٢٦-٠٩-٢٤",
+   "failure": true,
+   "why": "digits of another script reach MySQL as they are"
+  },
+  {
+   "type": "datetime",
+   "value": "2026-09-24 10:00:00\n",
+   "failure": true
+  },
+  {
+   "type": "string",
+   "value": [
+    1,
+    2
+   ],
+   "failure": true,
+   "size": 255
+  },
+  {
+   "type": "string",
+   "value": {
+    "a": 1
+   },
+   "failure": true,
+   "size": 255
+  },
+  {
+   "type": "integer",
+   "value": [
+    1
+   ],
+   "failure": true
+  },
+  {
+   "type": "geopoint",
+   "value": "1e1 0",
+   "failure": true,
+   "size": 80,
+   "why": "its geometry could not be read"
+  },
+  {
+   "type": "geopoint",
+   "value": "+1 0",
+   "failure": true,
+   "size": 80,
+   "why": "its geometry could not be read"
+  },
+  {
+   "type": "geopoint",
+   "value": "0 0 0",
+   "failure": true,
+   "size": 80,
+   "why": "its geometry could not be read"
+  },
+  {
+   "type": "geopoint",
+   "value": "١ ٢",
+   "failure": true,
+   "size": 80,
+   "why": "its geometry could not be read"
+  },
+  {
+   "type": "geopoint",
+   "value": "1_0 0",
+   "failure": true,
+   "size": 80,
+   "why": "its geometry could not be read"
+  },
+  {
+   "type": "geotrace",
+   "value": "0 0;1e1 1",
+   "failure": true
+  },
+  {
+   "type": "geopoint",
+   "value": "0.1 32.5 -10.5 4.0",
+   "stored": "0.1 32.5 -10.5 4.0",
+   "size": 80
+  }
+ ],
+ "same": [
+  {
+   "old": 2.5,
+   "new": 2.5,
+   "numeric": true,
+   "same": true
+  },
+  {
+   "old": 2.5,
+   "new": "2.50",
+   "numeric": true,
+   "same": true,
+   "why": "a number target compares numbers"
+  },
+  {
+   "old": 1,
+   "new": true,
+   "numeric": true,
+   "same": true
+  },
+  {
+   "old": 3,
+   "new": 4,
+   "numeric": true,
+   "same": false
+  },
+  {
+   "old": null,
+   "new": null,
+   "numeric": true,
+   "same": true
+  },
+  {
+   "old": null,
+   "new": 0,
+   "numeric": true,
+   "same": false
+  },
+  {
+   "old": 0,
+   "new": null,
+   "numeric": true,
+   "same": false
+  },
+  {
+   "old": "01",
+   "new": "1",
+   "numeric": false,
+   "same": false,
+   "why": "a text target compares text: the column would hold other characters"
+  },
+  {
+   "old": "1",
+   "new": "1.0",
+   "numeric": false,
+   "same": false
+  },
+  {
+   "old": "1e3",
+   "new": "1000",
+   "numeric": false,
+   "same": false
+  },
+  {
+   "old": "a",
+   "new": "a",
+   "numeric": false,
+   "same": true
+  },
+  {
+   "old": "3",
+   "new": 3,
+   "numeric": false,
+   "same": true,
+   "why": "3 is spelled 3"
+  },
+  {
+   "old": "true",
+   "new": true,
+   "numeric": false,
+   "same": true
+  },
+  {
+   "old": null,
+   "new": "",
+   "numeric": false,
+   "same": false
+  },
+  {
+   "old": 2.5,
+   "new": 2.5,
+   "numeric": null,
+   "same": true,
+   "why": "without the target's type, the old value's says it"
+  },
+  {
+   "old": "01",
+   "new": "1",
+   "numeric": null,
+   "same": false
+  },
+  {
+   "old": 3,
+   "new": "3",
+   "numeric": null,
+   "same": true
   }
  ]
 }

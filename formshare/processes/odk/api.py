@@ -4185,7 +4185,7 @@ def create_repository(
                     df_language = default_language.replace(")", "|")
                     df_language = df_language.replace("(", "")
                     parts = df_language.split("|")
-                    root = etree.fromstring(stdout.decode())
+                    root = etree.fromstring(machine_xml(stdout))
                     language_array = root.findall(".//ODKlanguage")  # language
                     language_found = False
                     if language_array:
@@ -4219,7 +4219,7 @@ def create_repository(
                             )
                         return 22, lng_message
                 else:
-                    root = etree.fromstring(stdout.decode())
+                    root = etree.fromstring(machine_xml(stdout))
                     language_array = root.findall(".//ODKlanguage")  # language
                     if language_array:
                         return 23, _(

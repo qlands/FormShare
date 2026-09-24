@@ -1470,14 +1470,24 @@ def property_type_label(code):
     return {c: label for c, label, _ in PROPERTY_TYPES}.get(code, code)
 
 
+_COORDINATE = re.compile(r"-?[0-9]+(\.[0-9]+)?")
+
+
 def _valid_point(text):
+    """A point the geometry can read: latitude and longitude, or those with
+    altitude and accuracy, each a plain decimal in ASCII digits.
+
+    geometry_expression reads coordinates as [-0-9.] and drops altitude and
+    accuracy only when both are there, so anything float() takes beyond that
+    -- 1e1, +1, 1_0, other scripts' digits, a point of three numbers -- would
+    keep its text and get a NULL geometry beside it, silently
+    (rstools.md 15.4 d)."""
     parts = text.split()
-    if len(parts) < 2 or len(parts) > 4:
+    if len(parts) not in (2, 4):
         return False
-    try:
-        numbers = [float(part) for part in parts]
-    except ValueError:
+    if not all(_COORDINATE.fullmatch(part) for part in parts):
         return False
+    numbers = [float(part) for part in parts]
     return -90 <= numbers[0] <= 90 and -180 <= numbers[1] <= 180
 
 
@@ -2157,6 +2167,10 @@ def properties_xml(properties_by_table):
             xml_type, size, decsize = _PROPERTIES_XML_TYPES.get(
                 p["property_type"], ("varchar", "255", "0")
             )
+            # The property's own type, in create.xml's attribute for it: the
+            # column type alone cannot tell a trace from a shape (both text),
+            # and the device checks a geopoint, trace or shape as its default
+            # is only when odktype says so (rstools.md 15.2).
             field = etree.SubElement(
                 table,
                 "field",
@@ -2164,6 +2178,7 @@ def properties_xml(properties_by_table):
                 type=xml_type,
                 size=size,
                 decsize=decsize,
+                odktype=p["property_type"],
             )
             if p.get("property_default") is not None:
                 field.set("default", p["property_default"])

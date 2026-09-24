@@ -26,6 +26,45 @@ import formshare.plugins as plugins
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
+# The exit codes of create_repository this page has a branch for. Any other
+# -- one RSTools adds, a tool killed by a signal, "form data cannot be found"
+# -- fails closed: reported to the technical team and shown as an error,
+# never a silent return to the first stage. Exit codes are a contract with
+# RSTools (CLAUDE.md); a new one still needs its own branch and message.
+REPOSITORY_CODES_HANDLED = {
+    1,
+    2,
+    3,
+    4,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    34,
+    35,
+    36,
+    37,
+}
+
 
 class GenerateRepository(PrivateView):
     def __init__(self, request):
@@ -77,6 +116,7 @@ class GenerateRepository(PrivateView):
         list_array = []
         select_errors = []
         option_errors = []
+        unknown_error = False
         duplicated_choices = []
         tables_with_name_error = []
         languages = []
@@ -680,6 +720,17 @@ class GenerateRepository(PrivateView):
                                             )
                                 stage = -1
 
+                            if (
+                                result_code not in REPOSITORY_CODES_HANDLED
+                            ):  # pragma: no cover
+                                # No tool returns such a code today; this is
+                                # what keeps tomorrow's from passing silently.
+                                self.report_critical_error(
+                                    user_id, project_id, form_id, result_code, message
+                                )
+                                unknown_error = True
+                                stage = -1
+
                 return {
                     "form_data": form_data,
                     "userid": user_id,
@@ -690,6 +741,7 @@ class GenerateRepository(PrivateView):
                     "list_array": list_array,
                     "select_errors": select_errors,
                     "option_errors": option_errors,
+                    "unknown_error": unknown_error,
                     "duplicated_choices": duplicated_choices,
                     "tables_with_name_error": tables_with_name_error,
                     "file_with_error": file_with_error,

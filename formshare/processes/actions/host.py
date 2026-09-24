@@ -338,14 +338,24 @@ def _number_of(value):
         return None
 
 
-def _same(old, new):
-    """Whether a write leaves a value as it was: both null, or equal as
-    numbers when both are numbers, or equal as JavaScript text."""
+def _same(old, new, numeric=None):
+    """Whether a write leaves a value as it was (actions-api.md 9).
+
+    Both null, or equal as numbers when the target holds numbers and both
+    read as one, or else equal as JavaScript text. A text target compares as
+    text: "1" over "01" is a change, since the column would hold other
+    characters (rstools.md 15.4 a). ``numeric`` says what the target holds;
+    when it is not given -- the engine's report, which has no dictionary --
+    the old value says it, being typed by the target's type in the input.
+    """
     if old is None or new is None:
         return old is None and new is None
-    a, b = _number_of(old), _number_of(new)
-    if a is not None and b is not None:
-        return a == b
+    if numeric is None:
+        numeric = isinstance(old, (int, float)) and not isinstance(old, bool)
+    if numeric:
+        a, b = _number_of(old), _number_of(new)
+        if a is not None and b is not None:
+            return a == b
     return js_string(old) == js_string(new)
 
 

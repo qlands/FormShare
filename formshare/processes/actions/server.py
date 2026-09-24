@@ -70,8 +70,12 @@ log = logging.getLogger("formshare")
 
 _MSEL = re.compile(r"_msel_")
 _IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-_DATE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
-_DATETIME = re.compile(r"^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$")
+# ASCII digits, the whole text: \d is any script's digit in Python 3, and $
+# lets a final newline through (rstools.md 15.4 b). Used with fullmatch.
+_DATE = re.compile(r"([0-9]{4})-([0-9]{2})-([0-9]{2})")
+_DATETIME = re.compile(
+    r"([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2})"
+)
 _INT_MIN, _INT_MAX = -2147483648, 2147483647
 
 # A property's type as a column: what the module sees, the characters a text
@@ -555,6 +559,16 @@ def store_value(js_type, value, what, name, size=0, decimals=0, digits=0):
     """
     if value is None:
         return None
+    if isinstance(value, (list, dict)):
+        # Neither JavaScript's String() of it (1,2 and [object Object]) nor
+        # Python's is anything a module means (rstools.md 15.4 c).
+        raise ModuleError(
+            "{} is not a value for {} {}".format(
+                json.dumps(value, separators=(",", ":"), ensure_ascii=False),
+                what,
+                name,
+            )
+        )
     if isinstance(value, bool):
         as_text = (
             ("1" if value else "0")
@@ -607,14 +621,14 @@ def store_value(js_type, value, what, name, size=0, decimals=0, digits=0):
             )
         return rounded
     if js_type == "date":
-        found = _DATE.match(as_text)
+        found = _DATE.fullmatch(as_text)
         if not found or not _real_date(*found.groups()):
             raise ModuleError(
                 "{} is not a date: use YYYY-MM-DD for {} {}".format(as_text, what, name)
             )
         return as_text
     if js_type == "datetime":
-        found = _DATETIME.match(as_text)
+        found = _DATETIME.fullmatch(as_text)
         if (
             not found
             or not _real_date(*found.groups()[:3])
@@ -680,6 +694,7 @@ def _plan_writes(request, source, case, writes):
                 "column": "_active",
                 "value": int(value),
                 "old": 1 if target.get("active", True) else 0,
+                "numeric": True,
             }
         else:
             properties = {
@@ -706,6 +721,7 @@ def _plan_writes(request, source, case, writes):
                         digits,
                     ),
                     "old": (target.get("properties") or {}).get(name),
+                    "numeric": js_type in ("integer", "double"),
                 }
             else:
                 fields = {
@@ -741,8 +757,9 @@ def _plan_writes(request, source, case, writes):
                         (size - decimals) if field_type == "decimal" and size else 0,
                     ),
                     "old": (target.get("values") or {}).get(name),
+                    "numeric": js_type_of(field_type) in ("integer", "double"),
                 }
-        if not _same(entry["old"], entry["value"]):
+        if not _same(entry["old"], entry["value"], entry.pop("numeric")):
             plan.append(entry)
     plan.sort(key=lambda e: (e["table"], e["column"]))
     return plan

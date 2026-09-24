@@ -1,0 +1,413 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Case actions") }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jQuery-QueryBuilder/3.0.0/css/query-builder.default.min.css">
+    <style>
+      #act-preview, #act-module { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+      #act-preview { background: #f8f9fa; border: 1px solid #e5e7eb; padding: 10px; max-height: 420px; overflow: auto; white-space: pre; }
+      #act-module { width: 100%; min-height: 380px; }
+      .act-rows td { vertical-align: top; }
+      .act-rows .act-when { max-width: 480px; }
+      .act-result table { margin-top: 8px; }
+      #builder { margin-bottom: 8px; }
+      .act-mode .btn.active { pointer-events: none; }
+      .act-inline > * { margin-right: 6px; margin-bottom: 6px; }
+    </style>
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-QueryBuilder/3.0.0/js/query-builder.standalone.min.js"></script>
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% set crumb_current = _('Case actions') %}
+    {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_actions.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-lg-12">
+            {% block form_errors %}
+                {{ form.display_errors(errors) }}
+            {% endblock form_errors %}
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h2>{{ _('Case actions') }} &mdash; {{ formData.form_name }}</h2>
+                    <p>
+                        {{ _('What happens to the case each time this form is submitted: a property set, a column changed, the case deactivated or reactivated. The rules run on the server after every submission is stored, and on FormShare Collect at finalize for a case registered on the same device.') }}
+                        {% if source %}
+                            {{ _('This form follows up') }} <b>{{ source.table }}</b> {{ _('of') }} <b>{{ source.form }}</b> ({{ _('through') }} <code>{{ source.selector_field }}</code>){% if source.parent_table %}, {{ _('whose parent is') }} <b>{{ source.parent_table }}</b>{% endif %}.
+                        {% else %}
+                            <span class="text-danger">{{ _('This form has no case link yet: set it in "Links to lists" before writing rules that act on the case.') }}</span>
+                        {% endif %}
+                    </p>
+
+                    <div class="act-mode m-b">
+                        <form method="post" action="{{ request.url }}" style="display: inline">
+{{ form.secure_form(request) }}
+                            <input type="hidden" name="action_mode" value="table">
+                            <button type="submit" name="set_mode" value="1" class="btn btn-sm {% if mode == 'table' %}btn-primary active{% else %}btn-white{% endif %}" {% if mode == 'expert' %}onclick="return confirmTable(this.form)"{% endif %}>{{ _('Table mode') }}</button>
+                        </form>
+                        <form method="post" action="{{ request.url }}" style="display: inline">
+{{ form.secure_form(request) }}
+                            <input type="hidden" name="action_mode" value="expert">
+                            <button type="submit" name="set_mode" value="1" class="btn btn-sm {% if mode == 'expert' %}btn-primary active{% else %}btn-white{% endif %}">{{ _('Expert mode') }}</button>
+                        </form>
+                        <span class="text-muted" style="margin-left: 10px">
+                            {% if mode == 'table' %}{{ _('FormShare writes the code from the rows below.') }}{% else %}{{ _('You write the code; the table is not consulted.') }}{% endif %}
+                        </span>
+                    </div>
+
+                    {% if mode == 'table' %}
+                    <h3>{{ _('Rules') }}</h3>
+                    {% if rows|length > 0 %}
+                        <table class="table table-striped act-rows">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>{{ _('When') }}</th>
+                                    <th>{{ _('Target') }}</th>
+                                    <th>{{ _('Value') }}</th>
+                                    <th>{{ _('Actions') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for a_row in rows %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td class="act-when">{{ a_row.when_words }}</td>
+                                    <td>
+                                        {% if a_row.target_scope == 'parent' %}{{ _("the case's parent") }}{% else %}{{ _('the case') }}{% endif %}:
+                                        {% if a_row.target_kind == 'active' %}
+                                            {% if a_row.target_name == '1' %}{{ _('reactivate') }}{% else %}{{ _('deactivate') }}{% endif %}
+                                        {% else %}
+                                            {{ a_row.target_kind }} <code>{{ a_row.target_name }}</code>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if a_row.target_kind == 'active' %}&mdash;
+                                        {% elif a_row.value_kind == 'constant' %}<code>{{ a_row.value if a_row.value is not none else 'NULL' }}</code>
+                                        {% elif a_row.value_kind == 'variable' %}{{ _('the answer to') }} <code>{{ a_row.value }}</code>
+                                        {% elif a_row.value_kind == 'now' %}{{ _('now') }}
+                                        {% else %}{{ _('computed') }}: <code>{{ a_row.value }}</code>{% endif %}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-xs btn-white act-edit"
+                                                data-id="{{ a_row.action_id }}" data-scope="{{ a_row.target_scope }}" data-kind="{{ a_row.target_kind }}"
+                                                data-name="{{ a_row.target_name }}" data-vkind="{{ a_row.value_kind }}"
+                                                data-value="{{ a_row.value if a_row.value is not none else '' }}"
+                                                data-when="{{ a_row.when_rules if a_row.when_rules else '' }}">{{ _('Edit') }}</button>
+                                        <form method="post" action="{{ request.url }}" style="display: inline">
+{{ form.secure_form(request) }}
+                                            <input type="hidden" name="action_id" value="{{ a_row.action_id }}">
+                                            <button type="submit" name="move_up" value="1" class="btn btn-xs btn-white" title="{{ _('Move up') }}"><i class="fas fa-arrow-up"></i></button>
+                                            <button type="submit" name="move_down" value="1" class="btn btn-xs btn-white" title="{{ _('Move down') }}"><i class="fas fa-arrow-down"></i></button>
+                                            <button type="submit" name="delete_action" value="1" class="btn btn-xs btn-danger">{{ _('Delete') }}</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        <p class="text-muted">{{ _('Rows are applied in this order; for one target, the first row whose condition holds is the one applied.') }}</p>
+                    {% else %}
+                        <p>{{ _('No rules yet.') }}</p>
+                    {% endif %}
+
+                    <hr class="hr-line-dashed">
+                    <h3 id="act-form-title">{{ _('Add a rule') }}</h3>
+                    <form id="act-form" method="post" action="{{ request.url }}">
+{{ form.secure_form(request) }}
+                        <input type="hidden" name="action_id" id="act-action-id" value="">
+                        <input type="hidden" name="when_rules" id="act-when-rules" value="">
+                        <label>{{ _('When') }}</label>
+                        <div id="builder"></div>
+                        <p class="text-muted">{{ _('Leave the condition empty for a rule that always applies.') }}</p>
+
+                        <label>{{ _('Target') }}</label>
+                        <div class="form-inline act-inline">
+                            <select name="target_scope" id="act-scope" class="form-control">
+                                <option value="case">{{ _('the case') }}</option>
+                                <option value="parent" id="act-scope-parent">{{ _("the case's parent") }}</option>
+                            </select>
+                            <select name="target_kind" id="act-kind" class="form-control">
+                                <option value="property">{{ _('set property') }}</option>
+                                <option value="column">{{ _('set column') }}</option>
+                                <option value="active">{{ _('activate or deactivate') }}</option>
+                            </select>
+                            <select name="target_name" id="act-name" class="form-control" style="min-width: 220px"></select>
+                        </div>
+
+                        <label id="act-value-label">{{ _('Value') }}</label>
+                        <div class="form-inline act-inline" id="act-value-row">
+                            <select name="value_kind" id="act-vkind" class="form-control">
+                                <option value="constant">{{ _('a constant') }}</option>
+                                <option value="variable">{{ _('the answer to a variable') }}</option>
+                                <option value="now">{{ _('now') }}</option>
+                                <option value="computed">{{ _('a computed value') }}</option>
+                            </select>
+                            <input type="text" name="value" id="act-constant" class="form-control" placeholder="{{ _('Value (empty = NULL)') }}" style="min-width: 220px">
+                            <select id="act-variable" class="form-control" style="min-width: 220px; display: none"></select>
+                            <select name="computed_aggregate" id="act-aggregate" class="form-control" style="display: none">
+                                <option value="avg">{{ _('average') }}</option>
+                                <option value="sum">{{ _('sum') }}</option>
+                                <option value="count">{{ _('count') }}</option>
+                                <option value="min">{{ _('minimum') }}</option>
+                                <option value="max">{{ _('maximum') }}</option>
+                            </select>
+                            <select name="computed_repeat" id="act-repeat" class="form-control" style="display: none"></select>
+                            <select name="computed_column" id="act-column" class="form-control" style="display: none"></select>
+                        </div>
+                        <div class="m-t">
+                            <button type="submit" name="add_action" value="1" id="act-submit" class="btn btn-primary">{{ _('Add the rule') }}</button>
+                            <button type="button" id="act-cancel" class="btn btn-white" style="display: none">{{ _('Cancel') }}</button>
+                        </div>
+                    </form>
+
+                    <hr class="hr-line-dashed">
+                    <h3>{{ _('The code FormShare wrote') }}</h3>
+                    <p class="text-muted">{{ _('This is what runs, on the server and on the devices. Read-only in table mode; switch to expert mode to start from it.') }}</p>
+                    <div id="act-preview">{{ compiled if compiled else _('// no rules') }}</div>
+                    {% else %}
+                    <h3>{{ _('The module') }}</h3>
+                    <p class="text-muted">{{ _('One default function run(s, api). What it can read and write is in the case management guide; nothing it does is applied until it returns, and nothing at all if it fails.') }}</p>
+                    <form method="post" action="{{ request.url }}">
+{{ form.secure_form(request) }}
+                        <textarea name="action_module" id="act-module" class="form-control">{{ module }}</textarea>
+                        <div class="m-t">
+                            <button type="submit" name="save_module" value="1" class="btn btn-primary">{{ _('Save the module') }}</button>
+                            <button type="button" id="act-copy" class="btn btn-white">{{ _('Copy the code FormShare would write from the table') }}</button>
+                        </div>
+                    </form>
+                    <textarea id="act-compiled" style="display: none">{{ compiled }}</textarea>
+                    {% endif %}
+
+                    <hr class="hr-line-dashed">
+                    <h3>{{ _('Test with a submission') }}</h3>
+                    {% if submissions|length > 0 %}
+                        <p class="text-muted">{{ _('Runs the current code over one of the submissions this form received, and shows what it would change. Nothing is written.') }}{% if mode == 'expert' %} {{ _('The code in the editor is what runs, saved or not.') }}{% endif %}</p>
+                        <div class="form-inline act-inline">
+                            <select id="act-test-submission" class="form-control" style="min-width: 360px">
+                                {% for a_sub in submissions %}
+                                    <option value="{{ a_sub.rowuuid }}">{{ a_sub.label }} &mdash; {{ a_sub.by }} &mdash; {{ a_sub.date }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" id="act-test" class="btn btn-white">{{ _('Test') }}</button>
+                        </div>
+                        <div id="act-result" class="act-result m-t"></div>
+                    {% else %}
+                        <p class="text-muted">{{ _('This form has no submission yet; collect one first to test with it.') }}</p>
+                    {% endif %}
+
+                    <hr class="hr-line-dashed">
+                    <h3>{{ _('Runs') }} {% if failedRuns > 0 %}<span class="label label-danger">{{ failedRuns }} {{ _('failed') }}</span>{% endif %}</h3>
+                    {% if runs|length > 0 %}
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>{{ _('When') }}</th>
+                                    <th>{{ _('Submission') }}</th>
+                                    <th>{{ _('Status') }}</th>
+                                    <th>{{ _('Changes') }}</th>
+                                    <th>{{ _('Message') }}</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for a_run in runs %}
+                                <tr>
+                                    <td>{{ a_run.run_dtime }}</td>
+                                    <td><code>{{ a_run.submission_id or a_run.main_rowuuid }}</code></td>
+                                    <td>{% if a_run.run_status == 0 %}<span class="label label-primary">{{ _('applied') }}</span>{% else %}<span class="label label-danger">{{ _('failed') }}</span>{% endif %}</td>
+                                    <td>
+                                        {% for a_change in a_run.run_changes %}
+                                            <div><code>{{ a_change.table }}.{{ a_change.column }}</code>: {{ a_change.old if a_change.old is not none else 'NULL' }} &rarr; {{ a_change.new if a_change.new is not none else 'NULL' }}</div>
+                                        {% else %}&mdash;{% endfor %}
+                                    </td>
+                                    <td>{{ a_run.run_message or '' }}{% for a_line in a_run.run_log %}<div class="text-muted">{{ a_line }}</div>{% endfor %}</td>
+                                    <td>
+                                        {% if a_run.run_status == 1 %}
+                                            <form method="post" action="{{ request.url }}" style="display: inline">
+{{ form.secure_form(request) }}
+                                                <input type="hidden" name="run_id" value="{{ a_run.run_id }}">
+                                                <button type="submit" name="retry_run" value="1" class="btn btn-xs btn-white">{{ _('Retry') }}</button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p class="text-muted">{{ _('No submission has run through the actions yet.') }}</p>
+                    {% endif %}
+
+                    <a class="btn btn-white m-t" href="{{ request.route_url('form_details', userid=userid, projcode=projcode, formid=formData.form_id) }}">{{ _('Back to the form') }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+      var actFilters = {{ filters|safe }};
+      var actTargets = {{ targets|safe }};
+      var actVariables = {{ variables|safe }};
+      var actRepeats = {{ repeats|safe }};
+      var actTestUrl = "{{ request.route_url('form_case_actions_test', userid=userid, projcode=projcode, formid=formData.form_id) }}";
+
+      function confirmTable(form) {
+        swal({
+          title: "{{ _('Back to the table?') }}",
+          text: "{{ _('The code you wrote will be replaced by the code FormShare writes from the rows. This cannot be undone.') }}",
+          type: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "{{ _('Yes, back to the table') }}",
+          cancelButtonText: "{{ _('Cancel') }}",
+          closeOnConfirm: true
+        }, function (isConfirm) { if (isConfirm) { $("#busy").show(); form.submit(); } });
+        return false;
+      }
+
+      function fillSelect(select, items, selected) {
+        select.empty();
+        items.forEach(function (item) {
+          var opt = $("<option></option>").attr("value", item.value).text(item.label);
+          if (item.value === selected) opt.attr("selected", "selected");
+          select.append(opt);
+        });
+      }
+
+      function refreshTargets(selectedName) {
+        var scope = $("#act-scope").val();
+        var kind = $("#act-kind").val();
+        var names = ((actTargets[scope] || {})[kind]) || [];
+        if (kind === "active") {
+          fillSelect($("#act-name"), [{value: "0", label: "{{ _('deactivate the case') }}"}, {value: "1", label: "{{ _('reactivate the case') }}"}], selectedName);
+          $("#act-value-row, #act-value-label").hide();
+        } else {
+          fillSelect($("#act-name"), names.map(function (n) { return {value: n.name, label: n.name + " (" + n.type + ")"}; }), selectedName);
+          $("#act-value-row, #act-value-label").show();
+        }
+      }
+
+      function refreshValue() {
+        var kind = $("#act-vkind").val();
+        $("#act-constant").toggle(kind === "constant");
+        $("#act-variable").toggle(kind === "variable");
+        $("#act-aggregate, #act-repeat, #act-column").toggle(kind === "computed");
+        $("#act-constant").attr("name", kind === "constant" ? "value" : "value_unused");
+        $("#act-variable").attr("name", kind === "variable" ? "value" : "value_unused");
+      }
+
+      function refreshColumns(selected) {
+        var repeat = $("#act-repeat").val();
+        var columns = actRepeats[repeat] || {};
+        var items = [];
+        Object.keys(columns).forEach(function (c) { if (columns[c] === "integer" || columns[c] === "double") items.push({value: c, label: c}); });
+        fillSelect($("#act-column"), items, selected);
+      }
+
+      $(document).ready(function () {
+        if ($("#builder").length && actFilters.length) {
+          $("#builder").queryBuilder({
+            filters: actFilters,
+            allow_empty: true,
+            plugins: ["not-group"],
+            icons: { add_group: "fas fa-plus-circle", add_rule: "fas fa-plus", remove_group: "fas fa-times", remove_rule: "fas fa-times", error: "fas fa-exclamation-triangle" },
+            operators: ["equal", "not_equal", "less", "less_or_equal", "greater", "greater_or_equal", "between", "not_between",
+                        "in", "not_in", "begins_with", "not_begins_with", "ends_with", "not_ends_with", "contains", "not_contains",
+                        "is_empty", "is_not_empty", "is_null", "is_not_null"]
+          });
+          // An empty canvas means "always"; the library would otherwise
+          // start with one blank rule that fails validation.
+          $("#builder").queryBuilder("setRules", {condition: "AND", rules: []});
+        }
+        if (!actTargets.parent) { $("#act-scope-parent").remove(); }
+        fillSelect($("#act-variable"), actVariables.map(function (v) { return {value: v.name, label: v.name + " (" + (v.multi ? "multi-select" : v.type) + ")"}; }));
+        fillSelect($("#act-repeat"), Object.keys(actRepeats).map(function (r) { return {value: r, label: r}; }));
+        refreshTargets();
+        refreshValue();
+        refreshColumns();
+        $("#act-scope, #act-kind").on("change", function () { refreshTargets(); });
+        $("#act-vkind").on("change", refreshValue);
+        $("#act-repeat").on("change", function () { refreshColumns(); });
+
+        $("#act-form").on("submit", function () {
+          var rules = null;
+          if ($("#builder").length && actFilters.length) {
+            rules = $("#builder").queryBuilder("getRules", {allow_invalid: false});
+            if (rules === null && !$("#builder").queryBuilder("validate")) { return false; }
+          }
+          $("#act-when-rules").val(rules && rules.rules && rules.rules.length ? JSON.stringify(rules) : "");
+          return true;
+        });
+
+        $(".act-edit").on("click", function () {
+          // attr(), not data(): jQuery would parse the JSON attributes into
+          // objects, and the value may be a number-looking string.
+          var el = $(this);
+          var b = { id: el.attr("data-id"), scope: el.attr("data-scope"), kind: el.attr("data-kind"), name: el.attr("data-name"),
+                    vkind: el.attr("data-vkind"), value: el.attr("data-value"), when: el.attr("data-when") };
+          $("#act-action-id").val(b.id);
+          $("#act-scope").val(b.scope);
+          $("#act-kind").val(b.kind);
+          refreshTargets(String(b.name));
+          if (b.kind !== "active") {
+            $("#act-vkind").val(b.vkind);
+            refreshValue();
+            if (b.vkind === "constant") { $("#act-constant").val(b.value); }
+            if (b.vkind === "variable") { $("#act-variable").val(b.value); }
+            if (b.vkind === "computed") {
+              try {
+                var spec = JSON.parse(b.value);
+                $("#act-aggregate").val(spec.aggregate); $("#act-repeat").val(spec.repeat); refreshColumns(spec.column);
+              } catch (e) {}
+            }
+          }
+          if ($("#builder").length && actFilters.length) {
+            $("#builder").queryBuilder("setRules", b.when ? JSON.parse(b.when) : {condition: "AND", rules: []});
+          }
+          $("#act-form-title").text("{{ _('Edit the rule') }}");
+          $("#act-submit").attr("name", "update_action").text("{{ _('Save the rule') }}");
+          $("#act-cancel").show();
+          $("html, body").animate({ scrollTop: $("#act-form-title").offset().top - 20 }, 200);
+        });
+        $("#act-cancel").on("click", function () { window.location.reload(); });
+
+        $("#act-copy").on("click", function () { $("#act-module").val($("#act-compiled").val()); });
+
+        $("#act-test").on("click", function () {
+          var payload = { rowuuid: $("#act-test-submission").val() };
+          if ($("#act-module").length) { payload.module = $("#act-module").val(); }
+          $("#act-result").html("<i class='fa fa-spinner fa-spin'></i>");
+          fetch(actTestUrl, { method: "POST", headers: {"Content-Type": "application/json", "X-CSRF-Token": "{{ request.session.get_csrf_token() }}"}, body: JSON.stringify(payload), credentials: "same-origin" })
+            .then(function (r) { return r.json(); })
+            .then(function (r) {
+              var html = "";
+              if (r.error) { html += "<div class='alert alert-danger'>" + $("<div>").text(r.error).html() + "</div>"; }
+              else if (r.skipped) { html += "<div class='alert alert-info'>{{ _('This form has no actions.') }}</div>"; }
+              else if (!r.changes.length) { html += "<div class='alert alert-info'>{{ _('The run would change nothing.') }}</div>"; }
+              else {
+                html += "<table class='table table-bordered'><thead><tr><th>{{ _('Table') }}</th><th>{{ _('Row') }}</th><th>{{ _('Column') }}</th><th>{{ _('Old') }}</th><th>{{ _('New') }}</th></tr></thead><tbody>";
+                r.changes.forEach(function (c) {
+                  html += "<tr><td>" + c.table + "</td><td><code>" + c.rowuuid + "</code></td><td>" + c.column + "</td><td>" + (c.old === null ? "NULL" : $("<div>").text(c.old).html()) + "</td><td>" + (c.new === null ? "NULL" : $("<div>").text(c.new).html()) + "</td></tr>";
+                });
+                html += "</tbody></table>";
+              }
+              if (r.log && r.log.length) { html += "<pre>" + $("<div>").text(r.log.join("\n")).html() + "</pre>"; }
+              $("#act-result").html(html);
+            })
+            .catch(function (e) { $("#act-result").html("<div class='alert alert-danger'>" + e + "</div>"); });
+        });
+      });
+    </script>
+{% endblock scripts %}

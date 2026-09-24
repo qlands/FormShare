@@ -1,0 +1,28 @@
+{
+ "changes": [
+  {
+   "scope": "source",
+   "table": "maintable_properties",
+   "rowuuid": "H1",
+   "column": "trained_teachers",
+   "old": "2",
+   "new": "3"
+  },
+  {
+   "scope": "source",
+   "table": "teachers_properties",
+   "rowuuid": "T1",
+   "column": "status",
+   "old": "pending",
+   "new": "interviewed"
+  },
+  {
+   "scope": "source",
+   "table": "teachers_properties",
+   "rowuuid": "T1",
+   "column": "trained",
+   "old": "0",
+   "new": "1"
+  }
+ ]
+}

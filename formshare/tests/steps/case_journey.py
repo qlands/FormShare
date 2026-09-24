@@ -1179,12 +1179,348 @@ def t_e_s_t_case_journey(test_object):
         _maintable_count(test_object.server_config, schema2) == after_valid
     ), "a follow-up on a non-existent worker was stored"
 
+    # --- Actions (feature 3): one JavaScript module, run after each load ----
+    # The decision table compiles to a module; the server runs it right
+    # after JSONToMySQL stores a submission and applies what it wrote to the
+    # case; actions.json serves the same text; the dry run writes nothing;
+    # a failing module leaves the submission loaded and is retried
+    # (docs/formshare_case_management/actions-api.md).
+    config = test_object.server_config
+    # The property the rules will set, back on the roster and served by the
+    # roster list (the properties block above cleaned up after itself).
+    res = testapp.post(
+        roster_props,
+        {
+            "add_property": "1",
+            "property_name": "risk_factor",
+            "property_type": "integer",
+            "property_default": "0",
+            "property_desc": "",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        "/user/{}/project/{}/caselists/{}/edit".format(login, project, "roster"),
+        {"add_column": "1", "column_name": "property:risk_factor", "column_as": ""},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    actions = "/user/{}/project/{}/form/{}/actions".format(login, project, TOOL2)
+    res = testapp.get(actions, status=200)
+    test_object.root.assertIn(b"Table mode", res.body)
+    test_object.root.assertIn(b"No rules yet", res.body)
+    test_object.root.assertIn(b"v.consent_obtained", res.body)
+    test_object.root.assertIn(b"p.risk_factor", res.body)
+    res = testapp.get(
+        "/user/{}/project/{}/form/{}".format(login, project, TOOL2), status=200
+    )
+    test_object.root.assertIn(b"/actions", res.body)
+    # A constant the property's type refuses is refused with its reason.
+    res = testapp.post(
+        actions,
+        {
+            "add_action": "1",
+            "target_scope": "case",
+            "target_kind": "property",
+            "target_name": "risk_factor",
+            "value_kind": "constant",
+            "value": "high",
+            "when_rules": "",
+        },
+        status=302,
+    )
+    assert "FS_error" in res.headers
+    # Two rules: risk_factor becomes 7 when consent was obtained; the worker
+    # is deactivated for a role nobody has, so it never fires.
+    when_yes = json.dumps(
+        {
+            "condition": "AND",
+            "rules": [
+                {
+                    "id": "v.consent_obtained",
+                    "field": "v.consent_obtained",
+                    "type": "string",
+                    "operator": "equal",
+                    "value": "yes",
+                }
+            ],
+        }
+    )
+    res = testapp.post(
+        actions,
+        {
+            "add_action": "1",
+            "target_scope": "case",
+            "target_kind": "property",
+            "target_name": "risk_factor",
+            "value_kind": "constant",
+            "value": "7",
+            "when_rules": when_yes,
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        actions,
+        {
+            "add_action": "1",
+            "target_scope": "case",
+            "target_kind": "active",
+            "target_name": "0",
+            "value_kind": "constant",
+            "value": "",
+            "when_rules": json.dumps(
+                {
+                    "condition": "AND",
+                    "rules": [
+                        {
+                            "id": "v.main_role",
+                            "operator": "equal",
+                            "value": "nobody",
+                        }
+                    ],
+                }
+            ),
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.get(actions, status=200)
+    test_object.root.assertIn(b"consent_obtained equals &#39;yes&#39;", res.body)
+    test_object.root.assertIn(b"api.case.set(&#34;risk_factor&#34;, 7)", res.body)
+    # The module is what actions.json serves, in the manifest with the rest.
+    manifest = _pull_manifest(test_object, login, project, TOOL2)
+    assert "actions.json" in _manifest_entries(manifest)
+    served = json.loads(_served_file(test_object, manifest, "actions.json"))
+    assert served["version"] == 1 and served["mode"] == "table"
+    assert 'api.case.set("risk_factor", 7)' in served["module"]
+    assert 'if (s.consent_obtained === "yes")' in served["module"]
+    assert (
+        'if (s.main_role === "nobody") { api.case.deactivate(); }' in served["module"]
+    )
+
+    # A submission runs the module: the worker's risk_factor becomes 7, the
+    # run is recorded with the change, and the worker stays active.
+    risk = (
+        "SELECT risk_factor FROM `{}`.`roster_properties` WHERE rowuuid = '{}'".format(
+            schema1, worker_id
+        )
+    )
+    assert str(_scalar(config, risk)) == "0"
+    roster_hash = _manifest_hash(manifest, "roster.csv")
+    valid = _write_tool2_submission(
+        resources, test_object.working_dir, centre_id, worker_id
+    )
+    res = testapp.post(
+        "/user/{}/project/{}/push".format(login, project),
+        status=201,
+        upload_files=[("filetoupload", valid)],
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+    assert "FS_error" not in res.headers
+    assert str(_scalar(config, risk)) == "7"
+    assert (
+        str(
+            _scalar(
+                config,
+                "SELECT _active FROM `{}`.`roster` WHERE rowuuid = '{}'".format(
+                    schema1, worker_id
+                ),
+            )
+        )
+        == "1"
+    )
+    main2 = _scalar(
+        config,
+        "SELECT rowuuid FROM `{}`.`maintable` WHERE worker_id = '{}' "
+        "ORDER BY _submitted_date DESC LIMIT 1".format(schema2, worker_id),
+    )
+    runs = "SELECT run_status, run_message, run_changes, run_id FROM actionrun "
+    runs = (
+        runs
+        + "WHERE project_id = '{}' AND form_id = '{}' AND main_rowuuid = '{}'".format(
+            test_object.projectID, TOOL2, main2
+        )
+    )
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    a_run = engine.execute(runs).fetchone()
+    engine.dispose()
+    assert a_run is not None and a_run[0] == 0, a_run
+    changes = json.loads(a_run[2])
+    assert changes == [
+        {
+            "scope": "source",
+            "table": "roster_properties",
+            "rowuuid": worker_id,
+            "column": "risk_factor",
+            "old": "0",
+            "new": "7",
+        }
+    ], changes
+    # The property change alone makes the roster list stale: the served
+    # copy carries the 7 at the next pull (the audit log marks the change).
+    manifest = _pull_manifest(test_object, login, project, TOOL2)
+    assert _manifest_hash(manifest, "roster.csv") != roster_hash
+    served_roster = _served_file(test_object, manifest, "roster.csv").decode("utf-8")
+    assert '"{}"'.format(worker_id) in served_roster
+    row = [
+        r for r in csv.reader(io.StringIO(served_roster)) if r and r[0] == worker_id
+    ][0]
+    assert row[-1] == "7", row
+    res = testapp.get(actions, status=200)
+    test_object.root.assertIn(b"roster_properties.risk_factor", res.body)
+
+    # The dry run: what a module would change, and nothing written.
+    res = testapp.post_json(
+        actions + "/test",
+        {
+            "rowuuid": main2,
+            "module": "export default function run(s, api) {\n"
+            '  api.case.set("risk_factor", 9);\n  api.log("dry " + s.consent_obtained);\n}',
+        },
+        status=200,
+    )
+    assert res.json["ok"], res.json
+    assert res.json["changes"][0]["new"] == "9" and res.json["changes"][0]["old"] == "7"
+    assert res.json["log"] == ["dry yes"]
+    assert str(_scalar(config, risk)) == "7"
+    res = testapp.post_json(actions + "/test", {"rowuuid": main2}, status=200)
+    assert res.json["ok"] and res.json["changes"] == [], res.json
+    res = testapp.post_json(actions + "/test", {"rowuuid": ""}, status=200)
+    assert not res.json["ok"]
+    res = testapp.post_json(
+        actions + "/test",
+        {"rowuuid": main2, "module": "export default function run(s, api) { s.x.y; }"},
+        status=200,
+    )
+    assert not res.json["ok"] and "TypeError" in res.json["error"], res.json
+
+    # Expert mode: a module that fails leaves the submission loaded and is
+    # recorded as failed; mended, a retry applies it. A module no host could
+    # run is refused at save.
+    res = testapp.post(actions, {"set_mode": "1", "action_mode": "expert"}, status=302)
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        actions,
+        {"save_module": "1", "action_module": "function nope() {}"},
+        status=302,
+    )
+    assert "FS_error" in res.headers
+    res = testapp.post(
+        actions,
+        {
+            "save_module": "1",
+            "action_module": "export default function run(s, api) {\n"
+            '  api.case.set("risk_factor", api.case.property("nope"));\n}',
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    served = json.loads(
+        _served_file(
+            test_object,
+            _pull_manifest(test_object, login, project, TOOL2),
+            "actions.json",
+        )
+    )
+    assert served["mode"] == "expert" and 'property("nope")' in served["module"]
+    before = _maintable_count(config, schema2)
+    valid = _write_tool2_submission(
+        resources, test_object.working_dir, centre_id, worker_id
+    )
+    res = testapp.post(
+        "/user/{}/project/{}/push".format(login, project),
+        status=201,
+        upload_files=[("filetoupload", valid)],
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+    assert _maintable_count(config, schema2) == before + 1
+    assert str(_scalar(config, risk)) == "7"
+    failed = "SELECT run_id, run_message FROM actionrun WHERE project_id = '{}' AND form_id = '{}' AND run_status = 1".format(
+        test_object.projectID, TOOL2
+    )
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    a_failure = engine.execute(failed).fetchone()
+    engine.dispose()
+    assert a_failure is not None and "no property nope" in a_failure[1], a_failure
+    res = testapp.get(actions, status=200)
+    test_object.root.assertIn(b"no property nope", res.body)
+    res = testapp.post(
+        actions,
+        {
+            "save_module": "1",
+            "action_module": "export default function run(s, api) {\n"
+            '  api.case.set("risk_factor", 3);\n}',
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(actions, {"retry_run": "1", "run_id": a_failure[0]}, status=302)
+    assert "FS_error" not in res.headers
+    assert str(_scalar(config, risk)) == "3"
+    assert (
+        str(
+            _scalar(
+                config,
+                "SELECT run_status FROM actionrun WHERE run_id = '{}'".format(
+                    a_failure[0]
+                ),
+            )
+        )
+        == "0"
+    )
+    # Back to the table: the rows as saved are the module again.
+    res = testapp.post(actions, {"set_mode": "1", "action_mode": "table"}, status=302)
+    assert "FS_error" not in res.headers
+    served = json.loads(
+        _served_file(
+            test_object,
+            _pull_manifest(test_object, login, project, TOOL2),
+            "actions.json",
+        )
+    )
+    assert (
+        served["mode"] == "table"
+        and 'api.case.set("risk_factor", 7)' in served["module"]
+    )
+    # Rows move and go: the second rule first, then deleted.
+    ids = re.findall(
+        r'data-id="([^"]+)"', testapp.get(actions, status=200).body.decode("utf-8")
+    )
+    assert len(ids) == 2
+    res = testapp.post(actions, {"move_up": "1", "action_id": ids[1]}, status=302)
+    assert "FS_error" not in res.headers
+    body = testapp.get(actions, status=200).body.decode("utf-8")
+    assert body.index("main_role equals") < body.index("consent_obtained equals")
+    res = testapp.post(actions, {"delete_action": "1", "action_id": ids[1]}, status=302)
+    assert "FS_error" not in res.headers
+    served = json.loads(
+        _served_file(
+            test_object,
+            _pull_manifest(test_object, login, project, TOOL2),
+            "actions.json",
+        )
+    )
+    assert (
+        "nobody" not in served["module"]
+        and 'api.case.set("risk_factor", 7)' in served["module"]
+    )
+
     # --- A column added to a list reaches the devices -----------------------
     # A form's copy is regenerated at manifest time only when stale, and stale
     # is decided against the source's data; a change to the list's own
     # definition did not count, so a column added after deployment was served
     # only once Tool 1 got new data. The edit view now clears the copies'
     # generation stamp, which the gate reads as "never generated".
+    # A pull first: the gate counts a change in the same second as the last
+    # stamp, so the pull that followed the actions above may regenerate once
+    # more; after it the copy is settled.
+    _pull_manifest(test_object, login, project, TOOL2)
     roster_seq, roster_gen = _list_edition(
         test_object.server_config, test_object.projectID, "roster"
     )

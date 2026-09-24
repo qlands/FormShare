@@ -236,7 +236,11 @@ def list_is_stale(lastgen, *change_dates):
     if lastgen is None:
         return True
     for a_date in change_dates:
-        if a_date is not None and a_date > lastgen:
+        # Equal seconds count as a change: the stamps have one-second
+        # resolution, and a change in the same second as the generation
+        # would otherwise be served stale until the next one. The cost is
+        # one regeneration of a file whose content may not have moved.
+        if a_date is not None and a_date >= lastgen:
             return True
     return False
 

@@ -1,0 +1,12 @@
+{
+ "changes": [
+  {
+   "scope": "source",
+   "table": "maintable",
+   "rowuuid": "00000001-0000-4000-8000-000000000001",
+   "column": "_active",
+   "old": "1",
+   "new": "0"
+  }
+ ]
+}

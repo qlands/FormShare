@@ -106,6 +106,7 @@ pytokens==0.4.1
 pytz==2025.2
 -e git+https://github.com/qlands/pyutilib.git@master#egg=pyutilib
 pyxform==4.1.0
+quickjs==1.19.4
 PyYAML==6.0.3
 qrcode==8.2
 redis==7.1.0

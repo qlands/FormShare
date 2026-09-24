@@ -124,6 +124,9 @@ def test_a_change_after_generation_makes_it_stale():
     assert cm.list_is_stale(generated, after)
     # any one changed source is enough
     assert cm.list_is_stale(generated, before, after)
+    # the same second counts: the stamps are second-grained, and a change
+    # in the generation's second must reach the next pull
+    assert cm.list_is_stale(generated, generated)
 
 
 def test_an_unknown_change_date_is_ignored():

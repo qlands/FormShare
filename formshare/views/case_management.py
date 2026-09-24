@@ -12,8 +12,12 @@ the guards would let a source be deleted out from under its consumers.
 """
 
 import datetime
+import json
 import os
+import re
 import uuid
+
+from sqlalchemy import text
 
 from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
 from formshare.middleware.response import FileResponse
@@ -57,6 +61,31 @@ from formshare.processes.db.project import (
 )
 from formshare.views.classes import PrivateView
 from formshare.plugins.helpers import feature_exists
+from formshare.processes.actions.compiler import (
+    CompileError,
+    compile_module,
+    describe_when,
+)
+from formshare.processes.actions.server import (
+    get_form_runs,
+    retry_run,
+    run_for_submission,
+)
+from formshare.processes.db.actions import (
+    add_form_action,
+    build_catalogue,
+    catalogue_for_querybuilder,
+    delete_form_action,
+    get_action_mode,
+    get_action_module,
+    get_form_actions,
+    move_form_action,
+    set_action_mode,
+    set_expert_module,
+    update_form_action,
+)
+
+_IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 class ListSection(PrivateView):
@@ -650,4 +679,214 @@ class PropertiesView(ListSection):
                 if form_id and table_name
                 else []
             ),
+        }
+
+
+class ActionsView(ListSection):
+    """Form → Case actions (feature 3, decision 16): the decision table in
+    table mode, the module editor in expert mode, the preview, the test with
+    a submission and the run log. The module the server runs is what this
+    page last saved; actions.json serves the same text."""
+
+    def _submissions(self, form_data, limit=50):
+        """The most recent rows of the form, to dry-run against."""
+        schema = form_data.get("form_schema")
+        if not schema:
+            return []
+        label = form_data.get("form_pkey") or "rowuuid"
+        try:
+            rows = self.request.dbsession.execute(
+                text(
+                    "SELECT rowuuid, `{}` AS label, _submitted_by, _submitted_date "
+                    "FROM `{}`.maintable ORDER BY _submitted_date DESC LIMIT {}".format(
+                        label if _IDENTIFIER.match(label) else "rowuuid",
+                        schema,
+                        int(limit),
+                    )
+                )
+            ).fetchall()
+        except Exception:
+            self.request.dbsession.rollback()
+            return []
+        return [
+            {
+                "rowuuid": r[0],
+                "label": "" if r[1] is None else str(r[1]),
+                "by": r[2],
+                "date": "" if r[3] is None else str(r[3]),
+            }
+            for r in rows
+        ]
+
+    def process_view(self):
+        user_id, project_code, project_id, project_details = self.project_or_404()
+        form_id = self.request.matchdict["formid"]
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+        here = self.request.route_url(
+            "form_case_actions", userid=user_id, projcode=project_code, formid=form_id
+        )
+        if self.request.method == "POST":
+            post_data = self.get_post_dict()
+            ok, message = True, ""
+            if "add_action" in post_data or "update_action" in post_data:
+                data = {
+                    "target_scope": post_data.get("target_scope", "case"),
+                    "target_kind": post_data.get("target_kind", ""),
+                    "target_name": post_data.get("target_name", ""),
+                    "value_kind": post_data.get("value_kind", "constant"),
+                    "value": post_data.get("value", ""),
+                    "when_rules": post_data.get("when_rules", ""),
+                }
+                if data["value_kind"] == "computed":
+                    data["value"] = json.dumps(
+                        {
+                            "aggregate": post_data.get("computed_aggregate", ""),
+                            "repeat": post_data.get("computed_repeat", ""),
+                            "column": post_data.get("computed_column", ""),
+                        }
+                    )
+                if "update_action" in post_data and post_data.get("action_id"):
+                    ok, message = update_form_action(
+                        self.request, project_id, form_id, post_data["action_id"], data
+                    )
+                else:
+                    ok, message = add_form_action(
+                        self.request, project_id, form_id, data
+                    )
+                    if ok:
+                        message = ""
+            elif "delete_action" in post_data:
+                ok, message = delete_form_action(
+                    self.request, project_id, form_id, post_data.get("action_id", "")
+                )
+            elif "move_up" in post_data or "move_down" in post_data:
+                ok, message = move_form_action(
+                    self.request,
+                    project_id,
+                    form_id,
+                    post_data.get("action_id", ""),
+                    -1 if "move_up" in post_data else 1,
+                )
+            elif "set_mode" in post_data:
+                ok, message = set_action_mode(
+                    self.request,
+                    project_id,
+                    form_id,
+                    post_data.get("action_mode", "table"),
+                )
+            elif "save_module" in post_data:
+                ok, message = set_expert_module(
+                    self.request,
+                    project_id,
+                    form_id,
+                    post_data.get("action_module", ""),
+                )
+            elif "retry_run" in post_data:
+                outcome = retry_run(
+                    self.request,
+                    post_data.get("run_id", ""),
+                    form_data.get("form_schema"),
+                    self.user.login,
+                )
+                ok, message = outcome.get("ok", False), outcome.get("error") or ""
+            self.returnRawViewResult = True
+            if ok:
+                return HTTPFound(location=here)
+            self.add_error(message)
+            return HTTPFound(location=here, headers={"FS_error": "true"})
+
+        catalogue = build_catalogue(self.request, project_id, form_id)
+        rows = get_form_actions(self.request, project_id, form_id)
+        for a_row in rows:
+            try:
+                a_row["when_words"] = describe_when(a_row.get("when_rules"), catalogue)
+            except CompileError:
+                a_row["when_words"] = "?"
+        mode = get_action_mode(self.request, project_id, form_id)
+        module = get_action_module(self.request, project_id, form_id)
+        try:
+            compiled = compile_module(rows, catalogue)
+        except CompileError as e:
+            compiled = "// " + str(e)
+        targets = {}
+        for (scope, kind, name), a_type in catalogue.targets.items():
+            targets.setdefault(scope, {}).setdefault(kind, []).append(
+                {"name": name, "type": a_type}
+            )
+        return {
+            "projectDetails": project_details,
+            "userid": user_id,
+            "projcode": project_code,
+            "formData": form_data,
+            "rows": rows,
+            "mode": mode,
+            "module": module,
+            "compiled": compiled,
+            "filters": json.dumps(catalogue_for_querybuilder(catalogue)),
+            "targets": json.dumps(targets),
+            "variables": json.dumps(catalogue.variables),
+            "repeats": json.dumps(catalogue.repeats),
+            "hasCase": catalogue.source is not None,
+            "source": catalogue.source,
+            "submissions": self._submissions(form_data),
+            "runs": get_form_runs(self.request, project_id, form_id, limit=50),
+            "failedRuns": len(
+                get_form_runs(self.request, project_id, form_id, status=1)
+            ),
+        }
+
+
+class ActionsTestView(ListSection):
+    """The dry run (actions-api.md section 11): POST {rowuuid, module?} as
+    JSON, returns {ok, changes, log, error}; nothing is written."""
+
+    def __init__(self, request):
+        ListSection.__init__(self, request)
+        # A fetch from the page: the token travels in the X-CSRF-Token
+        # header, and the referer is the page rather than this address.
+        self.checkCrossPost = False
+
+    def process_view(self):
+        user_id, project_code, project_id, project_details = self.project_or_404()
+        form_id = self.request.matchdict["formid"]
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+        self.returnRawViewResult = True
+        if self.request.method != "POST":
+            raise HTTPNotFound
+        try:
+            data = json.loads(self.request.body.decode("utf-8") or "{}")
+        except ValueError:
+            data = self.get_post_dict()
+        rowuuid = str(data.get("rowuuid", "") or "").strip()
+        module = data.get("module")
+        if module is not None and str(module).strip() == "":
+            module = None
+        if rowuuid == "" or not form_data.get("form_schema"):
+            return {
+                "ok": False,
+                "error": self._("Choose a submission to test with"),
+                "changes": [],
+                "log": [],
+            }
+        outcome = run_for_submission(
+            self.request,
+            project_id,
+            form_id,
+            form_data["form_schema"],
+            rowuuid,
+            None,
+            self.user.login,
+            dry_run=True,
+            module=module,
+        )
+        return {
+            "ok": outcome["ok"],
+            "skipped": outcome.get("skipped", False),
+            "error": outcome["error"],
+            "changes": outcome["changes"],
+            "log": outcome["log"],
         }

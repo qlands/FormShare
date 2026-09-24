@@ -95,6 +95,7 @@ requires = [
     "pytz",
     "PyUtilib",
     "pyxform",
+    "quickjs",
     "qrcode",
     "redis",
     "regex",

@@ -1,0 +1,12 @@
+{
+ "changes": [
+  {
+   "scope": "source",
+   "table": "maintable_properties",
+   "rowuuid": "00000001-0000-4000-8000-000000000001",
+   "column": "note",
+   "old": null,
+   "new": "at 09:30 :now {self.maintable} it's -- not a comment"
+  }
+ ]
+}

@@ -503,6 +503,13 @@ class Odkform(Base):
     form_version = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_index = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_type = Column(INTEGER, server_default=text("'1'"))
+    # Actions (feature 3, decision 16): how the form's module is written --
+    # "table", compiled from its PropertyAction rows, or "expert", written by
+    # the owner -- and the module itself, compiled or written, which is what
+    # the server runs after each load and what actions.json serves. NULL or
+    # empty: no actions. docs/formshare_case_management/actions-api.md.
+    action_mode = Column(Unicode(10), server_default=text("'table'"))
+    action_module = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_case = Column(INTEGER, server_default=text("'0'"))
     form_casetype = Column(
         INTEGER, server_default=text("'0'")
@@ -1051,6 +1058,83 @@ class TableProperty(Base):
     property_default = Column(Unicode(255))
     property_desc = Column(Unicode(500))
     property_cdate = Column(DateTime)
+
+    odkform = relationship("Odkform")
+
+
+class PropertyAction(Base):
+    """A row of a form's decision table (feature 3, decision 16).
+
+    "When this form is submitted, set X to Y if Z", one row per line. The
+    rows are compiled, in action_order, into the form's JavaScript module
+    (Odkform.action_module) by processes/actions/compiler.py; the module is
+    what runs, on the server after each load and on the device at
+    finalize. The closed grammar is the schema: there is no expression
+    column here -- an expression lives in expert mode, as code. The
+    condition is jQuery QueryBuilder's rule JSON, NULL for "always".
+    docs/formshare_case_management/formshare.md section 2.5, actions-api.md.
+    """
+
+    __tablename__ = "propertyaction"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "form_id"],
+            ["odkform.project_id", "odkform.form_id"],
+            ondelete="CASCADE",
+        ),
+    )
+
+    action_id = Column(Unicode(64), primary_key=True, nullable=False)
+    project_id = Column(Unicode(64), nullable=False)
+    form_id = Column(Unicode(120), nullable=False)
+    action_order = Column(INTEGER, nullable=False, server_default=text("'0'"))
+    # case | parent: the linked case, or the row it belongs to
+    target_scope = Column(Unicode(10), nullable=False, server_default=text("'case'"))
+    # property | column | active
+    target_kind = Column(Unicode(10), nullable=False)
+    # the property or column name; "0" / "1" for active
+    target_name = Column(Unicode(120))
+    # constant | variable | now | computed
+    value_kind = Column(Unicode(10), nullable=False)
+    # the constant, the variable, or the computed spec as JSON
+    # ({"aggregate", "repeat", "column", "filter"})
+    value = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    # QueryBuilder rule JSON; NULL = always
+    when_rules = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    action_cdate = Column(DateTime)
+
+    odkform = relationship("Odkform")
+
+
+class ActionRun(Base):
+    """What the module did to one submission, or why it could not.
+
+    One row per run on the server: the change report of actions-api.md
+    section 9 when it succeeded, the failure message with its line when it
+    did not. A failed run leaves the submission loaded and is retried from
+    the logs page (formshare.md section 3.3).
+    """
+
+    __tablename__ = "actionrun"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "form_id"],
+            ["odkform.project_id", "odkform.form_id"],
+            ondelete="CASCADE",
+        ),
+    )
+
+    run_id = Column(Unicode(64), primary_key=True, nullable=False)
+    project_id = Column(Unicode(64), nullable=False)
+    form_id = Column(Unicode(120), nullable=False)
+    submission_id = Column(Unicode(64))
+    main_rowuuid = Column(Unicode(80), nullable=False)
+    run_dtime = Column(DateTime)
+    # 0 = applied, 1 = failed, 2 = dry run
+    run_status = Column(INTEGER, nullable=False, server_default=text("'0'"))
+    run_message = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    run_changes = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    run_log = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     odkform = relationship("Odkform")
 

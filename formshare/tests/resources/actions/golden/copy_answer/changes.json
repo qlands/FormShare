@@ -1,0 +1,23 @@
+{
+ "changes": [
+  {
+   "scope": "source",
+   "table": "maintable_properties",
+   "rowuuid": "00000001-0000-4000-8000-000000000001",
+   "column": "note",
+   "old": null,
+   "new": "Maria"
+  },
+  {
+   "scope": "source",
+   "table": "maintable_properties",
+   "rowuuid": "00000001-0000-4000-8000-000000000001",
+   "column": "status",
+   "old": "new",
+   "new": "tester"
+  }
+ ],
+ "log": [
+  "copied c option 1"
+ ]
+}

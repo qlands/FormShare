@@ -16,12 +16,19 @@ from subprocess import Popen, PIPE
 from uuid import uuid4
 from urllib.parse import quote
 import pandas as pd
+from sqlalchemy import text
 import formshare.plugins as plugins
 from bs4 import BeautifulSoup
 from formshare.processes.color_hash import ColorHash
 from formshare.processes.option_values import (
     invalid_option_values_heading,
     describe_invalid_option_values,
+)
+from formshare.processes.actions.server import run_after_load
+from formshare.processes.db.actions import (
+    actions_json,
+    get_action_mode,
+    get_action_module,
 )
 from formshare.processes.odk.geojson import (
     check_geojson,
@@ -2789,6 +2796,12 @@ def refresh_published_lists(request, project_id, form, form_files):
         # the same list) serve whatever was uploaded.
         if not list_is_stale(a_file.get("file_lastgen"), last_submission, last_clean):
             continue
+        # The stamp is the database's clock, read before generating: the
+        # dates it is compared with are the database's (audit_date) and the
+        # loader's, and a change that lands while the file is being written
+        # must count against the next pull, not be hidden behind a stamp
+        # taken after it.
+        started = request.dbsession.execute(text("SELECT NOW()")).scalar()
         odk_dir = get_odk_path(request)
         uid = str(uuid.uuid4())
         temp_dir = os.path.join(odk_dir, *["tmp", uid])
@@ -2817,9 +2830,7 @@ def refresh_published_lists(request, project_id, form, form_files):
         # Stamp this form's copy as generated even when the content did not
         # change, so the per-file gate closes and the next pull does not
         # regenerate on every request.
-        update_media_lastgen(
-            request, project_id, form, a_file["file_name"], datetime.datetime.now()
-        )
+        update_media_lastgen(request, project_id, form, a_file["file_name"], started)
     return refreshed
 
 
@@ -2834,6 +2845,7 @@ REPOSITORY_FILES = (
     "manifest.xml",
     "properties.xml",
     "lists.xml",
+    "actions.json",
 )
 # The formList extension, elements a stock parser skips and FormShare Collect
 # reads: which mirror a form belongs to, and which questions are geopoints.
@@ -2870,6 +2882,14 @@ def get_repository_file_content(request, project_id, form_id, file_name):
         return properties_xml(get_form_properties(request, project_id, form_id))
     if file_name == "lists.xml":
         return lists_xml(get_form_list_definitions(request, project_id, form_id))
+    if file_name == "actions.json":
+        # The form's module, compiled or written, empty for a form without
+        # actions (actions-api.md 2); made from the form row on every
+        # request so a rule saved a minute ago is in it.
+        return actions_json(
+            get_action_mode(request, project_id, form_id),
+            get_action_module(request, project_id, form_id),
+        )
     path = os.path.join(
         get_odk_path(request),
         *["forms", form_data["form_directory"], "repository", file_name]
@@ -4611,6 +4631,20 @@ def store_json_file(
                                 log.error(message)
                                 return 1, message
                         else:
+                            # The form's actions run now, before anything
+                            # answers the device, over the rows the load just
+                            # wrote (actions-api.md; formshare.md 3.3). A
+                            # failure is recorded beside the load errors and
+                            # never touches the submission.
+                            run_after_load(
+                                request,
+                                project,
+                                form,
+                                schema,
+                                submission_id,
+                                uuid_file,
+                                submission_data.get("_submitted_by", ""),
+                            )
                             # Add the JSON to the Elastic Search index but only submissions without error
 
                             index_data = {
@@ -5994,6 +6028,16 @@ def push_revision(request, user, project, form, submission):
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
+        # The form's actions, as after a live load (store_json_file).
+        run_after_load(
+            request,
+            project,
+            form,
+            schema,
+            submission,
+            uuid_file,
+            submission_data.get("_submitted_by", ""),
+        )
         # Add the JSON to the Elastic Search index
         index_data = {
             "_submitted_date": submission_data.get("_submitted_date", ""),

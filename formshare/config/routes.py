@@ -82,6 +82,8 @@ from formshare.views.case_management import (
     TableFieldsApiView,
     SampleListView,
     CaseLinksView,
+    ActionsView,
+    ActionsTestView,
     WorkflowDiagramView,
     WorkflowModelApiView,
     PropertiesView,
@@ -504,6 +506,24 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/form/{formid}/caselinks",
             CaseLinksView,
             "dashboard/projects/case_management/case_links.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "form_case_actions",
+            "/user/{userid}/project/{projcode}/form/{formid}/actions",
+            ActionsView,
+            "dashboard/projects/case_management/actions.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "form_case_actions_test",
+            "/user/{userid}/project/{projcode}/form/{formid}/actions/test",
+            ActionsTestView,
+            "json",
         )
     )
 

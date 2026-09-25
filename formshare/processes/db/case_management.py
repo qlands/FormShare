@@ -34,6 +34,12 @@ import uuid
 
 from lxml import etree
 
+from formshare.processes.list_filter import (
+    resolve as resolve_filter,
+    uses_properties as filter_uses_properties,
+    referenced_properties,
+)
+
 from formshare.models import (
     PublishedList,
     PublishedListColumn,
@@ -153,7 +159,8 @@ def build_list_select(
     :param columns: [(column_name, column_as[, source]), ...] extra columns,
         in order; source is "table" (the default) or "property", a column of
         <table>_properties, joined 1:1 on rowuuid
-    :param filter_sql: optional membership WHERE fragment, UI-built
+    :param filter_sql: the list's filter, compiled from the owner's rule set
+        by processes/list_filter.py, with {t} and {p} marking the aliases
     :param symbolic: spell the tables as ``{source.<table>}`` rather than
         ``schema.table`` -- the SELECT a device runs over its mirror
         (lists.xml, formshare.md 3.10); everything else is the same text,
@@ -163,8 +170,11 @@ def build_list_select(
     ``name`` is always rowuuid and always first; ``label`` always second.
     """
     # A property column joins <table>_properties; the join and the aliases
-    # appear only then, so a list without properties reads as before.
-    uses_properties = any(len(col) > 2 and col[2] == "property" for col in columns)
+    # appear only then, so a list without properties reads as before. A
+    # filter that reads a property needs the join too, served or not.
+    uses_properties = any(
+        len(col) > 2 and col[2] == "property" for col in columns
+    ) or filter_uses_properties(filter_sql)
     t = "t." if uses_properties else ""
     # A row list is keyed by the source row's rowuuid: one row per source row,
     # linkable as a case. A value list is keyed by a column -- a list of
@@ -215,7 +225,9 @@ def build_list_select(
     if active is not None:
         where.append("{}_active = {}".format(t, int(active)))
     if filter_sql:
-        where.append(filter_sql)
+        # Compiled by processes/list_filter.py, with markers for the
+        # aliases, which only this function knows.
+        where.append(resolve_filter(filter_sql, t))
     if where:
         sql = sql + " WHERE " + " AND ".join(where)
     # A value list has no rowuuid to order by; its values order it instead.
@@ -1799,6 +1811,22 @@ def property_is_served(request, project_id, form_id, table_name, property_name):
     )
 
 
+def property_filters_a_list(request, project_id, form_id, table_name, property_name):
+    """The id of a published list of the table whose filter reads the
+    property, or None. Its SELECT would fail once the property is gone."""
+    lists = (
+        request.dbsession.query(PublishedList.list_id, PublishedList.filter_rules)
+        .filter(PublishedList.source_project == project_id)
+        .filter(PublishedList.source_form == form_id)
+        .filter(PublishedList.source_table == table_name)
+        .all()
+    )
+    for list_id, rules in lists:
+        if property_name in referenced_properties(rules):
+            return list_id
+    return None
+
+
 def _form_schema(request, project_id, form_id):
     res = (
         request.dbsession.query(Odkform.form_schema)
@@ -2008,6 +2036,14 @@ def delete_table_property(request, project_id, form_id, table_name, property_nam
         return False, _(
             "A published list serves this property. Remove it from the list first."
         )
+    filtering = property_filters_a_list(
+        request, project_id, form_id, table_name, property_name
+    )
+    if filtering:
+        return False, _(
+            'The filter of the published list "{}" reads this property. '
+            "Change the filter first."
+        ).format(filtering)
     schema = _form_schema(request, project_id, form_id)
     if not schema:
         return False, _("The form has no repository")

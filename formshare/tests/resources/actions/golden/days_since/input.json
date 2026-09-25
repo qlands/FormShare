@@ -1,0 +1,28 @@
+{
+ "submission": {
+  "rowuuid": "00000001-0000-4000-8000-0000000000d1",
+  "values": {
+   "visit_note": "follow-up"
+  },
+  "repeats": {},
+  "selections": {},
+  "submitted_by": "tester",
+  "submitted_date": "2026-09-24 10:00:00"
+ },
+ "case": {
+  "table": "teachers",
+  "rowuuid": "00000002-0000-4000-8000-0000000000d2",
+  "active": true,
+  "values": {
+   "teacher_name": "Ann"
+  },
+  "properties": {
+   "status": "recent",
+   "last_visit": "2026-09-01"
+  },
+  "parent": null
+ },
+ "lookups": {},
+ "now": "2026-09-24 10:00:00",
+ "user": "tester"
+}

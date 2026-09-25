@@ -13,6 +13,7 @@ from subprocess import Popen, PIPE
 from sqlalchemy.exc import IntegrityError
 import paginate
 from formshare import plugins as p
+from formshare.processes.actions.server import take_back_runs
 import pandas as pd
 from PIL import Image
 from formshare.models.formshare import Submission, Jsonlog
@@ -1552,6 +1553,9 @@ def delete_submission(
     sql = "SET @odktools_current_user = '" + user + "'"
     request.dbsession.execute(sql)
     try:
+        # What the form's actions wrote for this submission goes with it,
+        # in the same transaction as the delete (formshare.md 8.4).
+        take_back_runs(request, project, main_rowuuid=row_uuid)
         sql = "DELETE FROM " + schema + ".maintable WHERE rowuuid = '" + row_uuid + "'"
         request.dbsession.execute(sql)
         request.dbsession.commit()
@@ -1821,6 +1825,14 @@ def delete_all_submission(request, user, project, form, deleted_by):
         os.makedirs(os.path.join(odk_dir, *paths))
         paths = ["forms", form_directory, "submissions", "maps"]
         os.makedirs(os.path.join(odk_dir, *paths))
+
+        # What the form's actions wrote goes with its submissions (formshare.md
+        # 8.4). Committed before the TRUNCATE, which commits on its own.
+        request.dbsession.execute(
+            sqlalchemy_text("SET @odktools_current_user = :u"), {"u": user}
+        )
+        take_back_runs(request, project, schema=schema)
+        request.dbsession.commit()
 
         # TRUNCATE is orders of magnitude faster than DELETE for large tables
         # because it deallocates pages directly instead of deleting row by row.

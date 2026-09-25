@@ -222,8 +222,8 @@
                             {% for a_run in runs %}
                                 <tr>
                                     <td>{{ a_run.run_dtime }}</td>
-                                    <td><code>{{ a_run.submission_id or a_run.main_rowuuid }}</code></td>
-                                    <td>{% if a_run.run_status == 0 %}<span class="label label-primary">{{ _('applied') }}</span>{% else %}<span class="label label-danger">{{ _('failed') }}</span>{% endif %}</td>
+                                    <td><code>{{ a_run.submission_id or a_run.main_rowuuid }}</code>{% if a_run.instance_id %}<div class="text-muted" title="{{ _('The submission as the device knows it: its instanceID') }}"><code>{{ a_run.instance_id }}</code></div>{% endif %}</td>
+                                    <td>{% if a_run.run_status == 0 %}<span class="label label-primary">{{ _('applied') }}</span>{% elif a_run.run_status == 2 %}<span class="label label-default" title="{{ _('The submission was deleted and what this run wrote was put back') }}">{{ _('taken back') }}</span>{% else %}<span class="label label-danger">{{ _('failed') }}</span>{% endif %}</td>
                                     <td>
                                         {% for a_change in a_run.run_changes %}
                                             <div><code>{{ a_change.table }}.{{ a_change.column }}</code>: {{ a_change.old if a_change.old is not none else 'NULL' }} &rarr; {{ a_change.new if a_change.new is not none else 'NULL' }}</div>

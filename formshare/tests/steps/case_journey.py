@@ -1770,3 +1770,305 @@ def t_e_s_t_case_journey(test_object):
     )
     assert "FS_error" not in res.headers
     assert _maintable_count(test_object.server_config, schema2) == before + 1
+
+    # --- The device's QA, answered (formshare.md 8) -------------------------
+    # A counting module on the version that receives the follow-ups now: every
+    # run adds one to the worker's risk_factor, so a run that happens twice,
+    # or is not taken back, shows in the count.
+    push = "/user/{}/project/{}/push".format(login, project)
+    as_assistant = dict(
+        FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+    )
+    actions_v6 = "/user/{}/project/{}/form/{}/actions".format(login, project, tool2_v6)
+    res = testapp.post(
+        actions_v6, {"set_mode": "1", "action_mode": "expert"}, status=302
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        actions_v6,
+        {
+            "save_module": "1",
+            "action_module": "export default function run(s, api) {\n"
+            '  api.case.set("risk_factor", (api.case.property("risk_factor") || 0) + 1);\n'
+            "}\n",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    def instance_of(xml_path):
+        with io.open(xml_path, encoding="utf-8") as a_file:
+            return re.search(r"<instanceID>([^<]*)</instanceID>", a_file.read()).group(
+                1
+            )
+
+    def runs_of(instance_id):
+        engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+        try:
+            return engine.execute(
+                "SELECT run_id, main_rowuuid, run_status, submission_id FROM actionrun "
+                "WHERE project_id = '{}' AND instance_id = '{}'".format(
+                    test_object.projectID, instance_id
+                )
+            ).fetchall()
+        finally:
+            engine.dispose()
+
+    # 8.5: the run keeps the submission's instanceID, how the device knows
+    # it, and the Actions page shows it beside the server's own id.
+    counted = int(_scalar(config, risk))
+    visit = _write_tool2_submission(
+        resources,
+        test_object.working_dir,
+        centre_id,
+        worker_id,
+        form_id=tool2_v6,
+        version="20260915v6",
+    )
+    visit_instance = instance_of(visit)
+    res = testapp.post(
+        push,
+        status=201,
+        upload_files=[("filetoupload", visit)],
+        extra_environ=as_assistant,
+    )
+    assert "FS_error" not in res.headers
+    assert int(_scalar(config, risk)) == counted + 1
+    visit_runs = runs_of(visit_instance)
+    assert len(visit_runs) == 1 and visit_runs[0][2] == 0, visit_runs
+    visit_main = visit_runs[0][1]
+    res = testapp.get(actions_v6, status=200)
+    test_object.root.assertIn(visit_instance.encode("utf-8"), res.body)
+
+    # 8.4: deleting the submission takes its run back -- the count it added
+    # goes, and the run says so -- and the same submission sent again, as an
+    # edit resolved on the logs page would be, counts once, not twice.
+    testapp.post(
+        "/user/{}/project/{}/form/{}/submissions/delete".format(
+            login, project, tool2_v6
+        ),
+        {"oper": "del", "id": visit_main},
+        status="*",
+    )
+    assert (
+        _scalar(
+            config,
+            "SELECT COUNT(*) FROM `{}`.`maintable` WHERE rowuuid = '{}'".format(
+                schema2, visit_main
+            ),
+        )
+        == 0
+    )
+    assert int(_scalar(config, risk)) == counted
+    assert runs_of(visit_instance)[0][2] == 2
+    res = testapp.get(actions_v6, status=200)
+    test_object.root.assertIn(b"taken back", res.body)
+    resent = _write_tool2_submission(
+        resources,
+        test_object.working_dir,
+        centre_id,
+        worker_id,
+        form_id=tool2_v6,
+        version="20260915v6",
+    )
+    res = testapp.post(
+        push,
+        status=201,
+        upload_files=[("filetoupload", resent)],
+        extra_environ=as_assistant,
+    )
+    assert "FS_error" not in res.headers
+    assert int(_scalar(config, risk)) == counted + 1
+
+    # 8.3: a submission in two parts, as Collect sends one whose media pass
+    # the 10 MB the server says it takes: the same XML twice, each with some
+    # of the media, all but the last marked *isIncomplete*. The later part is
+    # the same submission: its media join the first part's, and it is neither
+    # loaded nor run again.
+    counted = int(_scalar(config, risk))
+    before = _maintable_count(config, schema2)
+    in_parts = _write_tool2_submission(
+        resources,
+        test_object.working_dir,
+        centre_id,
+        worker_id,
+        form_id=tool2_v6,
+        version="20260915v6",
+    )
+    part_instance = instance_of(in_parts)
+    photos = []
+    for number in (1, 2):
+        photo = os.path.join(test_object.working_dir, "part{}.jpg".format(number))
+        with open(photo, "wb") as a_file:
+            a_file.write(os.urandom(2048))
+        photos.append(photo)
+    res = testapp.post(
+        push,
+        {"*isIncomplete*": "yes"},
+        status=201,
+        upload_files=[("xml_submission_file", in_parts), ("part1.jpg", photos[0])],
+        extra_environ=as_assistant,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        push,
+        status=201,
+        upload_files=[("xml_submission_file", in_parts), ("part2.jpg", photos[1])],
+        extra_environ=as_assistant,
+    )
+    assert "FS_error" not in res.headers
+    assert _maintable_count(config, schema2) == before + 1
+    assert int(_scalar(config, risk)) == counted + 1
+    part_runs = runs_of(part_instance)
+    assert len(part_runs) == 1 and part_runs[0][2] == 0, part_runs
+    first_part = part_runs[0][3]
+    assert (
+        _scalar(
+            config,
+            "SELECT COUNT(*) FROM submission WHERE project_id = '{}' AND sameas = '{}'".format(
+                test_object.projectID, first_part
+            ),
+        )
+        == 1
+    )
+    v6_directory = get_form_details(config, test_object.projectID, tool2_v6)[
+        "form_directory"
+    ]
+    media = os.path.join(
+        config["repository.path"],
+        "odk",
+        "forms",
+        v6_directory,
+        "submissions",
+        first_part,
+    )
+    assert os.path.exists(os.path.join(media, "part1.jpg")), os.listdir(media)
+    assert os.path.exists(os.path.join(media, "part2.jpg")), os.listdir(media)
+
+    # 8.1: a list's filter, built in QueryBuilder over the table's columns and
+    # its properties, compiled to the SELECT the server generates the list
+    # from and lists.xml serves the devices. A text compares exactly, as
+    # SQLite does on the phone; the server's collation would not.
+    edit = "/user/{}/project/{}/caselists/roster/edit".format(login, project)
+    res = testapp.get(edit, status=200)
+    test_object.root.assertIn(b"No filter: every row is served", res.body)
+    test_object.root.assertIn(b'"p.risk_factor"', res.body)
+    risk_now = int(_scalar(config, risk))
+    not_this_worker = {
+        "condition": "AND",
+        "rules": [
+            {
+                "id": "p.risk_factor",
+                "field": "p.risk_factor",
+                "type": "integer",
+                "operator": "not_equal",
+                "value": risk_now,
+            }
+        ],
+    }
+    res = testapp.post(
+        edit,
+        {"change_filter": "1", "filter_rules": json.dumps(not_this_worker)},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.get(edit, status=200)
+    test_object.root.assertIn(
+        "property risk_factor is not &#39;{}&#39;".format(risk_now).encode("utf-8"),
+        res.body,
+    )
+    manifest = _pull_manifest(test_object, login, project, tool2_v6)
+    served_roster = _served_file(test_object, manifest, "roster.csv").decode("utf-8")
+    assert worker_id not in served_roster
+    # Read as a device reads it: the XML escapes the comparison.
+    roster_select = (
+        etree.fromstring(_served_file(test_object, manifest, "lists.xml"))
+        .find(".//list[@id='roster']/select")
+        .text
+    )
+    assert "p.`risk_factor` <> {}".format(risk_now) in roster_select, roster_select
+    assert "LEFT JOIN {source.roster_properties} AS p" in roster_select
+
+    # The worker's name, in capitals: a server that compared as its collation
+    # does would find the worker; the list, like the phone, does not.
+    name = _scalar(
+        config,
+        "SELECT `{}` FROM `{}`.`roster` WHERE rowuuid = '{}'".format(
+            worker_label, schema1, worker_id
+        ),
+    )
+    by_name = {
+        "condition": "AND",
+        "rules": [
+            {
+                "id": "t." + worker_label,
+                "field": "t." + worker_label,
+                "type": "string",
+                "operator": "equal",
+                "value": str(name).upper() + "X",
+            }
+        ],
+    }
+    # Another case, if the name has letters; a trailing space, which the
+    # collation pads away; the name as it is.
+    attempts = [(str(name) + " ", False), (str(name), True)]
+    if str(name).swapcase() != str(name):
+        attempts.insert(0, (str(name).swapcase(), False))
+    for value, served in attempts:
+        by_name["rules"][0]["value"] = value
+        res = testapp.post(
+            edit,
+            {"change_filter": "1", "filter_rules": json.dumps(by_name)},
+            status=302,
+        )
+        assert "FS_error" not in res.headers
+        roster_csv = _served_file(
+            test_object,
+            _pull_manifest(test_object, login, project, tool2_v6),
+            "roster.csv",
+        ).decode("utf-8")
+        assert (worker_id in roster_csv) == served, (value, roster_csv)
+
+    # A rule the compiler refuses is refused with its reason, and the filter
+    # stays as it was.
+    wrong = {
+        "condition": "AND",
+        "rules": [
+            {
+                "id": "t." + worker_label,
+                "field": "t." + worker_label,
+                "operator": "less",
+                "value": "a",
+            }
+        ],
+    }
+    res = testapp.post(
+        edit, {"change_filter": "1", "filter_rules": json.dumps(wrong)}, status=200
+    )
+    test_object.root.assertIn(b"does not apply to", res.body)
+
+    # The property a filter reads cannot be deleted while it does.
+    not_this_worker["rules"][0]["value"] = risk_now
+    res = testapp.post(
+        edit,
+        {"change_filter": "1", "filter_rules": json.dumps(not_this_worker)},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        roster_props,
+        {"delete_property": "1", "property_name": "risk_factor"},
+        status=302,
+    )
+    assert "FS_error" in res.headers
+    assert _column_type(config, schema1, "roster_properties", "risk_factor") == "int"
+
+    # Removed, the filter serves every row again.
+    res = testapp.post(edit, {"clear_filter": "1"}, status=302)
+    assert "FS_error" not in res.headers
+    served_roster = _served_file(
+        test_object, _pull_manifest(test_object, login, project, tool2_v6), "roster.csv"
+    ).decode("utf-8")
+    assert worker_id in served_roster
+    res = testapp.get(edit, status=200)
+    test_object.root.assertIn(b"No filter: every row is served", res.body)

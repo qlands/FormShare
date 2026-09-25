@@ -66,12 +66,20 @@ from formshare.processes.actions.compiler import (
     compile_module,
     describe_when,
 )
+from formshare.processes.list_filter import (
+    FilterError,
+    compile_filter,
+    describe_filter,
+    filter_fields,
+    querybuilder_filters,
+)
 from formshare.processes.actions.server import (
     get_form_runs,
     retry_run,
     run_for_submission,
 )
 from formshare.processes.db.actions import (
+    _choices as lookup_choices,
     add_form_action,
     build_catalogue,
     catalogue_for_querybuilder,
@@ -219,6 +227,13 @@ class EditPublishedListView(ListSection):
             list_data["source_form"],
             list_data["source_table"],
         )
+        table_properties = get_table_properties(
+            self.request,
+            list_data["source_project"],
+            list_data["source_form"],
+            list_data["source_table"],
+        )
+        fields = filter_fields(table_columns, table_properties)
         # Every definition change below marks the served copies stale
         # (invalidate_list_copies): the devices get the new shape on their
         # next pull, not when the source next receives data.
@@ -312,6 +327,42 @@ class EditPublishedListView(ListSection):
                     invalidate_list_copies(self.request, project_id, list_id)
                     self.returnRawViewResult = True
                     return HTTPFound(self.request.url)
+            if (
+                "change_filter" in post_data.keys()
+                or "clear_filter" in post_data.keys()
+            ):
+                # The filter the owner built (formshare.md 8.1): compiled to
+                # the fragment the list's SELECT appends, on the server and in
+                # lists.xml, and tried on the source before it is kept.
+                rules = ""
+                if "change_filter" in post_data.keys():
+                    rules = str(post_data.get("filter_rules", "") or "").strip()
+                error = None
+                filter_sql = None
+                try:
+                    filter_sql = compile_filter(rules, fields)
+                except FilterError as e:
+                    error = str(e)
+                if error is None and filter_sql:
+                    error = self.try_filter(project_id, list_id, list_data, filter_sql)
+                if error is not None:
+                    self.append_to_errors(error)
+                else:
+                    updated, message = update_published_list(
+                        self.request,
+                        project_id,
+                        list_id,
+                        {
+                            "filter_rules": rules if filter_sql else None,
+                            "filter_sql": filter_sql,
+                        },
+                    )
+                    if not updated:
+                        self.append_to_errors(message)
+                    else:
+                        invalidate_list_copies(self.request, project_id, list_id)
+                        self.returnRawViewResult = True
+                        return HTTPFound(self.request.url)
             if "change_label" in post_data.keys():
                 label_column = post_data.get("label_column", "")
                 if label_column != "":
@@ -334,13 +385,69 @@ class EditPublishedListView(ListSection):
             "listData": list_data,
             "listColumns": get_list_columns(self.request, project_id, list_id),
             "tableColumns": table_columns,
-            "tableProperties": get_table_properties(
-                self.request,
-                list_data["source_project"],
-                list_data["source_form"],
-                list_data["source_table"],
+            "tableProperties": table_properties,
+            "filterFields": querybuilder_filters(
+                fields, self.select_choices(list_data, fields)
             ),
+            "filterRules": self.stored_rules(list_data),
+            "filterWords": describe_filter(list_data.get("filter_rules"), fields),
         }
+
+    def try_filter(self, project_id, list_id, list_data, filter_sql):
+        """Runs the list's SELECT with the new filter over its source, one
+        row at most, so that a filter the database refuses is refused here
+        and not at the next pull. None when it runs, or when the source has
+        no repository yet to try it on."""
+        schema = get_list_source_schema(self.request, list_data)
+        if not schema:
+            return None
+        columns = [
+            (
+                a_column["column_name"],
+                a_column["column_as"],
+                a_column.get("column_source") or "table",
+            )
+            for a_column in get_list_columns(self.request, project_id, list_id)
+        ]
+        try:
+            sql, _ = build_list_select(
+                schema,
+                list_data["source_table"],
+                list_data["label_column"],
+                columns,
+                filter_sql,
+                limit=1,
+                active=list_data.get("list_active", 1),
+                key_column=list_data.get("list_key_column"),
+            )
+            self.request.dbsession.execute(text(sql)).fetchall()
+        except Exception as e:
+            self.request.dbsession.rollback()
+            return self._("The filter could not run on the list's source: {}").format(
+                str(e)
+            )
+        return None
+
+    def select_choices(self, list_data, fields):
+        """The codes of each select column's choice list, for the filter's
+        combos."""
+        schema = get_list_source_schema(self.request, list_data)
+        choices = {}
+        for field_id, field in fields.items():
+            lookup = field.get("lookup") or ""
+            if lookup.startswith("lkp") and field["kind"] in ("text", "number"):
+                values = lookup_choices(self.request, schema, lookup, lookup[3:])
+                if values:
+                    choices[field_id] = values
+        return choices
+
+    @staticmethod
+    def stored_rules(list_data):
+        """The stored rule set as an object for the editor, or None."""
+        try:
+            return json.loads(list_data.get("filter_rules") or "null")
+        except ValueError:
+            return None
 
 
 class DeletePublishedListView(ListSection):

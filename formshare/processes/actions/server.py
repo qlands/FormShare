@@ -31,7 +31,7 @@ import uuid
 
 from sqlalchemy import text
 
-from formshare.models import ActionRun, DictField, DictTable, map_from_schema
+from formshare.models import ActionRun, DictField, DictTable, Odkform, map_from_schema
 from formshare.processes.actions.host import (
     BINARY,
     ModuleError,
@@ -809,6 +809,7 @@ def _record(
     changes,
     log_lines,
     run_id=None,
+    instance_id=None,
 ):
     try:
         if run_id is not None:
@@ -831,6 +832,7 @@ def _record(
                     project_id=project_id,
                     form_id=form_id,
                     submission_id=submission_id,
+                    instance_id=instance_id,
                     main_rowuuid=main_rowuuid,
                     run_dtime=datetime.datetime.now(),
                     run_status=status,
@@ -898,6 +900,7 @@ def run_for_submission(
     dry_run=False,
     module=None,
     run_id=None,
+    instance_id=None,
 ):
     """Runs the form's module for one loaded submission.
 
@@ -905,6 +908,7 @@ def run_for_submission(
     run applies the writes and records itself; a dry run applies nothing
     and records nothing. ``module`` overrides the form's stored module, for
     testing unsaved code. ``run_id`` names an earlier failed run to update.
+    ``instance_id`` is the submission's meta/instanceID, kept with the run.
     Whatever goes wrong -- the module, the input, the database -- ends as a
     failure with its reason, never as an exception (actions-api.md 8).
     """
@@ -936,6 +940,7 @@ def run_for_submission(
             message,
             [],
             log_lines,
+            instance_id,
         )
 
     try:
@@ -984,6 +989,7 @@ def run_for_submission(
         None,
         changes,
         result.log,
+        instance_id,
     )
 
 
@@ -998,6 +1004,7 @@ def _finish(
     error,
     changes,
     log_lines,
+    instance_id=None,
 ):
     if not dry_run:
         run_id = _record(
@@ -1011,6 +1018,7 @@ def _finish(
             changes,
             log_lines,
             run_id,
+            instance_id,
         )
     return {
         "ok": error is None,
@@ -1023,16 +1031,31 @@ def _finish(
 
 
 def run_after_load(
-    request, project_id, form_id, schema, submission_id, uuid_file, user
+    request,
+    project_id,
+    form_id,
+    schema,
+    submission_id,
+    uuid_file,
+    user,
+    instance_id=None,
 ):
     """What the loaders call after JSONToMySQL returned 0. Never raises:
-    the submission is stored whatever the module does."""
+    the submission is stored whatever the module does. ``instance_id`` is
+    the submission's meta/instanceID (formshare.md 8.5)."""
     try:
         main_rowuuid = main_rowuuid_of(uuid_file)
         if main_rowuuid is None:
             return
         outcome = run_for_submission(
-            request, project_id, form_id, schema, main_rowuuid, submission_id, user
+            request,
+            project_id,
+            form_id,
+            schema,
+            main_rowuuid,
+            submission_id,
+            user,
+            instance_id=instance_id,
         )
         if outcome.get("error"):
             log.error(
@@ -1052,6 +1075,103 @@ def run_after_load(
             pass
 
 
+def take_back_runs(request, project_id, main_rowuuid=None, schema=None):
+    """Puts back what the applied runs of a submission wrote, when its rows
+    are about to go (formshare.md 8.4). With ``main_rowuuid``, the runs of
+    that submission; with ``schema`` instead, the runs of every submission
+    in that repository, all of which are going.
+
+    A deleted submission never happened, so neither did its module's effect
+    on other rows: a follow-up that counted a visit on its teacher counts it
+    no more. That is also what makes an edit resolved on the logs page count
+    once -- delete the first submission, push the edit, and its module runs
+    over the rows as they were before the first.
+
+    The rule, newest run first: every change whose column still holds what
+    the run stored goes back to what it held before. A value that another
+    run or a person has changed since is left as it is, since putting it
+    back would undo their write, not this run's. A row that is gone is
+    skipped. The runs are marked taken back (2). It is the rule RSTools'
+    Mirror.remove is asked to follow on the device (rstools.md 20.3), so
+    that the phone and the server agree.
+
+    A run is found by its submission, not by its form: the versions of a
+    form share one repository, and a run recorded under the version that
+    received the submission is taken back from the page of the version that
+    replaced it. Its changes are in the repository of the case link its own
+    form had.
+
+    Runs in the caller's transaction and commits nothing, so that a delete
+    the database refuses takes its take-back with it. The caller has set
+    @odktools_current_user, which the audit records. Returns how many values
+    were put back.
+    """
+    query = (
+        request.dbsession.query(ActionRun)
+        .filter(ActionRun.project_id == project_id)
+        .filter(ActionRun.run_status == 0)
+    )
+    if main_rowuuid is not None:
+        query = query.filter(ActionRun.main_rowuuid == main_rowuuid)
+    elif schema:
+        forms = [
+            a_form[0]
+            for a_form in request.dbsession.query(Odkform.form_id)
+            .filter(Odkform.project_id == project_id)
+            .filter(Odkform.form_schema == schema)
+            .all()
+        ]
+        if not forms:
+            return 0
+        query = query.filter(ActionRun.form_id.in_(forms))
+    else:
+        return 0
+    runs = query.order_by(ActionRun.run_dtime.desc()).all()
+    put_back = 0
+    sources = {}
+    for a_run in runs:
+        if a_run.form_id not in sources:
+            source = case_source_of(request, project_id, a_run.form_id)
+            sources[a_run.form_id] = source.get("schema") if source else None
+        case_schema = sources[a_run.form_id]
+        try:
+            changes = json.loads(a_run.run_changes or "[]")
+        except ValueError:
+            changes = []
+        if case_schema:
+            for change in reversed(changes):
+                try:
+                    table = _q(change.get("table"))
+                    column = _q(change.get("column"))
+                    current = request.dbsession.execute(
+                        text(
+                            "SELECT {} FROM {}.{} WHERE rowuuid = :r".format(
+                                column, _q(case_schema), table
+                            )
+                        ),
+                        {"r": change.get("rowuuid")},
+                    ).fetchone()
+                    if current is None or render(current[0]) != change.get("new"):
+                        continue
+                    request.dbsession.execute(
+                        text(
+                            "UPDATE {}.{} SET {} = :v WHERE rowuuid = :r".format(
+                                _q(case_schema), table, column
+                            )
+                        ),
+                        {"v": change.get("old"), "r": change.get("rowuuid")},
+                    )
+                    put_back = put_back + 1
+                except Exception as e:
+                    log.error(
+                        "A change of run {} could not be taken back: {}".format(
+                            a_run.run_id, e
+                        )
+                    )
+        a_run.run_status = 2
+    return put_back
+
+
 def retry_run(request, run_id, schema, user):
     """Runs a recorded run again, in place."""
     a_run = get_run(request, run_id)
@@ -1066,4 +1186,5 @@ def retry_run(request, run_id, schema, user):
         a_run["submission_id"],
         user,
         run_id=run_id,
+        instance_id=a_run.get("instance_id"),
     )

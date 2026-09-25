@@ -1,0 +1,12 @@
+{
+ "changes": [
+  {
+   "scope": "source",
+   "table": "teachers_properties",
+   "rowuuid": "00000002-0000-4000-8000-0000000000d2",
+   "column": "status",
+   "old": "recent",
+   "new": "overdue"
+  }
+ ]
+}

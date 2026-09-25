@@ -6,11 +6,13 @@
 {% block css %}
     {{ super() }}
     {% cssresource request,'formshare','select2' %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jQuery-QueryBuilder/3.0.0/css/query-builder.default.min.css">
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','select2' %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-QueryBuilder/3.0.0/js/query-builder.standalone.min.js"></script>
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -53,6 +55,23 @@
                             <option value="0" {% if listData.list_active == 0 %}selected{% endif %}>{{ _('Inactive cases') }}</option>
                         </select>
                         <button type="submit" name="change_active" value="1" class="btn btn-white">{{ _('Change') }}</button>
+                    </form>
+                    <div class="hr-line-dashed"></div>
+                    <h3>{{ _('Filter') }}</h3>
+                    <p class="text-muted">{{ _('Serve only the rows that match. The same for every assistant, on the server and on the devices, which apply it to the rows they have not sent yet. Texts are compared exactly as written, capitals and spaces included.') }}</p>
+                    {% if filterWords %}
+                        <p id="filter-words">{{ _('Serves the rows where') }} <b>{{ filterWords }}</b>.</p>
+                    {% else %}
+                        <p id="filter-words">{{ _('No filter: every row is served.') }}</p>
+                    {% endif %}
+                    <form method="post" id="filter-form">
+                        {{ form.secure_form(request) }}
+                        <div id="filter-builder"></div>
+                        <input type="hidden" name="filter_rules" id="filter-rules" value="">
+                        <button type="submit" name="change_filter" value="1" class="btn btn-primary">{{ _('Save the filter') }}</button>
+                        {% if filterWords %}
+                            <button type="submit" name="clear_filter" value="1" class="btn btn-white" id="filter-clear">{{ _('Remove the filter') }}</button>
+                        {% endif %}
                     </form>
                     <div class="hr-line-dashed"></div>
                     <h3>{{ _('Label') }}</h3>
@@ -125,10 +144,29 @@
 {% block scripts %}
     {{ super() }}
     <script>
+        var filterFields = {{ filterFields|tojson }};
+        var filterRules = {{ filterRules|tojson }};
         $(document).ready(function() {
             $("#label_column").select2();
             $("#column_name").select2();
             $("#list_key_column").select2();
+            if (filterFields.length) {
+                $("#filter-builder").queryBuilder({
+                    filters: filterFields,
+                    allow_empty: true,
+                    plugins: ["not-group"],
+                    icons: { add_group: "fas fa-plus-circle", add_rule: "fas fa-plus", remove_group: "fas fa-times", remove_rule: "fas fa-times", error: "fas fa-exclamation-triangle" }
+                });
+                $("#filter-builder").queryBuilder("setRules", filterRules && filterRules.rules ? filterRules : {condition: "AND", rules: []});
+            }
+            $("#filter-form").on("submit", function (e) {
+                if (e.originalEvent && e.originalEvent.submitter && e.originalEvent.submitter.id === "filter-clear") { return true; }
+                if (!filterFields.length) { return true; }
+                var rules = $("#filter-builder").queryBuilder("getRules", {allow_invalid: false});
+                if (rules === null) { return false; }
+                $("#filter-rules").val(rules.rules && rules.rules.length ? JSON.stringify(rules) : "");
+                return true;
+            });
         });
     </script>
 {% endblock scripts %}

@@ -955,6 +955,9 @@ class PublishedList(Base):
     source_form = Column(Unicode(120), nullable=False)
     source_table = Column(Unicode(120), nullable=False)
     label_column = Column(Unicode(120), nullable=False)
+    # The list's filter as the owner built it, QueryBuilder's JSON, which is
+    # the stored truth; filter_sql is compiled from it (processes/list_filter.py).
+    filter_rules = Column(MEDIUMTEXT())
     filter_sql = Column(MEDIUMTEXT())
     geometry_column = Column(Unicode(120))
     list_filter_mode = Column(Unicode(20), server_default=text("'all'"))
@@ -1128,9 +1131,14 @@ class ActionRun(Base):
     project_id = Column(Unicode(64), nullable=False)
     form_id = Column(Unicode(120), nullable=False)
     submission_id = Column(Unicode(64))
+    # The submission's meta/instanceID: how a device knows it, where
+    # submission_id is the server's own name for it.
+    instance_id = Column(Unicode(120))
     main_rowuuid = Column(Unicode(80), nullable=False)
     run_dtime = Column(DateTime)
-    # 0 = applied, 1 = failed, 2 = dry run
+    # 0 = applied, 1 = failed, 2 = taken back: the submission's rows were
+    # deleted and what the run wrote to other rows was put back. A dry run
+    # is never recorded.
     run_status = Column(INTEGER, nullable=False, server_default=text("'0'"))
     run_message = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     run_changes = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))

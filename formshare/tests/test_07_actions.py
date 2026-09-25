@@ -906,6 +906,117 @@ def test_js_string_is_javascripts_spelling():
         assert js_string(value) == text, (value, js_string(value))
 
 
+def _days_catalogue():
+    """A catalogue with a date of each group, as build_catalogue makes it,
+    and what _add_days_since adds to it (formshare.md 8.2)."""
+    from formshare.processes.db.actions import _add_days_since
+
+    cat = Catalogue(
+        fields={
+            "v.when": {
+                "js": "s.when",
+                "type": "date",
+                "label": "when",
+                "group": "submission",
+            },
+            "v.at": {
+                "js": "s.at",
+                "type": "datetime",
+                "label": "at",
+                "group": "submission",
+            },
+            "v.name": {
+                "js": "s.name",
+                "type": "string",
+                "label": "name",
+                "group": "submission",
+            },
+            "p.last_visit": {
+                "js": 'api.case.property("last_visit")',
+                "type": "date",
+                "label": "case last_visit",
+                "group": "case",
+            },
+            "pp.opened": {
+                "js": 'api.case.parent.property("opened")',
+                "type": "date",
+                "label": "parent opened",
+                "group": "parent",
+            },
+            "c.max.visits.day": {
+                "js": 'api.max(s.repeat("visits"), "day")',
+                "type": "date",
+                "label": "maximum of visits.day",
+                "group": "computed",
+            },
+        },
+        targets={("case", "property", "status"): "string"},
+    )
+    cat.ui = [
+        {"id": "p.last_visit", "label": "case property last_visit", "type": "date"}
+    ]
+    _add_days_since(cat)
+    return cat
+
+
+def test_every_date_has_a_days_since_field():
+    cat = _days_catalogue()
+    days = {k: v for k, v in cat.fields.items() if k.startswith("d.")}
+    assert set(days) == {"d.v.when", "d.v.at", "d.p.last_visit", "d.pp.opened"}
+    assert days["d.p.last_visit"]["type"] == "integer"
+    assert days["d.p.last_visit"]["js"] == (
+        '(api.case.property("last_visit") === null ? null : '
+        'api.days(api.case.property("last_visit"), api.now))'
+    )
+    ui = {u["id"]: u for u in cat.ui if u["id"].startswith("d.")}
+    assert ui["d.p.last_visit"]["label"] == "days since case property last_visit"
+    assert ui["d.p.last_visit"]["optgroup"] == "The case, days since"
+    assert ui["d.v.when"]["optgroup"] == "This submission, days since"
+    assert ui["d.pp.opened"]["optgroup"] == "The case's parent, days since"
+
+
+def test_a_day_count_compiles_to_api_days():
+    cat = _days_catalogue()
+    expression = compile_when(rule("d.v.when", "greater", 20), cat)
+    assert "api.days(s.when, api.now)" in expression
+    assert describe_when(rule("d.v.when", "greater", 20), cat) == (
+        "days since when is greater than 20"
+    )
+
+
+@pytest.mark.parametrize(
+    "last_visit, status",
+    [("2026-09-01", "overdue"), ("2026-09-10", "recent"), (None, None)],
+)
+def test_a_day_count_runs_against_the_hosts_date(last_visit, status):
+    cat = _days_catalogue()
+    rows = [
+        row(
+            1,
+            "property",
+            "status",
+            value="overdue",
+            when=rule("d.p.last_visit", "greater", 20),
+        ),
+        row(
+            2,
+            "property",
+            "status",
+            value="recent",
+            when=rule("d.p.last_visit", "less_or_equal", 20),
+        ),
+    ]
+    module = compile_module(rows, cat)
+    inputs = base_input()
+    inputs["case"]["properties"] = {"status": "new", "last_visit": last_visit}
+    # A date and time: api.days reads its date and leaves the time.
+    inputs["now"] = "2026-09-24 23:59:59"
+    result = run_module(module, inputs)
+    assert result.ok, result.error
+    written = [w["value"] for w in result.writes if w["name"] == "status"]
+    assert written == ([status] if status else [])
+
+
 def test_js_json_is_json_stringify():
     """How an array or an object a module wrote is named when it is refused:
     as the device names it, JSON.stringify's spelling (rstools.md 17.1)."""

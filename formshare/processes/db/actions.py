@@ -800,7 +800,54 @@ def build_catalogue(request, project_id, form_id):
                         "optgroup": "The case's parent",
                     }
                 )
+    _add_days_since(catalogue)
     return catalogue
+
+
+# Where a day count of a date is offered, by the group of the date.
+_DAYS_SINCE_GROUPS = {
+    "submission": "This submission, days since",
+    "case": "The case, days since",
+    "parent": "The case's parent, days since",
+}
+
+
+def _add_days_since(catalogue):
+    """A field "days since <date>" for every date, or date and time, the
+    module can read: the submission's, the case's, its parent's.
+
+    It counts whole days from the date to ``api.now`` with ``api.days``
+    (actions-api.md 4.5 and 7), which reads the date and leaves the time, so
+    "30 days since the last visit" is a rule of the table rather than a
+    module written by hand. The count is relative to each host's own date,
+    as ``api.now`` is: the server's on the server, the phone's on the phone.
+    A date that is not there counts nothing: the field is null, and a
+    comparison with null is false.
+    """
+    ui_labels = {entry["id"]: entry["label"] for entry in catalogue.ui}
+    for field_id, entry in list(catalogue.fields.items()):
+        if entry.get("multi") or entry.get("type") not in ("date", "datetime"):
+            continue
+        optgroup = _DAYS_SINCE_GROUPS.get(entry.get("group"))
+        if optgroup is None:
+            continue
+        days_id = "d." + field_id
+        catalogue.fields[days_id] = {
+            "js": "({date} === null ? null : api.days({date}, api.now))".format(
+                date=entry["js"]
+            ),
+            "type": "integer",
+            "label": "days since " + entry["label"],
+            "group": "days",
+        }
+        catalogue.ui.append(
+            {
+                "id": days_id,
+                "label": "days since " + ui_labels.get(field_id, entry["label"]),
+                "type": "integer",
+                "optgroup": optgroup,
+            }
+        )
 
 
 def catalogue_for_querybuilder(catalogue):

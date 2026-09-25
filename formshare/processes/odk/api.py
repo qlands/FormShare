@@ -4754,6 +4754,7 @@ def store_json_file(
                                 submission_id,
                                 uuid_file,
                                 submission_data.get("_submitted_by", ""),
+                                instance_id=submission_data.get("meta/instanceID"),
                             )
                             # Add the JSON to the Elastic Search index but only submissions without error
 
@@ -6147,6 +6148,7 @@ def push_revision(request, user, project, form, submission):
             submission,
             uuid_file,
             submission_data.get("_submitted_by", ""),
+            instance_id=submission_data.get("meta/instanceID"),
         )
         # Add the JSON to the Elastic Search index
         index_data = {

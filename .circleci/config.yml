@@ -5,7 +5,7 @@ jobs:
   # name, so the dot of py-3.13 had to go
   py-3-13:
     docker:
-      - image: qlands/odktools_circleci:20260920
+      - image: qlands/odktools_circleci:20260926
         environment:
           - ELASTIC_USER=elastic
           - ELASTIC_PASSWORD=RxlCXBATIkd8meZ97XH8z

@@ -1,0 +1,1 @@
+celery -A formshare.config.celery_app worker -D --loglevel=info -Q FormShare -f /home/cquiros/data/projects2017/personal/software/FormShare/celery.log --pidfile /home/cquiros/data/projects2017/personal/software/FormShare/celerypid.log

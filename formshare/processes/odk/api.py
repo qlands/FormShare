@@ -4851,6 +4851,9 @@ def store_json_file(
                     # that multiple posts are done by ODK Collect for the same
                     # submission
 
+                    if project_has_crowdsourcing(request, project):
+                        assistant_uuid = None
+
                     if (
                         request.registry.settings.get(
                             "store_submission_same_as", "True"

@@ -2405,7 +2405,7 @@ class IFeature(Interface):
     """
 
     def feature_exist(self, feature_code):
-        """Called by FormShare so plugins can add new roles.
+        """Called by FormShare so plugins can indicate if a Feature exist.
         This function must return True or False if the feature exists.
         """
         raise NotImplementedError("feature_exist must be implemented in subclasses")

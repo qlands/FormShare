@@ -86,6 +86,10 @@ from formshare.views.case_management import (
     WorkflowModelApiView,
     PropertiesView,
 )
+from formshare.views.list_transfer import (
+    ExportPublishedListsView,
+    ImportPublishedListsView,
+)
 from formshare.views.form import (
     FormDetails,
     AddNewForm,
@@ -448,6 +452,33 @@ def load_routes(config, settings):
             "project_case_list_sample",
             "/user/{userid}/project/{projcode}/caselists/{listid}/sample",
             SampleListView,
+            None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_case_list_export",
+            "/user/{userid}/project/{projcode}/caselists/{listid}/export",
+            ExportPublishedListsView,
+            None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_case_lists_export",
+            "/user/{userid}/project/{projcode}/caselists/export",
+            ExportPublishedListsView,
+            None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_case_lists_import",
+            "/user/{userid}/project/{projcode}/caselists/import",
+            ImportPublishedListsView,
             None,
         )
     )

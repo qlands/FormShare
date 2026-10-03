@@ -23,6 +23,16 @@
                     {% if lists %}
                         <a class="btn btn-white" href="{{ request.route_url('project_case_properties', userid=userid, projcode=projcode) }}">{{ _('Properties') }}</a>
                     {% endif %}
+                    <button type="button" class="btn btn-white" data-toggle="modal" data-target="#import_lists"><i class="fas fa-file-import"></i> {{ _('Import lists') }}</button>
+                    {% if lists %}
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-white dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-file-export"></i> {{ _('Export all') }}</button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="{{ request.route_url('project_case_lists_export', userid=userid, projcode=projcode, _query={'format': 'json'}) }}">JSON</a>
+                                <a class="dropdown-item" href="{{ request.route_url('project_case_lists_export', userid=userid, projcode=projcode, _query={'format': 'yaml'}) }}">YAML</a>
+                            </div>
+                        </div>
+                    {% endif %}
                     <hr class="hr-line-dashed">
                     {% if lists %}
                         <table class="table table-striped">
@@ -53,6 +63,13 @@
                                     <td>
                                         <a class="btn btn-xs btn-white" href="{{ request.route_url('project_case_list_edit', userid=userid, projcode=projcode, listid=a_list.list_id) }}">{{ _('Edit') }}</a>
                                         <a class="btn btn-xs btn-white" href="{{ request.route_url('project_case_list_sample', userid=userid, projcode=projcode, listid=a_list.list_id) }}"><i class="fas fa-download"></i> {{ _('Sample CSV') }}</a>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-xs btn-white dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-file-export"></i> {{ _('Export') }}</button>
+                                            <div class="dropdown-menu">
+                                                <a class="dropdown-item" href="{{ request.route_url('project_case_list_export', userid=userid, projcode=projcode, listid=a_list.list_id, _query={'format': 'json'}) }}">JSON</a>
+                                                <a class="dropdown-item" href="{{ request.route_url('project_case_list_export', userid=userid, projcode=projcode, listid=a_list.list_id, _query={'format': 'yaml'}) }}">YAML</a>
+                                            </div>
+                                        </div>
                                         {% if a_list.has_active_consumers == False %}
                                             <a style="color: white" urn="{{ request.route_url('project_case_list_delete', userid=userid, projcode=projcode, listid=a_list.list_id) }}" class="btn btn-xs btn-danger remove_list"><i class="fas fa-trash"></i> {{ _('Delete') }}</a>
                                         {% endif %}
@@ -68,12 +85,42 @@
             </div>
         </div>
     </div>
+    <div class="modal inmodal" id="import_lists" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content animated fadeIn">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                    <h4 class="modal-title">{{ _('Import lists') }}</h4>
+                </div>
+                <form role="form" class="require_busy" method="post" enctype="multipart/form-data" action="{{ request.route_url('project_case_lists_import', userid=userid, projcode=projcode) }}">
+                    {{ form.secure_form(request) }}
+                    <div class="modal-body">
+                        <p>{{ _('A JSON or YAML file exported from Published lists, in this project or in another one.') }}</p>
+                        <p>{{ _('Each list names its source form by its ID. That form must exist in this project with its repository, and its table must have every column the list serves. The properties in the file are created on the tables that do not have them yet.') }}</p>
+                        <p>{{ _('Nothing is imported unless the whole file can be.') }}</p>
+                        <div class="custom-file">
+                            <input type="file" name="listfile" class="custom-file-input" accept=".json,.yaml,.yml" required>
+                            <label class="custom-file-label">{{ _('Choose file...') }}</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ _('Import') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 {% endblock maincontent %}
 
 {% block scripts %}
     {{ super() }}
     <script>
         $(document).ready(function() {
+            $('.custom-file-input').on('change', function() {
+                let fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
             $('.remove_list').click(function () {
                 var action_url = $( this ).attr('urn');
                 swal({

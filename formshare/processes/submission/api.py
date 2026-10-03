@@ -1005,6 +1005,11 @@ def get_fields_from_table(
                 editable = "false"
             else:
                 editable = field_is_editable(field.get("field_name"))
+            # MySQL generates the column -- the geometry RSTools derives from a
+            # geotrace or geoshape answer -- and refuses any write to it
+            # (3105). The answer it comes from stays editable.
+            if field.get("field_generatedas"):
+                editable = "false"
 
             relfield = field.get("field_rtable", "")
             if relfield is None:
@@ -1148,9 +1153,20 @@ def get_request_data_jqgrid(
 ):
     _ = request.translate
     schema = get_form_schema(request, project, form)
+    # MySQL hands a geometry back as bytes, which JSON cannot carry: a grid
+    # over a form with a geotrace or a geoshape failed outright, since RSTools
+    # derives a geometry beside each answer (<name>_geom). The grid reads it
+    # as WKT, and a search on it searches the WKT, which is what it shows.
+    geometries = {
+        a_field["field_name"]
+        for a_field in get_dictionary_fields(request, project, form, table_name)
+        if a_field.get("field_type") == "geometry"
+    }
     query_fields = []
     for a_field in fields:
-        if a_field.find("(") < 0:
+        if a_field in geometries:
+            query_fields.append("ST_AsText(`{0}`) AS `{0}`".format(a_field))
+        elif a_field.find("(") < 0:
             query_fields.append("`{}`".format(a_field))
         else:
             # The field is a function
@@ -1175,38 +1191,27 @@ def get_request_data_jqgrid(
                 fixed_filter_field, fixed_filter_value
             )
     else:
+        if search_field in geometries:
+            searched = "LOWER(ST_AsText(`" + search_field + "`))"
+        else:
+            searched = "LOWER(`" + search_field + "`)"
         sql = "SELECT " + sql_fields + " FROM " + schema + ".`" + table_name + "`"
         if search_operator == "like":
-            sql = (
-                sql
-                + " WHERE LOWER(`"
-                + search_field
-                + "`) like '%"
-                + search_string.lower()
-                + "%'"
-            )
+            sql = sql + " WHERE " + searched + " like '%" + search_string.lower() + "%'"
             where_clause = (
-                " WHERE LOWER(`"
-                + search_field
-                + "`) like '%"
-                + search_string.lower()
-                + "%'"
+                " WHERE " + searched + " like '%" + search_string.lower() + "%'"
             )
         else:
             sql = (
                 sql
-                + " WHERE LOWER(`"
-                + search_field
-                + "`) not like '%"
+                + " WHERE "
+                + searched
+                + " not like '%"
                 + search_string.lower()
                 + "%'"
             )
             where_clause = (
-                " WHERE LOWER(`"
-                + search_field
-                + "`) not like '%"
-                + search_string.lower()
-                + "%'"
+                " WHERE " + searched + " not like '%" + search_string.lower() + "%'"
             )
         if fixed_filter_field is not None:
             sql = sql + " AND `{}` = '{}'".format(

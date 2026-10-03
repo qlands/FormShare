@@ -3,8 +3,8 @@
 A training manual, or a project set up again, needs the lists of a workflow
 without an owner typing each one into the wizard, which is where the mistakes
 come in. The document carries what the wizard and the edit page set -- the
-file name, the source form and table, the label, the key, the rows to serve
-and the served columns -- and the properties of each source table, which the
+file name, the source form and table, the label, the key, the rows to serve,
+the served columns and the filter -- and the properties of each source table, which the
 follow-up rules set. A list names its source by form_id, never by schema, so
 an import resolves it in the importing project: the same form uploaded there
 has a schema of its own, and the list follows it.
@@ -43,6 +43,7 @@ from formshare.processes.db.case_management import (
     validate_property_default,
 )
 from formshare.processes.db.form import get_form_data
+from formshare.processes.list_filter import FilterError, compile_filter, filter_fields
 
 __all__ = [
     "DOCUMENT",
@@ -78,6 +79,7 @@ _LIST_KEYS = (
     "key_column",
     "rows",
     "columns",
+    "filter",
 )
 
 
@@ -113,18 +115,20 @@ def list_document(request, project_id, list_ids=None):
             if a_column.get("column_as"):
                 item["served_as"] = a_column["column_as"]
             columns.append(item)
-        lists.append(
-            {
-                "code": a_list["list_id"],
-                "file_name": a_list["list_filename"],
-                "form_id": a_list["source_form"],
-                "table": a_list["source_table"],
-                "label_column": a_list["label_column"],
-                "key_column": a_list.get("list_key_column") or None,
-                "rows": "inactive" if a_list.get("list_active") == 0 else "active",
-                "columns": columns,
-            }
-        )
+        entry = {
+            "code": a_list["list_id"],
+            "file_name": a_list["list_filename"],
+            "form_id": a_list["source_form"],
+            "table": a_list["source_table"],
+            "label_column": a_list["label_column"],
+            "key_column": a_list.get("list_key_column") or None,
+            "rows": "inactive" if a_list.get("list_active") == 0 else "active",
+            "columns": columns,
+        }
+        rules = _stored_rules(a_list.get("filter_rules"))
+        if rules:
+            entry["filter"] = rules
+        lists.append(entry)
         source = (
             a_list["source_project"],
             a_list["source_form"],
@@ -149,6 +153,22 @@ def list_document(request, project_id, list_ids=None):
         "properties": properties,
         "lists": lists,
     }
+
+
+def _stored_rules(text):
+    """A list's stored filter as the rule set it is, or None.
+
+    filter_rules is the stored truth of a filter, QueryBuilder's JSON; its
+    compiled filter_sql names the source's columns and is compiled again
+    against the importing table's.
+    """
+    if not text:
+        return None
+    try:
+        rules = json.loads(text)
+    except ValueError:
+        return None
+    return rules if isinstance(rules, dict) else None
 
 
 def dump_document(document, file_format):
@@ -460,6 +480,30 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
             served.append((name, served_as, source))
         if len({a_column[0] for a_column in served}) != len(served):
             problems.append(_("it serves a column twice"))
+        # The filter is compiled against the importing table, whose fields a
+        # property of the document is about to join.
+        filter_rules = None
+        filter_sql = None
+        rules = entry.get("filter")
+        if rules not in (None, "", {}):
+            if not isinstance(rules, dict):
+                problems.append(_("its filter is not a rule set"))
+            else:
+                pending = [
+                    {"property_name": key[2], "property_type": value[0]}
+                    for key, value in defined.items()
+                    if key[:2] == (form_id, table) and key[2] not in properties
+                ]
+                fields = filter_fields(
+                    get_table_columns(request, project_id, form_id, table),
+                    get_table_properties(request, project_id, form_id, table) + pending,
+                )
+                try:
+                    filter_sql = compile_filter(rules, fields)
+                except FilterError as e:
+                    problems.append(_("its filter: {}").format(str(e)))
+                if filter_sql:
+                    filter_rules = json.dumps(rules)
         if problems:
             errors.append("{}: {}".format(where, "; ".join(problems)))
             continue
@@ -475,6 +519,8 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
                     "label_column": label_column,
                     "list_active": 0 if rows == "inactive" else 1,
                     "list_key_column": key_column,
+                    "filter_rules": filter_rules,
+                    "filter_sql": filter_sql,
                 },
                 served,
             )

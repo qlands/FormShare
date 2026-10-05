@@ -65,14 +65,16 @@
                     <small>{{ _('Search by username, full name or email address') }}</small>
                     <form class="require_busy" role="form" method="post" action="{{ request.url }}">
                         {{ form.secure_form(request) }}
-                        <div class="row">
-                            <div class="col-md-9">
-                                <select name="collaborator" style="width: 100%; !important;" class="js-example-data-ajax form-control"></select>
+                        {% block select_collaborator %}
+                            <div class="row">
+                                <div class="col-md-9">
+                                    <select name="collaborator" style="width: 100%; !important;" class="js-example-data-ajax form-control"></select>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="submit" name="add_collaborator" class="btn btn-block btn-primary action-buttons"> <i class="fa fa-plus"></i> {{ _('Add collaborator') }}</button>
+                                </div>
                             </div>
-                            <div class="col-md-3">
-                                <button type="submit" name="add_collaborator" class="btn btn-block btn-primary action-buttons"> <i class="fa fa-plus"></i> {{ _('Add collaborator') }}</button>
-                            </div>
-                        </div>
+                        {% endblock select_collaborator %}
                     </form>
                 </div>
             {% endblock collaborator_list_search %}
@@ -163,41 +165,43 @@
 
             });
 
-            function formatUser (user) {
-                if (!user.id) {
-                    return user.text;
+            {% block select_collaborator_js %}
+                function formatUser (user) {
+                    if (!user.id) {
+                        return user.text;
+                    }
+                    let baseUrl = "{{ request.route_url('gravatar') }}";
+                    let $state = $(
+                        '<span><img src="' + baseUrl + '?name=' + user.text + '&size=45" class="img-flag" /> ' + user.text + '</span>'
+                    );
+                    return $state;
                 }
-                let baseUrl = "{{ request.route_url('gravatar') }}";
-                let $state = $(
-                    '<span><img src="' + baseUrl + '?name=' + user.text + '&size=45" class="img-flag" /> ' + user.text + '</span>'
-                );
-                return $state;
-            }
 
-            $(".js-example-data-ajax").select2({
-                templateResult: formatUser,
-                ajax: {
-                    url: "{{ request.route_url('api_select2_users',userid=userid) }}",
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return {
-                            q: params.term, // search term
-                            page: params.page
-                        };
-                    },
-                    processResults: function (data, params) {
-                        params.page = params.page || 1;
-                        return {
-                            results: data.results,
-                            pagination: {
-                                more: (params.page * 10) < data.total
-                            }
-                        };
-                    },
-                    cache: true
-                }
-            });
+                $(".js-example-data-ajax").select2({
+                    templateResult: formatUser,
+                    ajax: {
+                        url: "{{ request.route_url('api_select2_users',userid=userid) }}",
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return {
+                                q: params.term, // search term
+                                page: params.page
+                            };
+                        },
+                        processResults: function (data, params) {
+                            params.page = params.page || 1;
+                            return {
+                                results: data.results,
+                                pagination: {
+                                    more: (params.page * 10) < data.total
+                                }
+                            };
+                        },
+                        cache: true
+                    }
+                });
+            {% endblock select_collaborator_js %}
 
         });
     </script>

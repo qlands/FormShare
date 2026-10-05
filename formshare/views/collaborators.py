@@ -13,10 +13,18 @@ from formshare.processes.db import (
     get_user_details,
     get_project_access_type,
     get_collaboration_details,
+    get_user_tenant,
+    get_tenant_admins,
 )
-from formshare.processes.email.send_email import send_collaboration_email
+import logging
+from formshare.processes.email.send_email import (
+    send_collaboration_email,
+    send_cross_tenant_email,
+)
 from formshare.views.classes import PrivateView
 from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
+
+log = logging.getLogger("formshare")
 
 
 class CollaboratorsListView(PrivateView):
@@ -52,12 +60,44 @@ class CollaboratorsListView(PrivateView):
             collaborator_details = self.get_post_dict()
             if "add_collaborator" in collaborator_details.keys():
                 if "collaborator" in collaborator_details.keys():
+                    if "cross_tenant" in collaborator_details.keys():
+                        cross_tenant = True
+                    else:
+                        cross_tenant = False
                     user_details = get_user_details(
                         self.request, collaborator_details["collaborator"]
                     )
                     if user_details:
                         if user_details["user_tenant"] != self.user.tenant:
-                            raise HTTPNotFound
+                            if not cross_tenant:
+                                raise HTTPNotFound
+                            else:
+                                log.error(
+                                    "Collaboration outside an organization. Project: {}. From user: {} to user {}".format(
+                                        project_id,
+                                        self.user.email,
+                                        user_details["user_email"],
+                                    )
+                                )
+
+                                tenant_admins = get_tenant_admins(
+                                    self.request, self.user.tenant
+                                )
+                                for an_admin in tenant_admins:
+                                    target_tenant_detail = get_user_tenant(
+                                        self.request, user_id
+                                    )
+                                    from_user_details = get_user_details(
+                                        self.request, user_id
+                                    )
+                                    send_cross_tenant_email(
+                                        self.request,
+                                        an_admin["user_email"],
+                                        from_user_details,
+                                        user_details,
+                                        project_details["project_name"],
+                                        target_tenant_detail["tenant_name"],
+                                    )
                         continue_adding = True
                         for plugin in p.PluginImplementations(p.ICollaborator):
                             if continue_adding:

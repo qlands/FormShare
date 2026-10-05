@@ -60,6 +60,7 @@
                 </div>
             </div>
             {% block collaborator_list_search %}
+            <div class="ibox">
                 <div class="ibox-content text-left">
                     <h2>{{ _('Add collaborator') }}</h2>
                     <small>{{ _('Search by username, full name or email address') }}</small>
@@ -77,7 +78,12 @@
                         {% endblock select_collaborator %}
                     </form>
                 </div>
+            </div>
             {% endblock collaborator_list_search %}
+            {% block collaborator_extra %}
+
+
+            {% endblock collaborator_extra %}
         </div>
     </div>
     <div class="modal inmodal" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">

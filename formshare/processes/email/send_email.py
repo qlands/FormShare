@@ -104,7 +104,7 @@ def send_cross_tenant_email(
         email_from,
         email_to,
         _(
-            "FormShare - WARNING!: An user has shared a project with an user outside your organization"
+            "FormShare - WARNING!: A user has shared a project with another user outside your organization."
         ),
         text,
     )

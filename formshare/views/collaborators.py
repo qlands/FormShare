@@ -15,8 +15,10 @@ from formshare.processes.db import (
     get_collaboration_details,
     get_user_tenant,
     get_tenant_admins,
+    get_user_id_with_email,
 )
 import logging
+import validators
 from formshare.processes.email.send_email import (
     send_collaboration_email,
     send_cross_tenant_email,
@@ -64,6 +66,13 @@ class CollaboratorsListView(PrivateView):
                         cross_tenant = True
                     else:
                         cross_tenant = False
+                    collaborator_id = collaborator_details["collaborator"]
+                    email_valid = validators.email(collaborator_id)
+                    if email_valid:
+                        collaborator_id = get_user_id_with_email(
+                            self.request, collaborator_id
+                        )
+                        collaborator_details["collaborator"] = collaborator_id
                     user_details = get_user_details(
                         self.request, collaborator_details["collaborator"]
                     )
@@ -177,8 +186,8 @@ class CollaboratorsListView(PrivateView):
                 user_details = get_user_details(
                     self.request, collaborator_details["collaborator_id"]
                 )
-                if user_details["user_tenant"] != self.user.tenant:
-                    raise HTTPNotFound
+                # if user_details["user_tenant"] != self.user.tenant:
+                #     raise HTTPNotFound
                 changed, message = set_collaborator_role(
                     self.request,
                     project_id,
@@ -232,9 +241,9 @@ class RemoveCollaborator(PrivateView):
             self.returnRawViewResult = True
             collaborator_id = self.request.matchdict["collid"]
 
-            user_details = get_user_details(self.request, collaborator_id)
-            if user_details["user_tenant"] != self.user.tenant:
-                raise HTTPNotFound
+            # user_details = get_user_details(self.request, collaborator_id)
+            # if user_details["user_tenant"] != self.user.tenant:
+            #     raise HTTPNotFound
 
             continue_remove = True
             next_page = self.request.route_url(

@@ -3,12 +3,14 @@ import paginate
 from formshare.processes.elasticsearch.partner_index import get_partner_index_manager
 from formshare.processes.elasticsearch.user_index import get_user_index_manager
 from formshare.views.classes import PrivateView
+from formshare.processes.db.user import get_user_tenant
 
 
 class APIUserSearchSelect2(PrivateView):
     def process_view(self):
         index_manager = get_user_index_manager(self.request)
         q = self.request.params.get("q", "")
+        across_tenants = self.request.params.get("across_tenants", "false")
         if self.request.registry.settings.get("formshare.saas.mode", "False") == "True":
             fixed_tenant = self.user.tenant
         else:
@@ -16,6 +18,12 @@ class APIUserSearchSelect2(PrivateView):
                 fixed_tenant = None
             else:
                 fixed_tenant = self.user.tenant
+
+        if across_tenants == "true":
+            fixed_tenant = None
+            across_tenants = True
+        else:
+            across_tenants = False
 
         include_me = self.request.params.get("include_me", "False")
         if include_me == "False":
@@ -43,13 +51,17 @@ class APIUserSearchSelect2(PrivateView):
                 select2_result = []
                 for result in query_result:
                     if result["user_id"] != self.user.login or include_me:
-                        select2_result.append(
-                            {
-                                "id": result["user_id"],
-                                "text": result["user_name"],
-                                "user_email": result.get("user_email", ""),
-                            }
-                        )
+                        select2_data = {
+                            "id": result["user_id"],
+                            "text": result["user_name"],
+                            "user_email": result.get("user_email", ""),
+                        }
+                        if across_tenants:
+                            tenant_data = get_user_tenant(
+                                self.request, select2_data["id"]
+                            )
+                            select2_data["tenant_name"] = tenant_data["tenant_name"]
+                        select2_result.append(select2_data)
                 with_pagination = False
                 if page.page_count > 1:
                     with_pagination = True

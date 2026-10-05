@@ -40,6 +40,8 @@ __all__ = [
     "get_user_with_token",
     "get_user_roles",
     "get_tenants",
+    "get_user_tenant",
+    "get_tenant_admins",
 ]
 
 logging.setLoggerClass(SecretLogger)
@@ -314,6 +316,26 @@ def get_user_roles(request, user):
 
 def get_tenants(request):
     res = request.dbsession.query(Tenant).all()
+    return map_from_schema(res)
+
+
+def get_user_tenant(request, user_id):
+    res = (
+        request.dbsession.query(Tenant)
+        .filter(User.user_tenant == Tenant.tenant_id)
+        .filter(User.user_id == user_id)
+        .first()
+    )
+    return map_from_schema(res)
+
+
+def get_tenant_admins(request, tenant_id):
+    res = (
+        request.dbsession.query(User)
+        .filter(User.user_tenant == tenant_id)
+        .filter(User.user_super == 1)
+        .all()
+    )
     return map_from_schema(res)
 
 

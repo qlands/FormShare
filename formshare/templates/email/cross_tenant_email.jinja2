@@ -1,0 +1,17 @@
+{% block email_body %}
+    {% block email_hello %}
+        {{ _('Hello from FormShare') }}
+        {{ formshare_site }}
+    {% endblock email_hello %}
+    {% block email_message %}
+
+        {{ _('You have received this email because on') }} {{ shared_date }}, {{ user_dict.user_name }} {{ _('shared the project') }} "{{ project_name }}" {{ _('with the user') }} {{ target_user_dict.user_name }} ({{ target_user_dict.user_email }}) ({{ tenant_name }}) {{ _('. Such user is outside your tenancy therefore you are sharing data with someone external to your organization.') }}.
+
+        {{ _('If this is not OK then you must contact ') }} {{ user_dict.user_name }} ({{ user_dict.user_email }}) {{ _('to cancel such collaboration. QLands is not responsible for the data you share through FormShare. QLands kept a log of this event for auditing purposes.') }}.
+
+    {% endblock email_message %}
+    {% block email_goodbye %}
+        {{ _('Regards') }},
+        {{ _('The FormShare team') }}
+    {% endblock email_goodbye %}
+{% endblock email_body %}

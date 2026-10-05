@@ -70,6 +70,46 @@ def send_password_email(request, email_to, reset_token, reset_key, user_dict):
     )
 
 
+def send_cross_tenant_email(
+    request, email_to, user_dict, target_user_dict, project_name, tenant_name
+):
+    jinjaEnv.add_extension(ext.i18n)
+    jinjaEnv.add_extension(ExtendThis)
+    _ = request.translate
+    email_from = request.registry.settings.get("mail.from", None)
+
+    if email_from is None:
+        log.error(
+            "FormShare has no email settings in place. Email service is disabled."
+        )
+        return False
+    if email_from == "":
+        return False
+    date_string = readble_date(datetime.datetime.now(), request.locale_name)
+    formshare_site = request.application_url
+    text = render_template(
+        "email/cross_tenant_email.jinja2",
+        {
+            "shared_date": date_string,
+            "user_dict": user_dict,
+            "target_user_dict": target_user_dict,
+            "tenant_name": tenant_name,
+            "project_name": project_name,
+            "formshare_site": formshare_site,
+            "_": _,
+        },
+    )
+    return send_email(
+        request,
+        email_from,
+        email_to,
+        _(
+            "FormShare - WARNING!: An user has shared a project with an user outside your organization"
+        ),
+        text,
+    )
+
+
 def send_error_to_technical_team(
     request, error_message, subject="500 Error", attachments=None
 ):

@@ -1837,6 +1837,24 @@ def t_e_s_t_case_journey(test_object):
     visit_runs = runs_of(visit_instance)
     assert len(visit_runs) == 1 and visit_runs[0][2] == 0, visit_runs
     visit_main = visit_runs[0][1]
+    # The run kept what risk_factor held as MySQL spells it, beside its
+    # report, and that is what the take-back below puts back (rstools.md 24.1).
+    kept = json.loads(
+        _scalar(
+            config,
+            "SELECT run_restore FROM actionrun WHERE run_id = '{}'".format(
+                visit_runs[0][0]
+            ),
+        )
+    )
+    assert kept == [
+        {
+            "table": "roster_properties",
+            "rowuuid": worker_id,
+            "column": "risk_factor",
+            "old": str(counted),
+        }
+    ], kept
     res = testapp.get(actions_v6, status=200)
     test_object.root.assertIn(visit_instance.encode("utf-8"), res.body)
 

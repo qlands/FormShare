@@ -1142,6 +1142,13 @@ class ActionRun(Base):
     run_status = Column(INTEGER, nullable=False, server_default=text("'0'"))
     run_message = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     run_changes = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    # What each column the run changed held before it, as MySQL spells it
+    # (CAST AS CHAR), read when the writes were planned, so that a take-back
+    # puts it back exactly. run_changes is for people and spells a number as
+    # JavaScript does: a decimal(17,3) with thirteen or fourteen digits before
+    # the point does not survive that (rstools.md 24.1). Runs recorded
+    # before it have none, and are taken back from run_changes.
+    run_restore = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     run_log = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     odkform = relationship("Odkform")

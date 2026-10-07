@@ -778,6 +778,38 @@ def _stored_report(plan):
     ]
 
 
+def _exact_olds(request, schema, plan):
+    """What each planned column holds now, as MySQL spells it, to keep beside
+    the change report rather than in it (rstools.md 24.1).
+
+    The report's old is the input's value spelled as JavaScript spells it,
+    and the input hands the module a decimal as a double: a decimal(17,3)
+    with thirteen or fourteen digits before the point does not come back
+    from one. 12345678901234.567 is reported as 12345678901234.566, and
+    99999999999999.999 as 100000000000000, which the column cannot even
+    hold. What is kept here is what a take-back writes back.
+    """
+    restore = []
+    for entry in plan:
+        held = request.dbsession.execute(
+            text(
+                "SELECT CAST({} AS CHAR) FROM {}.{} WHERE rowuuid = :r".format(
+                    _q(entry["column"]), _q(schema), _q(entry["table"])
+                )
+            ),
+            {"r": entry["rowuuid"]},
+        ).fetchone()
+        restore.append(
+            {
+                "table": entry["table"],
+                "rowuuid": entry["rowuuid"],
+                "column": entry["column"],
+                "old": None if held is None else held[0],
+            }
+        )
+    return restore
+
+
 def _apply(request, schema, plan, user):
     """The writes, in one transaction, audited as the assistant."""
     request.dbsession.execute(text("SET @odktools_current_user = :u"), {"u": user})
@@ -810,7 +842,9 @@ def _record(
     log_lines,
     run_id=None,
     instance_id=None,
+    restore=None,
 ):
+    restore = json.dumps(restore) if restore else None
     try:
         if run_id is not None:
             request.dbsession.query(ActionRun).filter(
@@ -821,6 +855,7 @@ def _record(
                     "run_status": status,
                     "run_message": message,
                     "run_changes": json.dumps(changes),
+                    "run_restore": restore,
                     "run_log": json.dumps(log_lines),
                 }
             )
@@ -838,6 +873,7 @@ def _record(
                     run_status=status,
                     run_message=message,
                     run_changes=json.dumps(changes),
+                    run_restore=restore,
                     run_log=json.dumps(log_lines),
                 )
             )
@@ -973,8 +1009,10 @@ def run_for_submission(
         return fail(str(e), result.log)
     except Exception as e:
         return fail("The writes could not be planned: {}".format(e), result.log)
+    restore = []
     if not dry_run and plan:
         try:
+            restore = _exact_olds(request, source["schema"], plan)
             _apply(request, source["schema"], plan, user)
         except Exception as e:
             return fail("The writes could not be applied: {}".format(e), result.log)
@@ -990,6 +1028,7 @@ def run_for_submission(
         changes,
         result.log,
         instance_id,
+        restore,
     )
 
 
@@ -1005,6 +1044,7 @@ def _finish(
     changes,
     log_lines,
     instance_id=None,
+    restore=None,
 ):
     if not dry_run:
         run_id = _record(
@@ -1019,6 +1059,7 @@ def _finish(
             log_lines,
             run_id,
             instance_id,
+            restore,
         )
     return {
         "ok": error is None,
@@ -1091,7 +1132,10 @@ def take_back_runs(request, project_id, main_rowuuid=None, schema=None):
     the run stored goes back to what it held before. A value that another
     run or a person has changed since is left as it is, since putting it
     back would undo their write, not this run's. A row that is gone is
-    skipped. The runs are marked taken back (2). It is the rule RSTools'
+    skipped. The runs are marked taken back (2). What goes back is the
+    column as MySQL spelled it when the run was planned (run_restore,
+    rstools.md 24.1); a run recorded before that was kept goes back to the
+    report's old. It is the rule RSTools'
     Mirror.remove is asked to follow on the device (rstools.md 20.3), so
     that the phone and the server agree.
 
@@ -1138,6 +1182,13 @@ def take_back_runs(request, project_id, main_rowuuid=None, schema=None):
             changes = json.loads(a_run.run_changes or "[]")
         except ValueError:
             changes = []
+        try:
+            exact = {
+                (held["table"], held["rowuuid"], held["column"]): held["old"]
+                for held in json.loads(a_run.run_restore or "[]")
+            }
+        except (ValueError, TypeError, KeyError):
+            exact = {}
         if case_schema:
             for change in reversed(changes):
                 try:
@@ -1153,13 +1204,21 @@ def take_back_runs(request, project_id, main_rowuuid=None, schema=None):
                     ).fetchone()
                     if current is None or render(current[0]) != change.get("new"):
                         continue
+                    key = (
+                        change.get("table"),
+                        change.get("rowuuid"),
+                        change.get("column"),
+                    )
                     request.dbsession.execute(
                         text(
                             "UPDATE {}.{} SET {} = :v WHERE rowuuid = :r".format(
                                 _q(case_schema), table, column
                             )
                         ),
-                        {"v": change.get("old"), "r": change.get("rowuuid")},
+                        {
+                            "v": exact[key] if key in exact else change.get("old"),
+                            "r": change.get("rowuuid"),
+                        },
                     )
                     put_back = put_back + 1
                 except Exception as e:

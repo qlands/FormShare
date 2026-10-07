@@ -1075,3 +1075,151 @@ def test_golden_triple_through_runactions(name):
     assert result.changes == expected["changes"]
     assert changes_of(result.writes, inputs.get("case")) == expected["changes"]
     assert result.log == expected.get("log", [])
+
+
+# ---------------------------------------------------------------------------
+# A take-back puts back what the column held, exactly (rstools.md 24.1)
+# ---------------------------------------------------------------------------
+
+
+class _Result:
+    def __init__(self, row):
+        self.row = row
+
+    def fetchone(self):
+        return self.row
+
+
+class _Query:
+    def __init__(self, rows):
+        self.rows = rows
+
+    def filter(self, *args):
+        return self
+
+    def order_by(self, *args):
+        return self
+
+    def all(self):
+        return self.rows
+
+
+class _Session:
+    """Answers every SELECT with what the column holds and records every
+    statement, so the server's applier runs without a database."""
+
+    def __init__(self, held, runs=()):
+        self.held = held
+        self.runs = list(runs)
+        self.statements = []
+
+    def execute(self, sql, params=None):
+        self.statements.append((str(sql), dict(params or {})))
+        return _Result(self.held if str(sql).startswith("SELECT") else None)
+
+    def query(self, *args):
+        return _Query(self.runs)
+
+
+class _ServerRequest:
+    def __init__(self, session):
+        self.dbsession = session
+
+
+class _Run:
+    def __init__(self, restore):
+        self.run_id = "run1"
+        self.form_id = "follow_up"
+        self.run_status = 0
+        self.run_restore = restore
+        self.run_changes = json.dumps(
+            [
+                {
+                    "scope": "source",
+                    "table": "roster",
+                    "rowuuid": "r1",
+                    "column": "amount",
+                    "old": "12345678901234.566",
+                    "new": "1",
+                }
+            ]
+        )
+
+
+def test_the_report_cannot_carry_a_large_decimal_back():
+    """Why a run keeps the old values apart: the report spells the double
+    the module was handed, which a decimal(17,3) with thirteen or fourteen
+    digits before the point does not survive."""
+    import decimal
+
+    from formshare.processes.actions.server import render
+
+    assert render(decimal.Decimal("12345678901234.567")) == "12345678901234.566"
+    assert render(decimal.Decimal("99999999999999.999")) == "100000000000000"
+
+
+def test_a_plan_keeps_each_column_as_mysql_spells_it():
+    from formshare.processes.actions.server import _exact_olds
+
+    session = _Session(("12345678901234.567",))
+    plan = [
+        {
+            "table": "roster",
+            "rowuuid": "r1",
+            "column": "amount",
+            "value": 1.0,
+            "old": 12345678901234.566,
+        }
+    ]
+    assert _exact_olds(_ServerRequest(session), "FS_x", plan) == [
+        {
+            "table": "roster",
+            "rowuuid": "r1",
+            "column": "amount",
+            "old": "12345678901234.567",
+        }
+    ]
+    assert session.statements == [
+        (
+            "SELECT CAST(`amount` AS CHAR) FROM `FS_x`.`roster` WHERE rowuuid = :r",
+            {"r": "r1"},
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    "restore, expected",
+    [
+        (
+            json.dumps(
+                [
+                    {
+                        "table": "roster",
+                        "rowuuid": "r1",
+                        "column": "amount",
+                        "old": "12345678901234.567",
+                    }
+                ]
+            ),
+            "12345678901234.567",
+        ),
+        # A run recorded before run_restore goes back to the report's old.
+        (None, "12345678901234.566"),
+    ],
+)
+def test_the_take_back_writes_the_exact_old_value(monkeypatch, restore, expected):
+    import decimal
+
+    from formshare.processes.actions import server
+
+    a_run = _Run(restore)
+    # The column still holds what the run stored, so it goes back.
+    session = _Session((decimal.Decimal("1.000"),), runs=[a_run])
+    monkeypatch.setattr(
+        server, "case_source_of", lambda request, project, form: {"schema": "FS_x"}
+    )
+    assert server.take_back_runs(_ServerRequest(session), "P", main_rowuuid="m1") == 1
+    sql, params = session.statements[-1]
+    assert sql == "UPDATE `FS_x`.`roster` SET `amount` = :v WHERE rowuuid = :r"
+    assert params == {"v": expected, "r": "r1"}
+    assert a_run.run_status == 2

@@ -11,7 +11,7 @@ does not collect it on a normal run.
 The six base steps (root, cookie consent, login, dashboard, profile and
 projects) always run first. FS_STEPS then names the rest, comma separated::
 
-    export FORMSHARE_PYTEST_RUNNING=true USE_RSTOOLS=True
+    export FORMSHARE_PYTEST_RUNNING=true
     FS_STEPS="assistants,assistant_groups,forms,odk,htmx_partials" \\
         ../env_formshare3/bin/pytest -q -p no:cacheprovider -c pytest.ini \\
         --cov=formshare --cov-config=.coveragerc --cov-report= tools/run_steps.py

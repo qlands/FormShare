@@ -4672,11 +4672,11 @@ def store_json_file(
                     if not continue_processing:
                         return 1, message
 
-                    print(
-                        "Calling JSONToMySQL for submission {} {}".format(
-                            submission_id, " ".join(args)
-                        )
-                    )
+                    # print(
+                    #     "Calling JSONToMySQL for submission {} {}".format(
+                    #         submission_id, " ".join(args)
+                    #     )
+                    # )
                     p = Popen(args, stdout=PIPE, stderr=PIPE)
                     stdout, stderr = p.communicate()
                     # An error 2 is an SQL error that goes to the logs

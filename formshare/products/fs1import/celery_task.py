@@ -455,8 +455,14 @@ def store_json_file(
                 }
                 if submission_data.get("_geolocation", "") != "":
                     index_data["_geolocation"] = submission_data.get("_geolocation", "")
-                # A trace or a shape, for the map (processes/geometry.py).
-                add_location(index_data, submission_data, shape_variables or [])
+                # Every location of the main table, for the map
+                # (processes/geometry.py).
+                add_location(
+                    index_data,
+                    submission_data,
+                    shape_variables or [],
+                    geopoint_variables or [],
+                )
                 add_dataset(settings, project, form, submission_id, index_data)
                 # Add the inserted records in the record index
                 with open(uuid_file) as f:

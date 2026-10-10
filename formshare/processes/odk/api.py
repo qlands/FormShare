@@ -4857,11 +4857,13 @@ def store_json_file(
                                 index_data["_geolocation"] = submission_data.get(
                                     "_geolocation", ""
                                 )
-                            # A trace or a shape, for the map (processes/geometry.py).
+                            # Every location of the main table, for the map
+                            # (processes/geometry.py).
                             add_location(
                                 index_data,
                                 submission_data,
                                 get_form_geoshapes(request, project, form),
+                                get_form_geopoints(request, project, form),
                             )
                             add_dataset(
                                 request.registry.settings,
@@ -5168,11 +5170,13 @@ def store_json_file(
                 }
                 if submission_data.get("_geolocation", "") != "":
                     index_data["_geolocation"] = submission_data.get("_geolocation", "")
-                # A trace or a shape, for the map (processes/geometry.py).
+                # Every location of the main table, for the map
+                # (processes/geometry.py).
                 add_location(
                     index_data,
                     submission_data,
                     get_form_geoshapes(request, project, form),
+                    get_form_geopoints(request, project, form),
                 )
                 add_dataset(
                     request.registry.settings,
@@ -6255,9 +6259,12 @@ def push_revision(request, user, project, form, submission):
         }
         if submission_data.get("_geolocation", "") != "":
             index_data["_geolocation"] = submission_data.get("_geolocation", "")
-        # A trace or a shape, for the map (processes/geometry.py).
+        # Every location of the main table, for the map (processes/geometry.py).
         add_location(
-            index_data, submission_data, get_form_geoshapes(request, project, form)
+            index_data,
+            submission_data,
+            get_form_geoshapes(request, project, form),
+            get_form_geopoints(request, project, form),
         )
         try:
             add_dataset(

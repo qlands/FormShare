@@ -60,6 +60,7 @@ __all__ = [
     "get_gps_points_from_form",
     "get_gps_points_from_project",
     "map_point",
+    "map_points",
     "get_tables_from_form",
     "get_tables_from_original_form",
     "update_table_desc",
@@ -200,6 +201,29 @@ def map_point(dataset):
     return None
 
 
+def map_points(dataset):
+    """Every point the core map places a submission by: each geopoint of its
+    main table, which the index keeps in _geoshape when there is more than
+    one (processes/geometry.py), or else the one map_point. (lat, lon) as
+    text; empty when the submission has no location."""
+    geoshape = dataset.get("_geoshape")
+    if isinstance(geoshape, dict):
+        parts = (
+            geoshape.get("geometries", [])
+            if geoshape.get("type") == "GeometryCollection"
+            else [geoshape]
+        )
+        points = [
+            (str(a_part["coordinates"][1]), str(a_part["coordinates"][0]))
+            for a_part in parts
+            if isinstance(a_part, dict) and a_part.get("type") == "Point"
+        ]
+        if points:
+            return points
+    point = map_point(dataset)
+    return [point] if point is not None else []
+
+
 def get_gps_points_from_project(request, project_id, query_from=None, query_size=None):
     total, datasets = get_datasets_from_project(
         request.registry.settings, project_id, query_from, query_size
@@ -207,25 +231,23 @@ def get_gps_points_from_project(request, project_id, query_from=None, query_size
     data = []
     colors = get_project_form_colors(request, project_id)
     for dataset in datasets:
-        point = map_point(dataset)
-        if point is None:
-            continue
         if dataset["_xform_id_string"] not in colors.keys():
             color = ColorHash(dataset["_xform_id_string"]).hex
         else:
             color = colors[dataset["_xform_id_string"]]
-        data.append(
-            {
-                "key": dataset["_xform_id_string"],
-                "lati": point[0],
-                "long": point[1],
-                "options": {
-                    "iconShape": "circle-dot",
-                    "borderWidth": 5,
-                    "borderColor": color,
-                },
-            }
-        )
+        for point in map_points(dataset):
+            data.append(
+                {
+                    "key": dataset["_xform_id_string"],
+                    "lati": point[0],
+                    "long": point[1],
+                    "options": {
+                        "iconShape": "circle-dot",
+                        "borderWidth": 5,
+                        "borderColor": color,
+                    },
+                }
+            )
     return True, {"points": data}
 
 
@@ -237,16 +259,14 @@ def get_gps_points_from_form(
     )
     data = []
     for dataset in datasets:
-        point = map_point(dataset)
-        if point is None:
-            continue
-        data.append(
-            {
-                "key": dataset["_submission_id"],
-                "lati": point[0],
-                "long": point[1],
-            }
-        )
+        for point in map_points(dataset):
+            data.append(
+                {
+                    "key": dataset["_submission_id"],
+                    "lati": point[0],
+                    "long": point[1],
+                }
+            )
     return True, {"points": data}
 
 

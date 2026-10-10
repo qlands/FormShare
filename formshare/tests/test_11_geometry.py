@@ -207,3 +207,124 @@ def test_the_core_map_places_a_trace_or_a_shape_by_its_point():
     assert map_point({"_geopoint": ""}) is None
     assert map_point({"_geolocation": {"lat": "", "lon": ""}}) is None
     assert map_point({}) is None
+
+
+# Every location of the main table: the home, the farm, the path to water.
+HOME = "40.3127 -76.0459 120 4"
+FARM = (
+    "40.3130 -76.0470 120 4;40.3130 -76.0450 120 4;40.3120 -76.0450 120 4;"
+    "40.3120 -76.0470 120 4;40.3130 -76.0470 120 4"
+)
+PATH = "40.3127 -76.0459 120 4;40.3140 -76.0440 120 4;40.3150 -76.0420 120 4"
+WATER = "40.3150 -76.0420 118 5"
+
+
+def test_the_home_the_farm_and_the_path_are_drawn_together():
+    home = {"lat": "40.3127", "lon": "-76.0459"}
+    document = add_location(
+        {"_geolocation": home},
+        {"home": HOME, "farm": FARM, "path": PATH},
+        [("farm", GEOSHAPE), ("path", GEOTRACE)],
+        ["home"],
+    )
+    assert document["_geoshape"]["type"] == "GeometryCollection"
+    assert [g["type"] for g in document["_geoshape"]["geometries"]] == [
+        "Point",
+        "Polygon",
+        "LineString",
+    ]
+    assert document["_geoshape"]["geometries"][0]["coordinates"] == [-76.0459, 40.3127]
+    assert document["_geotype"] == ["point", "shape", "trace"]
+    # Still counted once, at the home.
+    assert document["_geolocation"] == home
+
+
+def test_two_points_are_both_drawn_and_one_counts():
+    home = {"lat": "40.3127", "lon": "-76.0459"}
+    document = add_location(
+        {"_geolocation": home}, {"home": HOME, "water": WATER}, [], ["home", "water"]
+    )
+    assert [g["type"] for g in document["_geoshape"]["geometries"]] == [
+        "Point",
+        "Point",
+    ]
+    assert document["_geotype"] == "point"
+    assert document["_geolocation"] == home
+
+
+def test_one_point_alone_is_indexed_as_it_always_was():
+    home = {"lat": "40.3127", "lon": "-76.0459"}
+    document = add_location({"_geolocation": home}, {"home": HOME}, [], ["home"])
+    assert document == {"_geolocation": home, "_geotype": "point"}
+    # An answer left blank is no location.
+    document = add_location(
+        {"_geolocation": home},
+        {"home": HOME, "farm": ""},
+        [("farm", GEOSHAPE)],
+        ["home"],
+    )
+    assert "_geoshape" not in document
+
+
+def test_without_a_geopoint_the_first_trace_or_shape_places_the_submission():
+    second = FARM.replace("40.3130", "40.3200").replace("40.3120", "40.3190")
+    document = add_location(
+        {},
+        {"farm": FARM, "garden": second, "path": PATH},
+        [("farm", GEOSHAPE), ("garden", GEOSHAPE), ("path", GEOTRACE)],
+        ["home"],
+    )
+    assert [g["type"] for g in document["_geoshape"]["geometries"]] == [
+        "Polygon",
+        "Polygon",
+        "LineString",
+    ]
+    assert document["_geotype"] == ["shape", "trace"]
+    farm = shape(document["_geoshape"]["geometries"][0])
+    point = Point(document["_geolocation"]["lon"], document["_geolocation"]["lat"])
+    assert farm.contains(point)
+
+
+def test_a_repeat_or_an_unreadable_answer_is_left_out():
+    # A repeat's rows arrive as a list; they are not the submission's own.
+    document = add_location(
+        {},
+        {"home": "not a point", "plots": [{"plots/plot": FARM}], "path": PATH},
+        [("plots", GEOSHAPE), ("path", GEOTRACE)],
+        ["home"],
+    )
+    assert document["_geoshape"]["type"] == "LineString"
+    assert document["_geotype"] == "trace"
+
+
+def test_a_collection_is_simplified_member_by_member():
+    document = add_location(
+        {},
+        {"home": HOME, "farm": FARM, "path": PATH},
+        [("farm", GEOSHAPE), ("path", GEOTRACE)],
+        ["home"],
+    )
+    far = simplified(document["_geoshape"], 8)
+    assert far["type"] == "GeometryCollection"
+    assert far["geometries"][0] == document["_geoshape"]["geometries"][0]
+    assert shape(far).is_valid
+
+
+def test_the_core_map_places_every_point_of_a_submission():
+    from formshare.processes.submission.api import map_points
+
+    both = add_location(
+        {"_geolocation": {"lat": "40.3127", "lon": "-76.0459"}},
+        {"home": HOME, "water": WATER, "farm": FARM},
+        [("farm", GEOSHAPE)],
+        ["home", "water"],
+    )
+    both["_geopoint"] = HOME
+    assert map_points(both) == [("40.3127", "-76.0459"), ("40.315", "-76.042")]
+    # A shape alone: the point on it; one geopoint alone: that point.
+    farm_only = add_location({}, {"farm": FARM}, [("farm", GEOSHAPE)], [])
+    assert map_points(farm_only) == [
+        (str(farm_only["_geolocation"]["lat"]), str(farm_only["_geolocation"]["lon"]))
+    ]
+    assert map_points({"_geopoint": HOME}) == [("40.3127", "-76.0459")]
+    assert map_points({}) == []

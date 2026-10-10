@@ -1,18 +1,22 @@
-"""Traces and shapes in the dataset index, which the map reads.
+"""Traces, shapes and points in the dataset index, which the map reads.
 
 A submission located by a geoshape or a geotrace had nothing in the dataset
-index for the map to draw. FormShare now gives each document the first trace
-or shape of the main table as GeoJSON (_geoshape), a point on it when no
-geopoint gave one (_geolocation), and _geotype (processes/geometry.py):
+index for the map to draw. FormShare now gives each document every location
+of the main table as GeoJSON (_geoshape) -- the one trace or shape, or a
+GeometryCollection of the points, traces and shapes answered -- a point to
+count it by when no geopoint gave one (_geolocation), and the kinds it holds
+(_geotype; processes/geometry.py):
 
 - a submission in testing and one loaded into the repository are indexed
   alike;
 - a boundary that crosses itself is repaired into a MultiPolygon that
   Elasticsearch takes, counted by a point inside it;
-- a geopoint still places a document when the form has one;
+- a home, a farm and a path are drawn together, counted at the home, and
+  Elasticsearch takes the collection with the repaired boundary in it;
 - a shape query over a box finds the documents whose shapes cross it, as the
   map's will;
-- index_geometries gives a document indexed without its shape that shape;
+- index_geometries gives a document indexed without its shape that shape,
+  and one indexed with a single shape the collection it now has;
 - a form located by a trace alone is geo-referenced: its page has the map,
   and the core map places the submission by the point on its trace.
 """
@@ -43,6 +47,10 @@ BOWTIE = (
 SQUARE = "-2 37 0 0;-2 37.01 0 0;-2.01 37.01 0 0;-2.01 37 0 0;-2 37 0 0"
 ROUTE = "-3 38 0 0;-3.01 38.01 0 0;-3.02 38.03 0 0"
 HOME = "-2.005 37.005 0 0"
+# Away from the box the map's query is asked about below.
+FAR_BOWTIE = BOWTIE.replace("-1.00", "-4.00").replace("36.00", "39.00")
+FAR_HOME = "-4.001 39.001 0 0"
+FAR_ROUTE = "-4.000 39.000 0 0;-4.010 39.010 0 0;-4.020 39.030 0 0"
 
 
 def _workbook(path):
@@ -198,10 +206,14 @@ def t_e_s_t_geo_index(test_object):
         time.sleep(3)
     assert schema, "the geo_index repository did not build"
 
-    # A geopoint still places the document; the shape is drawn.
-    document, _ = push("G2", home=HOME, plot=SQUARE)
-    assert document["_geotype"] == "shape"
-    assert document["_geoshape"]["type"] == "Polygon"
+    # The home and the plot are drawn together; the home counts it.
+    document, home_and_plot_id = push("G2", home=HOME, plot=SQUARE)
+    assert document["_geotype"] == ["point", "shape"]
+    assert document["_geoshape"]["type"] == "GeometryCollection"
+    assert [g["type"] for g in document["_geoshape"]["geometries"]] == [
+        "Point",
+        "Polygon",
+    ]
     assert (
         float(document["_geolocation"]["lat"]),
         float(document["_geolocation"]["lon"]),
@@ -217,6 +229,43 @@ def t_e_s_t_geo_index(test_object):
     # Nothing to place: no location at all.
     document, _ = push("G4")
     assert "_geolocation" not in document and "_geotype" not in document
+
+    # A home, a boundary that crosses itself and a route: all three drawn,
+    # the boundary repaired inside the collection, which Elasticsearch takes.
+    document, everything_id = push(
+        "G5", home=FAR_HOME, plot=FAR_BOWTIE, route=FAR_ROUTE
+    )
+    assert document["_geotype"] == ["point", "shape", "trace"]
+    assert [g["type"] for g in document["_geoshape"]["geometries"]] == [
+        "Point",
+        "MultiPolygon",
+        "LineString",
+    ]
+    # Indexed whole: a box over the far end of the route alone finds it.
+    connection.indices.refresh(index=index_name)
+    found = connection.search(
+        index=index_name,
+        query={
+            "bool": {
+                "filter": [
+                    {"term": {"project_id": test_object.projectID}},
+                    {"term": {"form_id": FORM}},
+                    {
+                        "geo_shape": {
+                            "_geoshape": {
+                                "shape": {
+                                    "type": "envelope",
+                                    "coordinates": [[39.025, -4.015], [39.035, -4.025]],
+                                },
+                                "relation": "intersects",
+                            }
+                        }
+                    },
+                ]
+            }
+        },
+    )["hits"]["hits"]
+    assert [hit["_id"] for hit in found] == [everything_id], found
 
     # --- What the map will ask: the shapes that cross a box --------------------
     connection.indices.refresh(index=index_name)
@@ -268,6 +317,33 @@ def t_e_s_t_geo_index(test_object):
     document = connection.get(index=index_name, id=route_id)["_source"]
     assert document["_geotype"] == "trace"
     assert document["_geoshape"]["type"] == "LineString"
+    # A document indexed before every location was: the plot alone.
+    connection.update(
+        index=index_name,
+        id=home_and_plot_id,
+        doc={
+            "_geoshape": {
+                "type": "Polygon",
+                "coordinates": [[[37, -2], [37.01, -2], [37.01, -2.01], [37, -2]]],
+            },
+            "_geotype": "shape",
+        },
+    )
+    assert (
+        index_geometries(
+            [
+                "--project",
+                test_object.projectID,
+                "--form",
+                FORM,
+                config["global:config:file"],
+            ]
+        )
+        == 0
+    )
+    document = connection.get(index=index_name, id=home_and_plot_id)["_source"]
+    assert document["_geotype"] == ["point", "shape"]
+    assert document["_geoshape"]["type"] == "GeometryCollection"
     connection.close()
 
     # --- A form located by a trace alone -------------------------------------

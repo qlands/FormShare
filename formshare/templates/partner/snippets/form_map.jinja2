@@ -18,10 +18,10 @@
     <div class="ibox-content">
         {% block form_map_content %}
             <div id="mapbox">
-                {% if formDetails.submissions > 0 and formDetails.form_geopoint != None and withgps > 0 %}
+                {% if formDetails.submissions > 0 and (formDetails.form_geopoint != None or formDetails.form_geoshape != None) and withgps > 0 %}
                     <div id="projmap" style="height: 600px"></div>
                 {% else %}
-                    {% if formDetails.form_geopoint == None %}
+                    {% if (formDetails.form_geopoint == None and formDetails.form_geoshape == None) %}
                         {{ _('This form is not geo-referenced') }}
                     {% else %}
                         {% if formDetails.submissions == 0 %}

@@ -57,7 +57,7 @@
                                     <li title="{{ _('Doesn\'t accept submissions') }}"><a style="background-color: red; color: white; border-radius: 25px">{{ _('Inactive') }}</a></li>
                                 {% endif %}
                             {% endif %}
-                            {% if formDetails.form_geopoint != None %}
+                            {% if (formDetails.form_geopoint != None or formDetails.form_geoshape != None) %}
                                 <li><a style="border-radius: 25px">{{ _('Geo-referenced') }}</a></li>
                             {% endif %}
                             {% if formDetails.form_blocked != 0 %}

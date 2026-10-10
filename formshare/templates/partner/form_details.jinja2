@@ -6,7 +6,7 @@
 
 {% block css %}
     {{ super() }}
-    {% if formDetails.form_geopoint != None %}
+    {% if (formDetails.form_geopoint != None or formDetails.form_geoshape != None) %}
         {% cssresource request,'formshare','leaflet' %}
         {% cssresource request,'formshare','blueimp' %}
     {% endif %}
@@ -21,7 +21,7 @@
         }
     </script>
     {{ super() }}
-    {% if formDetails.form_geopoint != None %}
+    {% if (formDetails.form_geopoint != None or formDetails.form_geoshape != None) %}
         {% jsresource request,'formshare','leaflet' %}
         {% jsresource request,'formshare','blueimp' %}
     {% endif %}

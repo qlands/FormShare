@@ -74,6 +74,7 @@ from formshare.processes.db import (
     get_form_files,
     get_project_code_from_id,
     get_form_geopoints,
+    get_form_geoshapes,
     get_media_files,
     add_file_to_form,
     add_submission_same_as,
@@ -99,6 +100,7 @@ from formshare.processes.db import (
 from formshare.processes.elasticsearch.record_index import (
     add_record,
 )
+from formshare.processes.geometry import add_location, geoshape_variables_of
 from formshare.processes.elasticsearch.repository_index import (
     add_dataset,
     get_dataset_stats_for_form,
@@ -1990,6 +1992,9 @@ def upload_odk_form(
                             if geo_variables:
                                 form_geo_points = ",".join(geo_variables)
                                 form_data["form_geopoint"] = form_geo_points
+                            form_data["form_geoshape"] = (
+                                ",".join(geoshape_variables_of(json_dict)) or None
+                            )
                             if len(required_files) > 0:
                                 form_data["form_reqfiles"] = ",".join(required_files)
                             if len(extra_columns_in_survey) > 0:
@@ -2519,6 +2524,10 @@ def update_odk_form(
                                     if geo_point_variables:
                                         form_geo_points = ",".join(geo_point_variables)
                                         form_data["form_geopoint"] = form_geo_points
+                                    form_data["form_geoshape"] = (
+                                        ",".join(geoshape_variables_of(json_dict))
+                                        or None
+                                    )
 
                                     if len(required_files) > 0:
                                         form_data["form_reqfiles"] = ",".join(
@@ -4778,6 +4787,12 @@ def store_json_file(
                                 index_data["_geolocation"] = submission_data.get(
                                     "_geolocation", ""
                                 )
+                            # A trace or a shape, for the map (processes/geometry.py).
+                            add_location(
+                                index_data,
+                                submission_data,
+                                get_form_geoshapes(request, project, form),
+                            )
                             add_dataset(
                                 request.registry.settings,
                                 project,
@@ -5083,6 +5098,12 @@ def store_json_file(
                 }
                 if submission_data.get("_geolocation", "") != "":
                     index_data["_geolocation"] = submission_data.get("_geolocation", "")
+                # A trace or a shape, for the map (processes/geometry.py).
+                add_location(
+                    index_data,
+                    submission_data,
+                    get_form_geoshapes(request, project, form),
+                )
                 add_dataset(
                     request.registry.settings,
                     project,
@@ -6164,6 +6185,10 @@ def push_revision(request, user, project, form, submission):
         }
         if submission_data.get("_geolocation", "") != "":
             index_data["_geolocation"] = submission_data.get("_geolocation", "")
+        # A trace or a shape, for the map (processes/geometry.py).
+        add_location(
+            index_data, submission_data, get_form_geoshapes(request, project, form)
+        )
         try:
             add_dataset(
                 request.registry.settings,

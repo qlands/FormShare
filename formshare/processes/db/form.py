@@ -41,6 +41,7 @@ from formshare.processes.db.case_management import (
     form_creates_cases,
     form_consumes_cases,
 )
+from formshare.processes.geometry import parse_geoshape_variables
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_form,
 )
@@ -81,6 +82,7 @@ __all__ = [
     "get_number_of_submissions_in_database",
     "get_by_details",
     "get_form_geopoints",
+    "get_form_geoshapes",
     "get_number_of_submissions_by_assistant",
     "get_media_files",
     "set_form_status",
@@ -1273,6 +1275,19 @@ def get_form_geopoints(request, project, form):
         if res.form_geopoint is not None:
             return res.form_geopoint.split(",")
     return []
+
+
+def get_form_geoshapes(request, project, form):
+    """[(variable, odk_type)]: the traces and shapes the map draws."""
+    res = (
+        request.dbsession.query(Odkform.form_geoshape)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_id == form)
+        .first()
+    )
+    if res is None:
+        return []
+    return parse_geoshape_variables(res[0])
 
 
 def get_form_directory(request, project, form):

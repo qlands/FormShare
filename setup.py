@@ -102,6 +102,7 @@ requires = [
     "requests",
     "scipy",
     "sgmllib3k",
+    "shapely",
     "simplekml",
     "six",
     "snowballstemmer",
@@ -174,6 +175,7 @@ setup(
             "update_aes_key = formshare.scripts.updateaeskey:main",
             "export_elasticsearch = formshare.scripts.exportelasticsearch:main",
             "import_elasticsearch = formshare.scripts.importelasticsearch:main",
+            "index_geometries = formshare.scripts.indexgeometries:main",
         ],
     },
 )

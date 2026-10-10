@@ -498,6 +498,9 @@ class Odkform(Base):
     form_invalidcolumns = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_public = Column(INTEGER)
     form_geopoint = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    # The geotraces and geoshapes of the main table, in form order, as
+    # "group/name:type" -- what the map draws (processes/geometry.py).
+    form_geoshape = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_hexcolor = Column(Unicode(60))
     form_reptask = Column(Unicode(64))
     form_version = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))

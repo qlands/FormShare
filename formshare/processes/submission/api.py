@@ -59,6 +59,7 @@ __all__ = [
     "json_to_csv",
     "get_gps_points_from_form",
     "get_gps_points_from_project",
+    "map_point",
     "get_tables_from_form",
     "get_tables_from_original_form",
     "update_table_desc",
@@ -176,6 +177,29 @@ def get_dataset_info_from_file(request, project_id, form, submission_id):
     return result
 
 
+def map_point(dataset):
+    """Where the core map places a submission: its geopoint, or, for one
+    located by a trace or a shape alone, the point on it the dataset index
+    keeps as _geolocation (processes/geometry.py). (lat, lon) as text, or
+    None when the submission has neither."""
+    geopoint = (dataset.get("_geopoint") or "").strip()
+    if geopoint:
+        parts = geopoint.split(" ")
+        if len(parts) >= 2:
+            try:
+                float(parts[0])
+                float(parts[1])
+                return parts[0], parts[1]
+            except ValueError as e:
+                log.error(str(e) + " in " + str(dataset.get("_xform_id_string")))
+    location = dataset.get("_geolocation")
+    if isinstance(location, dict):
+        lat, lon = location.get("lat"), location.get("lon")
+        if lat not in (None, "") and lon not in (None, ""):
+            return str(lat), str(lon)
+    return None
+
+
 def get_gps_points_from_project(request, project_id, query_from=None, query_size=None):
     total, datasets = get_datasets_from_project(
         request.registry.settings, project_id, query_from, query_size
@@ -183,33 +207,25 @@ def get_gps_points_from_project(request, project_id, query_from=None, query_size
     data = []
     colors = get_project_form_colors(request, project_id)
     for dataset in datasets:
-        if "_geopoint" in dataset.keys():
-            parts = dataset["_geopoint"].split(" ")
-            if len(parts) >= 2:
-                try:
-                    float(parts[0])
-                    try:
-                        float(parts[1])
-                        if dataset["_xform_id_string"] not in colors.keys():
-                            color = ColorHash(dataset["_xform_id_string"]).hex
-                        else:
-                            color = colors[dataset["_xform_id_string"]]
-                        data.append(
-                            {
-                                "key": dataset["_xform_id_string"],
-                                "lati": parts[0],
-                                "long": parts[1],
-                                "options": {
-                                    "iconShape": "circle-dot",
-                                    "borderWidth": 5,
-                                    "borderColor": color,
-                                },
-                            }
-                        )
-                    except Exception as e:
-                        log.error(str(e) + " in " + dataset["_xform_id_string"])
-                except Exception as e:
-                    log.error(str(e) + " in " + dataset["_xform_id_string"])
+        point = map_point(dataset)
+        if point is None:
+            continue
+        if dataset["_xform_id_string"] not in colors.keys():
+            color = ColorHash(dataset["_xform_id_string"]).hex
+        else:
+            color = colors[dataset["_xform_id_string"]]
+        data.append(
+            {
+                "key": dataset["_xform_id_string"],
+                "lati": point[0],
+                "long": point[1],
+                "options": {
+                    "iconShape": "circle-dot",
+                    "borderWidth": 5,
+                    "borderColor": color,
+                },
+            }
+        )
     return True, {"points": data}
 
 
@@ -221,24 +237,16 @@ def get_gps_points_from_form(
     )
     data = []
     for dataset in datasets:
-        if "_geopoint" in dataset.keys():
-            parts = dataset["_geopoint"].split(" ")
-            if len(parts) >= 2:
-                try:
-                    float(parts[0])
-                    try:
-                        float(parts[1])
-                        data.append(
-                            {
-                                "key": dataset["_submission_id"],
-                                "lati": parts[0],
-                                "long": parts[1],
-                            }
-                        )
-                    except Exception as e:
-                        log.error(str(e) + " in " + dataset["_xform_id_string"])
-                except Exception as e:
-                    log.error(str(e) + " in " + dataset["_xform_id_string"])
+        point = map_point(dataset)
+        if point is None:
+            continue
+        data.append(
+            {
+                "key": dataset["_submission_id"],
+                "lati": point[0],
+                "long": point[1],
+            }
+        )
     return True, {"points": data}
 
 

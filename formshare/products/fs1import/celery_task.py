@@ -16,6 +16,7 @@ from formshare.processes.elasticsearch.record_index import (
 from formshare.processes.elasticsearch.repository_index import (
     add_dataset,
 )
+from formshare.processes.geometry import add_location, parse_geoshape_variables
 from formshare.processes.sse.messaging import send_task_status_to_form
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
@@ -141,6 +142,15 @@ def get_assistant_name(engine, assistant_uuid):
         return assistant_uuid
 
 
+def get_form_geoshapes(engine, project, form):
+    """The traces and shapes of the form, for the map (processes/geometry.py)."""
+    row = engine.execute(
+        "SELECT form_geoshape FROM odkform "
+        "WHERE project_id = '{}' AND form_id = '{}'".format(project, form)
+    ).fetchone()
+    return parse_geoshape_variables(row[0] if row is not None else None)
+
+
 def get_directory_size(path):
     total = 0
     stack = [path]
@@ -180,6 +190,7 @@ def store_json_file(
     geopoint_variables,
     settings,
     ignore_xform_check=False,
+    shape_variables=None,
 ):
     mysql_user = settings["mysql.user"]
     mysql_password = settings["mysql.password"]
@@ -444,6 +455,8 @@ def store_json_file(
                 }
                 if submission_data.get("_geolocation", "") != "":
                     index_data["_geolocation"] = submission_data.get("_geolocation", "")
+                # A trace or a shape, for the map (processes/geometry.py).
+                add_location(index_data, submission_data, shape_variables or [])
                 add_dataset(settings, project, form, submission_id, index_data)
                 # Add the inserted records in the record index
                 with open(uuid_file) as f:
@@ -513,6 +526,7 @@ def internal_import_json_files(
     _ = es.gettext
 
     engine = create_engine(settings["sqlalchemy.url"], poolclass=NullPool)
+    shape_variables = get_form_geoshapes(engine, project, form)
     list_of_files = path_to_files + "/**/*.json"
     files_to_import = glob.iglob(list_of_files, recursive=True)
     index = 0
@@ -566,6 +580,7 @@ def internal_import_json_files(
             geopoint_variables,
             settings,
             ignore_xform_check,
+            shape_variables,
         )
         index = index + 1
     engine.dispose()

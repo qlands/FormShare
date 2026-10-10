@@ -13,7 +13,7 @@
                         {% if form.form_blocked != 0 %}
                             <span title="{{ _('This form is merging with another form or it had a problem while merging and cannot receive submissions. Contact the technical support.') }}" class="label label-danger">{{ _('Blocked') }}</span>
                         {% endif %}
-                        {% if form.form_geopoint != None %}
+                        {% if (form.form_geopoint != None or form.form_geoshape != None) %}
                             <span class="label label-default">{{ _('Geo-referenced') }}</span>
                         {% endif %}
                         {% if form.form_casetype == 1 %}

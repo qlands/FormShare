@@ -23,7 +23,7 @@
         {% cssresource request,'formshare','switchery' %}
         {% cssresource request,'formshare','datepicker' %}
         {% cssresource request,'formshare','select2' %}
-        {% if formDetails.form_geopoint != None %}
+        {% if (formDetails.form_geopoint != None or formDetails.form_geoshape != None) %}
             {% cssresource request,'formshare','leaflet' %}
             {% cssresource request,'formshare','blueimp' %}
         {% endif %}
@@ -75,7 +75,7 @@
         {% jsresource request,'formshare','clipboard' %}
         {% jsresource request,'formshare','bs-custom-file-input' %}
         {% jsresource request,'formshare','sse' %}
-        {% if formDetails.form_geopoint != None %}
+        {% if (formDetails.form_geopoint != None or formDetails.form_geoshape != None) %}
             {% jsresource request,'formshare','leaflet' %}
             {% jsresource request,'formshare','blueimp' %}
         {% endif %}
@@ -158,7 +158,7 @@
                                                 {% if formDetails.form_schema != None %}
                                                     {% include 'dashboard/projects/forms/snippets/form_important_links.jinja2' %}
                                                 {% endif %}
-                                                {% if formDetails.form_geopoint != None %}
+                                                {% if (formDetails.form_geopoint != None or formDetails.form_geoshape != None) %}
                                                     {% include 'dashboard/projects/forms/snippets/form_map.jinja2' %}
                                                 {% endif %}
                                                 {% if formDetails.form_schema != None %}
@@ -220,7 +220,7 @@
             {% endif %}
         {% endif %}
         {% include 'dashboard/projects/forms/snippets/product_error.jinja2' %}
-        {% if formDetails.form_geopoint != None and formDetails.submissions > 0 and withgps > 0 %}
+        {% if (formDetails.form_geopoint != None or formDetails.form_geoshape != None) and formDetails.submissions > 0 and withgps > 0 %}
             {% include 'dashboard/projects/forms/snippets/submission_info.jinja2' %}
         {% endif %}
     {% else %}
@@ -593,7 +593,7 @@
                     }
 
 
-                    {% if formDetails.form_geopoint != None and formDetails.submissions > 0 and withgps > 0 %}
+                    {% if (formDetails.form_geopoint != None or formDetails.form_geoshape != None) and formDetails.submissions > 0 and withgps > 0 %}
                         {% if active_tab == 'map' or active_tab == None %}
                             load_map();
                         {% else %}

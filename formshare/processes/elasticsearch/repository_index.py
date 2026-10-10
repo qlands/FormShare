@@ -12,6 +12,18 @@ logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 
+# Where a submission is, beyond its first geopoint (processes/geometry.py): its
+# first trace or shape, which the map draws when few features are in view, and
+# whether the document is located by a point, a trace or a shape. The map
+# counts by _geolocation, a geo_point, because aggregating a geo_shape field
+# needs a paid licence. A shape Elasticsearch still refuses, once FormShare has
+# repaired what it can, leaves the document indexed without it.
+_LOCATION_FIELDS = {
+    "_geoshape": {"type": "geo_shape", "ignore_malformed": True},
+    "_geotype": {"type": "keyword"},
+}
+
+
 def _get_dataset_index_definition(number_of_shards, number_of_replicas):
     """
     Constructs the dataset index with a given number of shards and replicas.
@@ -47,6 +59,7 @@ def _get_dataset_index_definition(number_of_shards, number_of_replicas):
                 "form_id": {"type": "keyword"},
                 "project_id": {"type": "keyword"},
                 "submission_id": {"type": "keyword"},
+                **_LOCATION_FIELDS,
             }
         },
     }
@@ -110,7 +123,27 @@ def get_projects_dict(project_id, query_from=None, query_size=None):
     return _dict
 
 
+def _located():
+    """The submissions that have a place on the map: a geopoint, or a trace or
+    a shape. The index gives a trace or a shape a point on it as
+    _geolocation as well (processes/geometry.py), so a submission located by
+    any of the three has that field. Asking for _geoshape too keeps on the
+    count a document indexed with its shape but without that point, as a
+    plugin that stores submissions itself might index one."""
+    return {
+        "bool": {
+            "should": [
+                {"exists": {"field": "_geolocation"}},
+                {"exists": {"field": "_geoshape"}},
+            ],
+            "minimum_should_match": 1,
+        }
+    }
+
+
 def get_datasets_with_gps(project_id, form_id, size=0):
+    """The submissions of a form located by a geopoint, a geotrace or a
+    geoshape: their number with size 0, the documents otherwise."""
     _dict = {
         "size": size,
         "query": {
@@ -118,7 +151,7 @@ def get_datasets_with_gps(project_id, form_id, size=0):
                 "filter": {
                     "bool": {
                         "filter": [
-                            {"exists": {"field": "_geolocation"}},
+                            _located(),
                             {"term": {"project_id": project_id}},
                             {"term": {"form_id": form_id}},
                         ]
@@ -131,6 +164,8 @@ def get_datasets_with_gps(project_id, form_id, size=0):
 
 
 def get_projects_with_gps(project_id, size=0):
+    """The submissions of a project located by a geopoint, a geotrace or a
+    geoshape: their number with size 0, the documents otherwise."""
     _dict = {
         "size": size,
         "query": {
@@ -138,7 +173,7 @@ def get_projects_with_gps(project_id, size=0):
                 "filter": {
                     "bool": {
                         "filter": [
-                            {"exists": {"field": "_geolocation"}},
+                            _located(),
                             {"term": {"project_id": project_id}},
                         ]
                     }
@@ -278,6 +313,19 @@ def create_dataset_index(settings):
                 else:
                     raise e
         else:
+            # An index created before the location fields gains them: a new
+            # field can be added to an existing mapping, and adding it again
+            # changes nothing.
+            try:
+                connection.indices.put_mapping(
+                    index=index_name, properties=_LOCATION_FIELDS
+                )
+            except Exception as e:  # pragma: no cover
+                log.error(
+                    "The location fields could not be added to the index {}: {}".format(
+                        index_name, str(e)
+                    )
+                )
             connection.close()
     else:
         raise ESConnectionError("Cannot connect to ElasticSearch")

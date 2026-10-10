@@ -968,6 +968,10 @@ class PublishedList(Base):
     list_key_column = Column(Unicode(120))
     list_lastgen = Column(DateTime)
     list_seq = Column(INTEGER, server_default=text("'0'"))
+    # A GeoJSON list's last generation left out this many cases -- no
+    # location, or one that cannot be the geometry asked for -- which are on
+    # no map until they have one. NULL for a CSV list.
+    list_skipped = Column(INTEGER)
     list_createdate = Column(DateTime)
 
     project = relationship(

@@ -38,10 +38,20 @@
                             </div>
                         </div>
                         <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">{{ _('Format') }}</label>
+                            <div class="col-sm-10">
+                                <select name="list_format" id="list_format" class="form-control">
+                                    <option value="csv" {% if listData.list_format != "geojson" %}selected{% endif %}>{{ _('CSV: a list to choose from') }}</option>
+                                    <option value="geojson" {% if listData.list_format == "geojson" %}selected{% endif %}>{{ _('GeoJSON: cases to select on a map') }}</option>
+                                </select>
+                                <span class="form-text m-b-none">{{ _('A GeoJSON list serves each case as a point, a line or a shape. A follow-up form selects it with select_one_from_file and the map appearance.') }}</span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
                             <label class="col-sm-2 col-form-label">{{ _('File name') }}</label>
                             <div class="col-sm-10">
                                 <input type="text" name="list_filename" class="form-control" value="{{ listData.list_filename }}" placeholder="cases.csv">
-                                <span class="form-text m-b-none">{{ _('The exact name a form must use in select_one_from_file. Lower case, ending in .csv') }}</span>
+                                <span class="form-text m-b-none">{{ _('The exact name a form must use in select_one_from_file. Lower case, ending in .csv, or in .geojson for a GeoJSON list') }}</span>
                             </div>
                         </div>
                         <div class="form-group row">
@@ -73,7 +83,16 @@
                                 <span class="form-text m-b-none">{{ _('The column whose value names each case on the device.') }}</span>
                             </div>
                         </div>
-                        <div class="form-group row">
+                        <div class="form-group row" id="geometry_row" {% if listData.list_format != "geojson" %}style="display: none"{% endif %}>
+                            <label class="col-sm-2 col-form-label">{{ _('Location') }}</label>
+                            <div class="col-sm-10">
+                                <select name="geometry_column" class="form-control" id="geometry_column" style="width: 100%">
+                                    <option value="">{{ _('Select the table first') }}</option>
+                                </select>
+                                <span class="form-text m-b-none">{{ _('The geopoint, geotrace or geoshape each case is drawn from. A case without one is left out of the map until it has one.') }}</span>
+                            </div>
+                        </div>
+                        <div class="form-group row" id="key_row" {% if listData.list_format == "geojson" %}style="display: none"{% endif %}>
                             <label class="col-sm-2 col-form-label">{{ _('Key') }}</label>
                             <div class="col-sm-10">
                                 <select name="list_key_column" class="form-control" id="list_key_column" style="width: 100%">
@@ -110,6 +129,14 @@
             $("#source_table").select2();
             $("#label_column").select2();
             $("#list_key_column").select2();
+            $("#geometry_column").select2();
+            $('#list_format').change(function () {
+                // A GeoJSON list is drawn from a location and serves rows, never values.
+                var geojson = $(this).val() === 'geojson';
+                $('#geometry_row').toggle(geojson);
+                $('#key_row').toggle(!geojson);
+                if (geojson) { $('#list_key_column').val('').trigger('change.select2'); }
+            });
 
             var tables_url = '{{ request.route_url('project_form_tables_api', userid=userid, projcode=projcode, formid='__FORM__') }}';
             var fields_url = '{{ request.route_url('project_table_fields_api', userid=userid, projcode=projcode, formid='__FORM__', tablename='__TABLE__') }}';
@@ -141,8 +168,10 @@
                 var table_name = $(this).val();
                 var field_combo = $('#label_column');
                 var key_combo = $('#list_key_column');
+                var geometry_combo = $('#geometry_column');
                 field_combo.empty();
                 key_combo.empty();
+                geometry_combo.empty();
                 key_combo.append(new Option("{{ _('Each row (keyed by its rowuuid)') }}", ''));
                 if (form_id === '' || table_name === '') {
                     return;
@@ -155,8 +184,15 @@
                             field_combo.append(new Option(a_field, a_field));
                             key_combo.append(new Option(a_field, a_field));
                         });
+                        $.each(data.geo || {}, function (a_field, a_kind) {
+                            geometry_combo.append(new Option(a_field + ' (' + a_kind + ')', a_field));
+                        });
+                        if (geometry_combo.children().length === 0) {
+                            geometry_combo.append(new Option("{{ _('This table has no geopoint, geotrace or geoshape') }}", ''));
+                        }
                         field_combo.trigger('change.select2');
                         key_combo.trigger('change.select2');
+                        geometry_combo.trigger('change.select2');
                     });
             });
         });

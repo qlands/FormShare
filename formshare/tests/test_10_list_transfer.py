@@ -30,9 +30,18 @@ class _Project:
         }
         self.tables = {"reg": ["maintable", "members"], "draft": ["maintable"]}
         self.columns = {
-            ("reg", "maintable"): ["farmer_id", "farmer_name", "county", "village"],
+            ("reg", "maintable"): [
+                "farmer_id",
+                "farmer_name",
+                "county",
+                "village",
+                "home",
+                "plot",
+            ],
             ("reg", "members"): ["member_name", "parent_rowuuid"],
         }
+        # What a GeoJSON list may be drawn from; every other column is text.
+        self.odktypes = {"home": "geopoint", "plot": "geoshape"}
         self.properties = {
             ("reg", "maintable"): [
                 {"property_name": "stage", "property_type": "string"}
@@ -60,7 +69,8 @@ class _Project:
                 {"table_name": t} for t in self.tables.get(f, [])
             ],
             "get_table_columns": lambda r, p, f, t: [
-                {"field_name": c} for c in self.columns.get((f, t), [])
+                {"field_name": c, "field_odktype": self.odktypes.get(c, "text")}
+                for c in self.columns.get((f, t), [])
             ],
             "get_table_properties": lambda r, p, f, t: list(
                 self.properties.get((f, t), [])
@@ -584,3 +594,141 @@ class ExportDocument(unittest.TestCase):
         self.assertEqual([a["code"] for a in only["lists"]], ["counties"])
         # What the export writes, the import reads back unchanged.
         self.assertEqual(yaml.safe_load(lt.dump_document(document, "yaml")), document)
+
+
+class GeoJSONLists(unittest.TestCase):
+    """A GeoJSON list travels with its format and the location it is drawn
+    from, and is refused where the importing table could not draw it."""
+
+    def setUp(self):
+        self.project = _Project()
+        self.project.install(self)
+        self.request = _Request()
+
+    def plots(self, **changes):
+        a_list = _farmers(
+            code="plots",
+            file_name="plots.geojson",
+            format="geojson",
+            geometry_column="plot",
+            columns=[{"column": "county", "served_as": "region"}],
+        )
+        a_list.update(changes)
+        return a_list
+
+    def refusal(self, **changes):
+        done, errors, _ = lt.import_lists(
+            self.request, "P", _document([self.plots(**changes)]), "owner"
+        )
+        self.assertEqual(self.project.added_lists, [])
+        self.assertEqual(len(errors), 1)
+        return errors[0]
+
+    def test_a_geojson_list_is_imported_with_its_location(self):
+        done, errors, warnings = lt.import_lists(
+            self.request,
+            "P",
+            _document([self.plots(), _farmers(geometry_column="plot")], [VISITS]),
+            "owner",
+        )
+        self.assertEqual((errors, warnings), ([], []))
+        self.assertEqual(done["lists"], ["plots", "farmers"])
+        plots, farmers = self.project.added_lists
+        self.assertEqual(
+            (plots["list_filename"], plots["list_format"], plots["geometry_column"]),
+            ("plots.geojson", "geojson", "plot"),
+        )
+        # A CSV list has no location, whatever the file says.
+        self.assertEqual(
+            (farmers["list_format"], farmers["geometry_column"]), ("csv", None)
+        )
+
+    def test_a_format_other_than_csv_or_geojson_is_refused(self):
+        self.assertIn("its format is csv or geojson", self.refusal(format="kml"))
+
+    def test_the_file_name_ends_as_the_format_says(self):
+        self.assertIn(
+            "end in .csv, or in .geojson", self.refusal(file_name="plots.csv")
+        )
+        self.assertIn(
+            "end in .csv, or in .geojson",
+            self.refusal(format="csv", file_name="plots.geojson"),
+        )
+
+    def test_a_geojson_list_is_not_a_list_of_values(self):
+        self.assertIn(
+            "a GeoJSON list cannot be a list of values",
+            self.refusal(key_column="county"),
+        )
+
+    def test_the_location_is_a_geopoint_a_geotrace_or_a_geoshape(self):
+        self.assertIn(
+            'the table has no geopoint, geotrace or geoshape "county"',
+            self.refusal(geometry_column="county"),
+        )
+        self.assertIn(
+            'the table has no geopoint, geotrace or geoshape "None"',
+            self.refusal(geometry_column=None),
+        )
+
+    def test_no_served_column_takes_the_locations_name(self):
+        self.assertIn(
+            '"fs_location" is where a GeoJSON list carries its location',
+            self.refusal(columns=[{"column": "county", "served_as": "fs_location"}]),
+        )
+
+    def test_the_export_says_what_the_import_reads(self):
+        self.project.lists = [
+            {
+                "list_id": "plots",
+                "list_filename": "plots.geojson",
+                "list_format": "geojson",
+                "geometry_column": "plot",
+                "source_project": "P",
+                "source_form": "reg",
+                "source_table": "maintable",
+                "label_column": "farmer_name",
+                "list_key_column": None,
+                "list_active": 1,
+                "list_createdate": datetime.datetime(2026, 10, 7, 9, 0),
+                "filter_rules": None,
+            },
+            {
+                "list_id": "farmers",
+                "list_filename": "farmers.csv",
+                "list_format": "csv",
+                "geometry_column": None,
+                "source_project": "P",
+                "source_form": "reg",
+                "source_table": "maintable",
+                "label_column": "farmer_name",
+                "list_key_column": None,
+                "list_active": 1,
+                "list_createdate": datetime.datetime(2026, 10, 7, 10, 0),
+                "filter_rules": None,
+            },
+        ]
+        original = lt.get_list_columns
+        lt.get_list_columns = lambda r, p, list_id: []
+        self.addCleanup(setattr, lt, "get_list_columns", original)
+        document = lt.list_document(self.request, "P")
+        plots, farmers = document["lists"]
+        self.assertEqual(
+            (plots["format"], plots["geometry_column"]), ("geojson", "plot")
+        )
+        # A CSV list's entry reads as it did before GeoJSON lists.
+        self.assertNotIn("format", farmers)
+        self.assertNotIn("geometry_column", farmers)
+        # Into a project without them, through YAML.
+        self.project.lists = []
+        loaded, error = lt.load_document(lt.dump_document(document, "yaml"))
+        self.assertEqual(error, "")
+        done, errors, warnings = lt.import_lists(self.request, "P", loaded, "owner")
+        self.assertEqual((errors, warnings), ([], []))
+        self.assertEqual(
+            [
+                (a["list_id"], a["list_format"], a["geometry_column"])
+                for a in self.project.added_lists
+            ],
+            [("plots", "geojson", "plot"), ("farmers", "csv", None)],
+        )

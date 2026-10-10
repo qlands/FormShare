@@ -47,6 +47,10 @@ from formshare.processes.db.case_management import (
     PROPERTY_TYPES,
     add_table_property,
     delete_table_property,
+    GEOMETRY_ALIAS,
+    geometry_columns,
+    geojson_list_select,
+    write_list_geojson,
 )
 from formshare.processes.db.form import get_form_data, get_form_directory
 from formshare.processes.odk.api import (
@@ -156,33 +160,62 @@ class AddPublishedListView(ListSection):
             source_form = list_data.get("source_form", "")
             source_table = list_data.get("source_table", "")
             label_column = list_data.get("label_column", "")
+            # A GeoJSON list (feature 6) is drawn from a geopoint, geotrace or
+            # geoshape of the table, one feature per case.
+            list_format = (
+                "geojson" if list_data.get("list_format") == "geojson" else "csv"
+            )
+            geometry_column = (
+                str(list_data.get("geometry_column", "") or "").strip() or None
+            )
+            key_column = str(list_data.get("list_key_column", "") or "").strip() or None
             # add, tablesof and fieldsof are path segments under /caselists;
             # a list with one of those ids would shadow them.
             if list_id in ("add", "tablesof", "fieldsof"):
                 list_id = ""
-            if list_id == "" or not valid_list_filename(file_name):
+            if (
+                list_id == ""
+                or not valid_list_filename(file_name)
+                or not file_name.endswith("." + list_format)
+            ):
                 self.append_to_errors(
                     self._(
                         "The file name must be lower case, start with a letter, "
-                        "and end in .csv"
+                        "and end in .csv, or in .geojson for a GeoJSON list"
                     )
                 )
             elif source_form == "" or source_table == "" or label_column == "":
                 self.append_to_errors(
                     self._("Select the form, the table and the label column")
                 )
+            elif list_format == "geojson" and key_column is not None:
+                self.append_to_errors(
+                    self._(
+                        "A GeoJSON list serves each case as a feature on a map, so "
+                        "it cannot be a list of values"
+                    )
+                )
+            elif list_format == "geojson" and geometry_column not in geometry_columns(
+                get_table_columns(self.request, project_id, source_form, source_table)
+            ):
+                self.append_to_errors(
+                    self._(
+                        "Select the geopoint, geotrace or geoshape the GeoJSON list "
+                        "is drawn from"
+                    )
+                )
             else:
                 list_active = 0 if list_data.get("list_active") == "0" else 1
-                key_column = (
-                    str(list_data.get("list_key_column", "") or "").strip() or None
-                )
                 added, message = add_published_list(
                     self.request,
                     project_id,
                     {
                         "list_id": list_id,
                         "list_filename": file_name,
-                        "list_format": "csv",
+                        "list_format": list_format,
+                        "geometry_column": (
+                            geometry_column if list_format == "geojson" else None
+                        ),
                         "source_project": project_id,
                         "source_form": source_form,
                         "source_table": source_table,
@@ -256,16 +289,32 @@ class EditPublishedListView(ListSection):
                     )
                     for a_column in get_list_columns(self.request, project_id, list_id)
                 ]
-                current.append((column_name, column_as or None, column_source))
-                updated, message = set_list_columns(
-                    self.request, project_id, list_id, current
-                )
-                if not updated:
-                    self.append_to_errors(message)
+                # A name served twice would fail every generation of the
+                # list (build_list_select refuses it), and a GeoJSON list
+                # carries its location under GEOMETRY_ALIAS.
+                taken = {"name", "label"} | {
+                    a_column[1] or a_column[0] for a_column in current
+                }
+                if list_data.get("list_format") == "geojson":
+                    taken.add(GEOMETRY_ALIAS)
+                if (column_as or column_name) in taken:
+                    self.append_to_errors(
+                        self._(
+                            'The list already serves a column called "{}". '
+                            "Serve it under another name"
+                        ).format(column_as or column_name)
+                    )
                 else:
-                    invalidate_list_copies(self.request, project_id, list_id)
-                    self.returnRawViewResult = True
-                    return HTTPFound(self.request.url)
+                    current.append((column_name, column_as or None, column_source))
+                    updated, message = set_list_columns(
+                        self.request, project_id, list_id, current
+                    )
+                    if not updated:
+                        self.append_to_errors(message)
+                    else:
+                        invalidate_list_copies(self.request, project_id, list_id)
+                        self.returnRawViewResult = True
+                        return HTTPFound(self.request.url)
             if "remove_column" in post_data.keys():
                 column_name = post_data.get("column_name", "")
                 current = [
@@ -293,7 +342,14 @@ class EditPublishedListView(ListSection):
                 # A built consumer's foreign key (or lack of one) was shaped by
                 # the key; switching a row list to a value list under it, or
                 # back, would leave the schema disagreeing with the list.
-                if list_has_active_consumers(self.request, project_id, list_id):
+                if list_data.get("list_format") == "geojson" and key_column:
+                    self.append_to_errors(
+                        self._(
+                            "A GeoJSON list serves each case as a feature on a "
+                            "map, so it cannot be a list of values"
+                        )
+                    )
+                elif list_has_active_consumers(self.request, project_id, list_id):
                     self.append_to_errors(
                         self._(
                             "The key cannot change while a form with a repository "
@@ -363,6 +419,30 @@ class EditPublishedListView(ListSection):
                         invalidate_list_copies(self.request, project_id, list_id)
                         self.returnRawViewResult = True
                         return HTTPFound(self.request.url)
+            if "change_geometry" in post_data.keys():
+                geometry_column = post_data.get("geometry_column", "")
+                if list_data.get(
+                    "list_format"
+                ) == "geojson" and geometry_column in geometry_columns(table_columns):
+                    updated, message = update_published_list(
+                        self.request,
+                        project_id,
+                        list_id,
+                        {"geometry_column": geometry_column},
+                    )
+                    if not updated:
+                        self.append_to_errors(message)
+                    else:
+                        invalidate_list_copies(self.request, project_id, list_id)
+                        self.returnRawViewResult = True
+                        return HTTPFound(self.request.url)
+                else:
+                    self.append_to_errors(
+                        self._(
+                            "Select the geopoint, geotrace or geoshape the list is "
+                            "drawn from"
+                        )
+                    )
             if "change_label" in post_data.keys():
                 label_column = post_data.get("label_column", "")
                 if label_column != "":
@@ -391,6 +471,7 @@ class EditPublishedListView(ListSection):
             ),
             "filterRules": self.stored_rules(list_data),
             "filterWords": describe_filter(list_data.get("filter_rules"), fields),
+            "geometryColumns": geometry_columns(table_columns),
         }
 
     def try_filter(self, project_id, list_id, list_data, filter_sql):
@@ -504,13 +585,11 @@ class TableFieldsApiView(ListSection):
         form_id = self.request.matchdict["formid"]
         table_name = self.request.matchdict["tablename"]
         self.returnRawViewResult = True
+        columns = get_table_columns(self.request, project_id, form_id, table_name)
         return {
-            "fields": [
-                a_field["field_name"]
-                for a_field in get_table_columns(
-                    self.request, project_id, form_id, table_name
-                )
-            ]
+            "fields": [a_field["field_name"] for a_field in columns],
+            # What a GeoJSON list can be drawn from: {column: point|trace|shape}.
+            "geo": geometry_columns(columns),
         }
 
 
@@ -543,6 +622,40 @@ class SampleListView(ListSection):
             )
             for a_column in get_list_columns(self.request, project_id, list_id)
         ]
+        repository_path = self.request.registry.settings["repository.path"]
+        temp_dir = os.path.join(repository_path, *["tmp"])
+        if list_data.get("list_format") == "geojson":
+            # Ten features, written by caselistgen as the list is: the file to
+            # design a form against, and to attach as its placeholder.
+            try:
+                sql, kind = geojson_list_select(
+                    self.request, list_data, schema, columns, limit=10
+                )
+            except Exception as e:
+                self.add_error(str(e))
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
+            if sql is None:
+                self.add_error(kind)
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
+            if not os.path.exists(temp_dir):
+                os.makedirs(temp_dir)
+            geojson_file = os.path.join(temp_dir, str(uuid.uuid4()) + ".geojson")
+            written, message, _ = write_list_geojson(
+                self.request.registry.settings, sql, kind, geojson_file
+            )
+            if not written:
+                self.add_error(message)
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
+            response = FileResponse(
+                geojson_file,
+                request=self.request,
+                content_type="application/geo+json",
+                cache_max_age=0,
+            )
+            response.content_disposition = 'attachment; filename="{}"'.format(
+                list_data["list_filename"]
+            )
+            return response
         try:
             sql, headers = build_list_select(
                 schema,
@@ -558,8 +671,6 @@ class SampleListView(ListSection):
         except Exception as e:
             self.add_error(str(e))
             return HTTPFound(location=next_page, headers={"FS_error": "true"})
-        repository_path = self.request.registry.settings["repository.path"]
-        temp_dir = os.path.join(repository_path, *["tmp"])
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir)
         csv_file = os.path.join(temp_dir, str(uuid.uuid4()) + ".csv")

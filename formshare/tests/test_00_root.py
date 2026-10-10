@@ -72,6 +72,7 @@ from .steps.case_journey import t_e_s_t_case_journey
 from .steps.actions_split import t_e_s_t_actions_split
 from .steps.geo_clean import t_e_s_t_geo_clean
 from .steps.geo_index import t_e_s_t_geo_index
+from .steps.geo_lists import t_e_s_t_geo_lists
 from .steps.list_transfer import t_e_s_t_list_transfer
 from .steps.repository_tasks import t_e_s_t_repository_tasks
 from .steps.root import t_e_s_t_root
@@ -244,6 +245,8 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_geo_clean(self.test_object)
             print("Testing traces and shapes in the dataset index")
             t_e_s_t_geo_index(self.test_object)
+            print("Testing published lists served as GeoJSON")
+            t_e_s_t_geo_lists(self.test_object)
             print("Testing the export and import of published lists")
             t_e_s_t_list_transfer(self.test_object)
             print("Testing partners")

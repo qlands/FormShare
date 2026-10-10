@@ -8,6 +8,7 @@ from formshare.processes.db import (
     get_project_access_type,
     get_project_details,
     get_one_assistant,
+    get_project_published_lists,
 )
 from formshare.processes.elasticsearch.repository_index import delete_dataset_from_index
 from formshare.processes.email.send_email import send_error_to_technical_team
@@ -17,6 +18,7 @@ from formshare.processes.odk.api import (
     describe_ambiguous_selects,
     describe_invalid_option_values,
     describe_output_file_errors,
+    geojson_without_features,
     output_file_error_report,
     output_file_errors,
 )
@@ -482,18 +484,22 @@ class GenerateRepository(PrivateView):
                                 self.append_to_errors(txt_message)
 
                             if result_code == 28:  # pragma: no cover
-                                txt_message = "The following GeoJSON file does not have features: \n"
-                                root = etree.fromstring(message)
-                                files_with_problems = root.findall(".//file")
-                                if files_with_problems:
-                                    for a_file in files_with_problems:
-                                        txt_message = (
-                                            txt_message
-                                            + "\t"
-                                            + a_file.get("name", "")
-                                            + "\n"
-                                        )
-                                self.append_to_errors(txt_message)
+                                # The copy of a published GeoJSON list is
+                                # emptied for the build, which an RSTools
+                                # before rstools.md 27 (2026-10-07) refuses;
+                                # nothing ends with 28 since.
+                                self.append_to_errors(
+                                    geojson_without_features(
+                                        message,
+                                        {
+                                            a_list["list_filename"]
+                                            for a_list in get_project_published_lists(
+                                                self.request, project_id
+                                            )
+                                        },
+                                        self._,
+                                    )
+                                )
 
                             if result_code == 29:  # pragma: no cover
                                 txt_message = "The following GeoJSON file does not have properties: \n"

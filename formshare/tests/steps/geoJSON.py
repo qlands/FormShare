@@ -1,6 +1,7 @@
 import os
 import time
 
+from .geo_lists import tool_reads_an_empty_geojson
 from .sql import count_lookup_rows, get_form_details, get_lookup_choice
 
 
@@ -101,14 +102,22 @@ def t_e_s_t_geo_json(test_object):
     )
     assert "FS_error" not in res.headers
 
-    # Get the details of a form. Cannot create repository
+    # Get the details of a form. Since rstools.md 27 the form checker reads a
+    # collection with no features as a CSV with only its header -- a select
+    # with no options, which stops nothing -- where an older one refused it
+    # with 28. CI's image may have either, so the step asks the installed one.
     res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}".format(
             test_object.randonLogin, test_object.project, "example_geojson"
         ),
         status=200,
     )
-    test_object.root.assertIn(b"This form cannot create a repository", res.body)
+    if tool_reads_an_empty_geojson(
+        test_object.server_config["odktools.path"], test_object.working_dir
+    ):
+        test_object.root.assertNotIn(b"This form cannot create a repository", res.body)
+    else:
+        test_object.root.assertIn(b"This form cannot create a repository", res.body)
 
     # Uploads a GeoJSON file with no Feature collection
     paths = [

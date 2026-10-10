@@ -49,6 +49,9 @@ from formshare.processes.db import (
     get_list_columns,
     get_form_consumers,
     build_list_select,
+    GEOMETRY_ALIAS,
+    geometry_columns,
+    get_table_columns,
     get_consumer_sources,
     apply_link_attributes,
     sync_form_consumers,
@@ -596,6 +599,45 @@ def output_file_error_report(files):
         "{} could not be written: {}".format(a_file["path"], a_file["reason"])
         for a_file in files
     )
+
+
+# What the copy of a published GeoJSON list holds while a form that selects
+# from it is built (create_repository): the GeoJSON equivalent of a CSV with
+# only its header, so that the select stays external.
+EMPTY_FEATURE_COLLECTION = '{"type":"FeatureCollection","features":[]}'
+
+
+def geojson_without_features(output, published_files, translate):
+    """What an exit 28 of jxformtomysql tells the owner.
+
+    28 names the GeoJSON files that have no features. A file the owner
+    attached that way is the form's to fix, and is reported as it always has
+    been. A published list is not: create_repository emptied its copy
+    itself, and a jxformtomysql from before rstools.md section 27
+    (2026-10-07) refuses an empty FeatureCollection. That needs a newer
+    RSTools on the server, and the message says so rather than blame a file
+    the owner attached with features in it. Nothing ends with 28 since; this
+    is for a server whose RSTools is older.
+    """
+    _ = translate
+    try:
+        root = etree.fromstring(machine_xml(output).encode("utf-8"))
+        names = [a_file.get("name", "") for a_file in root.findall(".//file")]
+    except Exception:
+        names = []
+    lists = [a_name for a_name in names if a_name in published_files]
+    message = ""
+    if len(lists) < len(names) or not names:
+        message = "The following GeoJSON file does not have features: \n" + "".join(
+            "\t" + a_name + "\n" for a_name in names if a_name not in lists
+        )
+    if lists:
+        message += _(
+            "The form selects from the published GeoJSON list {}. The RSTools "
+            "installed on this server cannot build such a form yet: ask the "
+            "administrator of the server to update it."
+        ).format(", ".join(lists))
+    return message
 
 
 def check_jxform_file(
@@ -1287,7 +1329,9 @@ def check_jxform_file(
                 attachments,
             )
             return 27, message
-        if p.returncode == 28:
+        if p.returncode == 28:  # pragma: no cover
+            # Nothing ends with 28 since rstools.md 27 (2026-10-07): a server
+            # with an older RSTools still gets here.
             message = "The following GeoJSON file does not have features: \n"
             root = etree.fromstring(stdout)
             files_with_problems = root.findall(".//file")
@@ -3038,6 +3082,22 @@ def get_form_list_definitions(request, project_id, form_id):
             (c["column_name"], c["column_as"], c.get("column_source") or "table")
             for c in get_list_columns(request, a_list["project_id"], a_list["list_id"])
         ]
+        # A GeoJSON list's SELECT carries its location under GEOMETRY_ALIAS,
+        # the column the device draws each case from, as caselistgen does.
+        geometry_kind = None
+        if a_list.get("list_format") == "geojson":
+            geometry_kind = geometry_columns(
+                get_table_columns(
+                    request,
+                    a_list["source_project"],
+                    a_list["source_form"],
+                    a_list["source_table"],
+                )
+            ).get(a_list.get("geometry_column") or "")
+            if geometry_kind is not None:
+                columns = columns + [
+                    (a_list["geometry_column"], GEOMETRY_ALIAS, "table")
+                ]
         sql, headers = build_list_select(
             schema,
             a_list["source_table"],
@@ -3059,6 +3119,8 @@ def get_form_list_definitions(request, project_id, form_id):
             "key_column": a_list.get("list_key_column"),
             "active": a_list.get("list_active", 1),
             "select": sql,
+            "format": "geojson" if geometry_kind else "csv",
+            "geometry": geometry_kind,
             "selector": consumer["selector_field"] if consumer else None,
             "link": bool(consumer["consumer_is_link"]) if consumer else False,
         }
@@ -3999,19 +4061,27 @@ def create_repository(
         # the *source* table's rowuuid, not a copy. A header-only file keeps
         # the select external (selecttype 3, no lookup), which is the state
         # apply_registry_links expects and the state a placeholder gives.
-        # Only the build's temp copy is truncated; the stored attachment the
-        # device downloads is untouched.
+        # A GeoJSON list's copy becomes a FeatureCollection without features,
+        # its equivalent since rstools.md section 27 (2026-10-07); an older
+        # jxformtomysql refuses that with 28 (geojson_without_features says
+        # why). Only the build's temp copy is emptied; the stored attachment
+        # the device downloads is untouched.
         registry_files = {
             a_list["list_filename"]
             for a_list in get_project_published_lists(request, project)
         }
         for a_name in registry_files:
             a_copy = os.path.join(target_dir, a_name)
-            if os.path.exists(a_copy):
-                with io.open(a_copy, "r", encoding="utf-8") as list_copy:
-                    header = list_copy.readline()
+            if not os.path.exists(a_copy):
+                continue
+            if a_name.endswith(".geojson"):
                 with io.open(a_copy, "w", encoding="utf-8") as list_copy:
-                    list_copy.write(header)
+                    list_copy.write(EMPTY_FEATURE_COLLECTION)
+                continue
+            with io.open(a_copy, "r", encoding="utf-8") as list_copy:
+                header = list_copy.readline()
+            with io.open(a_copy, "w", encoding="utf-8") as list_copy:
+                list_copy.write(header)
         path = os.path.join(odk_dir, *["tmp", tmp_uid, "*.*"])
         files = glob.glob(path)
         if files:

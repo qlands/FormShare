@@ -34,6 +34,22 @@
                         {{ _('Every list carries name (the row identity) and label. The columns below are served in addition, in this order.') }}
                     </p>
                     <div class="hr-line-dashed"></div>
+                    {% if listData.list_format == 'geojson' %}
+                    <h3>{{ _('Location') }}</h3>
+                    <p>{{ _('A GeoJSON list serves each case as a feature drawn from this column: a point, a line or a shape that a follow-up form selects on a map. Its id is the case\'s identity and its title the label.') }}</p>
+                    {% if listData.list_skipped %}
+                        <p id="list-skipped" class="text-warning">{{ _('Cases the last generation left out, having no location they can be drawn from:') }} {{ listData.list_skipped }}</p>
+                    {% endif %}
+                    <form method="post" class="form-inline">
+                        {{ form.secure_form(request) }}
+                        <select name="geometry_column" id="geometry_column" class="form-control" style="min-width: 250px">
+                            {% for a_column, a_kind in geometryColumns.items() %}
+                                <option value="{{ a_column }}" {% if a_column == listData.geometry_column %}selected{% endif %}>{{ a_column }} ({{ a_kind }})</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" name="change_geometry" value="1" class="btn btn-white">{{ _('Change the location') }}</button>
+                    </form>
+                    {% else %}
                     <h3>{{ _('Key') }}</h3>
                     <form method="post" class="form-inline">
                         {{ form.secure_form(request) }}
@@ -46,6 +62,7 @@
                         <button type="submit" name="change_key" value="1" class="btn btn-white">{{ _('Change the key') }}</button>
                         <span class="form-text m-b-none">{{ _('A column key serves each distinct value once; such a list cannot be a case link.') }}</span>
                     </form>
+                    {% endif %}
                     <div class="hr-line-dashed"></div>
                     <h3>{{ _('Rows to serve') }}</h3>
                     <form method="post" class="form-inline">

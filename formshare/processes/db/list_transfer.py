@@ -28,10 +28,12 @@ import re
 import yaml
 
 from formshare.processes.db.case_management import (
+    GEOMETRY_ALIAS,
     PROPERTY_TYPES,
     add_published_list,
     add_table_property,
     delete_published_list,
+    geometry_columns,
     get_form_data_tables,
     get_list_columns,
     get_list_source_tables,
@@ -80,6 +82,8 @@ _LIST_KEYS = (
     "rows",
     "columns",
     "filter",
+    "format",
+    "geometry_column",
 )
 
 
@@ -128,6 +132,9 @@ def list_document(request, project_id, list_ids=None):
         rules = _stored_rules(a_list.get("filter_rules"))
         if rules:
             entry["filter"] = rules
+        if a_list.get("list_format") == "geojson":
+            entry["format"] = "geojson"
+            entry["geometry_column"] = a_list.get("geometry_column")
         lists.append(entry)
         source = (
             a_list["source_project"],
@@ -388,6 +395,8 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
         label_column = _text(entry.get("label_column"))[0] or ""
         key_column = _text(entry.get("key_column"))[0] or None
         rows = _text(entry.get("rows"))[0] or "active"
+        list_format = _text(entry.get("format"))[0] or "csv"
+        geometry_column = _text(entry.get("geometry_column"))[0] or None
         where = '{} "{}"'.format(_("List"), code or index)
         problems = []
         if not _CODE.match(code) or code in _RESERVED_CODES:
@@ -398,11 +407,15 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
             problems.append(
                 _("its code is in use, in the project or earlier in the file")
             )
-        if not valid_list_filename(file_name) or not file_name.endswith(".csv"):
+        if list_format not in ("csv", "geojson"):
+            problems.append(_("its format is csv or geojson"))
+        elif not valid_list_filename(file_name) or not file_name.endswith(
+            "." + list_format
+        ):
             problems.append(
                 _(
                     "its file name must be lower case, start with a letter, and "
-                    "end in .csv"
+                    "end in .csv, or in .geojson for a GeoJSON list"
                 )
             )
         elif file_name in taken_files:
@@ -435,6 +448,18 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
             problems.append(
                 _('the table has no column "{}" to key with').format(key_column)
             )
+        if list_format == "geojson":
+            if key_column is not None:
+                problems.append(_("a GeoJSON list cannot be a list of values"))
+            if geometry_column not in geometry_columns(
+                get_table_columns(request, project_id, form_id, table)
+            ):
+                problems.append(
+                    _(
+                        'the table has no geopoint, geotrace or geoshape "{}" to '
+                        "draw it from"
+                    ).format(geometry_column)
+                )
         served = []
         served_names = {"name", "label"}
         for position, a_column in enumerate(entry.get("columns") or [], start=1):
@@ -469,7 +494,11 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
                     ).format(served_as)
                 )
             alias = served_as or name
-            if alias in served_names:
+            if list_format == "geojson" and alias == GEOMETRY_ALIAS:
+                problems.append(
+                    _('"{}" is where a GeoJSON list carries its location').format(alias)
+                )
+            elif alias in served_names:
                 problems.append(
                     _(
                         'two served columns are called "{}" (name and label are '
@@ -512,7 +541,10 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
                 {
                     "list_id": code,
                     "list_filename": file_name,
-                    "list_format": "csv",
+                    "list_format": list_format,
+                    "geometry_column": (
+                        geometry_column if list_format == "geojson" else None
+                    ),
                     "source_project": project_id,
                     "source_form": form_id,
                     "source_table": table,

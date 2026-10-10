@@ -90,6 +90,11 @@ __all__ = [
     "build_workflow_model",
     "get_project_workflow",
     "PROPERTY_TYPES",
+    "GEOMETRY_ALIAS",
+    "GEOMETRY_KINDS",
+    "geometry_columns",
+    "write_list_geojson",
+    "geojson_list_select",
     "property_type_label",
     "validate_property_default",
     "default_clause",
@@ -272,6 +277,127 @@ def write_list_csv(headers, rows, file_name):
         writer.writerow(headers)
         for a_row in rows:
             writer.writerow(["" if a_value is None else a_value for a_value in a_row])
+
+
+# A GeoJSON list (feature 6, stage 5) carries its location in the list's
+# SELECT under this alias. caselistgen makes each feature's geometry from it
+# and does not repeat it as a property (rstools.md 6.4).
+GEOMETRY_ALIAS = "fs_location"
+# What caselistgen calls each kind of ODK location.
+GEOMETRY_KINDS = {"geopoint": "point", "geotrace": "trace", "geoshape": "shape"}
+# caselistgen's exit codes (rstools.md 6.4). Every one but 0 refuses the list,
+# and an unknown one too: a new code lands here with its message.
+_CASELISTGEN_ERRORS = {
+    1: "the arguments made no sense to caselistgen",
+    2: "the database could not be reached",
+    3: "the database refused the list's query",
+    4: "the query lacks name or the location column",
+    5: "the file could not be written",
+}
+
+
+def geometry_columns(columns):
+    """{column: kind} of the dictionary columns a GeoJSON list can be drawn
+    from -- the geopoints, geotraces and geoshapes of a table -- with kind
+    point, trace or shape."""
+    return {
+        a_column["field_name"]: GEOMETRY_KINDS[
+            (a_column.get("field_odktype") or "").lower()
+        ]
+        for a_column in columns
+        if (a_column.get("field_odktype") or "").lower() in GEOMETRY_KINDS
+    }
+
+
+def write_list_geojson(settings, sql, kind, file_name):
+    """Writes a GeoJSON list with RSTools' caselistgen, from the list's SELECT
+    with its location under GEOMETRY_ALIAS.
+
+    One Feature per row: the top-level id is the row's rowuuid, the label is
+    served again as title, the location -- ODK's text, ; or | between points
+    -- becomes a Point, a LineString or a closed Polygon, longitude first.
+    caselistgen writes the file whole or not at all. Returns (ok, message,
+    skipped): skipped counts the rows it left out, a case with no location or
+    with one that cannot be the geometry asked for, which never fail a list.
+    """
+    tool = os.path.join(
+        settings["odktools.path"], *["utilities", "CaseListGen", "caselistgen"]
+    )
+    args = [
+        tool,
+        "-H",
+        settings["mysql.host"],
+        "-P",
+        str(settings["mysql.port"]),
+        "-u",
+        settings["mysql.user"],
+        "-p",
+        settings["mysql.password"],
+        "-q",
+        sql,
+        "-f",
+        "geojson",
+        "-g",
+        GEOMETRY_ALIAS,
+        "-G",
+        kind,
+        "-o",
+        file_name,
+    ]
+    try:
+        process = Popen(args, stdout=PIPE, stderr=PIPE)
+    except OSError as e:
+        return False, "caselistgen could not be run: {}".format(e), 0
+    stdout, stderr = process.communicate()
+    skipped = 0
+    detail = ""
+    try:
+        report = etree.fromstring(stdout)
+        skipped = sum(int(a_count.text or 0) for a_count in report.findall("skipped"))
+        error = report.find("error")
+        if error is not None:
+            detail = (error.text or "").strip()
+    except Exception:
+        detail = (stderr or b"").decode("utf-8", "replace").strip()
+    if process.returncode == 0:
+        return True, "", skipped
+    reason = _CASELISTGEN_ERRORS.get(
+        process.returncode,
+        "caselistgen failed with exit code {}".format(process.returncode),
+    )
+    return False, reason + (": " + detail if detail else ""), 0
+
+
+def geojson_list_select(request, list_data, schema, columns, limit=None):
+    """The SELECT of a GeoJSON list with its location appended, and the kind
+    of that location: (sql, kind), or (None, message) when the location
+    column is not a geopoint, geotrace or geoshape of the source table."""
+    kinds = geometry_columns(
+        get_table_columns(
+            request,
+            list_data["source_project"],
+            list_data["source_form"],
+            list_data["source_table"],
+        )
+    )
+    kind = kinds.get(list_data.get("geometry_column") or "")
+    if kind is None:
+        return (
+            None,
+            "The location column {} is not a geopoint, geotrace or geoshape of {}".format(
+                list_data.get("geometry_column"), list_data["source_table"]
+            ),
+        )
+    sql, _ = build_list_select(
+        schema,
+        list_data["source_table"],
+        list_data["label_column"],
+        list(columns) + [(list_data["geometry_column"], GEOMETRY_ALIAS, "table")],
+        list_data.get("filter_sql"),
+        limit=limit,
+        active=list_data.get("list_active", 1),
+    )
+    return sql, kind
 
 
 # ---------------------------------------------------------------------------
@@ -526,25 +652,35 @@ def generate_published_list_file(request, list_data, out_path):
         )
     ]
     try:
-        sql, headers = build_list_select(
-            schema,
-            list_data["source_table"],
-            list_data["label_column"],
-            columns,
-            list_data.get("filter_sql"),
-            active=list_data.get("list_active", 1),
-            key_column=list_data.get("list_key_column"),
-        )
-        rows = request.dbsession.execute(sql).fetchall()
-        write_list_csv(headers, rows, out_path)
+        stamp = {
+            "list_seq": PublishedList.list_seq + 1,
+            "list_lastgen": datetime.datetime.now(),
+        }
+        if list_data.get("list_format") == "geojson":
+            sql, kind = geojson_list_select(request, list_data, schema, columns)
+            if sql is None:
+                return False, kind
+            written, message, skipped = write_list_geojson(
+                request.registry.settings, sql, kind, out_path
+            )
+            if not written:
+                return False, message
+            stamp["list_skipped"] = skipped
+        else:
+            sql, headers = build_list_select(
+                schema,
+                list_data["source_table"],
+                list_data["label_column"],
+                columns,
+                list_data.get("filter_sql"),
+                active=list_data.get("list_active", 1),
+                key_column=list_data.get("list_key_column"),
+            )
+            rows = request.dbsession.execute(sql).fetchall()
+            write_list_csv(headers, rows, out_path)
         request.dbsession.query(PublishedList).filter(
             PublishedList.project_id == list_data["project_id"]
-        ).filter(PublishedList.list_id == list_data["list_id"]).update(
-            {
-                "list_seq": PublishedList.list_seq + 1,
-                "list_lastgen": datetime.datetime.now(),
-            }
-        )
+        ).filter(PublishedList.list_id == list_data["list_id"]).update(stamp)
         request.dbsession.commit()
         return True, ""
     except Exception as e:
@@ -561,12 +697,18 @@ def generate_published_list_file(request, list_data, out_path):
 # ---------------------------------------------------------------------------
 
 
+# jxformtomysql's selecttype of a select from a file a list can be: a CSV (3)
+# or a GeoJSON (6). 4 is an XML file, which no list is.
+_FILE_SELECTS = ("3", "6")
+
+
 def detect_consumers(maintable_fields, published_lists):
     """Which registry lists a form consumes, from its maintable fields.
 
     A form consumes a list when one of its ``select_one_from_file`` fields
-    (``selecttype`` 3 in create.xml) names that list's file. The match is by
-    file name, which is the whole coupling between a form and a list.
+    names that list's file: ``selecttype`` 3 in create.xml for a CSV, 6 for
+    a GeoJSON. The match is by file name, which is the whole coupling between
+    a form and a list.
 
     :param maintable_fields: get_fields_from_table_in_file(create_file, "maintable")
     :param published_lists: get_project_published_lists(...)
@@ -575,7 +717,7 @@ def detect_consumers(maintable_fields, published_lists):
     by_filename = {a_list["list_filename"]: a_list for a_list in published_lists}
     consumers = []
     for a_field in maintable_fields:
-        if a_field.get("selecttype") != "3":
+        if a_field.get("selecttype") not in _FILE_SELECTS:
             continue
         a_list = by_filename.get(a_field.get("externalfilename", ""))
         if a_list is None:
@@ -2249,6 +2391,8 @@ def lists_xml(definitions):
     the _active it serves, and the SELECT that generates it with the tables
     spelled symbolically. No column map: a device never reads a CSV back
     (README decision 14). A form in neither role serves an empty document.
+    A GeoJSON list adds format="geojson", the SELECT column that holds the
+    location (location) and its kind (geometry: point, trace or shape).
     """
     root = etree.Element("XMLLists", version="1.0")
     for d in definitions:
@@ -2267,6 +2411,12 @@ def lists_xml(definitions):
         )
         if d.get("key_column"):
             a_list.set("key", d["key_column"])
+        if d.get("format") == "geojson":
+            # Served as GeoJSON (feature 6): the SELECT's GEOMETRY_ALIAS column
+            # holds each case's location, a point, a trace or a shape.
+            a_list.set("format", "geojson")
+            a_list.set("location", GEOMETRY_ALIAS)
+            a_list.set("geometry", d["geometry"])
         if d.get("selector"):
             a_list.set("selector", d["selector"])
             a_list.set("link", "true" if d.get("link") else "false")

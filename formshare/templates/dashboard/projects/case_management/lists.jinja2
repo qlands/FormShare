@@ -52,7 +52,7 @@
                             <tbody>
                             {% for a_list in lists %}
                                 <tr>
-                                    <td><code>{{ a_list.list_filename }}</code></td>
+                                    <td><code>{{ a_list.list_filename }}</code>{% if a_list.list_format == 'geojson' %}<br><small>{{ _('GeoJSON, drawn from') }} {{ a_list.geometry_column }}{% if a_list.list_skipped %}; <span class="text-warning">{{ a_list.list_skipped }} {{ _('without a location') }}</span>{% endif %}</small>{% endif %}</td>
                                     <td>{{ a_list.source_form }}</td>
                                     <td>{{ a_list.source_table }}</td>
                                     <td>{{ a_list.label_column }}</td>
@@ -62,7 +62,7 @@
                                     <td>{% if a_list.list_lastgen %}{{ a_list.list_lastgen }}{% else %}{{ _('Never') }}{% endif %}</td>
                                     <td>
                                         <a class="btn btn-xs btn-white" href="{{ request.route_url('project_case_list_edit', userid=userid, projcode=projcode, listid=a_list.list_id) }}">{{ _('Edit') }}</a>
-                                        <a class="btn btn-xs btn-white" href="{{ request.route_url('project_case_list_sample', userid=userid, projcode=projcode, listid=a_list.list_id) }}"><i class="fas fa-download"></i> {{ _('Sample CSV') }}</a>
+                                        <a class="btn btn-xs btn-white" href="{{ request.route_url('project_case_list_sample', userid=userid, projcode=projcode, listid=a_list.list_id) }}"><i class="fas fa-download"></i> {% if a_list.list_format == 'geojson' %}{{ _('Sample GeoJSON') }}{% else %}{{ _('Sample CSV') }}{% endif %}</a>
                                         <div class="btn-group">
                                             <button type="button" class="btn btn-xs btn-white dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-file-export"></i> {{ _('Export') }}</button>
                                             <div class="dropdown-menu">

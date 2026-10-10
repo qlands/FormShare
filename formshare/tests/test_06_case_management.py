@@ -238,6 +238,28 @@ def test_an_ordinary_select_one_is_not_a_consumer():
     assert cm.detect_consumers(fields, LISTS) == []
 
 
+def test_a_select_from_a_geojson_list_is_a_consumer():
+    """jxformtomysql marks a select from a GeoJSON file 6, not 3; a follow-up
+    that picks its case on a map consumes the list all the same. An XML file
+    (4) is never a list."""
+    plots = {
+        "list_id": "plots",
+        "list_filename": "plots.geojson",
+        "source_table": "maintable",
+    }
+    fields = [
+        {"name": "farm", "selecttype": "6", "externalfilename": "plots.geojson"},
+        {"name": "region", "selecttype": "4", "externalfilename": "plots.geojson"},
+    ]
+    assert cm.detect_consumers(fields, LISTS + [plots]) == [
+        {
+            "list_id": "plots",
+            "list_filename": "plots.geojson",
+            "selector_field": "farm",
+        }
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Consumer persistence and the case-link choice, against a real (SQLite) DB
 # ---------------------------------------------------------------------------
@@ -1468,3 +1490,381 @@ def test_lists_xml_carries_each_list_and_its_select():
     # fed by this form: no selector, the default role
     assert (districts.get("role"), districts.get("selector")) == ("feeds", None)
     assert len(etree.fromstring(cm.lists_xml([]))) == 0
+
+
+# ---------------------------------------------------------------------------
+# A GeoJSON list (feature 6): each case a feature on a map, written by
+# RSTools' caselistgen from the location the list names
+# ---------------------------------------------------------------------------
+
+import json  # noqa: E402
+import os  # noqa: E402
+import stat  # noqa: E402
+
+_GEO_COLUMNS = [
+    {"field_name": "home", "field_odktype": "geopoint"},
+    {"field_name": "route", "field_odktype": "geotrace"},
+    {"field_name": "plot", "field_odktype": "geoshape"},
+    # What RSTools derives from a trace or a shape: generated, bytes when
+    # read, and of no ODK type, so never offered as a location.
+    {"field_name": "plot_geom", "field_odktype": ""},
+    {"field_name": "farmer", "field_odktype": "text"},
+    {"field_name": "notes", "field_odktype": None},
+]
+
+
+def _geo_list():
+    return {
+        "source_project": "p",
+        "source_form": "tool1",
+        "source_table": "maintable",
+        "label_column": "farmer",
+        "geometry_column": "plot",
+        "filter_sql": None,
+        "list_active": 1,
+    }
+
+
+def test_a_geojson_list_is_drawn_from_a_geopoint_a_geotrace_or_a_geoshape():
+    assert cm.geometry_columns(_GEO_COLUMNS) == {
+        "home": "point",
+        "route": "trace",
+        "plot": "shape",
+    }
+    assert cm.geometry_columns([]) == {}
+
+
+def test_the_select_of_a_geojson_list_carries_its_location_last(monkeypatch):
+    monkeypatch.setattr(cm, "get_table_columns", lambda *args: _GEO_COLUMNS)
+    sql, kind = cm.geojson_list_select(
+        None, _geo_list(), "FS_s", [("farmer", "owner", "table")], limit=10
+    )
+    assert kind == "shape"
+    assert sql == (
+        "SELECT rowuuid AS name,`farmer` AS label,`farmer` AS `owner`,"
+        "`plot` AS `fs_location` FROM `FS_s`.`maintable` WHERE _active = 1 "
+        "ORDER BY rowuuid LIMIT 10"
+    )
+    # Only a location of the source table, and never the generated geometry.
+    for column in ("plot_geom", "farmer", "", None):
+        a_list = dict(_geo_list(), geometry_column=column)
+        sql, message = cm.geojson_list_select(None, a_list, "FS_s", [])
+        assert sql is None
+        assert message.startswith("The location column")
+
+
+def _fake_caselistgen(tmp_path, code, report, stderr=""):
+    """A caselistgen that records its arguments one per line, prints the
+    report it is given and ends with the code it is given."""
+    folder = tmp_path / "tools" / "utilities" / "CaseListGen"
+    folder.mkdir(parents=True)
+    tool = folder / "caselistgen"
+    tool.write_text(
+        "#!/bin/sh\n"
+        'for an_argument in "$@"; do printf "%s\\n" "$an_argument"; done'
+        ' > "{}"\n'
+        "cat <<'REPORT'\n{}\nREPORT\n"
+        "printf '%s' '{}' >&2\n"
+        "exit {}\n".format(tmp_path / "args.txt", report, stderr, code)
+    )
+    tool.chmod(tool.stat().st_mode | stat.S_IEXEC)
+    return {
+        "odktools.path": str(tmp_path / "tools"),
+        "mysql.host": "mysqlserver",
+        "mysql.port": 3306,
+        "mysql.user": "fs",
+        "mysql.password": "secret",
+    }
+
+
+def test_caselistgen_writes_the_list_and_counts_the_cases_it_left_out(tmp_path):
+    report = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        "<caselistgen><format>geojson</format><rows>3</rows>"
+        '<skipped reason="emptygeometry">2</skipped>'
+        '<skipped reason="invalidgeometry">1</skipped>'
+        "<milliseconds>4</milliseconds></caselistgen>"
+    )
+    settings = _fake_caselistgen(tmp_path, 0, report)
+    out = str(tmp_path / "plots.geojson")
+    sql = "SELECT rowuuid AS name FROM `FS_s`.`maintable`"
+    assert cm.write_list_geojson(settings, sql, "shape", out) == (True, "", 3)
+    arguments = (tmp_path / "args.txt").read_text().splitlines()
+    assert dict(zip(arguments[::2], arguments[1::2])) == {
+        "-H": "mysqlserver",
+        "-P": "3306",
+        "-u": "fs",
+        "-p": "secret",
+        "-q": sql,
+        "-f": "geojson",
+        "-g": "fs_location",
+        "-G": "shape",
+        "-o": out,
+    }
+
+
+def test_a_refused_list_says_why_in_caselistgens_words(tmp_path):
+    report = (
+        "<caselistgen><format>geojson</format><rows>0</rows>"
+        '<milliseconds>1</milliseconds><error code="3">the query was '
+        "refused: Error 1146: Table 'FS_s.maintable' doesn't exist</error>"
+        "</caselistgen>"
+    )
+    settings = _fake_caselistgen(tmp_path, 3, report)
+    ok, message, skipped = cm.write_list_geojson(
+        settings, "SELECT 1", "point", str(tmp_path / "a.geojson")
+    )
+    assert (ok, skipped) == (False, 0)
+    assert message == (
+        "the database refused the list's query: the query was refused: "
+        "Error 1146: Table 'FS_s.maintable' doesn't exist"
+    )
+
+
+def test_a_code_formshare_has_not_heard_of_refuses_the_list(tmp_path):
+    # Fails closed, as the merge check does: no report, so stderr is the why.
+    settings = _fake_caselistgen(tmp_path, 7, "", stderr="something new")
+    ok, message, _ = cm.write_list_geojson(
+        settings, "SELECT 1", "trace", str(tmp_path / "a.geojson")
+    )
+    assert not ok
+    assert message == "caselistgen failed with exit code 7: something new"
+
+
+def test_a_missing_caselistgen_refuses_the_list(tmp_path):
+    settings = {
+        "odktools.path": str(tmp_path),
+        "mysql.host": "localhost",
+        "mysql.port": "3306",
+        "mysql.user": "fs",
+        "mysql.password": "secret",
+    }
+    ok, message, _ = cm.write_list_geojson(
+        settings, "SELECT 1", "point", str(tmp_path / "a.geojson")
+    )
+    assert not ok and message.startswith("caselistgen could not be run")
+
+
+def _odktools_path():
+    """Where the suite's configuration says RSTools is: ODKTOOLS_PATH, as CI
+    sets it, or the generated test_config.json."""
+    if os.environ.get("ODKTOOLS_PATH"):
+        return os.environ["ODKTOOLS_PATH"]
+    config = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "test_config.json"
+    )
+    if not os.path.exists(config):
+        return ""
+    with open(config) as config_file:
+        return json.load(config_file).get("odktools.path", "")
+
+
+def test_the_installed_caselistgen_understands_what_it_is_asked(tmp_path):
+    """The arguments are a contract with RSTools. With nothing listening
+    where the server should be, a caselistgen that read them all gets as far
+    as connecting (2); one that did not would stop at 1."""
+    tools = _odktools_path()
+    if not os.path.exists(
+        os.path.join(tools, "utilities", "CaseListGen", "caselistgen")
+    ):
+        pytest.skip("caselistgen is not installed")
+    settings = {
+        "odktools.path": tools,
+        "mysql.host": "127.0.0.1",
+        "mysql.port": "1",
+        "mysql.user": "fs",
+        "mysql.password": "secret",
+    }
+    ok, message, _ = cm.write_list_geojson(
+        settings,
+        "SELECT rowuuid AS name, 'a' AS label, '' AS fs_location",
+        "shape",
+        str(tmp_path / "a.geojson"),
+    )
+    assert not ok
+    assert message.startswith("the database could not be reached"), message
+
+
+def test_lists_xml_says_a_geojson_list_and_where_its_location_is():
+    common = {
+        "repository": "FS_a",
+        "source_form": "tool1",
+        "source_table": "maintable",
+        "label_column": "farmer",
+        "key_column": None,
+        "active": 1,
+        "role": "reads",
+        "selector": "plot_id",
+        "link": True,
+    }
+    xml = cm.lists_xml(
+        [
+            dict(
+                common,
+                list_id="plots",
+                filename="plots.geojson",
+                select="SELECT rowuuid AS name,`plot` AS `fs_location` "
+                "FROM {source.maintable}",
+                format="geojson",
+                geometry="shape",
+            ),
+            dict(
+                common,
+                list_id="farmers",
+                filename="farmers.csv",
+                select="SELECT rowuuid AS name FROM {source.maintable}",
+                format="csv",
+                geometry=None,
+            ),
+        ]
+    )
+    plots, farmers = etree.fromstring(xml).findall("list")
+    assert (plots.get("format"), plots.get("location"), plots.get("geometry")) == (
+        "geojson",
+        "fs_location",
+        "shape",
+    )
+    # A row list keyed by rowuuid, linkable like any other.
+    assert (plots.get("kind"), plots.get("link")) == ("row", "true")
+    # A CSV list reads as it always has.
+    assert [farmers.get(name) for name in ("format", "location", "geometry")] == [
+        None,
+        None,
+        None,
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Building a form that selects from a GeoJSON list: its copy is emptied, as a
+# CSV list's is cut to its header, so the select stays external
+# ---------------------------------------------------------------------------
+
+import subprocess  # noqa: E402
+
+from formshare.processes.odk.api import (  # noqa: E402
+    EMPTY_FEATURE_COLLECTION,
+    geojson_without_features,
+)
+
+# jxformtomysql's report for exit 28, as it writes it (-o m).
+_EXIT_28 = """<!DOCTYPE XMLResult>
+<XMLResult>
+ <XMLLanguageNotFound>
+  <languages/>
+ </XMLLanguageNotFound>
+ <XMLFileError>
+  {}
+ </XMLFileError>
+</XMLResult>
+"""
+
+
+def _exit_28(*names):
+    return _EXIT_28.format(
+        "".join('<file name="{}"/>'.format(a_name) for a_name in names)
+    )
+
+
+def test_a_published_list_without_features_is_the_servers_rstools():
+    message = geojson_without_features(
+        _exit_28("plots.geojson"), {"plots.geojson"}, lambda text: text
+    )
+    assert message == (
+        "The form selects from the published GeoJSON list plots.geojson. The "
+        "RSTools installed on this server cannot build such a form yet: ask the "
+        "administrator of the server to update it."
+    )
+
+
+def test_an_attached_geojson_without_features_is_the_forms():
+    assert geojson_without_features(
+        _exit_28("parcels.geojson"), {"plots.geojson"}, lambda text: text
+    ) == ("The following GeoJSON file does not have features: \n\tparcels.geojson\n")
+    both = geojson_without_features(
+        _exit_28("parcels.geojson", "plots.geojson"),
+        {"plots.geojson"},
+        lambda text: text,
+    )
+    assert both.startswith(
+        "The following GeoJSON file does not have features: \n\tparcels.geojson\n"
+        "The form selects from the published GeoJSON list plots.geojson."
+    )
+    # A report that does not read still says what 28 means.
+    assert geojson_without_features("", set(), lambda text: text).startswith(
+        "The following GeoJSON file does not have features"
+    )
+
+
+def test_the_installed_jxformtomysql_keeps_a_select_from_an_empty_list_external(
+    tmp_path,
+):
+    """What rstools.md 26 asked and 27 did (2026-10-07): a FeatureCollection
+    without features is read as a CSV with only its header is -- the select
+    stays external, with no lookup table, and the case link can point it at
+    the list's source."""
+    tool = os.path.join(_odktools_path(), "JXFormToMysql", "jxformtomysql")
+    if not os.path.exists(tool):
+        pytest.skip("jxformtomysql is not installed")
+    survey = {
+        "type": "survey",
+        "name": "data",
+        "title": "Visits",
+        "id_string": "visits",
+        "sms_keyword": "visits",
+        "default_language": "default",
+        "version": "1",
+        "children": [
+            {"type": "text", "name": "visit_id", "label": "Visit"},
+            {
+                "type": "select one",
+                "name": "farm",
+                "label": "Farm",
+                "itemset": "plots.geojson",
+                "parameters": {},
+            },
+            {
+                "name": "meta",
+                "type": "group",
+                "control": {"bodyless": True},
+                "children": [
+                    {
+                        "name": "instanceID",
+                        "bind": {"readonly": "true()", "jr:preload": "uid"},
+                        "type": "calculate",
+                    }
+                ],
+            },
+        ],
+    }
+    (tmp_path / "visits.srv").write_text(json.dumps(survey))
+    (tmp_path / "plots.geojson").write_text(EMPTY_FEATURE_COLLECTION)
+    (tmp_path / "tmp").mkdir()
+    run = subprocess.run(
+        [
+            tool,
+            "-j",
+            str(tmp_path / "visits.srv"),
+            "-t",
+            "maintable",
+            "-v",
+            "visit_id",
+            "-e",
+            str(tmp_path / "tmp"),
+            "-o",
+            "m",
+            str(tmp_path / "plots.geojson"),
+        ],
+        cwd=str(tmp_path),
+        capture_output=True,
+    )
+    if run.returncode == 28:
+        pytest.skip("this jxformtomysql predates rstools.md 27")
+    assert run.returncode == 0, run.stdout
+    create = etree.parse(str(tmp_path / "create.xml"))
+    farm = create.find(".//table[@name='maintable']/field[@name='farm']")
+    assert (farm.get("selecttype"), farm.get("externalfilename")) == (
+        "6",
+        "plots.geojson",
+    )
+    assert farm.get("rtable") in (None, "")
+    assert create.find(".//table[@name='lkpfarm']") is None

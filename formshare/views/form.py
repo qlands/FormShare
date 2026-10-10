@@ -22,6 +22,7 @@ from formshare.processes.db import (
     delete_form,
     add_file_to_form,
     get_form_files,
+    get_project_published_lists,
     remove_file_from_form,
     form_file_exists,
     get_all_assistants,
@@ -109,6 +110,7 @@ from formshare.processes.odk.api import (
     output_file_error_heading,
     output_file_error_report,
     describe_output_file_errors,
+    geojson_without_features,
 )
 from formshare.processes.odk.processes import get_form_primary_key, get_form_case_params
 from formshare.processes.storage import (
@@ -621,14 +623,22 @@ class FormDetails(PrivateView):
                     for a_file in files_with_problems:
                         txt_message = txt_message + "\t" + a_file.get("name", "") + "\n"
                 errors.append(txt_message)
-            if created == 28:
-                txt_message = "The following GeoJSON file does not have features: \n"
-                root = etree.fromstring(message)
-                files_with_problems = root.findall(".//file")
-                if files_with_problems:
-                    for a_file in files_with_problems:
-                        txt_message = txt_message + "\t" + a_file.get("name", "") + "\n"
-                errors.append(txt_message)
+            if created == 28:  # pragma: no cover
+                # The copy of a published GeoJSON list is emptied for the
+                # build, which an RSTools before rstools.md 27 (2026-10-07)
+                # refuses; nothing ends with 28 since.
+                errors.append(
+                    geojson_without_features(
+                        message,
+                        {
+                            a_list["list_filename"]
+                            for a_list in get_project_published_lists(
+                                self.request, project_id
+                            )
+                        },
+                        self._,
+                    )
+                )
             if created == 29:
                 txt_message = "The following GeoJSON file does not have properties: \n"
                 root = etree.fromstring(message)

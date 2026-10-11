@@ -1457,29 +1457,28 @@ def update_multiselect_data(
             index = index + 1
 
     engine = create_engine(sql_url, poolclass=NullPool)
+    session = Session(bind=engine)
     try:
-        session = Session(bind=engine)
         session.execute("SET @odktools_current_user = '" + user + "'")
-        # print(parent_sql)
-        # print(delete_sql)
-        # for an_insert in insert_array:
-        #    print(an_insert)
         session.execute(parent_sql)
         session.execute(delete_sql)
         for an_insert in insert_array:
             session.execute(an_insert)
 
         session.commit()
-        engine.dispose()
         return True
     except exc.IntegrityError as e:
-        engine.dispose()
         log.error(
             "Error while updating multiselect table {} schema {} parent table {} rowuuid {}. Error {}".format(
                 multiselect_table, schema, parent_table, row_uuid, str(e)
             )
         )
         return False
+    finally:
+        # Closing rolls back what a failed statement left open, and with it
+        # the lock MySQL holds on the table until then (see update_data).
+        session.close()
+        engine.dispose()
 
 
 def update_data(request, user, project, form, table_name, row_uuid, field, value):
@@ -1502,16 +1501,14 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
 
     log.info(sql)
     engine = create_engine(sql_url, poolclass=NullPool)
+    session = Session(bind=engine)
     try:
-        session = Session(bind=engine)
         session.execute("SET @odktools_current_user = '" + user + "'")
         session.execute(sql)
         session.commit()
-        engine.dispose()
         res = {"data": {field: value}}
         return res
     except exc.IntegrityError as e:
-        engine.dispose()
         p1 = re.compile(r"`(\w+)`")
         m1 = p1.findall(str(e))
         if m1:
@@ -1543,6 +1540,13 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
     except Exception as ex:
         log.error(str(ex))
         return {"fieldErrors": [{"name": field, "status": "Unknown error"}]}
+    finally:
+        # A refused UPDATE leaves its transaction open, and with it the
+        # metadata lock MySQL took on the table: an ALTER, a DROP TRIGGER or
+        # a merge of that table then waits until the connection happens to be
+        # collected. Closing the session rolls it back.
+        session.close()
+        engine.dispose()
 
 
 def delete_submission(
@@ -1937,16 +1941,20 @@ def update_record_with_id(request, user, schema, table, rowuuid, data):
         sql = sql + " WHERE rowuuid = '" + rowuuid + "'"
         sql_url = request.registry.settings.get("sqlalchemy.url")
         engine = create_engine(sql_url, poolclass=NullPool)
+        session = Session(bind=engine)
         try:
-            session = Session(bind=engine)
             session.execute("SET @odktools_current_user = '" + user + "'")
             session.execute(sql)
             session.commit()
-            engine.dispose()
             return True, ""
         except Exception as e:
-            engine.dispose()
             return False, str(e)
+        finally:
+            # Closing rolls back what a failed statement left open, and with
+            # it the lock MySQL holds on the table until then (see
+            # update_data).
+            session.close()
+            engine.dispose()
     else:
         return (
             False,

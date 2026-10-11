@@ -109,6 +109,9 @@ __all__ = [
     "get_table_properties",
     "get_form_properties",
     "properties_xml",
+    "export_properties_xml",
+    "exporter_takes_properties",
+    "properties_argument",
     "lists_xml",
     "property_is_served",
     "add_table_property",
@@ -2368,6 +2371,132 @@ def properties_xml(properties_by_table):
     return etree.tostring(
         root, pretty_print=True, xml_declaration=True, encoding="UTF-8"
     )
+
+
+def export_properties_xml(settings, schema, create_xml_file):
+    """The properties.xml an export of a repository passes to RSTools' Go
+    exporters (``-y``, rstools.md 32), so that each table's properties go out
+    as more columns beside its rows; None when there is nothing to export.
+
+    Called from the export plugins' Celery tasks, where there is no request:
+    it reads the database through settings. A repository is shared by every
+    version of its form, and so are its property tables, while a property's
+    definition belongs to a version (a merge copies them, inherit_properties),
+    so the definitions of every version on the schema are read, each once.
+    Only what the exporters can take is kept: a property whose column the
+    repository has, of a table the exported version's create.xml has --
+    RSTools refuses a property table for a table create.xml lacks, rather
+    than export without it.
+    """
+    from sqlalchemy import create_engine, text
+    from sqlalchemy.pool import NullPool
+
+    try:
+        tables = {
+            element.get("name")
+            for element in etree.parse(create_xml_file).iter("table")
+            if element.get("name")
+        }
+    except (OSError, etree.XMLSyntaxError):
+        return None
+    engine = create_engine(settings["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        with engine.connect() as connection:
+            forms = connection.execute(
+                text("SELECT project_id, form_id FROM odkform WHERE form_schema = :s"),
+                {"s": schema},
+            ).fetchall()
+            if not forms:
+                return None
+            definitions = []
+            for project_id, form_id in forms:
+                definitions.extend(
+                    connection.execute(
+                        text(
+                            "SELECT table_name, property_name, property_type, "
+                            "property_default, property_desc, property_cdate "
+                            "FROM tableproperty WHERE project_id = :p "
+                            "AND form_id = :f"
+                        ),
+                        {"p": project_id, "f": form_id},
+                    ).fetchall()
+                )
+            columns = {
+                (row[0], row[1])
+                for row in connection.execute(
+                    text(
+                        "SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.COLUMNS "
+                        "WHERE TABLE_SCHEMA = :s AND TABLE_NAME LIKE :p"
+                    ),
+                    {"s": schema, "p": "%\\_properties"},
+                ).fetchall()
+            }
+    finally:
+        engine.dispose()
+    by_table = {}
+    seen = set()
+    for table, name, ptype, default, desc, cdate in sorted(
+        definitions, key=lambda d: (d[0], d[5] or datetime.datetime.min)
+    ):
+        if (table, name) in seen or table not in tables:
+            continue
+        if (properties_table(table), name) not in columns:
+            continue
+        seen.add((table, name))
+        by_table.setdefault(table, []).append(
+            {
+                "property_name": name,
+                "property_type": ptype,
+                "property_default": default,
+                "property_desc": desc,
+            }
+        )
+    if not by_table:
+        return None
+    return properties_xml(by_table)
+
+
+_TAKES_PROPERTIES = {}
+
+
+def exporter_takes_properties(tool):
+    """Whether one of RSTools' Go exporters knows -y (rstools.md 32). One
+    from before it refuses the whole export for a flag it does not know, so
+    it is asked, once per binary, by its usage."""
+    if tool not in _TAKES_PROPERTIES:
+        try:
+            process = Popen([tool, "-h"], stdout=PIPE, stderr=PIPE)
+            out, err = process.communicate(timeout=60)
+            _TAKES_PROPERTIES[tool] = b"\n  -y" in out + err
+        except Exception:
+            _TAKES_PROPERTIES[tool] = False
+    return _TAKES_PROPERTIES[tool]
+
+
+def properties_argument(settings, schema, create_xml_file, tool, work_dir):
+    """What an export plugin adds to the arguments of a Go exporter so that
+    each table's properties go out beside its rows: (arguments, file).
+
+    The arguments are ["-y=<file>"], with the form's properties.xml written
+    to a file in work_dir that the caller removes when the export is done.
+    They are empty, and the file None, when the form has no properties or the
+    installed exporter predates -y: the export then runs exactly as it did
+    before properties were exported.
+    """
+    xml = export_properties_xml(settings, schema, create_xml_file)
+    if xml is None:
+        return [], None
+    if not exporter_takes_properties(tool):
+        log.warning(
+            "{} does not take -y (rstools.md 32): the properties of {} are not "
+            "exported".format(tool, schema)
+        )
+        return [], None
+    os.makedirs(work_dir, exist_ok=True)
+    handle, path = tempfile.mkstemp(prefix="properties_", suffix=".xml", dir=work_dir)
+    with os.fdopen(handle, "wb") as a_file:
+        a_file.write(xml)
+    return ["-y=" + path], path
 
 
 # ---------------------------------------------------------------------------

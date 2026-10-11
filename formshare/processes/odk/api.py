@@ -5589,6 +5589,14 @@ def store_json_submission(request, user, project, assistant_uuid):
         return False, 500, ""
 
 
+# How a submission's XML is tidied before anything reads it. tidy breaks
+# a line at column 68 unless told not to, and the break went into the
+# answer: a long text answer reached the repository with a line break
+# where the person typed a space ("they now walk\ntwo hours"). It still
+# folds a run of spaces into one.
+TIDY_XML = ["tidy", "-xml", "-wrap", "0"]
+
+
 def store_submission(request, user, project, assistant_uuid):
     odk_dir = get_odk_path(request)
     unique_id = uuid4()
@@ -5641,7 +5649,7 @@ def store_submission(request, user, project, assistant_uuid):
                 # Now that we know the file has been fully saved to disk move it into place.
                 if temp_file_path.find(".xml") >= 0:
                     final = open(file_path, "w")
-                    args = ["tidy", "-xml", temp_file_path]
+                    args = TIDY_XML + [temp_file_path]
                     p = Popen(args, stdout=final, stderr=PIPE)
                     stdout, stderr = p.communicate()
                     final.close()

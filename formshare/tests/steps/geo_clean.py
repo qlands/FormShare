@@ -12,7 +12,10 @@ checks what makes them work:
 - a search on the geometry searches its WKT, and sorting by it works;
 - the cleaning interface offers the geometry read-only, since MySQL refuses
   any write to it (3105), while the answer it is derived from stays
-  editable, and an edit of the answer moves the geometry with it.
+  editable, and an edit of the answer moves the geometry with it;
+- a repository built before rstools.md 29, whose UPDATE trigger audits the
+  geometry and refuses every edit of its answer (1366), is mended by
+  regenerate_audit_triggers -- or, with a tool from before, left as it is.
 """
 
 import json
@@ -25,6 +28,8 @@ import openpyxl
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
+from formshare.processes.audit_triggers import without_definer
+from formshare.scripts.regenerateaudittriggers import main as regenerate_audit_triggers
 from .sql import get_form_details
 
 FORM = "geo_clean"
@@ -77,6 +82,49 @@ def _query(config, sql):
     engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
     try:
         return engine.execute(sql).fetchall()
+    finally:
+        engine.dispose()
+
+
+def _maintable_triggers(config, schema):
+    return sorted(
+        row[0]
+        for row in _query(
+            config,
+            "SELECT TRIGGER_NAME FROM information_schema.TRIGGERS WHERE "
+            "TRIGGER_SCHEMA = '{}' AND EVENT_OBJECT_TABLE = 'maintable'".format(schema),
+        )
+    )
+
+
+def _audit_geometry_as_before(config, schema):
+    """Puts back in maintable's UPDATE audit trigger the block that a
+    createaudittriggers from before rstools.md 29 wrote for route_geom: what
+    every repository it built still has."""
+    name = _query(
+        config,
+        "SELECT TRIGGER_NAME FROM information_schema.TRIGGERS WHERE "
+        "TRIGGER_SCHEMA = '{}' AND EVENT_OBJECT_TABLE = 'maintable' "
+        "AND TRIGGER_NAME LIKE 'audit\\_%\\_update' "
+        "AND TRIGGER_NAME NOT LIKE '%before\\_update'".format(schema),
+    )[0][0]
+    statement = _query(config, "SHOW CREATE TRIGGER `{}`.`{}`".format(schema, name))[0][
+        2
+    ]
+    start = statement.index("IF IFnull(OLD.`route`,")
+    end = statement.index("END IF;", start) + len("END IF;")
+    block = statement[start:end]
+    geometry = block.replace("`route`", "`route_geom`").replace(
+        "'route'", "'route_geom'"
+    )
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        with engine.connect() as connection:
+            connection.exec_driver_sql("DROP TRIGGER `{}`.`{}`".format(schema, name))
+            connection.exec_driver_sql("USE `{}`".format(schema))
+            connection.exec_driver_sql(
+                without_definer(statement.replace(block, block + " " + geometry))
+            )
     finally:
         engine.dispose()
 
@@ -269,6 +317,71 @@ def t_e_s_t_geo_clean(test_object):
         assert moved == "LINESTRING(0.1 0.2,0.3 0.4)", moved
     else:
         assert moved == "LINESTRING(0.5 0.6,0.7 0.8)", moved
+
+    # --- A repository built before rstools.md 29 -------------------------------
+    def edit(route):
+        res = testapp.post(
+            "/user/{}/project/{}/assistantaccess/form/{}/maintable/action".format(
+                login, project, FORM
+            ),
+            {"route": route, "oper": "edit", "id": main},
+            status=200,
+        )
+        assert "FS_error" not in res.headers
+        return _query(
+            config,
+            "SELECT ST_AsText(route_geom) FROM `{}`.maintable WHERE rowuuid = '{}'".format(
+                schema, main
+            ),
+        )[0][0]
+
+    mend = [
+        "--project",
+        test_object.projectID,
+        "--form",
+        FORM,
+        config["global:config:file"],
+    ]
+    if audits_geometry:
+        # The installed tool would write the same triggers: the script says
+        # so and changes nothing.
+        before = _maintable_triggers(config, schema)
+        assert regenerate_audit_triggers(mend) == 1
+        assert _maintable_triggers(config, schema) == before
+    else:
+        # The trigger as the old tool wrote it refuses the edit, as it does in
+        # every repository built with it.
+        _audit_geometry_as_before(config, schema)
+        assert edit("0.9 1.0 0 0;1.1 1.2 0 0") == "LINESTRING(0.5 0.6,0.7 0.8)"
+        before = _maintable_triggers(config, schema)
+        assert regenerate_audit_triggers(mend) == 0
+        after = _maintable_triggers(config, schema)
+        # The tool's audit and _lastupdate triggers are written again, under a
+        # new name; FormShare's and the schema's own are kept.
+        rewritten = [n for n in before if n.startswith(("audit_", "TLU_"))]
+        assert rewritten and not set(rewritten) & set(after), (before, after)
+        assert [n for n in before if n not in rewritten] == [
+            n for n in after if not n.startswith(("audit_", "TLU_"))
+        ]
+        assert not _query(
+            config,
+            "SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE "
+            "TRIGGER_SCHEMA = '{}' AND ACTION_STATEMENT LIKE '%route_geom%'".format(
+                schema
+            ),
+        )[0][0]
+        # The edit goes through, the geometry follows, and the log has the
+        # answer without its geometry.
+        assert edit("0.9 1.0 0 0;1.1 1.2 0 0") == "LINESTRING(0.9 1,1.1 1.2)"
+        logged = {
+            row[0]
+            for row in _query(
+                config,
+                "SELECT audit_column FROM `{}`.audit_log WHERE audit_action = "
+                "'UPDATE' AND audit_key = '{}'".format(schema, main),
+            )
+        }
+        assert "route" in logged and "route_geom" not in logged, logged
 
     res = testapp.post(
         "/user/{}/project/{}/assistantaccess/logout".format(login, project),

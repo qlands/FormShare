@@ -176,6 +176,7 @@ setup(
             "export_elasticsearch = formshare.scripts.exportelasticsearch:main",
             "import_elasticsearch = formshare.scripts.importelasticsearch:main",
             "index_geometries = formshare.scripts.indexgeometries:main",
+            "regenerate_audit_triggers = formshare.scripts.regenerateaudittriggers:main",
         ],
     },
 )

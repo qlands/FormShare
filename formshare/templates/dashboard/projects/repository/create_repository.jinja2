@@ -131,6 +131,12 @@
                                     {% if key_needed %}
                                         <h2>{{ _('Encryption is not set up for this project.') }}</h2>
                                         <span style="color: red">{{ key_needed }}</span>
+                                        {# Where a plugin offers to set the key up (the
+                                           Encryption plugin links its setup page,
+                                           docs/formshare_field_encryption/plugin.md 4.5):
+                                           userid, projcode, formid and projectDetails
+                                           are in the context. #}
+                                        {% block key_needed_extra %}{% endblock key_needed_extra %}
                                     {% endif %}
                                     {% if result_code == 38 %}
                                         <h2>{{ _('FormShare could not write the files of the repository.') }}</h2>

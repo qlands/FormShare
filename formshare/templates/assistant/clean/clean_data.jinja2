@@ -311,6 +311,11 @@
                         odata: [{ oper:'like', text:"{{ _('like') }}"}, { oper:'notlike', text:"{{ _('not like') }}"}],
                     });
 
+                {# The grid exists here: a plugin binds its events (the
+                   Encryption plugin opens and seals the encrypted columns,
+                   docs/formshare_field_encryption/plugin.md 5.1). #}
+                {% block clean_grid_extra %}{% endblock clean_grid_extra %}
+
                 $('#update_multiselect').submit(function(e) {
                     e.preventDefault();
                     $('#multiselect option').prop('selected', true);

@@ -60,7 +60,8 @@ class AuthPolicy:
         timeout:     Cookie max-age in seconds.  None means session cookie.
         group:       The group name embedded in the cookie payload
                      (e.g. "mainApp", "assistant", "partner").
-        secure:      Set the Secure flag on the cookie.
+        secure:      Set the Secure flag on the cookie: True, False, or "auto"
+                     for when the request came over HTTPS (request_is_https).
         http_only:   Set the HttpOnly flag on the cookie (default True).
         same_site:   SameSite cookie attribute (default "Lax").
     """
@@ -71,7 +72,7 @@ class AuthPolicy:
         secret: str,
         timeout: Optional[int] = None,
         group: str = "mainApp",
-        secure: bool = False,
+        secure=False,
         http_only: bool = True,
         same_site: str = "Lax",
     ):
@@ -135,12 +136,21 @@ class AuthPolicy:
             parts.append(f"Max-Age={self.timeout}")
         if self.http_only:
             parts.append("HttpOnly")
-        if self.secure:
+        if self.is_secure(request):
             parts.append("Secure")
         if self.same_site:
             parts.append(f"SameSite={self.same_site}")
 
         return [("Set-Cookie", "; ".join(parts))]
+
+    def is_secure(self, request) -> bool:
+        """Whether the cookie carries the Secure flag, so that a browser never
+        sends it over plain HTTP. Field encryption needs HTTPS (WebAuthn and
+        WebCrypto exist only on secure origins), and a login cookie a browser
+        would send in clear undoes it."""
+        if self.secure == "auto":
+            return request_is_https(request)
+        return bool(self.secure)
 
     def forget(self, request):
         """Return headers that expire the auth cookie."""
@@ -148,7 +158,32 @@ class AuthPolicy:
             f"{self.cookie_name}=; Path=/; Max-Age=0; "
             f"HttpOnly; SameSite={self.same_site}"
         )
+        if self.is_secure(request):
+            cookie = cookie + "; Secure"
         return [("Set-Cookie", cookie)]
+
+
+def request_is_https(request) -> bool:
+    """Whether a request came over HTTPS: as the proxy in front says
+    (X-Forwarded-Proto, its first value), or as its own URL does when nothing
+    is in front. A client claiming https on plain HTTP only makes its own
+    cookie stricter."""
+    headers = getattr(request, "headers", None) or {}
+    forwarded = (headers.get("x-forwarded-proto") or "").split(",")[0].strip()
+    if forwarded:
+        return forwarded.lower() == "https"
+    return str(getattr(request, "url", "")).startswith("https://")
+
+
+def secure_setting(value) -> object:
+    """auth.secure_cookies: "true", "false", or "auto" (the default): the
+    Secure flag whenever the request came over HTTPS."""
+    value = str(value or "auto").strip().lower()
+    if value in ("true", "yes", "1"):
+        return True
+    if value in ("false", "no", "0"):
+        return False
+    return "auto"
 
 
 # ---------------------------------------------------------------------------
@@ -192,11 +227,14 @@ def build_policies(settings: dict) -> list:
         except (TypeError, ValueError):
             return None
 
+    secure = secure_setting(settings.get("auth.secure_cookies", "auto"))
+
     main_policy = AuthPolicy(
         cookie_name=settings["auth.main.cookie"],
         secret=settings["auth.main.secret"],
         timeout=_timeout("auth.main.cookie.timeout"),
         group="mainApp",
+        secure=secure,
     )
 
     assistant_policy = AuthPolicy(
@@ -204,6 +242,7 @@ def build_policies(settings: dict) -> list:
         secret=settings["auth.assistant.secret"],
         timeout=_timeout("auth.assistant.cookie.timeout"),
         group="assistant",
+        secure=secure,
     )
 
     partner_policy = AuthPolicy(
@@ -211,6 +250,7 @@ def build_policies(settings: dict) -> list:
         secret=settings["auth.partner.secret"],
         timeout=_timeout("auth.partner.cookie.timeout"),
         group="partner",
+        secure=secure,
     )
 
     policies = [

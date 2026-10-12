@@ -58,7 +58,11 @@
                                                                     <tr>
                                                                         <td>{{ a_variable.key }}</td>
                                                                         <td>{{ a_variable.desc }}</td>
-                                                                        <td>{{ a_variable.value }}</td>
+                                                                        {# A plugin finds a value by its column, and one that
+                                                                           holds an envelope by data-encrypted. #}
+                                                                        {% block marker_info_value scoped %}
+                                                                            <td data-column="{{ a_variable.key }}"{% if a_variable.encrypted %} data-encrypted="true"{% endif %}>{{ a_variable.value }}</td>
+                                                                        {% endblock marker_info_value %}
                                                                     </tr>
                                                                 {% endif %}
                                                             {% endfor %}

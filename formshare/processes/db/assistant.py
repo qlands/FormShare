@@ -1,5 +1,10 @@
 import datetime
 import logging
+from formshare.processes.db.encryption import (
+    grants_before_deletion,
+    member_access_changed,
+    record_deleted_grants,
+)
 from formshare.processes.logging.loggerclass import SecretLogger
 import secrets
 from uuid import uuid4
@@ -371,11 +376,15 @@ def get_assistant_by_api_key(request, api_key):
 
 
 def delete_assistant(request, assistant_uuid):
+    # The assistant's encryption key goes with it (ON DELETE CASCADE), and
+    # with it every grant it held: the record says so once it has gone.
+    held = grants_before_deletion(request, "assistant", assistant_uuid)
     try:
         request.dbsession.query(Collaborator).filter(
             Collaborator.coll_uuid == assistant_uuid
         ).delete()
         request.dbsession.commit()
+        record_deleted_grants(request, held, "assistant deleted")
         return True, ""
     except Exception as e:
         request.dbsession.rollback()
@@ -467,6 +476,9 @@ def modify_assistant(request, assistant_uuid, assistant_data):
             Collaborator.coll_uuid == assistant_uuid
         ).update(mapped_data)
         request.dbsession.commit()
+        # A deactivated assistant may no longer hold a project's key (field
+        # encryption, formshare.md 9).
+        member_access_changed(request, "assistant", assistant_uuid)
         return True, ""
     except Exception as e:
         request.dbsession.rollback()

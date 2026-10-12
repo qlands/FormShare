@@ -326,19 +326,20 @@ class PartnerGetSubMissionInfo(PartnerView):
         for key, value in submission_info.items():
             field_desc = None
             primary_key = False
+            encrypted = False
             for a_field in fields:
                 if form_data["form_schema"] is None:
-                    if a_field["xmlcode"] == key:
-                        field_desc = a_field["desc"]
-                        if a_field["key"] == "true":
-                            primary_key = True
-                        break
+                    matches = a_field["xmlcode"] == key
                 else:
-                    if a_field["name"] == key:
-                        field_desc = a_field["desc"]
-                        if a_field["key"] == "true":
-                            primary_key = True
-                        break
+                    matches = a_field["name"] == key
+                if matches:
+                    field_desc = a_field["desc"]
+                    if a_field["key"] == "true":
+                        primary_key = True
+                    # Its value is an envelope (field encryption): a plugin
+                    # opens it on the page.
+                    encrypted = a_field.get("encrypted") in (True, "true")
+                    break
             if field_desc is not None:
                 submission_data.append(
                     {
@@ -346,6 +347,7 @@ class PartnerGetSubMissionInfo(PartnerView):
                         "desc": field_desc,
                         "value": value,
                         "pkey": primary_key,
+                        "encrypted": encrypted,
                     }
                 )
 

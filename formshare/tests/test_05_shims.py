@@ -575,3 +575,44 @@ def test_a_plugins_keys_are_stripped_beside_cores(monkeypatch):
         classes.AssistantView.clean_api_result,
     ):
         assert clean(View(), dict(result)) == {"kept": 1}
+
+
+def test_a_login_cookie_is_secure_over_https():
+    """auth.secure_cookies: auto marks a login cookie Secure when the request
+    came over HTTPS, as the proxy in front says or the URL does."""
+    from formshare.middleware.auth import AuthPolicy, request_is_https, secure_setting
+
+    class Request:
+        def __init__(self, url, headers=None):
+            self.url = url
+            self.headers = headers or {}
+
+    over_https = Request("https://formshare.example.org/login")
+    behind_proxy = Request(
+        "http://127.0.0.1:5900/login", {"x-forwarded-proto": "https"}
+    )
+    plain = Request("http://formshare.example.org/login")
+    assert request_is_https(over_https) and request_is_https(behind_proxy)
+    assert not request_is_https(plain)
+    assert not request_is_https(
+        Request("https://x/login", {"x-forwarded-proto": "http, https"})
+    )
+
+    assert [secure_setting(v) for v in ("true", "False", "auto", None, "maybe")] == [
+        True,
+        False,
+        "auto",
+        "auto",
+        "auto",
+    ]
+
+    def cookie(policy, request):
+        return dict(policy.remember(request, "carlos"))["Set-Cookie"]
+
+    auto = AuthPolicy("tkt", "secret", secure="auto")
+    assert "Secure" in cookie(auto, over_https)
+    assert "Secure" in cookie(auto, behind_proxy)
+    assert "Secure" not in cookie(auto, plain)
+    assert "Secure" in dict(auto.forget(over_https))["Set-Cookie"]
+    assert "Secure" in cookie(AuthPolicy("tkt", "secret", secure=True), plain)
+    assert "Secure" not in cookie(AuthPolicy("tkt", "secret"), over_https)

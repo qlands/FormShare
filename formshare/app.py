@@ -29,7 +29,7 @@ from formshare.config.fastapi_config import FormShareConfig
 from formshare.config.environment import load_environment
 from formshare.config.config_indexes import configure_indexes
 from formshare.models import get_engine, get_session_factory, startup_tasks
-from formshare.middleware.auth import build_policies
+from formshare.middleware.auth import build_policies, secure_setting
 from formshare.middleware.settings import init_settings
 
 logging.basicConfig(level=logging.INFO)
@@ -194,7 +194,14 @@ def create_app(settings: dict | None = None, ini_path: str | None = None):
     session_secret = settings.get(
         "auth.main.secret", "changeme-replace-with-a-real-secret"
     )
-    fastapi_app.add_middleware(SessionMiddleware, secret_key=session_secret)
+    # The session cookie (the CSRF token, flash messages) is Secure when
+    # auth.secure_cookies says true: unlike the login cookies, Starlette's
+    # cannot decide per request, so "auto" leaves it as it was.
+    fastapi_app.add_middleware(
+        SessionMiddleware,
+        secret_key=session_secret,
+        https_only=secure_setting(settings.get("auth.secure_cookies", "auto")) is True,
+    )
 
     # -- Static file mounts --
     for sv in fs_config.static_views:

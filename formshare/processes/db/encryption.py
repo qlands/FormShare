@@ -113,6 +113,10 @@ __all__ = [
     "grant_with_recovery",
     "revoke_member",
     "revoke_ineligible_members",
+    "access_changed",
+    "member_access_changed",
+    "grants_before_deletion",
+    "record_deleted_grants",
     "list_project_access",
     "replace_recovery_member",
     "log_encryption_event",
@@ -1912,6 +1916,116 @@ def revoke_ineligible_members(request, project_id, actor_type="system", actor_id
             "access".format(str(e), project_id)
         )
         return 0
+
+
+# ---------------------------------------------------------------------------
+# Losing access (section 9)
+# ---------------------------------------------------------------------------
+
+
+def _actor(request):
+    """Who changed who may do what, for the record: the user logged in, or the
+    system when no one is."""
+    login = getattr(getattr(request, "user", None), "login", None)
+    if login:
+        return "user", login
+    return "system", None
+
+
+def access_changed(request, project_id):
+    """Called after anything that may take someone's right to hold the
+    project's key: a collaborator removed or made a plain member, an
+    assistant's rights on a form or through a group taken away, a group
+    deactivated or deleted. Takes the key from whoever lost the right, and
+    records it. Never raises: the change it follows stands either way, and a
+    failure here is logged. Returns how many members lost it."""
+    try:
+        actor_type, actor_id = _actor(request)
+        return revoke_ineligible_members(request, project_id, actor_type, actor_id)
+    except Exception as e:
+        log.error(
+            "Error {} while taking the key of project {} from those who lost "
+            "access".format(str(e), project_id)
+        )
+        return 0
+
+
+def member_access_changed(request, member_type, identity):
+    """The same after a change to a person rather than to a project -- an
+    assistant deactivated: every project where they hold a key."""
+    try:
+        projects = sorted(
+            {
+                row[0]
+                for row in request.dbsession.query(EncryptionGrant.project_id)
+                .join(
+                    EncryptionMember,
+                    EncryptionMember.member_id == EncryptionGrant.member_id,
+                )
+                .filter(EncryptionMember.member_type == member_type)
+                .filter(_MEMBER_OF[member_type] == identity)
+                .all()
+            }
+        )
+    except Exception as e:
+        log.error(
+            "Error {} while finding the projects of the {} {}".format(
+                str(e), member_type, identity
+            )
+        )
+        return 0
+    return sum(access_changed(request, project_id) for project_id in projects)
+
+
+def grants_before_deletion(request, member_type=None, identity=None, project_id=None):
+    """What a deletion is about to take with it through ON DELETE CASCADE --
+    a person's grants, or a project's -- as {(project_id, member_id): [key
+    ids]}. Read before the deletion and recorded after it succeeds
+    (record_deleted_grants): taking the grants first would leave a project
+    nobody can read if the deletion then failed."""
+    query = request.dbsession.query(
+        EncryptionGrant.project_id, EncryptionGrant.member_id, EncryptionGrant.key_id
+    )
+    if project_id is not None:
+        query = query.filter(EncryptionGrant.project_id == project_id)
+    if member_type is not None:
+        query = (
+            query.join(
+                EncryptionMember,
+                EncryptionMember.member_id == EncryptionGrant.member_id,
+            )
+            .filter(EncryptionMember.member_type == member_type)
+            .filter(_MEMBER_OF[member_type] == identity)
+        )
+    held = {}
+    try:
+        for a_project, a_member, a_key in query.all():
+            held.setdefault((a_project, a_member), []).append(a_key)
+    except Exception as e:
+        log.error("Error {} while reading the grants a deletion takes".format(str(e)))
+    return held
+
+
+def record_deleted_grants(request, held, reason):
+    """Writes the revoke events a deletion owes: its grants went with what
+    they belonged to, and the record outlives them."""
+    if not held:
+        return
+    try:
+        actor_type, actor_id = _actor(request)
+        for (project_id, member_id), key_ids in sorted(held.items()):
+            _event(
+                request,
+                project_id,
+                actor_type,
+                actor_id,
+                "revoke",
+                {"member_id": member_id, "key_ids": sorted(key_ids), "reason": reason},
+            )
+        request.dbsession.commit()
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} while recording the grants a deletion took".format(str(e)))
 
 
 def list_project_access(request, project_id):

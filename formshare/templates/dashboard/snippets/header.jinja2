@@ -66,6 +66,9 @@
                     </li>
                     {% endblock header_language %}
 
+                    {# A plugin's controls in the top bar, before signing out: the
+                       Encryption plugin's lock (plugin.md 4.3). #}
+                    {% block header_links_extra %}{% endblock header_links_extra %}
                     {% block header_logout %}
                         {% if activeUser != None %}
                             <li>

@@ -88,6 +88,9 @@
                             </div>
                         </li>
                     {% endblock language_menu_item %}
+                    {# A plugin's controls in the top bar, before signing out: the
+                       Encryption plugin's lock (plugin.md 4.3). #}
+                    {% block header_links_extra %}{% endblock header_links_extra %}
                     <li>
                         {% if activeAssistant.type == 1 %}
                         <a href="{{ request.route_url('assistant_logout', userid=userid, projcode=projcode) }}">

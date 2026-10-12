@@ -1,5 +1,6 @@
 import datetime
 import logging
+from formshare.processes.db.encryption import access_changed
 from formshare.processes.logging.loggerclass import SecretLogger
 import uuid
 
@@ -78,6 +79,9 @@ def delete_group(request, project, group):
             Collgroup.project_id == project
         ).filter(Collgroup.group_id == group).delete()
         request.dbsession.commit()
+        # Whoever lost the right to the project's key loses the key (field
+        # encryption, formshare.md 9).
+        access_changed(request, project)
         return True, ""
     except Exception as e:
         request.dbsession.rollback()
@@ -153,6 +157,7 @@ def modify_group(request, project, group, group_data):
                 Collgroup.project_id == project
             ).filter(Collgroup.group_id == group).update(mapped_data)
             request.dbsession.commit()
+            access_changed(request, project)
             return True, ""
         except Exception as e:
             request.dbsession.rollback()
@@ -209,6 +214,7 @@ def remove_assistant_from_group(request, project, group, assistant_uuid):
             Collingroup.coll_uuid == assistant_uuid
         ).delete()
         request.dbsession.commit()
+        access_changed(request, project)
         return True, ""
     except IntegrityError:
         request.dbsession.rollback()
@@ -222,7 +228,7 @@ def remove_assistant_from_group(request, project, group, assistant_uuid):
         request.dbsession.rollback()
         log.error(
             "Error {} while removing member {} in group {} of project {}".format(
-                str(e), assistant, group, project
+                str(e), assistant_uuid, group, project
             )
         )
         return False, str(e)

@@ -180,6 +180,21 @@ sudo docker-compose --env-file .env -f formshare.yml up -d
 # GRANT SYSTEM_VARIABLES_ADMIN ON *.* TO 'my_RDS_root_user'@'%';
 ```
 
+## Serve FormShare over HTTPS
+
+Run FormShare behind HTTPS in production. Field encryption (questions an
+XLSForm marks `fs_encrypted: yes`) cannot work without it, because browsers
+offer WebAuthn and WebCrypto only on secure origins. TLS can end in front of
+FormShare, at Apache, nginx or a load balancer. When it does, have the proxy
+send `X-Forwarded-Proto: https` so that FormShare marks its login cookies
+`Secure`.
+
+The `auth.secure_cookies` setting decides that flag:
+- `auto` (the default): the login cookies are `Secure` when the request came
+  over HTTPS;
+- `true`: always `Secure`, the session cookie included;
+- `false`: never.
+
 ## Install plug-ins while using Docker (images > 20200306)
 
 All plug-ins must be deployed in the directory /opt/formshare/plugins which is a volume in all the provided docker compose files.

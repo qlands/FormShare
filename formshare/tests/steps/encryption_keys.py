@@ -240,7 +240,8 @@ def t_e_s_t_encryption_keys(test_object):
             set_role,
         )
 
-        # Losing the right to clean loses the key (section 9).
+        # Losing the right to clean loses the key (section 9), in the request
+        # that takes the right, and the record names who took it.
         res = testapp.post(
             "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
                 login, CODE, FORM, cleaner
@@ -251,16 +252,16 @@ def t_e_s_t_encryption_keys(test_object):
         assert "FS_error" not in res.headers
         # A new transaction, to see what the request just committed.
         session.rollback()
-        assert revoke_ineligible_members(request, project_id) == 1
         access = {
             person.get("coll_uuid") or person.get("user_id"): person
             for person in list_project_access(request, project_id)["people"]
         }
         assert cleaner not in access
-        assert revoke_ineligible_members(request, project_id) == 0
         revoked = list_encryption_events(request, project_id, "revoke")[0]
-        assert revoked["actor_type"] == "system"
+        assert (revoked["actor_type"], revoked["actor_id"]) == ("user", login)
         assert revoked["event_detail"]["reason"] == "not eligible"
+        # Nothing is left for a sweep to take.
+        assert revoke_ineligible_members(request, project_id) == 0
     finally:
         session.close()
         engine.dispose()

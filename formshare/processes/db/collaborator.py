@@ -1,5 +1,6 @@
 import datetime
 import logging
+from formshare.processes.db.encryption import access_changed
 from formshare.processes.logging.loggerclass import SecretLogger
 
 from formshare.models import Userproject, User, Project, map_from_schema
@@ -98,6 +99,9 @@ def remove_collaborator_from_project(request, project, collaborator):
         )
         return False, str(e)
 
+    # Whoever lost the right to the project's key loses the key (field
+    # encryption, formshare.md 9).
+    access_changed(request, project)
     return True, ""
 
 
@@ -107,6 +111,7 @@ def set_collaborator_role(request, project, collaborator, role):
             Userproject.project_id == project
         ).filter(Userproject.user_id == collaborator).update({"access_type": role})
         request.dbsession.commit()
+        access_changed(request, project)
         return True, ""
     except Exception as e:
         request.dbsession.rollback()

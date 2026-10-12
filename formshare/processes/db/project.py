@@ -1,5 +1,9 @@
 import datetime
 import logging
+from formshare.processes.db.encryption import (
+    grants_before_deletion,
+    record_deleted_grants,
+)
 from formshare.processes.logging.loggerclass import SecretLogger
 import uuid
 from sqlalchemy import or_
@@ -1520,6 +1524,9 @@ def modify_project(request, project, project_data):
 
 def delete_project(request, user, project):
     _ = request.translate
+    # The project's keys and every grant to them go with it (ON DELETE
+    # CASCADE): the record says so once it has gone.
+    held = grants_before_deletion(request, project_id=project)
     try:
         request.dbsession.query(Project).filter(Project.project_id == project).delete()
         res = (
@@ -1551,6 +1558,7 @@ def delete_project(request, user, project):
                     {"project_active": 1}
                 )
         request.dbsession.commit()
+        record_deleted_grants(request, held, "project deleted")
         return True, ""
     except IntegrityError as e:
         request.dbsession.rollback()

@@ -3,6 +3,7 @@ import datetime
 import glob
 import json
 import logging
+from formshare.processes.db.encryption import access_changed
 import re
 import validators
 from formshare.processes.logging.loggerclass import SecretLogger
@@ -2008,6 +2009,9 @@ def update_assistant_privileges(request, project, form, assistant_uuid, privileg
                 mapped_data
             )
             request.dbsession.commit()
+            # Whoever lost the right to the project's key loses the key
+            # (field encryption, formshare.md 9).
+            access_changed(request, project)
             return True, ""
         except Exception as e:
             log.error(
@@ -2036,6 +2040,7 @@ def remove_assistant_from_form(request, project, form, assistant_uuid):
                 Formacces.form_id == form
             ).delete()
             request.dbsession.commit()
+            access_changed(request, project)
             return True, ""
         except Exception as e:
             log.error(
@@ -2123,6 +2128,7 @@ def update_group_privileges(request, project, form, group, can_submit, can_clean
                 {"group_can_submit": can_submit, "group_can_clean": can_clean}
             )
             request.dbsession.commit()
+            access_changed(request, project)
             return True, ""
         except Exception as e:
             log.error(
@@ -2153,6 +2159,7 @@ def remove_group_from_form(request, project, form, group):
                 Formgrpacces.form_id == form
             ).delete()
             request.dbsession.commit()
+            access_changed(request, project)
             return True, ""
         except Exception as e:
             log.error(

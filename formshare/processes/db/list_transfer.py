@@ -44,8 +44,14 @@ from formshare.processes.db.case_management import (
     valid_list_filename,
     validate_property_default,
 )
+from formshare.processes.db.encryption import encrypted_columns
 from formshare.processes.db.form import get_form_data
-from formshare.processes.list_filter import FilterError, compile_filter, filter_fields
+from formshare.processes.list_filter import (
+    FilterError,
+    compile_filter,
+    filter_fields,
+    referenced_columns,
+)
 
 __all__ = [
     "DOCUMENT",
@@ -448,6 +454,14 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
             problems.append(
                 _('the table has no column "{}" to key with').format(key_column)
             )
+        # A device reads, searches and picks by a list's label and key, and
+        # a filter compares: none can be a column only FormShare's interface
+        # can read (field encryption). It may be served, sealed.
+        encrypted = encrypted_columns(request, project_id, form_id, table)
+        if label_column in encrypted:
+            problems.append(_('its label, "{}", is encrypted').format(label_column))
+        if key_column is not None and key_column in encrypted:
+            problems.append(_('its key, "{}", is encrypted').format(key_column))
         if list_format == "geojson":
             if key_column is not None:
                 problems.append(_("a GeoJSON list cannot be a list of values"))
@@ -527,6 +541,11 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
                     get_table_columns(request, project_id, form_id, table),
                     get_table_properties(request, project_id, form_id, table) + pending,
                 )
+                read = sorted(referenced_columns(rules) & encrypted)
+                if read:
+                    problems.append(
+                        _('its filter reads "{}", which is encrypted').format(read[0])
+                    )
                 try:
                     filter_sql = compile_filter(rules, fields)
                 except FilterError as e:

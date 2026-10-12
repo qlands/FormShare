@@ -56,6 +56,8 @@ class _Project:
                 "source_table": "maintable",
             }
         ]
+        # The columns that hold envelopes (field encryption), by table.
+        self.encrypted = {}
         self.created_properties = []
         self.added_lists = []
         self.columns_set = {}
@@ -81,6 +83,9 @@ class _Project:
             "add_published_list": self.add_published_list,
             "set_list_columns": self.set_list_columns,
             "delete_published_list": self.delete_published_list,
+            "encrypted_columns": lambda r, p, f, t: set(
+                self.encrypted.get((f, t), set())
+            ),
         }
         for name, function in replaced.items():
             original = getattr(lt, name)
@@ -368,6 +373,43 @@ class ImportLists(unittest.TestCase):
         self.assertRefused(
             _document([_farmers(columns=[{"column": "nope"}])]),
             'the table has no column "nope"',
+        )
+
+    def test_an_encrypted_column_cannot_label_key_or_filter(self):
+        # A device reads, searches and picks by a list's label and key, and
+        # a filter compares: an envelope does none of that. It may be served.
+        self.project.encrypted[("reg", "maintable")] = {"farmer_name", "village"}
+        self.assertRefused(
+            _document([_farmers()], [VISITS]),
+            'its label, "farmer_name", is encrypted',
+        )
+        self.assertRefused(
+            _document(
+                [_farmers(label_column="county", key_column="village")], [VISITS]
+            ),
+            'its key, "village", is encrypted',
+        )
+        rules = {
+            "condition": "AND",
+            "rules": [{"id": "t.village", "operator": "equal", "value": "x"}],
+        }
+        self.assertRefused(
+            _document([_farmers(label_column="county", filter=rules)], [VISITS]),
+            'its filter reads "village", which is encrypted',
+        )
+        done, errors, warnings = self.run_import(
+            _document(
+                [
+                    _farmers(
+                        label_column="county",
+                        columns=[{"column": "farmer_name"}],
+                    )
+                ]
+            )
+        )
+        self.assertEqual(errors, [])
+        self.assertEqual(
+            self.project.columns_set["farmers"], [("farmer_name", None, "table")]
         )
 
     def test_a_served_property_must_exist_or_be_defined(self):

@@ -17,7 +17,7 @@ from sqlalchemy import (
     Unicode,
     DECIMAL,
 )
-from sqlalchemy.dialects.mysql import MEDIUMTEXT, BIGINT
+from sqlalchemy.dialects.mysql import MEDIUMTEXT, BIGINT, DATETIME
 from sqlalchemy.ext import mutable
 from sqlalchemy.orm import relationship
 
@@ -1159,6 +1159,155 @@ class ActionRun(Base):
     run_log = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     odkform = relationship("Odkform")
+
+
+# ---------------------------------------------------------------------------
+# Field encryption (docs/formshare_field_encryption/, formshare.md section 2)
+#
+# The server keeps public keys, member keys locked in a browser, grants sealed
+# in a browser, and the record of who did what. Nothing here opens anything:
+# every binary value is the base64url text the formats define, kept as the
+# browser sent it.
+# ---------------------------------------------------------------------------
+
+
+class EncryptionProjectKey(Base):
+    """A version of a project's key: its public half.
+
+    Answers to marked questions are sealed to the active version the moment
+    they arrive. A rotation retires it, and the retired versions stay, to
+    open the answers sealed to them. One active version per project, which
+    a functional unique index on the table holds (the migration's).
+    """
+
+    __tablename__ = "encryption_project_key"
+
+    project_id = Column(
+        ForeignKey("project.project_id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    # The first 8 bytes of SHA-256 of the key, in hex: the key's fingerprint.
+    key_id = Column(Unicode(16), primary_key=True, nullable=False)
+    # fsenc-pk:1:<key id>:<key>
+    public_key = Column(Unicode(100), nullable=False)
+    # active | retired
+    key_status = Column(Unicode(10), nullable=False)
+    created_by = Column(Unicode(120))
+    created_date = Column(DATETIME(fsp=6))
+    retired_date = Column(DATETIME(fsp=6))
+
+    project = relationship("Project")
+
+
+class EncryptionMember(Base):
+    """Someone who can hold a project's key: a user, an assistant, or a
+    project's recovery kit, which is a member with no person behind it.
+
+    Its key pair is made in its browser (or derived from the kit), and only
+    the public half is here. One active member per user, per assistant and
+    per project's kit, held by the migration's functional unique indexes; a
+    replaced one keeps its row, revoked, for the record.
+    """
+
+    __tablename__ = "encryption_member"
+
+    member_id = Column(Unicode(64), primary_key=True)
+    # user | assistant | recovery
+    member_type = Column(Unicode(10), nullable=False)
+    user_id = Column(ForeignKey("fsuser.user_id", ondelete="CASCADE"), index=True)
+    # An assistant is a collaborator row: coll_uuid is what formaccess and
+    # the assistant's session know it by.
+    coll_uuid = Column(
+        ForeignKey("collaborator.coll_uuid", ondelete="CASCADE"), index=True
+    )
+    # The project of a recovery kit.
+    project_id = Column(
+        ForeignKey("project.project_id", ondelete="CASCADE"), index=True
+    )
+    # fsenc-mk:1:<key>
+    public_key = Column(Unicode(100), nullable=False)
+    created_date = Column(DATETIME(fsp=6))
+    revoked_date = Column(DATETIME(fsp=6))
+
+
+class EncryptionUnlock(Base):
+    """A member's private key, locked in its browser by one unlock method: a
+    passkey's PRF output or a passphrase stretched with Argon2id. Each method
+    is one more locked copy of the same key; a member keeps at least one."""
+
+    __tablename__ = "encryption_unlock"
+
+    unlock_id = Column(Unicode(64), primary_key=True)
+    member_id = Column(
+        ForeignKey("encryption_member.member_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    # passkey | passphrase
+    unlock_method = Column(Unicode(10), nullable=False)
+    unlock_label = Column(Unicode(120))
+    # A passkey's WebAuthn credential id, base64url.
+    credential_id = Column(Unicode(1400))
+    # JSON. A passkey: {prf_salt}; a passphrase: {salt, opslimit, memlimit,
+    # alg}, kept so that they can be raised.
+    unlock_params = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    # JSON {nonce, box}: crypto_secretbox_easy of the member's private key.
+    locked_key = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"), nullable=False)
+    created_date = Column(DATETIME(fsp=6))
+    last_used_date = Column(DATETIME(fsp=6))
+
+
+class EncryptionGrant(Base):
+    """A version of a project's private key, sealed in a browser to a
+    member's public key: fsenc-grant:1:<key id>:<sealed key>. One per member
+    per version."""
+
+    __tablename__ = "encryption_grant"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "key_id"],
+            ["encryption_project_key.project_id", "encryption_project_key.key_id"],
+            ondelete="CASCADE",
+        ),
+    )
+
+    project_id = Column(Unicode(64), primary_key=True, nullable=False)
+    key_id = Column(Unicode(16), primary_key=True, nullable=False)
+    member_id = Column(
+        ForeignKey("encryption_member.member_id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+        index=True,
+    )
+    grant_value = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"), nullable=False)
+    # The member whose browser made it: a person, or the recovery kit.
+    granted_by = Column(Unicode(64))
+    granted_date = Column(DATETIME(fsp=6))
+
+
+class EncryptionEvent(Base):
+    """The record of field encryption, append only. No foreign keys: the
+    record outlives what it is about."""
+
+    __tablename__ = "encryption_event"
+    __table_args__ = (Index("ix_encryption_event_project", "project_id", "event_date"),)
+
+    event_id = Column(Unicode(64), primary_key=True)
+    # NULL for what concerns a member alone: an enrolment, an unlock method.
+    project_id = Column(Unicode(64))
+    # user | assistant | system
+    actor_type = Column(Unicode(10), nullable=False)
+    actor_id = Column(Unicode(120))
+    # setup, enroll, unlock_method_added, unlock_method_removed, unlock,
+    # grant, revoke, rotate, recovery_used, recovery_replaced, key_alarm,
+    # decrypted
+    event_type = Column(Unicode(30), nullable=False)
+    event_detail = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    # To the microsecond: the record is read in the order things happened.
+    event_date = Column(DATETIME(fsp=6), nullable=False)
+    ip = Column(Unicode(45))
+    user_agent = Column(Unicode(512))
 
 
 class CookieConsent(Base):

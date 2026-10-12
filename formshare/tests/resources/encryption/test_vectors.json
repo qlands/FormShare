@@ -1,0 +1,51 @@
+{
+  "about": "Version 1 envelopes made by RSTools' JSONToMySQL (common/sealing.h) through the real pipeline: a form with marked questions, a submission, the values MySQL stored. Every implementation that opens envelopes must open each of these to its value with the private key below, and every implementation that seals must produce envelopes these same rules accept. THE PRIVATE KEY IS A TEST KEY, published on purpose: never use it for anything else.",
+  "public_key": "fsenc-pk:1:9653f4079c692b1e:IzBErUT6pZ5FapSOCwp0FrsMjaSQa2Hal_c-CzTjRFI",
+  "key_id": "9653f4079c692b1e",
+  "public_key_b64url": "IzBErUT6pZ5FapSOCwp0FrsMjaSQa2Hal_c-CzTjRFI",
+  "private_key_b64url": "zKWHmLPb-F6_IIKPbRT8PVVtkMsGA6Kwa79XunzzzCo",
+  "vectors": [
+    {
+      "value": "yes",
+      "envelope": "fsenc:1:9653f4079c692b1e:Zp5C2hRCbXVmTca1d7cYTXkhpoYZEgBLJXADbVjotT6RSBbJDTTBj9cLkUJkS0HnXpbBoD90FfVuZ6MG_vY2F2kX5NZx3JaLCxd6OjAMsR8",
+      "padded_length": 32
+    },
+    {
+      "value": "no",
+      "envelope": "fsenc:1:9653f4079c692b1e:Z6uS8GY25He2ptMIUrBJoGBd3ErhkJYxZU3GaMzOQQBtjuwKSRbu3_hWTZhENNNfpFeChToU_pCPbQGaNTLIggZGUKIzkBwp_jSlUoBsAq4",
+      "padded_length": 32
+    },
+    {
+      "value": "Ana María O'Brien; \"Jr\"",
+      "envelope": "fsenc:1:9653f4079c692b1e:tJj9nHMNqnL3EpwJrvaKdgtNwjVY5uAzq0AHaabGSQMRIM6_O29avpOAsPHaeGIy9qqQ7Lm63K4ApwBUm0ZFzG8YtIUXV2azzaO6gm1LhmI",
+      "padded_length": 32
+    },
+    {
+      "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "envelope": "fsenc:1:9653f4079c692b1e:cxSJoJoNq8EY_MFA9IIRiIHI033Nr24RaLVxf04eakvzOtZasGawWfhppE2JvCiW5JpLc8BcO24SSl77VWlRab_WsKlKAFhgONBRrMoYsQY",
+      "padded_length": 32
+    },
+    {
+      "value": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "envelope": "fsenc:1:9653f4079c692b1e:pI_XIv78OdRbrdlLLyjdJdLTKEpmxtD6bMQdz5__dhD3bdlrs71knb0a6O5Bwap9AqiX7mjghiPjLYOSDhF87x3pdEIRCHwvjn7PLLCy6qM115bRfykvI8XUYJGip1JpGOxtpt8xeC-nSbRQDGIxeg",
+      "padded_length": 64
+    },
+    {
+      "value": "日本語のテキスト",
+      "envelope": "fsenc:1:9653f4079c692b1e:1Z8X6oK21gv2e2WKhEgBg008QHyRTy9e6IYCXHer7xWHEd4_InPosCRM-cN_3kFPDAeoZnPOi2eWpmO2S5_8l9Z2LTthUCQYGn1J-mtRxFQ",
+      "padded_length": 32
+    },
+    {
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "envelope": "fsenc:1:9653f4079c692b1e:U9to-7xV8gIOnLUp9x6V57OfU23nxJVEBBhxCezSvzQcOoAdWuS19S0CZGFA0uJnY7YRm15HTCW9sN_fGeN5sm0OoGx0liZbqpD1vS6-52UenNPSCvJi3Q9pZYCj53aSen3moZM3cXV6u9Wjv41ChNxhwv3JphW48YEMtLrcCDd7kLDbO7tlpgXYqF9RD9mjlsiMZhSdEpiO6NmkR3oaWbrWFm6e62QFtwMLvotuIDqPEQmAli4O0B7PSMcoRcYBA-fpzfEXRb3zHBboFxdmlbS4u3_MqX3iPR8VhVC0danK3LVgBYdFTP996QvqQHAR4y3IEM3TKC97A4gTfMngpd0FgbZjbJy8TK39k5h2IQqiGeIoCH93nutYOKVsm6Jw1-QY_3bAOpSTM2A2vV6wm59oieLcUPyRViJpUv1R4IHTtstyxH0QuXvm-NDE8HOXvLeNqzLczajJdMgN0XjGb1arizBQYhqTiqcXp0ij6oby7C25km6UUu4YHEChEXoFc60NAzpcdhNxBebQEQZCBqyC3tq3m_X7CblEXy95_HJ6i3AIgvllZHmPvOtX5Bg0RGoAYPDqEVmfYB3a_3RIE06z3m3Sk5Q7qgUQ23ZaZdW6RzivhvxWaw6-0hFNdcGtiNdRvTAdjqZUalE_YgYKx9eWZxmlP5h1GAUgve0rd73atR13GOQ4EZ1YHYlDxLCeggMzRlPcwhKdtNu9iG8sup4MNDjOFav8Q8ZVbrkkt20CcoR8YeJ0K4NBYBxE5GE6mlRiIS5Uc_3Upu_7Y8T9Z2IzISPjqt38Y47HCUcD4I34CwpsjLboSQtuIFxIcdR86WKRvvxEQmKNnrr9T39jB4ri8avk4Xm22OM4mDUTybfdTU6Bxxbz3bQlTdcjkq2ZuX7gvoOzqDrg8B1n3qqrAfsuwRqxGIlyGxRWSAc_L8IGMFgTlTuzRq3sE8paBTaETbzqYiQ0mQ9mkyykL1CR8TGylVy5sQbE2XdgzYnOG9AV3FjNvnBiJf3CVLMHt9CMFh1jZtYZMh0sF6Zz2gil8q8mXXT3Epu0vDRnKXCrDDASfXdaV4cuzMNVkj9rQKhH3ZPz5N0wOUul44mRUmG4w-mz0636z6lDNLPDqcERt7wFmaHaLh1ROC6dtZXpNe05mxL3mEpFDranPq0hvhZ6P61W5nnpFSndQV_tYz78vCUMp3e3uRN0XGpa9XIjn6Mk7Dre0YopB7uHjS5_oYqFrTLoIiaCc2QEoEbITT9Ltw9K11Rr6lrPrJky2hGpiMVYA5FE7--fRcwAQodyfmMYijK7uCNsV4PRLVus2gTunl51ddmj-0Xawx38u4NDTZJJ1aw39xIT8maSnvqMxCFAw-O1MQEsZTDRG7sOQ-V6LVwpFaLG74jFdDDAUIwL5iEgSKBtdDiPRV8fVrs_vXUpYA",
+      "padded_length": 1024
+    }
+  ],
+  "not_envelopes": [
+    "fsenc:1:0123456789abcdef:abc",
+    "FSENC:1:9653f4079c692b1e:Zp5C2hRCbXVmTca1d7cYTXkhpoYZEgBLJXADbVjotT6RSBbJDTTBj9cLkUJkS0HnXpbBoD90FfVuZ6MG_vY2F2kX5NZx3JaLCxd6OjAMsR8",
+    "fsenc:1:9653f4079c692b1e:Zp5C2hRCbXVmTca1d7cYTXkhpoYZEgBLJXADbVjotT6RSBbJDTTBj9cLkUJkS0HnXpbBoD90FfVuZ6MG_vY2F2kX5NZx3JaLCxd6OjAMsR8=",
+    "fsenc:2:9653f4079c692b1e:Zp5C2hRCbXVmTca1d7cYTXkhpoYZEgBLJXADbVjotT6RSBbJDTTBj9cLkUJkS0HnXpbBoD90FfVuZ6MG_vY2F2kX5NZx3JaLCxd6OjAMsR8",
+    ""
+  ]
+}

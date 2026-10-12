@@ -84,6 +84,7 @@ requires = [
     "pycparser",
     "pycryptodome",
     "Pygments",
+    "PyNaCl",
     "pyparsing",
     "pytest",
     "pytest-cov",

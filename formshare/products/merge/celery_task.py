@@ -27,6 +27,10 @@ from formshare.models import (
 from formshare.processes.elasticsearch.repository_index import delete_dataset_from_index
 from formshare.processes.email.send_async_email import send_async_email
 from formshare.processes.sse.messaging import send_task_status_to_form
+from formshare.processes.db.encryption import (
+    field_is_encrypted,
+    field_labelled_encrypted,
+)
 from formshare.products.fs1import.celery_task import internal_import_json_files
 from lxml import etree
 from sqlalchemy import create_engine
@@ -588,6 +592,7 @@ def update_dictionary_tables(db_session, form_id, xml_create_file, survey_data_c
             field_sensitive == "true"
             or formshare_sensitive == "yes"
             or formshare_sensitive == "1"
+            or field_labelled_encrypted(a_field)
         ):
             field_sensitive = 1
             if field_key == 0:
@@ -598,13 +603,10 @@ def update_dictionary_tables(db_session, form_id, xml_create_file, survey_data_c
             field_sensitive = 0
             field_protection = None
 
-        if (
-            a_field.get("formshare_encrypted", "no") == "yes"
-            or a_field.get("formshare_encrypted", "no") == "1"
-        ):
-            field_encrypted = 1
-        else:
-            field_encrypted = 0
+        # A column holds envelopes when RSTools marks it fs_encrypted, and
+        # only then: formshare_encrypted labelled clear answers "encrypted"
+        # and now marks them sensitive (above), which is what it was.
+        field_encrypted = field_is_encrypted(a_field)
 
         if (
             a_field.get("formshare_unique", "no") == "yes"
@@ -659,6 +661,11 @@ def update_dictionary_tables(db_session, form_id, xml_create_file, survey_data_c
             survey_data_columns.remove("formshare_ontological_term")
         if "formshare_encrypted" in survey_data_columns:
             survey_data_columns.remove("formshare_encrypted")
+        # RSTools' own mark, which an older jxformtomysql reports as an extra
+        # column under the header the form wrote it with.
+        for a_column in list(survey_data_columns):
+            if a_column.lower() == "fs_encrypted":
+                survey_data_columns.remove(a_column)
         if "formshare_unique" in survey_data_columns:
             survey_data_columns.remove("formshare_unique")
         if "formshare_sensitive" in survey_data_columns:

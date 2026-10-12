@@ -25,6 +25,13 @@ from formshare.processes.option_values import (
     describe_invalid_option_values,
 )
 from formshare.processes.actions.server import run_after_load
+from formshare.processes.db.encryption import (
+    KEY_NEEDED,
+    describe_invalid_encrypted_fields,
+    get_active_project_key,
+    invalid_encrypted_fields_heading,
+    survey_marks,
+)
 from formshare.processes.db.actions import (
     actions_json,
     get_action_mode,
@@ -216,11 +223,35 @@ def get_fields_from_table_in_file(create_file, table_name):
                     "rlookup": field.get("rlookup", "false"),
                     "rtable": field.get("rtable", "None"),
                     "rfield": field.get("rfield", "None"),
+                    "encrypted": field.get("fs_encrypted") == "true",
                 }
                 result.append(data)
             else:
                 break
     return result
+
+
+def encrypted_case_variable(create_file, variables, translate):
+    """Why a case form cannot have its case variables marked fs_encrypted,
+    or None when none is (formshare.md 6.7). Case management reads them --
+    the key and the label identify a case on the device, the date orders its
+    visits, the selector finds it -- and an envelope does none of that. Asked
+    before their types, which a mark turns into text: the type checks would
+    otherwise refuse a marked date with a message about its type."""
+    _ = translate
+    marked = {
+        a_field["name"]
+        for a_field in get_fields_from_table_in_file(create_file, "maintable")
+        if a_field["encrypted"]
+    }
+    for name in variables:
+        if name and name in marked:
+            return _(
+                'The variable "{}" is encrypted (fs_encrypted), but case '
+                "management reads it to identify, label, date or find cases. "
+                "Remove fs_encrypted from it."
+            ).format(name)
+    return None
 
 
 def get_odk_path(request):
@@ -725,6 +756,10 @@ def check_jxform_file(
                 # Remove internal columns. These will be added regardless
                 remove_column_from_array("formshare_sensitive", extra_columns_in_survey)
                 remove_column_from_array("formshare_encrypted", extra_columns_in_survey)
+                # RSTools' own mark (field encryption): an older jxformtomysql
+                # reports it as an extra column, which the repository page
+                # would then offer as one.
+                remove_column_from_array("fs_encrypted", extra_columns_in_survey)
                 remove_column_from_array("formshare_unique", extra_columns_in_survey)
                 remove_column_from_array(
                     "formshare_ontological_term", extra_columns_in_survey
@@ -1232,6 +1267,28 @@ def check_jxform_file(
                 attachments,
             )
             return 37, message
+
+        if p.returncode == 39:
+            # Questions marked fs_encrypted that a mark cannot work on: the
+            # key, a select, what a choice filter reads, a location, a file
+            # (field encryption, README 4). Refused before any file is
+            # written, in a check and in a build alike.
+            log.error(
+                ". Error: "
+                + str(p.returncode)
+                + "-"
+                + stderr.decode()
+                + " while checking PyXForm. Command line: "
+                + " ".join(args)
+            )
+            root = etree.fromstring(machine_xml(stdout))
+            message = (
+                _("FormShare thoroughly checks your ODK for inconsistencies.") + "\n"
+            )
+            message = message + invalid_encrypted_fields_heading(_) + "\n"
+            for a_line in describe_invalid_encrypted_fields(root, _):
+                message = message + "\t" + a_line + "\n"
+            return 39, message
 
         if p.returncode == 7:
             log.error(
@@ -1802,6 +1859,20 @@ def upload_odk_form(
                     form_caseselector_file = None
                     if project_case == 1:
                         if error == 0:
+                            marked_message = encrypted_case_variable(
+                                create_file,
+                                [
+                                    primary_key,
+                                    form_caselabel,
+                                    form_casedatetime,
+                                    form_caseselector,
+                                ],
+                                _,
+                            )
+                            if marked_message is not None:
+                                error = 1
+                                message = marked_message
+                        if error == 0:
                             if form_casetype == 1:
                                 fields = get_fields_from_table_in_file(
                                     create_file, "maintable"
@@ -2317,6 +2388,20 @@ def update_odk_form(
 
                             form_caseselector_file = None
                             if project_case == 1:
+                                if error == 0:
+                                    marked_message = encrypted_case_variable(
+                                        create_file,
+                                        [
+                                            primary_key,
+                                            form_caselabel,
+                                            form_casedatetime,
+                                            form_caseselector,
+                                        ],
+                                        _,
+                                    )
+                                    if marked_message is not None:
+                                        error = 1
+                                        message = marked_message
                                 if error == 0:
                                     if form_casetype == 1:
                                         fields = get_fields_from_table_in_file(
@@ -3989,6 +4074,13 @@ def create_repository(
     form_data = get_form_data(request, project, form)
     survey_file = get_form_survey_file(request, project, form)
     if survey_file is not None:
+        # A form that encrypts answers gets a repository -- or a new
+        # version of one -- only in a project with a key to seal them with
+        # (formshare.md 6.6). Asked before anything runs, so that nothing is
+        # built that could take no submission.
+        marked = survey_marks(survey_file)
+        if marked and get_active_project_key(request, project) is None:
+            return KEY_NEEDED, marked
         args = [
             jxform_to_mysql,
             "-j " + survey_file,

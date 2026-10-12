@@ -52,6 +52,10 @@ from formshare.processes.db.case_management import (
     geojson_list_select,
     write_list_geojson,
 )
+from formshare.processes.db.encryption import (
+    encrypted_column_message,
+    encrypted_columns,
+)
 from formshare.processes.db.form import get_form_data, get_form_directory
 from formshare.processes.odk.api import (
     get_fields_from_table_in_file,
@@ -73,6 +77,7 @@ from formshare.processes.actions.compiler import (
 from formshare.processes.list_filter import (
     FilterError,
     compile_filter,
+    referenced_columns,
     describe_filter,
     filter_fields,
     querybuilder_filters,
@@ -169,6 +174,14 @@ class AddPublishedListView(ListSection):
                 str(list_data.get("geometry_column", "") or "").strip() or None
             )
             key_column = str(list_data.get("list_key_column", "") or "").strip() or None
+            # A device reads, searches and picks by a list's label and key: a
+            # column only FormShare's interface can read cannot be either
+            # (field encryption). It may be served, sealed.
+            encrypted = (
+                encrypted_columns(self.request, project_id, source_form, source_table)
+                if source_form and source_table
+                else set()
+            )
             # add, tablesof and fieldsof are path segments under /caselists;
             # a list with one of those ids would shadow them.
             if list_id in ("add", "tablesof", "fieldsof"):
@@ -187,6 +200,18 @@ class AddPublishedListView(ListSection):
             elif source_form == "" or source_table == "" or label_column == "":
                 self.append_to_errors(
                     self._("Select the form, the table and the label column")
+                )
+            elif label_column in encrypted:
+                self.append_to_errors(
+                    encrypted_column_message(
+                        self._, label_column, self._("the label of a list")
+                    )
+                )
+            elif key_column is not None and key_column in encrypted:
+                self.append_to_errors(
+                    encrypted_column_message(
+                        self._, key_column, self._("the key of a list")
+                    )
                 )
             elif list_format == "geojson" and key_column is not None:
                 self.append_to_errors(
@@ -267,6 +292,12 @@ class EditPublishedListView(ListSection):
             list_data["source_table"],
         )
         fields = filter_fields(table_columns, table_properties)
+        encrypted = encrypted_columns(
+            self.request,
+            list_data["source_project"],
+            list_data["source_form"],
+            list_data["source_table"],
+        )
         # Every definition change below marks the served copies stale
         # (invalidate_list_copies): the devices get the new shape on their
         # next pull, not when the source next receives data.
@@ -349,6 +380,12 @@ class EditPublishedListView(ListSection):
                             "map, so it cannot be a list of values"
                         )
                     )
+                elif key_column is not None and key_column in encrypted:
+                    self.append_to_errors(
+                        encrypted_column_message(
+                            self._, key_column, self._("the key of a list")
+                        )
+                    )
                 elif list_has_active_consumers(self.request, project_id, list_id):
                     self.append_to_errors(
                         self._(
@@ -395,10 +432,16 @@ class EditPublishedListView(ListSection):
                     rules = str(post_data.get("filter_rules", "") or "").strip()
                 error = None
                 filter_sql = None
-                try:
-                    filter_sql = compile_filter(rules, fields)
-                except FilterError as e:
-                    error = str(e)
+                read = sorted(referenced_columns(rules) & encrypted)
+                if read:
+                    error = encrypted_column_message(
+                        self._, read[0], self._("read by a list's filter")
+                    )
+                else:
+                    try:
+                        filter_sql = compile_filter(rules, fields)
+                    except FilterError as e:
+                        error = str(e)
                 if error is None and filter_sql:
                     error = self.try_filter(project_id, list_id, list_data, filter_sql)
                 if error is not None:
@@ -445,7 +488,13 @@ class EditPublishedListView(ListSection):
                     )
             if "change_label" in post_data.keys():
                 label_column = post_data.get("label_column", "")
-                if label_column != "":
+                if label_column in encrypted:
+                    self.append_to_errors(
+                        encrypted_column_message(
+                            self._, label_column, self._("the label of a list")
+                        )
+                    )
+                elif label_column != "":
                     updated, message = update_published_list(
                         self.request,
                         project_id,

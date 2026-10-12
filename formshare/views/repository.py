@@ -10,10 +10,16 @@ from formshare.processes.db import (
     get_one_assistant,
     get_project_published_lists,
 )
+from formshare.processes.db.encryption import (
+    KEY_NEEDED,
+    describe_invalid_encrypted_fields,
+    key_needed_message,
+)
 from formshare.processes.elasticsearch.repository_index import delete_dataset_from_index
 from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.odk.api import (
     create_repository,
+    machine_xml,
     get_odk_path,
     describe_ambiguous_selects,
     describe_invalid_option_values,
@@ -69,6 +75,8 @@ REPOSITORY_CODES_HANDLED = {
     36,
     37,
     38,
+    39,
+    KEY_NEEDED,
 }
 
 
@@ -123,6 +131,8 @@ class GenerateRepository(PrivateView):
         select_errors = []
         option_errors = []
         output_errors = []
+        encrypted_errors = []
+        key_needed = None
         unknown_error = False
         duplicated_choices = []
         tables_with_name_error = []
@@ -578,6 +588,24 @@ class GenerateRepository(PrivateView):
                                     root, self._
                                 )
 
+                            if result_code == 39:  # pragma: no cover
+                                # A question marked fs_encrypted that cannot
+                                # be; the upload check refuses such a form
+                                # first, so only a form uploaded before the
+                                # mark existed gets here.
+                                stage = -1
+                                root = etree.fromstring(machine_xml(message))
+                                encrypted_errors = describe_invalid_encrypted_fields(
+                                    root, self._
+                                )
+
+                            if result_code == KEY_NEEDED:
+                                # The form encrypts answers and the project
+                                # has no key to seal them with: nothing was
+                                # built. The owner sets one up first.
+                                stage = -1
+                                key_needed = key_needed_message(self._, message)
+
                             if result_code == 38:
                                 # A file of the repository could not be written
                                 # (rstools.md 17.2): the server's fault, not the
@@ -771,6 +799,8 @@ class GenerateRepository(PrivateView):
                     "select_errors": select_errors,
                     "option_errors": option_errors,
                     "output_errors": output_errors,
+                    "encrypted_errors": encrypted_errors,
+                    "key_needed": key_needed,
                     "unknown_error": unknown_error,
                     "duplicated_choices": duplicated_choices,
                     "tables_with_name_error": tables_with_name_error,

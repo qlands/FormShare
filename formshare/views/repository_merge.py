@@ -1,5 +1,12 @@
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
+
+# The codes of mergeversions this page has a branch for: those that refuse a
+# merge, the description changes it asks about (VNS), and a new field or
+# table, which are no error at all. Any other is a refusal it does not know
+# and says so: exit codes are a contract with RSTools (CLAUDE.md), and a code
+# this page had not heard of used to show nothing.
+MERGE_CODES_KNOWN = {"TNS", "TWP", "FNS", "VNS", "RNS", "ACD", "ENC", "FNF", "TNF"}
 import os
 import uuid
 import shutil
@@ -11,6 +18,10 @@ from formshare.processes.db import (
     get_one_assistant,
     get_case_form,
     get_field_details,
+)
+from formshare.processes.db.encryption import (
+    encryption_change_message,
+    marked_columns,
 )
 from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.odk.api import (
@@ -422,6 +433,31 @@ class RepositoryMergeForm(PrivateView):
                                                 field_code, table_name
                                             )
                                         )
+                                    )
+                                if error_code == "ENC":  # pragma: no cover
+                                    # Reached only by a version that got past
+                                    # the merge check, which refuses this.
+                                    error_type = 2
+                                    table_name = a_error.get("table")
+                                    field_name = a_error.get("field")
+                                    errors.append(
+                                        encryption_change_message(
+                                            self._,
+                                            table_name,
+                                            field_name,
+                                            (table_name, field_name)
+                                            in marked_columns(old_create_file),
+                                        )
+                                    )
+                                if (
+                                    error_code not in MERGE_CODES_KNOWN
+                                ):  # pragma: no cover
+                                    error_type = 2
+                                    errors.append(
+                                        self._(
+                                            "The new version cannot be merged into the "
+                                            'existing repository. The check reported "{}".'
+                                        ).format(error_code)
                                     )
                                 if error_code == "ACD":  # pragma: no cover
                                     # Reached only by a form that got past the

@@ -34,6 +34,7 @@ from formshare.models import (
     DictTable,
     map_from_schema,
 )
+from formshare.processes.db.encryption import encrypted_column_message
 from formshare.processes.actions.compiler import (
     AGGREGATES,
     Catalogue,
@@ -217,11 +218,59 @@ def _check_row(request, project_id, form_id, data, catalogue):
                 return False, None, _("The condition is not valid")
             when = json.dumps(parsed) if parsed.get("rules") else None
     row["when_rules"] = when
+    refusal = _encrypted_refusal(row, catalogue, _)
+    if refusal is not None:
+        return False, None, refusal
     try:
         compile_module([dict(row, action_order=0)], catalogue)
     except CompileError as e:
         return False, None, str(e)
     return True, row, ""
+
+
+def _rule_ids(when_rules):
+    """The ids of the fields a condition reads."""
+    try:
+        rules = json.loads(when_rules) if when_rules else None
+    except ValueError:
+        return set()
+    found = set()
+
+    def walk(node):
+        if not isinstance(node, dict):
+            return
+        if "rules" in node:
+            for a_rule in node.get("rules") or []:
+                walk(a_rule)
+            return
+        field_id = str(node.get("field") or node.get("id") or "")
+        if field_id:
+            found.add(field_id)
+
+    walk(rules)
+    return found
+
+
+def _encrypted_refusal(row, catalogue, translate):
+    """Why a row cannot be kept when it writes a column that holds
+    envelopes, copies one, or decides by one (formshare.md 6.7); None when
+    it does none of that. A write would be refused by MySQL (3819), and a
+    copy or a comparison would read only the envelope."""
+    _ = translate
+    encrypted = getattr(catalogue, "encrypted", set())
+    target = (row["target_scope"], row["target_kind"], row["target_name"])
+    if target in getattr(catalogue, "encrypted_targets", set()):
+        return encrypted_column_message(
+            _, row["target_name"], _("written by an action")
+        )
+    if row["value_kind"] == "variable" and "v." + str(row["value"] or "") in encrypted:
+        return encrypted_column_message(_, row["value"], _("copied by an action"))
+    for field_id in sorted(_rule_ids(row["when_rules"])):
+        if field_id in encrypted:
+            return encrypted_column_message(
+                _, field_id.split(".", 1)[1], _("read by an action's condition")
+            )
+    return None
 
 
 def add_form_action(request, project_id, form_id, data):
@@ -586,6 +635,12 @@ def build_catalogue(request, project_id, form_id):
     catalogue.ui = []
     catalogue.property_types = {}
     catalogue.variables = []
+    # What holds envelopes (field encryption): the ids of fields no condition
+    # or copy can read, and the columns no row can write. They stay in the
+    # catalogue, so that a row naming one is refused with its reason rather
+    # than as unknown, and are left off the screen.
+    catalogue.encrypted = set()
+    catalogue.encrypted_targets = set()
     form = _form(request, project_id, form_id)
     schema = form.form_schema if form is not None else None
 
@@ -620,6 +675,9 @@ def build_catalogue(request, project_id, form_id):
             entry["multi"] = True
             entry["variable"] = name
         catalogue.fields["v." + name] = entry
+        if a_field.get("field_encrypted") == 1:
+            catalogue.encrypted.add("v." + name)
+            continue
         catalogue.variables.append({"name": name, "type": js_type, "multi": multi})
         ui = {
             "id": "v." + name,
@@ -768,6 +826,10 @@ def build_catalogue(request, project_id, form_id):
                 "label": "case " + cname,
                 "group": "case",
             }
+            if a_field.get("field_encrypted") == 1:
+                catalogue.encrypted.add("k." + cname)
+                catalogue.encrypted_targets.add(("case", "column", cname))
+                continue
             catalogue.ui.append(
                 {
                     "id": "k." + cname,

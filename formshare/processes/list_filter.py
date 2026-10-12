@@ -536,6 +536,31 @@ def referenced_properties(rules):
     return found
 
 
+def referenced_columns(rules):
+    """The names of the source table's columns a rule set reads: its ``t.``
+    fields, not its properties."""
+    try:
+        rules = _parse(rules)
+    except FilterError:
+        return set()
+    found = set()
+
+    def walk(node):
+        if not isinstance(node, dict):
+            return
+        if "rules" in node:
+            for r in node.get("rules") or []:
+                walk(r)
+            return
+        field_id = str(node.get("field") or node.get("id") or "")
+        if field_id.startswith("t."):
+            found.add(field_id[2:])
+
+    if rules is not None:
+        walk(rules)
+    return found
+
+
 def uses_properties(filter_sql):
     """Whether a compiled filter reads a property, so that the SELECT
     joins ``<table>_properties``."""

@@ -76,6 +76,7 @@ from .steps.geo_lists import t_e_s_t_geo_lists
 from .steps.reserved_names import t_e_s_t_reserved_names
 from .steps.properties_export import t_e_s_t_properties_export
 from .steps.encryption_keys import t_e_s_t_encryption_keys
+from .steps.encryption_forms import t_e_s_t_encryption_forms
 from .steps.list_transfer import t_e_s_t_list_transfer
 from .steps.repository_tasks import t_e_s_t_repository_tasks
 from .steps.root import t_e_s_t_root
@@ -256,6 +257,8 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_properties_export(self.test_object)
             print("Testing the record of field encryption's keys")
             t_e_s_t_encryption_keys(self.test_object)
+            print("Testing a form's encrypted questions through its life")
+            t_e_s_t_encryption_forms(self.test_object)
             print("Testing the export and import of published lists")
             t_e_s_t_list_transfer(self.test_object)
             print("Testing partners")

@@ -40,6 +40,7 @@ from formshare.models import (
     Collaborator,
     Collgroup,
     Collingroup,
+    DictField,
     EncryptionEvent,
     EncryptionGrant,
     EncryptionMember,
@@ -73,6 +74,16 @@ __all__ = [
     "seal_xml",
     "marked_xmlcodes",
     "marked_columns",
+    "survey_marks",
+    "field_is_encrypted",
+    "field_labelled_encrypted",
+    "invalid_encrypted_fields_heading",
+    "describe_invalid_encrypted_fields",
+    "encryption_change_message",
+    "KEY_NEEDED",
+    "key_needed_message",
+    "encrypted_columns",
+    "encrypted_column_message",
     "get_user_role",
     "assistant_can_clean",
     "member_is_eligible",
@@ -460,6 +471,168 @@ def marked_columns(create_xml_path):
             if field.get("fs_encrypted") == "true":
                 marked.add((table.get("name"), field.get("name")))
     return marked
+
+
+# ---------------------------------------------------------------------------
+# A form's marks through its life (formshare.md section 6)
+# ---------------------------------------------------------------------------
+
+# The elements of a survey that hold questions rather than being one.
+_STRUCTURES = ("survey", "group", "repeat")
+
+
+def survey_marks(survey_file):
+    """The names of the questions a form's survey JSON marks fs_encrypted,
+    read as jxformtomysql reads the mark (JXFormToMysql/main.cpp): a key that
+    is fs_encrypted in any case -- pyxform keeps a header as it was written
+    -- whose text is yes or true, in any case. What a repository build reads
+    before it runs anything (create_repository)."""
+    with open(survey_file, encoding="utf-8") as a_file:
+        survey = json.load(a_file)
+    marked = []
+
+    def walk(element):
+        if not isinstance(element, dict):
+            return
+        if element.get("type") not in _STRUCTURES:
+            for key, value in element.items():
+                if (
+                    " ".join(str(key).split()).lower() == "fs_encrypted"
+                    and isinstance(value, str)
+                    and value.strip().lower() in ("yes", "true")
+                ):
+                    marked.append(element.get("name", ""))
+                    break
+        for child in element.get("children") or []:
+            walk(child)
+
+    walk(survey)
+    return marked
+
+
+def field_is_encrypted(field):
+    """1 when a field of create.xml holds envelopes and nothing else: RSTools
+    writes fs_encrypted="true" on it. The dictionary's field_encrypted comes
+    from this and from nothing else; the plugin opens what it marks."""
+    return 1 if field.get("fs_encrypted") == "true" else 0
+
+
+def field_labelled_encrypted(field):
+    """formshare_encrypted, the XLSForm column that labelled a field
+    "encrypted" while its answers were stored in clear. Retired (formshare.md
+    6.5): it marks the field sensitive, which is what it was, and never makes
+    a column encrypted -- turning it into fs_encrypted would have every
+    update of such a form refused by mergeversions (ENC)."""
+    return field.get("formshare_encrypted", "no") in ("yes", "1")
+
+
+def _reason(reason, translate):
+    _ = translate
+    reasons = {
+        "key": _("it is the form's key"),
+        "select": _("it is a select: its answer must match an option"),
+        "filter": _("a choice filter reads it"),
+        "geo": _("it is a location"),
+        "media": _("it is a file (photo, audio, video), which cannot be encrypted yet"),
+    }
+    return reasons.get(reason, reason)
+
+
+def invalid_encrypted_fields_heading(translate):
+    _ = translate
+    return _(
+        "The ODK you just submitted marks as encrypted (fs_encrypted) questions "
+        "that cannot be encrypted:"
+    )
+
+
+def describe_invalid_encrypted_fields(root, translate):
+    """The lines of jxformtomysql's XMLInvalidEncryptedFields (exit 39), one
+    per question a mark cannot work on, with its reason in words."""
+    _ = translate
+    report = (
+        root
+        if root.tag == "XMLInvalidEncryptedFields"
+        else root.find(".//XMLInvalidEncryptedFields")
+    )
+    if report is None:
+        return []
+    lines = []
+    for a_field in report.findall("invalidField"):
+        name = a_field.get("name", "")
+        table = a_field.get("table", "")
+        reason = _reason(a_field.get("reason", ""), _)
+        if table in ("", "maintable"):
+            lines.append(
+                _('The question "{}" cannot be encrypted: {}.').format(name, reason)
+            )
+        else:
+            lines.append(
+                _(
+                    'The question "{}" of the table "{}" cannot be encrypted: {}.'
+                ).format(name, table, reason)
+            )
+    return lines
+
+
+def encryption_change_message(translate, table, field, marked_in_repository):
+    """What mergeversions' ENC means: a version marks a column the
+    repository holds in clear, or unmarks one it holds sealed. Its report
+    gives the two field definitions, which do not say which; the
+    repository's create.xml does."""
+    _ = translate
+    if marked_in_repository:
+        return _(
+            'The question "{}" of the table "{}" is encrypted in the repository '
+            "and not in the new version. Its answers would have to be decrypted, "
+            "which a form update cannot do: mark it fs_encrypted again before "
+            "merging."
+        ).format(field, table)
+    return _(
+        'The question "{}" of the table "{}" is not encrypted in the repository '
+        "and is in the new version. Its answers would have to be encrypted, "
+        "which a form update cannot do: remove fs_encrypted from it, or ask it "
+        "as a new question, before merging."
+    ).format(field, table)
+
+
+# create_repository's own code, outside RSTools' range: a form that encrypts
+# answers, in a project with no key to seal them with (formshare.md 6.6).
+KEY_NEEDED = 1001
+
+
+def key_needed_message(translate, questions):
+    _ = translate
+    return _(
+        "This form encrypts the answers to {}, and encryption is not set up for "
+        "the project yet. Its repository can be created, or this version "
+        "merged, once the project has a key."
+    ).format(", ".join(questions))
+
+
+def encrypted_columns(request, project_id, form_id, table_name):
+    """The columns of a repository's table that hold envelopes, as its
+    dictionary says (field_encrypted, from create.xml's fs_encrypted)."""
+    return {
+        row[0]
+        for row in request.dbsession.query(DictField.field_name)
+        .filter(DictField.project_id == project_id)
+        .filter(DictField.form_id == form_id)
+        .filter(DictField.table_name == table_name)
+        .filter(DictField.field_encrypted == 1)
+        .all()
+    }
+
+
+def encrypted_column_message(translate, column, use):
+    """Why a column that holds envelopes cannot be put to a use that reads
+    it: a list's label, key or filter, an action's condition or target
+    (formshare.md 6.7). use says what was asked of it."""
+    _ = translate
+    return _(
+        'The column "{}" is encrypted, so it cannot be {}: only FormShare\'s '
+        "interface can read it."
+    ).format(column, use)
 
 
 # ---------------------------------------------------------------------------

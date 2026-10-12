@@ -1396,6 +1396,9 @@ def get_form_survey_columns(request, project, form, filter_columns=True):
                     res.remove("formshare_ontological_term")
                 if "formshare_encrypted" in res:
                     res.remove("formshare_encrypted")
+                res = [
+                    a_column for a_column in res if a_column.lower() != "fs_encrypted"
+                ]
                 if "formshare_unique" in res:
                     res.remove("formshare_unique")
                 if "formshare_sensitive" in res:

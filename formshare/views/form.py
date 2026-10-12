@@ -111,6 +111,15 @@ from formshare.processes.odk.api import (
     output_file_error_report,
     describe_output_file_errors,
     geojson_without_features,
+    machine_xml,
+)
+from formshare.processes.db.encryption import (
+    KEY_NEEDED,
+    describe_invalid_encrypted_fields,
+    encryption_change_message,
+    invalid_encrypted_fields_heading,
+    key_needed_message,
+    marked_columns,
 )
 from formshare.processes.odk.processes import get_form_primary_key, get_form_case_params
 from formshare.processes.storage import (
@@ -430,6 +439,22 @@ class FormDetails(PrivateView):
                                         )
                                     )
                                 )
+                            elif error_code == "ENC":
+                                # A version marks a column the repository
+                                # holds in clear, or unmarks a sealed one
+                                # (field encryption): the answers already
+                                # there would have to be sealed or opened.
+                                table_name = a_error.get("table")
+                                field_name = a_error.get("field")
+                                errors.append(
+                                    encryption_change_message(
+                                        self._,
+                                        table_name,
+                                        field_name,
+                                        (table_name, field_name)
+                                        in marked_columns(old_create_file),
+                                    )
+                                )
                             elif error_code == "ACD":
                                 errors.append(
                                     self._(
@@ -703,6 +728,21 @@ class FormDetails(PrivateView):
                 for a_line in describe_invalid_option_values(root, self._):
                     txt_message = txt_message + "\t" + a_line + "\n"
                 errors.append(txt_message)
+
+            if created == 39:  # pragma: no cover
+                # A question marked fs_encrypted that cannot be. The upload
+                # check refuses such a version first, so only one uploaded
+                # before the mark existed gets here.
+                root = etree.fromstring(machine_xml(message))
+                txt_message = invalid_encrypted_fields_heading(self._) + "\n"
+                for a_line in describe_invalid_encrypted_fields(root, self._):
+                    txt_message = txt_message + "\t" + a_line + "\n"
+                errors.append(txt_message)
+
+            if created == KEY_NEEDED:
+                # The version encrypts answers and the project has no key
+                # to seal them with (formshare.md 6.6).
+                errors.append(key_needed_message(self._, message))
 
             if created == 38:
                 # A file of the new version could not be written (rstools.md
@@ -1176,6 +1216,7 @@ class FormDetails(PrivateView):
 
             remove_column_from_array("formshare_sensitive", form_survey_columns)
             remove_column_from_array("formshare_encrypted", form_survey_columns)
+            remove_column_from_array("fs_encrypted", form_survey_columns)
             remove_column_from_array("formshare_unique", form_survey_columns)
             remove_column_from_array("formshare_ontological_term", form_survey_columns)
             remove_column_from_array("formshare_ontological_term", form_choices_columns)

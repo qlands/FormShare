@@ -12,6 +12,10 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 from sqlalchemy.orm.session import Session
 from formshare.models import DictTable, DictField, map_from_schema, map_to_schema
+from formshare.processes.db.encryption import (
+    field_is_encrypted,
+    field_labelled_encrypted,
+)
 from formshare.processes.db.form import get_form_xml_create_file
 from lxml import etree
 import traceback
@@ -988,8 +992,11 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
         else:
             field_notnull = 0
         field_sensitive = a_field.get("sensitive", "false")
-        if field_sensitive == "true":
+        field_protection = a_field.get("protection")
+        if field_sensitive == "true" or field_labelled_encrypted(a_field):
             field_sensitive = 1
+            if field_protection is None:
+                field_protection = "exclude" if field_key == 0 else "recode"
         else:
             field_sensitive = 0
         new_field_dict = {
@@ -1013,7 +1020,8 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
             "field_size": a_field.get("size", 0),
             "field_decsize": a_field.get("decsize", 0),
             "field_sensitive": field_sensitive,
-            "field_protection": a_field.get("protection"),
+            "field_protection": field_protection,
+            "field_encrypted": field_is_encrypted(a_field),
             "field_rfilter": a_field.get("rfilter"),
             "field_generatedas": a_field.get("generatedas"),
             "field_autoincrement": field_autoincrement,

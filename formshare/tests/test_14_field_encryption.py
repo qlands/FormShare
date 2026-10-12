@@ -525,3 +525,221 @@ def test_formshare_seals_the_answers_xmltojson_would_seal(tmp_path):
         assert envelope.encode() in resealed
     assert _open(ours[("member/contact/mem_phone", 1)], private) == "07 <22> 22"
     assert _open(ours[("member/mem_name", 1)], private) == "Otieno & sons"
+
+
+# --- A form's marks through its life (formshare.md section 6) -------------------
+
+from formshare.processes.db.encryption import (  # noqa: E402
+    KEY_NEEDED,
+    describe_invalid_encrypted_fields,
+    encryption_change_message,
+    field_is_encrypted,
+    field_labelled_encrypted,
+    key_needed_message,
+    survey_marks,
+)
+
+
+def _same(text):
+    return text
+
+
+def test_the_marks_of_a_survey_are_read_as_jxformtomysql_reads_them(tmp_path):
+    survey = {
+        "type": "survey",
+        "name": "data",
+        "children": [
+            {"type": "text", "name": "farmer", "fs_encrypted": "yes"},
+            {"type": "integer", "name": "age", "FS_Encrypted": " TRUE "},
+            {"type": "text", "name": "notes", "fs_encrypted": "no"},
+            {"type": "text", "name": "plain"},
+            {
+                "type": "repeat",
+                "name": "member",
+                "fs_encrypted": "yes",
+                "children": [
+                    {"type": "text", "name": "mem_name", " fs_encrypted ": "Yes"},
+                    {"type": "decimal", "name": "mem_weight", "fs_encrypted": True},
+                ],
+            },
+        ],
+    }
+    (tmp_path / "form.srv").write_text(json.dumps(survey))
+    # A repeat is not a question, and the mark is text, as pyxform writes it.
+    assert survey_marks(str(tmp_path / "form.srv")) == ["farmer", "age", "mem_name"]
+
+
+def test_what_a_dictionary_field_is():
+    assert field_is_encrypted({"fs_encrypted": "true"}) == 1
+    assert field_is_encrypted({"fs_encrypted": "yes"}) == 0
+    assert field_is_encrypted({}) == 0
+    # The retired label marks a field sensitive, never encrypted.
+    assert field_labelled_encrypted({"formshare_encrypted": "yes"})
+    assert field_labelled_encrypted({"formshare_encrypted": "1"})
+    assert not field_labelled_encrypted({"formshare_encrypted": "no"})
+    assert not field_labelled_encrypted({"fs_encrypted": "true"})
+
+
+EXIT_39 = """<XMLResult>
+  <XMLInvalidEncryptedFields total="3">
+    <invalidField table="maintable" name="i_d" odktype="text" reason="key"/>
+    <invalidField table="maintable" name="gender" odktype="select one" reason="select"/>
+    <invalidField table="member" name="photo" odktype="image" reason="media"/>
+  </XMLInvalidEncryptedFields>
+</XMLResult>"""
+
+
+def test_exit_39_is_told_question_by_question():
+    lines = describe_invalid_encrypted_fields(etree.fromstring(EXIT_39), _same)
+    assert lines == [
+        'The question "i_d" cannot be encrypted: it is the form\'s key.',
+        'The question "gender" cannot be encrypted: it is a select: its answer '
+        "must match an option.",
+        'The question "photo" of the table "member" cannot be encrypted: it is a '
+        "file (photo, audio, video), which cannot be encrypted yet.",
+    ]
+    assert (
+        describe_invalid_encrypted_fields(etree.fromstring("<XMLResult/>"), _same) == []
+    )
+
+
+def test_enc_says_which_way_the_mark_changed():
+    unmarked = encryption_change_message(_same, "maintable", "farmer", True)
+    assert "encrypted in the repository and not in the new version" in unmarked
+    assert "mark it fs_encrypted again" in unmarked
+    marked = encryption_change_message(_same, "maintable", "notes", False)
+    assert "not encrypted in the repository and is in the new version" in marked
+    assert "remove fs_encrypted from it" in marked
+    assert KEY_NEEDED not in range(0, 100)  # outside RSTools' codes
+    assert "farmer, age" in key_needed_message(_same, ["farmer", "age"])
+
+
+def test_a_case_variable_cannot_be_encrypted(tmp_path):
+    from formshare.processes.odk.api import encrypted_case_variable
+
+    (tmp_path / "create.xml").write_text(
+        '<?xml version="1.0"?><XMLSchemaStructure><tables><table name="maintable">'
+        '<field name="pid" type="varchar" key="true"/>'
+        '<field name="hh_head" type="text" fs_encrypted="true"/>'
+        '<field name="visit_date" type="date"/>'
+        "</table></tables></XMLSchemaStructure>"
+    )
+    create = str(tmp_path / "create.xml")
+    message = encrypted_case_variable(create, ["pid", "hh_head", "visit_date"], _same)
+    assert message.startswith('The variable "hh_head" is encrypted')
+    assert encrypted_case_variable(create, ["pid", None, "visit_date"], _same) is None
+
+
+def test_a_filter_and_a_condition_say_what_they_read():
+    from formshare.processes.db.actions import _encrypted_refusal, _rule_ids
+    from formshare.processes.list_filter import referenced_columns
+
+    rules = json.dumps(
+        {
+            "condition": "AND",
+            "rules": [
+                {"id": "t.farmer", "operator": "equal", "value": "Ann"},
+                {
+                    "condition": "OR",
+                    "rules": [
+                        {"id": "p.status", "operator": "equal", "value": "open"},
+                        {"field": "t.age", "operator": "greater", "value": 3},
+                    ],
+                },
+            ],
+        }
+    )
+    assert referenced_columns(rules) == {"farmer", "age"}
+    assert referenced_columns("not json") == set()
+
+    class Catalogue:
+        encrypted = {"v.hh_head", "k.phone"}
+        encrypted_targets = {("case", "column", "phone")}
+
+    def row(**changes):
+        a_row = {
+            "target_scope": "case",
+            "target_kind": "property",
+            "target_name": "status",
+            "value_kind": "constant",
+            "value": "open",
+            "when_rules": None,
+        }
+        a_row.update(changes)
+        return a_row
+
+    assert _encrypted_refusal(row(), Catalogue, _same) is None
+    written = _encrypted_refusal(
+        row(target_kind="column", target_name="phone"), Catalogue, _same
+    )
+    assert (
+        written.startswith('The column "phone" is encrypted') and "written" in written
+    )
+    copied = _encrypted_refusal(
+        row(value_kind="variable", value="hh_head"), Catalogue, _same
+    )
+    assert "copied by an action" in copied
+    condition = json.dumps(
+        {"condition": "AND", "rules": [{"id": "k.phone", "operator": "is_null"}]}
+    )
+    assert _rule_ids(condition) == {"k.phone"}
+    read = _encrypted_refusal(row(when_rules=condition), Catalogue, _same)
+    assert read.startswith('The column "phone" is encrypted') and "condition" in read
+
+
+def test_the_installed_jxformtomysql_refuses_a_mark_that_cannot_work(tmp_path):
+    from pyxform.xls2json import parse_file_to_json
+
+    tool = os.path.join(_odktools_path(), "JXFormToMysql", "jxformtomysql")
+    if not os.path.exists(tool):
+        pytest.skip("jxformtomysql is not installed")
+    book = openpyxl.Workbook()
+    sheet = book.active
+    sheet.title = "survey"
+    for a_row in (
+        ["type", "name", "label", "fs_encrypted"],
+        ["text", "i_d", "ID", ""],
+        ["select_one gender", "gender", "Gender", "yes"],
+        ["geopoint", "home", "Home", "yes"],
+    ):
+        sheet.append(a_row)
+    choices = book.create_sheet("choices")
+    for a_row in (["list_name", "name", "label"], ["gender", "1", "Female"]):
+        choices.append(a_row)
+    settings = book.create_sheet("settings")
+    settings.append(["form_id", "version"])
+    settings.append(["refused", "1"])
+    book.save(str(tmp_path / "refused.xlsx"))
+    survey = parse_file_to_json(str(tmp_path / "refused.xlsx"), warnings=[])
+    (tmp_path / "refused.srv").write_text(json.dumps(survey))
+    (tmp_path / "tmp").mkdir()
+    run = subprocess.run(
+        [
+            tool,
+            "-j",
+            str(tmp_path / "refused.srv"),
+            "-t",
+            "maintable",
+            "-v",
+            "i_d",
+            "-e",
+            str(tmp_path / "tmp"),
+            "-o",
+            "m",
+            "-K",
+        ],
+        cwd=str(tmp_path),
+        capture_output=True,
+    )
+    if run.returncode != 39:
+        pytest.skip("this jxformtomysql predates field encryption")
+    from formshare.processes.odk.api import machine_xml
+
+    lines = describe_invalid_encrypted_fields(
+        etree.fromstring(machine_xml(run.stdout)), _same
+    )
+    assert lines == [
+        'The question "gender" cannot be encrypted: it is a select: its answer '
+        "must match an option.",
+        'The question "home" cannot be encrypted: it is a location.',
+    ]

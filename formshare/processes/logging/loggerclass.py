@@ -22,3 +22,17 @@ class SecretLogger(logging.Logger):
     def debug(self, msg, *args, **kwargs):
         message = msg.replace(self.db_password, "xxxxxxxx")
         super(SecretLogger, self).debug(message, *args, **kwargs)
+
+
+def masked_command(args):
+    """A tool's command line, as a list of arguments, with the database
+    password masked: for a record kept beside a submission's log, which the
+    logger's own masking never sees. RSTools takes the password as "-p
+    <password>" in one argument, or as "-p=<password>"."""
+    masked = []
+    for an_arg in args:
+        if an_arg.startswith("-p ") or an_arg.startswith("-p="):
+            masked.append(an_arg[:3] + "xxxxxxxx")
+        else:
+            masked.append(an_arg)
+    return " ".join(masked)

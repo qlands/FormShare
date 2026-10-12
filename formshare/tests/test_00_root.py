@@ -77,6 +77,7 @@ from .steps.reserved_names import t_e_s_t_reserved_names
 from .steps.properties_export import t_e_s_t_properties_export
 from .steps.encryption_keys import t_e_s_t_encryption_keys
 from .steps.encryption_forms import t_e_s_t_encryption_forms
+from .steps.encryption_submissions import t_e_s_t_encryption_submissions
 from .steps.list_transfer import t_e_s_t_list_transfer
 from .steps.repository_tasks import t_e_s_t_repository_tasks
 from .steps.root import t_e_s_t_root
@@ -259,6 +260,8 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_encryption_keys(self.test_object)
             print("Testing a form's encrypted questions through its life")
             t_e_s_t_encryption_forms(self.test_object)
+            print("Testing encrypted answers from the device to the repository")
+            t_e_s_t_encryption_submissions(self.test_object)
             print("Testing the export and import of published lists")
             t_e_s_t_list_transfer(self.test_object)
             print("Testing partners")

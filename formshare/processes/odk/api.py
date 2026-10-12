@@ -30,8 +30,14 @@ from formshare.processes.db.encryption import (
     describe_invalid_encrypted_fields,
     get_active_project_key,
     invalid_encrypted_fields_heading,
+    manifest_marks,
+    no_key_message,
+    seal_json_text,
+    seal_xml,
+    submission_digest,
     survey_marks,
 )
+from formshare.processes.logging.loggerclass import masked_command
 from formshare.processes.db.actions import (
     actions_json,
     get_action_mode,
@@ -339,6 +345,28 @@ def get_geopoint_variables_from_json(json_dict, parent_array, variables):
             variables.append(form_geo_point)
 
 
+def extract_sealed(archive, target_dir, marks, public_key):
+    """Unpacks an import's zip with every JSON and XML submission sealed as
+    it is read, so that no answer the form encrypts is written in clear. A
+    member that would land outside the directory is left out."""
+    root = os.path.realpath(target_dir)
+    for member in archive.infolist():
+        if member.is_dir():
+            continue
+        target = os.path.realpath(os.path.join(root, member.filename))
+        if not target.startswith(root + os.sep):
+            continue
+        data = archive.read(member)
+        name = member.filename.lower()
+        if name.endswith(".json"):
+            data, sealed = seal_json_text(data, marks, public_key)
+        elif name.endswith(".xml"):
+            data, sealed = seal_xml(data, marks, public_key)
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        with open(target, "wb") as a_file:
+            a_file.write(data)
+
+
 def import_external_data(
     request,
     user,
@@ -370,20 +398,47 @@ def import_external_data(
     paths = ["tmp", uid, input_file_name]
     file_name = os.path.join(odk_dir, *paths)
 
-    input_file.seek(0)
-    with open(file_name, "wb") as permanent_file:
-        shutil.copyfileobj(input_file, permanent_file)
-
-    input_file.close()
-    if input_file_name[-3:] == "zip":
-        if zipfile.is_zipfile(file_name):
-            with zipfile.ZipFile(file_name, "r") as zip_ref:
-                zip_ref.extractall(temp_dir)
-        else:
-            return False, "Invalid Zip file", None
-    else:
-        if import_type == 2:
+    marks = manifest_marks(odk_dir, form_directory)
+    if marks:
+        # The form encrypts answers: the files are sealed as they are read,
+        # and nothing of them is written in clear -- not the upload, not what
+        # it unpacks to (field encryption, formshare.md 5.5).
+        public_key = get_active_project_key(request, project)
+        if public_key is None:
+            input_file.close()
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            return False, no_key_message(request.translate), None
+        input_file.seek(0)
+        data = input_file.read()
+        input_file.close()
+        if input_file_name[-3:] == "zip":
+            try:
+                archive = zipfile.ZipFile(io.BytesIO(data))
+            except zipfile.BadZipFile:
+                return False, "Invalid Zip file", None
+            with archive:
+                extract_sealed(archive, temp_dir, marks, public_key)
+        elif import_type == 2:
             return False, "The import file must be Zip", None
+        else:
+            data, sealed = seal_json_text(data, marks, public_key)
+            with open(file_name, "wb") as permanent_file:
+                permanent_file.write(data)
+    else:
+        input_file.seek(0)
+        with open(file_name, "wb") as permanent_file:
+            shutil.copyfileobj(input_file, permanent_file)
+
+        input_file.close()
+        if input_file_name[-3:] == "zip":
+            if zipfile.is_zipfile(file_name):
+                with zipfile.ZipFile(file_name, "r") as zip_ref:
+                    zip_ref.extractall(temp_dir)
+            else:
+                return False, "Invalid Zip file", None
+        else:
+            if import_type == 2:
+                return False, "The import file must be Zip", None
 
     project_code = get_project_code_from_id(request, user, project)
     geopoint_variables = get_form_geopoints(request, project, form)
@@ -4583,6 +4638,9 @@ def store_json_file(
     assistant_uuid,
 ):
     _ = request.translate
+    # What the form encrypts: its answers arrive sealed (store_submission,
+    # store_json_submission), and a resend is recognised without them.
+    marks = manifest_marks(odk_dir, xform_directory)
     if schema is not None:
         if schema != "":
             # Add the controlling fields to the JSON file
@@ -4676,7 +4734,11 @@ def store_json_file(
 
                 # Get the MD5Sum of the JSON file and looks for it in the submissions
                 # This will get an exact match that will not move into the database
-                original_md5 = md5(open(original_file, "rb").read()).hexdigest()
+                if marks:
+                    with open(original_file, "r") as a_file:
+                        original_md5 = submission_digest(json.load(a_file))
+                else:
+                    original_md5 = md5(open(original_file, "rb").read()).hexdigest()
                 md5sum = md5(open(json_file, "rb").read()).hexdigest()
                 sameas = get_submission_data(request, project, form, original_md5)
                 if sameas is None:
@@ -4726,6 +4788,20 @@ def store_json_file(
                     args.append("-U " + uuid_file)
                     args.append("-O m")
                     args.append("-w")
+                    # The project's public key whenever it has one: jsontomysql
+                    # seals with it what a marked column receives in clear,
+                    # and refuses a marked form without it.
+                    public_key = get_active_project_key(request, project)
+                    if public_key is not None:
+                        args.append("-k " + public_key)
+                    elif marks:
+                        log.error(
+                            "Submission {} of {} cannot be loaded: the form "
+                            "encrypts answers and project {} has no key".format(
+                                submission_id, form, project
+                            )
+                        )
+                        return 1, ""
 
                     json_file_name = os.path.basename(json_file)
                     json_file_base = os.path.splitext(json_file_name)[0]
@@ -4906,7 +4982,7 @@ def store_json_file(
                                 log_file,
                                 1,
                                 assistant_uuid,
-                                " ".join(args),
+                                masked_command(args),
                             )
                             if not added:
                                 log.error(message)
@@ -5242,11 +5318,17 @@ def store_json_file(
                 odk_dir, *["forms", xform_directory, "submissions", "*.original"]
             )
             files = glob.glob(submissions_path)
-            md5sum = md5(open(original_file, "rb").read()).hexdigest()
+
+            def testing_digest(a_path):
+                if marks:
+                    with open(a_path, "r") as a_file:
+                        return submission_digest(json.load(a_file))
+                return md5(open(a_path, "rb").read()).hexdigest()
+
+            md5sum = testing_digest(original_file)
             for aFile in files:
                 if aFile != original_file:
-                    other_md5sum = md5(open(aFile, "rb").read()).hexdigest()
-                    if md5sum == other_md5sum:
+                    if md5sum == testing_digest(aFile):
                         submission_exists = aFile
                         break
 
@@ -5405,6 +5487,24 @@ def convert_xml_to_json(
         "-o " + temp_json_file,
         "-x " + xml_form_file,
     ]
+    # The XML holds its marked answers sealed already (store_submission).
+    # xmltojson is given the manifest and the key all the same: it keeps an
+    # envelope as it is, and would seal an answer FormShare had missed.
+    if manifest_marks(odk_dir, xform_directory):
+        public_key = get_active_project_key(request, project)
+        if public_key is None:
+            log.error(
+                "Submission {} of {} cannot be converted: the form encrypts "
+                "answers and project {} has no key".format(submission_id, form, project)
+            )
+            return 1, ""
+        args.append(
+            "-m "
+            + os.path.join(
+                odk_dir, *["forms", xform_directory, "repository", "manifest.xml"]
+            )
+        )
+        args.append("-k " + public_key)
     p = Popen(args, stdout=PIPE, stderr=PIPE)
 
     # print("Calling xml_to_json: {}".format(" ".join(args)))
@@ -5455,11 +5555,13 @@ def convert_xml_to_json(
 
 
 def store_json_submission(request, user, project, assistant_uuid):
+    _ = request.translate
     odk_dir = get_odk_path(request)
     unique_id = uuid4()
     path = os.path.join(odk_dir, *["submissions", str(unique_id)])
     os.makedirs(path)
     json_file = ""
+    json_raw = None
     for key in request.POST.keys():
         try:
             if key != "*isIncomplete*":
@@ -5476,13 +5578,18 @@ def store_json_submission(request, user, project, assistant_uuid):
                         filename = str(unique_id) + ".json"
                 input_file = request.POST[key].file
                 file_path = os.path.join(path, filename)
-                if file_path.upper().find(".JSON") >= 0:
-                    json_file = file_path
-                temp_file_path = file_path + "~"
                 input_file.seek(0)
-                with open(temp_file_path, "wb") as output_file:
-                    shutil.copyfileobj(input_file, output_file)
-                os.rename(temp_file_path, file_path)
+                if file_path.upper().find(".JSON") >= 0:
+                    # Kept in memory until the form is known, so that an
+                    # answer it encrypts is sealed before the JSON is written
+                    # anywhere (field encryption, formshare.md 5.2).
+                    json_file = file_path
+                    json_raw = input_file.read()
+                else:
+                    temp_file_path = file_path + "~"
+                    with open(temp_file_path, "wb") as output_file:
+                        shutil.copyfileobj(input_file, output_file)
+                    os.rename(temp_file_path, file_path)
             else:
                 log.error(
                     "Incomplete submission {} in project {} of user {} with assistant {}".format(
@@ -5500,13 +5607,42 @@ def store_json_submission(request, user, project, assistant_uuid):
                 + ". URL: "
                 + request.url
             )
-    if json_file != "":
-        f = open(json_file)
-        json_file_data = json.load(f)
-        f.close()
+    if json_raw is not None:
+        try:
+            json_file_data = json.loads(json_raw)
+        except ValueError as e:
+            log.error("Submission {} is not JSON: {}".format(unique_id, str(e)))
+            return False, 500, ""
         xform_id = json_file_data.get("_xform_id_string")
+        form_data = None
         if xform_id is not None:
             form_data = get_form_data(request, project, xform_id)
+        keep_json = True
+        if form_data is not None:
+            marks = manifest_marks(odk_dir, form_data["form_directory"])
+            if marks:
+                public_key = get_active_project_key(request, project)
+                if public_key is None:
+                    log.error(
+                        "Submission {} to {} was refused: the form encrypts "
+                        "answers and project {} has no key".format(
+                            unique_id, xform_id, project
+                        )
+                    )
+                    shutil.rmtree(path, ignore_errors=True)
+                    return False, 403, no_key_message(_)
+                # An API client may have sealed answers itself: they are
+                # kept as they came.
+                json_raw, sealed = seal_json_text(json_raw, marks, public_key)
+        elif get_active_project_key(request, project) is not None:
+            # A form FormShare does not know cannot say what it encrypts; in
+            # a project that seals answers nothing of it is kept.
+            keep_json = False
+            shutil.rmtree(path, ignore_errors=True)
+        if keep_json:
+            with open(json_file, "wb") as json_output:
+                json_output.write(json_raw)
+        if xform_id is not None:
             if form_data is not None:
                 if form_data["form_accsub"] == 1:
                     total, t1, t2 = get_dataset_stats_for_form(
@@ -5681,20 +5817,45 @@ def store_json_submission(request, user, project, assistant_uuid):
         return False, 500, ""
 
 
+class _Upload:
+    """A part of a submission's POST, as a plugin reads one."""
+
+    def __init__(self, filename, data):
+        self.filename = filename
+        self.file = io.BytesIO(data)
+
+
+def post_with_sealed_xml(post, xml_key, sealed_xml):
+    """A submission's POST with its XML in the form FormShare keeps: what the
+    plugins that see a submission as it came (IRawSubmission) are given when
+    the form encrypts answers, so that none of them sees one in clear."""
+    parts = {}
+    for key in post.keys():
+        if key == xml_key:
+            parts[key] = _Upload(post[key].filename, sealed_xml)
+        else:
+            parts[key] = post[key]
+    return parts
+
+
 # How a submission's XML is tidied before anything reads it. tidy breaks
 # a line at column 68 unless told not to, and the break went into the
 # answer: a long text answer reached the repository with a line break
-# where the person typed a space ("they now walk\ntwo hours"). It still
+# where the person typed a space ("they now walk\ntwo hours"). Wrapping
+# also broke an envelope, which an XML that arrives sealed carries. It still
 # folds a run of spaces into one.
 TIDY_XML = ["tidy", "-xml", "-wrap", "0"]
 
 
 def store_submission(request, user, project, assistant_uuid):
+    _ = request.translate
     odk_dir = get_odk_path(request)
     unique_id = uuid4()
     path = os.path.join(odk_dir, *["submissions", str(unique_id)])
     os.makedirs(path)
     xml_file = ""
+    xml_key = None
+    xml_data = None
     submission_message = ""
     if request.registry.settings.get("log_submissions", "false").upper() == "TRUE":
         if not "*isIncomplete*" in request.POST.keys():
@@ -5732,35 +5893,35 @@ def store_submission(request, user, project, assistant_uuid):
                     submission_message = submission_message + filename + "\n"
                 input_file = request.POST[key].file
                 file_path = os.path.join(path, filename)
-                if file_path.upper().find(".XML") >= 0:
-                    xml_file = file_path
-                temp_file_path = file_path + "~"
                 input_file.seek(0)
-                with open(temp_file_path, "wb") as output_file:
-                    shutil.copyfileobj(input_file, output_file)
-                # Now that we know the file has been fully saved to disk move it into place.
-                if temp_file_path.find(".xml") >= 0:
-                    final = open(file_path, "w")
-                    args = TIDY_XML + [temp_file_path]
-                    p = Popen(args, stdout=final, stderr=PIPE)
-                    stdout, stderr = p.communicate()
-                    final.close()
+                if file_path.upper().find(".XML") >= 0:
+                    # Tidied through a pipe and kept in memory until the form
+                    # is known: an answer the form encrypts is sealed before
+                    # the XML is written anywhere (field encryption,
+                    # formshare.md 5.1), so its clear text never reaches a
+                    # file. tidy wraps nothing (-wrap 0), so an XML that
+                    # arrives sealed -- an import, a device that seals --
+                    # keeps its envelopes whole; wrapping broke them.
+                    xml_file = file_path
+                    xml_key = key
+                    p = Popen(TIDY_XML, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+                    xml_data, stderr = p.communicate(input_file.read())
                     if p.returncode != 0:
                         log.error(
                             "Tidy error. Formatting "
                             + file_path
-                            + "  to "
-                            + temp_file_path
                             + ". Error: "
                             + "-"
                             + stderr.decode()
                             + ". Command line: "
-                            + " ".join(args)
+                            + " ".join(TIDY_XML)
                         )
                         return False, 500, ""
-                    else:
-                        os.remove(temp_file_path)
                 else:
+                    temp_file_path = file_path + "~"
+                    with open(temp_file_path, "wb") as output_file:
+                        shutil.copyfileobj(input_file, output_file)
+                    # Now that the file is fully saved to disk move it into place.
                     os.rename(temp_file_path, file_path)
             else:
                 log.error(
@@ -5784,13 +5945,48 @@ def store_submission(request, user, project, assistant_uuid):
             unique_id
         )
         log.error(submission_message)
-    if xml_file != "":
-        tree = etree.parse(xml_file)
-        root = tree.getroot()
+    if xml_data is not None:
+        try:
+            root = etree.fromstring(
+                xml_data, etree.XMLParser(resolve_entities=False, no_network=True)
+            )
+        except etree.XMLSyntaxError as e:
+            log.error("Submission {} is not XML: {}".format(unique_id, str(e)))
+            return False, 500, ""
         xform_id = root.get("id")
         xform_version = root.get("version")
+        form_data = None
         if xform_id is not None:
             form_data = get_form_data(request, project, xform_id, xform_version)
+        posted = request.POST
+        keep_xml = True
+        if form_data is not None:
+            marks = manifest_marks(odk_dir, form_data["form_directory"])
+            if marks:
+                public_key = get_active_project_key(request, project)
+                if public_key is None:
+                    # Nothing kept: sealing needs the project's key, and an
+                    # answer the form encrypts is never written in clear.
+                    log.error(
+                        "Submission {} to {} was refused: the form encrypts "
+                        "answers and project {} has no key".format(
+                            unique_id, xform_id, project
+                        )
+                    )
+                    shutil.rmtree(path, ignore_errors=True)
+                    return False, 403, no_key_message(_)
+                xml_data, sealed = seal_xml(xml_data, marks, public_key)
+                # The plugins that see a submission as it came get it sealed.
+                posted = post_with_sealed_xml(request.POST, xml_key, xml_data)
+        elif get_active_project_key(request, project) is not None:
+            # A form FormShare does not know cannot say what it encrypts; in
+            # a project that seals answers nothing of it is kept.
+            keep_xml = False
+            shutil.rmtree(path, ignore_errors=True)
+        if keep_xml:
+            with open(xml_file, "wb") as xml_output:
+                xml_output.write(xml_data)
+        if xform_id is not None:
             if form_data is not None:
                 if form_data["form_accsub"] == 1:
                     for a_plugin in plugins.PluginImplementations(
@@ -5803,7 +5999,7 @@ def store_submission(request, user, project, assistant_uuid):
                             form_data,
                             assistant_uuid,
                             str(unique_id),
-                            request.POST,
+                            posted,
                         )
                     if form_data["form_schema"] is None:
                         total, t1, t2 = get_dataset_stats_for_form(
@@ -6169,8 +6365,19 @@ def store_new_version(
             shutil.copyfile(current_file, backup_file)
             temp_file_path = current_file + "~"
             try:
+                # A person fixing a submission may type an answer the form
+                # encrypts: it is sealed before it replaces the stored JSON
+                # or goes into a diff (field encryption, formshare.md 5.4).
+                new_data = new_file.read()
+                marks = manifest_marks(odk_dir, form_directory)
+                if marks:
+                    public_key = get_active_project_key(request, project)
+                    if public_key is None:
+                        os.remove(backup_file)
+                        return 1, no_key_message(request.translate)
+                    new_data, sealed = seal_json_text(new_data, marks, public_key)
                 with open(temp_file_path, "wb") as output_file:
-                    shutil.copyfileobj(new_file, output_file)
+                    output_file.write(new_data)
                 os.remove(current_file)
                 os.rename(temp_file_path, current_file)
 
@@ -6334,6 +6541,11 @@ def push_revision(request, user, project, form, submission):
     args.append("-U " + uuid_file)
     args.append("-O m")
     args.append("-w")
+    # As a live load does (store_json_file): what a marked column receives in
+    # clear -- a person fixing the submission typed it -- is sealed.
+    public_key = get_active_project_key(request, project)
+    if public_key is not None:
+        args.append("-k " + public_key)
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:

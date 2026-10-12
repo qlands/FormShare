@@ -115,7 +115,7 @@ class ODKPushData(ODKView):
                             if stored:
                                 return submission_response(201, message)
                             else:
-                                return submission_response(error)
+                                return submission_response(error, message)
                         else:
                             return self.ask_for_credentials()
                     else:
@@ -128,7 +128,7 @@ class ODKPushData(ODKView):
                     if stored:
                         return submission_response(201, message)
                     else:
-                        return submission_response(error)
+                        return submission_response(error, message)
             else:
                 response = Response(status=404)
                 return response
@@ -165,7 +165,7 @@ class ODKPushJSONData(ODKView):
                             if stored:
                                 return submission_response(201, message)
                             else:
-                                return submission_response(error)
+                                return submission_response(error, message)
                         else:
                             return self.ask_for_credentials()
                     else:
@@ -178,7 +178,7 @@ class ODKPushJSONData(ODKView):
                     if stored:
                         return submission_response(201, message)
                     else:
-                        return submission_response(error)
+                        return submission_response(error, message)
             else:
                 response = Response(status=404)
                 return response
@@ -240,7 +240,7 @@ class ODKSubmission(ODKView):
                                 if stored:
                                     return submission_response(201, message)
                                 else:
-                                    return submission_response(error)
+                                    return submission_response(error, message)
                             else:
                                 return self.ask_for_credentials()
                         else:
@@ -252,7 +252,7 @@ class ODKSubmission(ODKView):
                         if stored:
                             return submission_response(201, message)
                         else:
-                            return submission_response(error)
+                            return submission_response(error, message)
                 else:
                     response = Response(status=404)
                     return response

@@ -743,3 +743,178 @@ def test_the_installed_jxformtomysql_refuses_a_mark_that_cannot_work(tmp_path):
         "must match an option.",
         'The question "home" cannot be encrypted: it is a location.',
     ]
+
+
+# --- The submission pipeline (formshare.md section 5) ----------------------------
+
+from formshare.processes.db.encryption import (  # noqa: E402
+    manifest_marks,
+    no_key_message,
+    seal_json_text,
+    submission_digest,
+)
+
+
+def test_a_resend_is_recognised_without_its_answers():
+    private, public = _new_key()
+    sent = {
+        "_xform_id_string": "enc",
+        "pid": "A1",
+        "farmer_name": "Ana",
+        "member": [{"member/mem_name": "Wanjiru", "member/mem_age": "12"}],
+        "meta/instanceID": "uuid:1",
+    }
+    first, second = json.loads(json.dumps(sent)), json.loads(json.dumps(sent))
+    seal_submission(first, MARKED, public)
+    seal_submission(second, MARKED, public)
+    assert first["farmer_name"] != second["farmer_name"]  # sealing is random
+    assert submission_digest(first) == submission_digest(second)
+    # Anything in clear still tells two submissions apart.
+    third = json.loads(json.dumps(sent))
+    third["pid"] = "A2"
+    seal_submission(third, MARKED, public)
+    assert submission_digest(third) != submission_digest(first)
+    assert submission_digest({"a": 1, "b": 2}) == submission_digest({"b": 2, "a": 1})
+
+
+def test_a_pushed_json_is_kept_as_sent_unless_something_is_sealed():
+    private, public = _new_key()
+    raw = b'{"_xform_id_string": "enc",  "farmer_name": "Ana"}'
+    assert seal_json_text(raw, {"notes"}, public) == (raw, 0)
+    kept, sealed = seal_json_text(raw, {"farmer_name"}, public)
+    assert sealed == 1
+    assert _open(json.loads(kept)["farmer_name"], private) == "Ana"
+    # A client that sealed for itself keeps its bytes.
+    already = json.dumps({"farmer_name": seal("Ana", public)}).encode()
+    assert seal_json_text(already, {"farmer_name"}, public) == (already, 0)
+
+
+def test_a_forms_marks_come_from_its_manifest(tmp_path):
+    repository = tmp_path / "forms" / "dir1" / "repository"
+    repository.mkdir(parents=True)
+    (repository / "manifest.xml").write_text(
+        '<?xml version="1.0"?><XMLSchemaManifest><table mysqlcode="maintable">'
+        '<field mysqlcode="farmer_name" xmlcode="farmer_name" fs_encrypted="true"/>'
+        "</table></XMLSchemaManifest>"
+    )
+    assert manifest_marks(str(tmp_path), "dir1") == {"farmer_name"}
+    assert manifest_marks(str(tmp_path), "nowhere") == set()
+    assert "encryption is not set up" in no_key_message(_same)
+
+
+def test_the_stored_command_hides_the_password():
+    from formshare.processes.logging.loggerclass import masked_command
+
+    assert masked_command(
+        ["jsontomysql", "-u root", "-p s3cret", "-p=other", "-s FS_x"]
+    ) == ("jsontomysql -u root -p xxxxxxxx -p=xxxxxxxx -s FS_x")
+
+
+def test_a_plugin_sees_the_submission_sealed():
+    from formshare.processes.odk.api import post_with_sealed_xml
+
+    class Part:
+        def __init__(self, filename, data):
+            self.filename = filename
+            self.file = data
+
+    post = {
+        "xml_submission_file": Part("submission.xml", b"<data>clear</data>"),
+        "image": Part("photo.jpg", b"jpeg"),
+        "*isIncomplete*": "yes",
+    }
+    seen = post_with_sealed_xml(post, "xml_submission_file", b"<data>sealed</data>")
+    assert seen["xml_submission_file"].file.read() == b"<data>sealed</data>"
+    assert seen["xml_submission_file"].filename == "submission.xml"
+    assert seen["image"] is post["image"]
+    assert seen["*isIncomplete*"] == "yes"
+
+
+def test_an_import_is_unpacked_sealed(tmp_path):
+    import io
+    import zipfile
+
+    from formshare.processes.odk.api import extract_sealed
+
+    private, public = _new_key()
+    archive_bytes = io.BytesIO()
+    with zipfile.ZipFile(archive_bytes, "w") as archive:
+        archive.writestr("one.json", json.dumps({"farmer_name": "Ana", "pid": "1"}))
+        archive.writestr(
+            "two/two.xml",
+            '<?xml version="1.0"?><data id="enc"><farmer_name>Otieno</farmer_name>'
+            "<pid>2</pid></data>",
+        )
+        archive.writestr("two/photo.jpg", b"jpeg")
+        archive.writestr("../outside.json", json.dumps({"farmer_name": "Bad"}))
+    target = tmp_path / "unpacked"
+    target.mkdir()
+    with zipfile.ZipFile(io.BytesIO(archive_bytes.getvalue())) as archive:
+        extract_sealed(archive, str(target), {"farmer_name"}, public)
+    one = json.loads((target / "one.json").read_text())
+    assert _open(one["farmer_name"], private) == "Ana" and one["pid"] == "1"
+    two = etree.fromstring((target / "two" / "two.xml").read_bytes())
+    assert _open(two.findtext("farmer_name"), private) == "Otieno"
+    assert (target / "two" / "photo.jpg").read_bytes() == b"jpeg"
+    assert not (tmp_path / "outside.json").exists()
+    # Nothing unpacked holds an answer in clear.
+    for a_file in target.rglob("*"):
+        if a_file.is_file():
+            assert b"Ana" not in a_file.read_bytes()
+            assert b"Otieno" not in a_file.read_bytes()
+
+
+def test_a_fixed_submission_is_sealed_before_it_is_kept(tmp_path, monkeypatch):
+    """A person fixing a submission may type an answer the form encrypts: the
+    check-in seals it before it replaces the stored JSON or goes into the
+    diff (formshare.md 5.4)."""
+    import io
+
+    from formshare.processes.odk import api
+
+    private, public = _new_key()
+    form_directory = tmp_path / "odk" / "forms" / "dir1"
+    (form_directory / "repository").mkdir(parents=True)
+    (form_directory / "repository" / "manifest.xml").write_text(
+        '<?xml version="1.0"?><XMLSchemaManifest><table mysqlcode="maintable">'
+        '<field mysqlcode="farmer_name" xmlcode="farmer_name" fs_encrypted="true"/>'
+        "</table></XMLSchemaManifest>"
+    )
+    submissions = form_directory / "submissions"
+    (submissions / "S1").mkdir(parents=True)
+    (submissions / "S1.json").write_text(
+        json.dumps({"pid": "S1", "farmer_name": seal("Ann", public)}, indent=4)
+    )
+    monkeypatch.setattr(api, "get_form_directory", lambda r, p, f: "dir1")
+    monkeypatch.setattr(api, "get_active_project_key", lambda r, p: public)
+    monkeypatch.setattr(api, "update_json_status", lambda *args: None)
+    monkeypatch.setattr(api, "add_json_history", lambda *args: (True, ""))
+
+    class Registry:
+        settings = {"repository.path": str(tmp_path)}
+
+    class Request:
+        registry = Registry()
+
+        @staticmethod
+        def translate(text):
+            return text
+
+    fixed = io.BytesIO(json.dumps({"pid": "S1", "farmer_name": "Ann Fixed"}).encode())
+    assert api.store_new_version(
+        Request(), "u", "p", "f", "S1", "a", "seq1", fixed, "notes"
+    ) == (0, "")
+    stored = json.loads((submissions / "S1.json").read_text())
+    assert _open(stored["farmer_name"], private) == "Ann Fixed"
+    diff = (submissions / "S1" / "diffs" / "seq1" / "seq1.diff").read_text()
+    assert "Ann Fixed" not in diff and "fsenc:1:" in diff
+
+    # No key, nothing replaced.
+    monkeypatch.setattr(api, "get_active_project_key", lambda r, p: None)
+    before = (submissions / "S1.json").read_text()
+    again = io.BytesIO(json.dumps({"pid": "S1", "farmer_name": "Clear"}).encode())
+    res, message = api.store_new_version(
+        Request(), "u", "p", "f", "S1", "a", "seq2", again, "notes"
+    )
+    assert res == 1 and "encryption is not set up" in message
+    assert (submissions / "S1.json").read_text() == before

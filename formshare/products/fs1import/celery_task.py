@@ -16,7 +16,14 @@ from formshare.processes.elasticsearch.record_index import (
 from formshare.processes.elasticsearch.repository_index import (
     add_dataset,
 )
+from formshare.processes.db.encryption import (
+    get_active_project_key_with_engine,
+    manifest_marks,
+    seal_json_text,
+    submission_digest,
+)
 from formshare.processes.geometry import add_location, parse_geoshape_variables
+from formshare.processes.logging.loggerclass import masked_command
 from formshare.processes.sse.messaging import send_task_status_to_form
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
@@ -191,6 +198,8 @@ def store_json_file(
     settings,
     ignore_xform_check=False,
     shape_variables=None,
+    marks=None,
+    public_key=None,
 ):
     mysql_user = settings["mysql.user"]
     mysql_password = settings["mysql.password"]
@@ -201,6 +210,22 @@ def store_json_file(
         settings["odktools.path"], *["JSONToMySQL", "jsontomysql"]
     )
     original_file = json_file.replace(".json", ".original.json")
+    if marks:
+        # What the form encrypts is sealed before any copy is made (field
+        # encryption, formshare.md 5.5). The testing data a repository build
+        # brings in is sealed already, and comes back as it is.
+        if public_key is None:
+            log.error(
+                "File {} was not imported: form {} encrypts answers and project "
+                "{} has no key".format(temp_json_file, form, project)
+            )
+            return 1, ""
+        with open(temp_json_file, "rb") as a_file:
+            raw = a_file.read()
+        sealed_raw, sealed = seal_json_text(raw, marks, public_key)
+        if sealed:
+            with open(temp_json_file, "wb") as a_file:
+                a_file.write(sealed_raw)
     shutil.copyfile(temp_json_file, original_file)
     # Add the controlling fields to the JSON file
     with open(temp_json_file, "r") as f:
@@ -269,7 +294,13 @@ def store_json_file(
     args = ["jq", "-S", ".", temp_json_file]
     final = open(ordered_json_file, "w")
     md5sum = md5(open(json_file, "rb").read()).hexdigest()
-    original_md5 = md5(open(original_file, "rb").read()).hexdigest()
+    if marks:
+        # Sealing is random: a resend is recognised with its envelopes
+        # masked (formshare.md 5.6).
+        with open(original_file, "r") as a_file:
+            original_md5 = submission_digest(json.load(a_file))
+    else:
+        original_md5 = md5(open(original_file, "rb").read()).hexdigest()
     p = Popen(args, stdout=final, stderr=PIPE)
     stdout, stderr = p.communicate()
     final.close()
@@ -339,6 +370,8 @@ def store_json_file(
             "-O m",
             "-w",
         ]
+        if public_key is not None:
+            args.append("-k " + public_key)
 
         p = Popen(args, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
@@ -438,7 +471,7 @@ def store_json_file(
                     log_file,
                     1,
                     assistant_uuid,
-                    " ".join(args),
+                    masked_command(args),
                 )
                 if not added:
                     log.error(message)
@@ -489,7 +522,7 @@ def store_json_file(
                 + "-"
                 + stderr.decode()
                 + ". Command line: "
-                + " ".join(args)
+                + masked_command(args)
             )
             return 2, ""
     else:
@@ -533,6 +566,8 @@ def internal_import_json_files(
 
     engine = create_engine(settings["sqlalchemy.url"], poolclass=NullPool)
     shape_variables = get_form_geoshapes(engine, project, form)
+    marks = manifest_marks(odk_dir, form_directory)
+    public_key = get_active_project_key_with_engine(engine, project)
     list_of_files = path_to_files + "/**/*.json"
     files_to_import = glob.iglob(list_of_files, recursive=True)
     index = 0
@@ -587,6 +622,8 @@ def internal_import_json_files(
             settings,
             ignore_xform_check,
             shape_variables,
+            marks,
+            public_key,
         )
         index = index + 1
     engine.dispose()

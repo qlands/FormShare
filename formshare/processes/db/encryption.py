@@ -29,12 +29,13 @@ import datetime
 import hashlib
 import json
 import logging
+import os
 import re
 import uuid
 
 import nacl.bindings
 from lxml import etree
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, text
 
 from formshare.models import (
     Collaborator,
@@ -84,6 +85,11 @@ __all__ = [
     "key_needed_message",
     "encrypted_columns",
     "encrypted_column_message",
+    "manifest_marks",
+    "get_active_project_key_with_engine",
+    "submission_digest",
+    "seal_json_text",
+    "no_key_message",
     "get_user_role",
     "assistant_can_clean",
     "member_is_eligible",
@@ -633,6 +639,90 @@ def encrypted_column_message(translate, column, use):
         'The column "{}" is encrypted, so it cannot be {}: only FormShare\'s '
         "interface can read it."
     ).format(column, use)
+
+
+# ---------------------------------------------------------------------------
+# The submission pipeline (formshare.md section 5)
+# ---------------------------------------------------------------------------
+
+
+def manifest_marks(odk_dir, form_directory):
+    """The xmlcodes a form marks fs_encrypted, read from the manifest beside
+    its create.xml: the upload check writes it there for a form in testing,
+    and the repository build writes it again. Empty when the form marks
+    nothing, or has no manifest (a form older than the marks)."""
+    manifest = os.path.join(
+        odk_dir, "forms", form_directory, "repository", "manifest.xml"
+    )
+    if not os.path.exists(manifest):
+        return set()
+    return marked_xmlcodes(manifest)
+
+
+def get_active_project_key_with_engine(engine, project_id):
+    """get_active_project_key for code with an engine and no request: the
+    Celery tasks that load submissions."""
+    with engine.connect() as connection:
+        row = connection.execute(
+            text(
+                "SELECT public_key FROM encryption_project_key WHERE "
+                "project_id = :project AND key_status = 'active'"
+            ),
+            {"project": project_id},
+        ).first()
+    return row[0] if row is not None else None
+
+
+# What an envelope counts as in a submission's digest.
+ENVELOPE_PLACEHOLDER = "fsenc"
+
+
+def submission_digest(data):
+    """The md5 by which a resend of a submission with sealed answers is
+    recognised (formshare.md 5.6). Sealing is random, so two sends of the
+    same answers never hash alike as written: this hashes the JSON with
+    every envelope replaced by one placeholder, the keys in order. It needs
+    no answer in clear, and stores none -- a hash of the answers would let
+    anyone with the database guess a short one. Two submissions that differ
+    only in what they seal hash alike; a form's key, which no mark can take,
+    tells two cases apart, and a device's instanceID two sends."""
+
+    def blank(node):
+        if isinstance(node, dict):
+            return {key: blank(value) for key, value in node.items()}
+        if isinstance(node, list):
+            return [blank(value) for value in node]
+        if is_envelope(node):
+            return ENVELOPE_PLACEHOLDER
+        return node
+
+    canonical = json.dumps(blank(data), sort_keys=True, ensure_ascii=False)
+    return hashlib.md5(canonical.encode("utf-8")).hexdigest()
+
+
+def seal_json_text(raw, marked, public_key_text):
+    """A submission's JSON, as received, with its marked answers sealed:
+    (the JSON to keep, as bytes, and how many answers were sealed). When
+    nothing needed sealing the bytes come back as they arrived, so a form
+    that marks nothing -- or a client that sealed for itself -- keeps the
+    file it sent."""
+    data = json.loads(raw)
+    sealed = seal_submission(data, marked, public_key_text)
+    if not sealed:
+        return raw, 0
+    return json.dumps(data, indent=4, ensure_ascii=False).encode("utf-8"), sealed
+
+
+def no_key_message(translate):
+    """What a device is told when it submits to a form that encrypts answers
+    in a project with no key to seal them with: nothing is kept, so that no
+    answer is ever written in clear (formshare.md 5)."""
+    _ = translate
+    return _(
+        "This form encrypts some of its answers and encryption is not set up "
+        "for its project yet, so the submission was not accepted. Keep it on "
+        "the device and send it again once the project has a key."
+    )
 
 
 # ---------------------------------------------------------------------------

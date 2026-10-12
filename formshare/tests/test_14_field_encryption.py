@@ -922,3 +922,83 @@ def test_a_fixed_submission_is_sealed_before_it_is_kept(tmp_path, monkeypatch):
     )
     assert res == 1 and "encryption is not set up" in message
     assert (submissions / "S1.json").read_text() == before
+
+
+# --- Writes and errors (formshare.md section 7) -----------------------------------
+
+from formshare.processes.db.encryption import (  # noqa: E402
+    encrypted_edit_message,
+    is_encrypted_refusal,
+)
+
+
+class _MySQLError(Exception):
+    def __init__(self, errno, message):
+        super().__init__(errno, message)
+        self.errno = errno
+
+
+class _Wrapped(Exception):
+    """As SQLAlchemy wraps a driver's error: the driver's in .orig."""
+
+    def __init__(self, original):
+        super().__init__(str(original))
+        self.orig = original
+
+
+def test_an_answer_in_clear_in_an_encrypted_column_is_told_apart():
+    refused = _MySQLError(
+        3819, "Check constraint 'fsenc_0123456789abcdef' is violated."
+    )
+    assert is_encrypted_refusal(refused)
+    assert is_encrypted_refusal(_Wrapped(refused))
+    # Another CHECK, or another error, is not encryption's.
+    assert not is_encrypted_refusal(
+        _MySQLError(3819, "Check constraint 'other' is violated.")
+    )
+    assert not is_encrypted_refusal(
+        _Wrapped(_MySQLError(1062, "Duplicate entry 'fsenc_'"))
+    )
+    assert not is_encrypted_refusal(ValueError("fsenc_"))
+    assert "unlock it to edit" in encrypted_edit_message(_same)
+    assert "public key" in encrypted_edit_message(_same, for_api=True)
+
+
+def test_a_name_from_a_request_is_quoted_only_when_it_is_one():
+    from formshare.processes.submission.api import _quoted
+
+    assert _quoted("maintable") == "`maintable`"
+    assert _quoted("FS_8e3a_1") == "`FS_8e3a_1`"
+    for bad in ("notes`; DROP TABLE x; --", "a b", "", None, "naïve"):
+        with pytest.raises(ValueError):
+            _quoted(bad)
+
+
+def test_an_action_that_writes_an_encrypted_column_says_which():
+    from formshare.processes.actions.host import ModuleError
+    from formshare.processes.actions.server import _apply
+
+    class Session:
+        def __init__(self):
+            self.committed = False
+
+        def execute(self, statement, params=None):
+            if "UPDATE" in str(statement) and "secret" in str(statement):
+                raise _Wrapped(
+                    _MySQLError(3819, "Check constraint 'fsenc_abc' is violated.")
+                )
+
+        def commit(self):
+            self.committed = True
+
+    class Request:
+        dbsession = Session()
+
+    plan = [
+        {"table": "maintable", "column": "visits", "value": "2", "rowuuid": "r1"},
+        {"table": "maintable", "column": "secret", "value": "clear", "rowuuid": "r1"},
+    ]
+    with pytest.raises(ModuleError) as refused:
+        _apply(Request(), "FS_x", plan, "assistant")
+    assert "maintable.secret is encrypted" in str(refused.value)
+    assert not Request.dbsession.committed

@@ -550,3 +550,28 @@ def test_the_config_shim_records_what_the_app_factory_needs():
     config.set_default_csrf_options()
     assert config.make_wsgi_app() is None
     assert config.get_jinja2_environment() is None
+
+
+def test_a_plugins_keys_are_stripped_beside_cores(monkeypatch):
+    """IAPISecurity adds keys to strip from an API result; it used to replace
+    core's own list with the plugin's, twice over."""
+    from formshare.views import classes
+
+    class Plugin:
+        def secure_json_result(self, request):
+            return ["plugin_secret"]
+
+    monkeypatch.setattr(
+        classes.p, "PluginImplementations", lambda interface: [Plugin()]
+    )
+
+    class View:
+        stripApiResult = False
+        request = None
+
+    result = {"user_password": "x", "plugin_secret": "y", "kept": 1}
+    for clean in (
+        classes.PrivateView.clean_api_result,
+        classes.AssistantView.clean_api_result,
+    ):
+        assert clean(View(), dict(result)) == {"kept": 1}

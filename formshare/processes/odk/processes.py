@@ -524,11 +524,15 @@ def get_assistant_permissions_on_a_form(
     )
 
     for group in groups:
+        # The group's rights on this form. Filtering on Form.form_id joined
+        # odkform without a condition and gave the group's rights on
+        # whichever form came first.
         res = (
             request.dbsession.query(Formgrpacces)
             .filter(Formgrpacces.project_id == group.project_id)
             .filter(Formgrpacces.group_id == group.group_id)
-            .filter(Form.form_id == form)
+            .filter(Formgrpacces.form_project == requested_project)
+            .filter(Formgrpacces.form_id == form)
             .first()
         )
         if res is not None:

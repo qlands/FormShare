@@ -85,6 +85,8 @@ __all__ = [
     "key_needed_message",
     "encrypted_columns",
     "encrypted_column_message",
+    "is_encrypted_refusal",
+    "encrypted_edit_message",
     "manifest_marks",
     "get_active_project_key_with_engine",
     "submission_digest",
@@ -639,6 +641,39 @@ def encrypted_column_message(translate, column, use):
         'The column "{}" is encrypted, so it cannot be {}: only FormShare\'s '
         "interface can read it."
     ).format(column, use)
+
+
+# ---------------------------------------------------------------------------
+# Writes (formshare.md section 7)
+# ---------------------------------------------------------------------------
+
+# What MySQL answers when a value breaks a CHECK constraint (README 6).
+CHECK_CONSTRAINT_VIOLATED = 3819
+
+
+def is_encrypted_refusal(error):
+    """Whether a database error is MySQL refusing a value in a column that
+    holds envelopes: 3819, a CHECK constraint violated, on one of RSTools'
+    fsenc_ constraints -- which are the only CHECK constraints a repository
+    has. Whoever wrote it -- the cleaning grid, the API, an action -- wrote
+    an answer in clear where only an envelope may go."""
+    original = getattr(error, "orig", error)
+    errno = getattr(original, "errno", None)
+    if errno is None and getattr(original, "args", None):
+        errno = original.args[0] if isinstance(original.args[0], int) else None
+    return errno == CHECK_CONSTRAINT_VIOLATED and "fsenc_" in str(error)
+
+
+def encrypted_edit_message(translate, for_api=False):
+    """What a person, or an API client, is told when the database refused an
+    answer in clear in an encrypted column."""
+    _ = translate
+    if for_api:
+        return _(
+            "This answer is encrypted: send it sealed with the project's "
+            "public key, or null to clear it."
+        )
+    return _("This answer is encrypted: unlock it to edit.")
 
 
 # ---------------------------------------------------------------------------

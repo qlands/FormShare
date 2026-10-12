@@ -239,6 +239,27 @@
                         onclickSubmit: function () {
                             return {csrf_token: '{{ request.session.get_csrf_token() }}'};
                         },
+                        afterSubmit: function (response) {
+                            // The server says which values it refused (an
+                            // answer in clear in an encrypted column, an
+                            // option not in its lookup); the form stays open
+                            // with them.
+                            let result = response.responseJSON;
+                            if (result === undefined) {
+                                try {
+                                    result = JSON.parse(response.responseText);
+                                } catch (e) {
+                                    result = {};
+                                }
+                            }
+                            if (result && result.errors && result.errors.length > 0) {
+                                let lines = result.errors.map(function (an_error) {
+                                    return $('<div>').text(an_error.field + ': ' + an_error.message).html();
+                                });
+                                return [false, lines.join('<br>')];
+                            }
+                            return [true, ''];
+                        },
                         serializeEditData: function(postedData) {
                             let rowuuid = postedData.id;
                             for (let row in pulled_data) {

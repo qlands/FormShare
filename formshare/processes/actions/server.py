@@ -32,6 +32,7 @@ import uuid
 from sqlalchemy import text
 
 from formshare.models import ActionRun, DictField, DictTable, Odkform, map_from_schema
+from formshare.processes.db.encryption import is_encrypted_refusal
 from formshare.processes.actions.host import (
     BINARY,
     ModuleError,
@@ -811,17 +812,29 @@ def _exact_olds(request, schema, plan):
 
 
 def _apply(request, schema, plan, user):
-    """The writes, in one transaction, audited as the assistant."""
+    """The writes, in one transaction, audited as the assistant. A write to a
+    column that holds envelopes fails with its name (field encryption): an
+    action can copy an envelope there, but cannot seal an answer yet."""
     request.dbsession.execute(text("SET @odktools_current_user = :u"), {"u": user})
     for entry in plan:
-        request.dbsession.execute(
-            text(
-                "UPDATE {}.{} SET {} = :v WHERE rowuuid = :r".format(
-                    _q(schema), _q(entry["table"]), _q(entry["column"])
+        try:
+            request.dbsession.execute(
+                text(
+                    "UPDATE {}.{} SET {} = :v WHERE rowuuid = :r".format(
+                        _q(schema), _q(entry["table"]), _q(entry["column"])
+                    )
+                ),
+                {"v": entry["value"], "r": entry["rowuuid"]},
+            )
+        except Exception as e:
+            if is_encrypted_refusal(e):
+                raise ModuleError(
+                    "{}.{} is encrypted: an action can only copy an envelope "
+                    "into it, not write an answer in clear".format(
+                        entry["table"], entry["column"]
+                    )
                 )
-            ),
-            {"v": entry["value"], "r": entry["rowuuid"]},
-        )
+            raise
     request.dbsession.commit()
 
 
@@ -1014,6 +1027,8 @@ def run_for_submission(
         try:
             restore = _exact_olds(request, source["schema"], plan)
             _apply(request, source["schema"], plan, user)
+        except ModuleError as e:
+            return fail(str(e), result.log)
         except Exception as e:
             return fail("The writes could not be applied: {}".format(e), result.log)
     return _finish(

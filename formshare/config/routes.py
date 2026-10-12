@@ -73,6 +73,10 @@ from formshare.views.collaborators import (
     AcceptCollaboration,
 )
 from formshare.views.dashboard import UserDashBoardView
+from formshare.views.encryption import (
+    AssistantEncryptionKeysView,
+    ProjectEncryptionKeysView,
+)
 from formshare.views.case_management import (
     PublishedListsView,
     AddPublishedListView,
@@ -1280,6 +1284,25 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/assistantaccess/forms",
             AssistantForms,
             "assistant/index.jinja2",
+        )
+    )
+
+    # The project's public encryption keys, for those who seal answers before
+    # sending them (field encryption, formshare.md 7.4).
+    routes.append(
+        add_route(
+            "project_encryption_keys",
+            "/user/{userid}/project/{projcode}/encryption/keys",
+            ProjectEncryptionKeysView,
+            "json",
+        )
+    )
+    routes.append(
+        add_route(
+            "assistant_encryption_keys",
+            "/user/{userid}/project/{projcode}/assistantaccess/encryption/keys",
+            AssistantEncryptionKeysView,
+            "json",
         )
     )
 

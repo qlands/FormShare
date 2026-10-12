@@ -763,7 +763,7 @@ class PrivateView(object):
             user_keys = user_keys + keys_to_strip
         for plugin in p.PluginImplementations(p.IAPISecurity):
             plugin_keys = plugin.secure_json_result(self.request)
-            user_keys = plugin_keys + plugin_keys
+            user_keys = user_keys + plugin_keys
         return remove_keys(result, user_keys)
 
     def check_authorization(self):
@@ -1214,7 +1214,7 @@ class AssistantView(object):
         user_keys = keys_to_remove
         for plugin in p.PluginImplementations(p.IAPISecurity):
             plugin_keys = plugin.secure_json_result(self.request)
-            user_keys = plugin_keys + plugin_keys
+            user_keys = user_keys + plugin_keys
         return remove_keys(result, user_keys)
 
     def __call__(self):

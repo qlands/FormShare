@@ -18,6 +18,10 @@ import pandas as pd
 from PIL import Image
 from formshare.models.formshare import Submission, Jsonlog
 from formshare.processes.color_hash import ColorHash
+from formshare.processes.db.encryption import (
+    encrypted_edit_message,
+    is_encrypted_refusal,
+)
 from formshare.processes.db import (
     get_form_schema,
     get_form_directory,
@@ -936,6 +940,38 @@ def update_field_sensitive(
         return False
 
 
+_IDENTIFIER = re.compile(r"[A-Za-z0-9_]+")
+
+
+def _quoted(name):
+    """A schema, table or column name, quoted, once it is known to be one. A
+    name that came with a request goes into SQL only like this, and a value
+    only as a parameter."""
+    if not isinstance(name, str) or not _IDENTIFIER.fullmatch(name):
+        raise ValueError("{} is not a name".format(name))
+    return "`{}`".format(name)
+
+
+def _table_columns(request, schema, table):
+    """{column: generated} of a repository table, as MySQL has it."""
+    rows = request.dbsession.execute(
+        sqlalchemy_text(
+            "SELECT COLUMN_NAME, GENERATION_EXPRESSION FROM information_schema.COLUMNS "
+            "WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :table"
+        ),
+        {"schema": schema, "table": table},
+    ).fetchall()
+    return {row[0]: bool(row[1]) for row in rows}
+
+
+def _write_refusal(error, translate, for_api=False):
+    """What to tell whoever wrote a value MySQL refused for being an answer
+    in clear in an encrypted column (3819); None for any other error."""
+    if is_encrypted_refusal(error):
+        return encrypted_edit_message(translate, for_api)
+    return None
+
+
 def field_is_editable(field_name):
     read_only_fields = [
         "surveyid",
@@ -1404,66 +1440,71 @@ def update_multiselect_data(
     primary_key_data,
     multiselect_values,
 ):
+    """Writes a multi-select's options: the space-separated answer in the
+    parent table and one row per option in its _msel_ table, in one
+    transaction. Names go into the SQL quoted once known to be names, the
+    values only as parameters."""
     _ = request.translate
     sql_url = request.registry.settings.get("sqlalchemy.url")
     schema = get_form_schema(request, project, form)
 
-    # Update the multiselect field in the parent table
+    # Update the multiselect field in the parent table; no option is NULL
     string_value = " ".join(multiselect_values)
-    string_value = string_value.strip()
-    parent_sql = (
-        "UPDATE "
-        + schema
-        + ".`"
-        + parent_table
-        + "` SET `"
-        + parent_field
-        + "` = '"
-        + string_value
-        + "'"
-    )
-    parent_sql = parent_sql + " WHERE rowuuid = '" + row_uuid + "'"
-    parent_sql = parent_sql.replace("''", "null")
-
-    delete_array = []
-    for key, value in primary_key_data.items():
-        delete_array.append("`{}` = '{}'".format(key, value))
-
-    # Delete the current multiselect values
-    delete_sql = "DELETE FROM {}.`{}` WHERE {}".format(
-        schema, multiselect_table, " AND ".join(delete_array)
-    )
-
-    # Insert the selected values
-    insert_array = []
-    if len(multiselect_values) > 0:
-        columns_array = []
-        for key in primary_key_data.keys():
-            columns_array.append("`{}`".format(key))
-        columns_array.append("`{}`".format(multiselect_field))
-        index = 1
-        for a_value in multiselect_values:
-            value_array = []
-            for pk_value in primary_key_data.values():
-                value_array.append("'{}'".format(pk_value))
-            value_array.append("'{}'".format(a_value))
-            insert_sql = "INSERT INTO {}.`{}` ({}) VALUES ({})".format(
-                schema,
-                multiselect_table,
-                ",".join(columns_array),
-                ",".join(value_array),
+    string_value = string_value.strip() or None
+    try:
+        parent_sql = sqlalchemy_text(
+            "UPDATE {}.{} SET {} = :value WHERE rowuuid = :rowuuid".format(
+                _quoted(schema), _quoted(parent_table), _quoted(parent_field)
             )
-            insert_array.append(insert_sql)
-            index = index + 1
+        )
+        key_names = list(primary_key_data.keys())
+        where = " AND ".join(
+            "{} = :k{}".format(_quoted(a_key), index)
+            for index, a_key in enumerate(key_names)
+        )
+        # Delete the current multiselect values
+        delete_sql = sqlalchemy_text(
+            "DELETE FROM {}.{} WHERE {}".format(
+                _quoted(schema), _quoted(multiselect_table), where
+            )
+        )
+        # Insert the selected values
+        insert_sql = sqlalchemy_text(
+            "INSERT INTO {}.{} ({}) VALUES ({})".format(
+                _quoted(schema),
+                _quoted(multiselect_table),
+                ",".join(
+                    [_quoted(a_key) for a_key in key_names]
+                    + [_quoted(multiselect_field)]
+                ),
+                ",".join(
+                    [":k{}".format(index) for index in range(len(key_names))]
+                    + [":option"]
+                ),
+            )
+        )
+    except ValueError as e:
+        log.error(
+            "Multiselect table {} of {} was not updated: {}".format(
+                multiselect_table, schema, str(e)
+            )
+        )
+        return False
+    keys = {
+        "k{}".format(index): primary_key_data[a_key]
+        for index, a_key in enumerate(key_names)
+    }
 
     engine = create_engine(sql_url, poolclass=NullPool)
     session = Session(bind=engine)
     try:
-        session.execute("SET @odktools_current_user = '" + user + "'")
-        session.execute(parent_sql)
-        session.execute(delete_sql)
-        for an_insert in insert_array:
-            session.execute(an_insert)
+        session.execute(
+            sqlalchemy_text("SET @odktools_current_user = :user"), {"user": user}
+        )
+        session.execute(parent_sql, {"value": string_value, "rowuuid": row_uuid})
+        session.execute(delete_sql, keys)
+        for a_value in multiselect_values:
+            session.execute(insert_sql, dict(keys, option=a_value))
 
         session.commit()
         return True
@@ -1482,29 +1523,51 @@ def update_multiselect_data(
 
 
 def update_data(request, user, project, form, table_name, row_uuid, field, value):
+    """Writes one value of one row from the cleaning grid. Returns
+    {"data": {field: value}}, or {"fieldErrors": [{"name", "status"}]} with
+    what to tell the person: a lookup the value is not in, an answer in clear
+    in an encrypted column (MySQL's 3819, field encryption), a column that
+    cannot be changed."""
     _ = request.translate
     sql_url = request.registry.settings.get("sqlalchemy.url")
     schema = get_form_schema(request, project, form)
-    sql = (
-        "UPDATE "
-        + schema
-        + ".`"
-        + table_name
-        + "` SET `"
-        + field
-        + "` = '"
-        + value
-        + "'"
+    # The table and the column come with the request: only a column the
+    # table has, that the grid offers to edit, and that MySQL does not derive
+    # (CLAUDE.md, "never write a generated column") goes into the statement,
+    # and the value only as a parameter.
+    try:
+        columns = _table_columns(request, schema, table_name) if schema else {}
+        known = (
+            field in columns
+            and not columns[field]
+            and field_is_editable(field) == "true"
+        )
+        sql = sqlalchemy_text(
+            "UPDATE {}.{} SET {} = :value WHERE rowuuid = :rowuuid".format(
+                _quoted(schema), _quoted(table_name), _quoted(field)
+            )
+        )
+    except ValueError:
+        known = False
+    if not known:
+        return {
+            "fieldErrors": [
+                {"name": field, "status": _("This column cannot be changed")}
+            ]
+        }
+    # An empty answer is stored as NULL, as it always was.
+    if value == "":
+        value = None
+    log.info(
+        "Updating {} of {}.{} for row {}".format(field, schema, table_name, row_uuid)
     )
-    sql = sql + " WHERE rowuuid = '" + row_uuid + "'"
-    sql = sql.replace("''", "null")
-
-    log.info(sql)
     engine = create_engine(sql_url, poolclass=NullPool)
     session = Session(bind=engine)
     try:
-        session.execute("SET @odktools_current_user = '" + user + "'")
-        session.execute(sql)
+        session.execute(
+            sqlalchemy_text("SET @odktools_current_user = :user"), {"user": user}
+        )
+        session.execute(sql, {"value": value, "rowuuid": row_uuid})
         session.commit()
         res = {"data": {field: value}}
         return res
@@ -1538,6 +1601,9 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
             ]
         }
     except Exception as ex:
+        refusal = _write_refusal(ex, _)
+        if refusal is not None:
+            return {"fieldErrors": [{"name": field, "status": refusal}]}
         log.error(str(ex))
         return {"fieldErrors": [{"name": field, "status": "Unknown error"}]}
     finally:
@@ -1908,46 +1974,66 @@ def delete_all_submission(request, user, project, form, deleted_by):
 
 
 def update_record_with_id(request, user, schema, table, rowuuid, data):
-    sql = "DESC {}.`{}`".format(schema, table)
-    fields = request.dbsession.execute(sql).fetchall()
-    field_array = []
-    key_array = []
-    for a_field in fields:
-        field_array.append(a_field[0])
-        if a_field[3] == "PRI":
-            key_array.append(a_field[0])
+    """Writes the values of one row for the API (/api_update). Returns (True,
+    "") or (False, message)."""
+    columns = _table_columns(request, schema, table)
+    keys = {
+        row[0]
+        for row in request.dbsession.execute(
+            sqlalchemy_text(
+                "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE "
+                "TABLE_SCHEMA = :schema AND TABLE_NAME = :table AND COLUMN_KEY = 'PRI'"
+            ),
+            {"schema": schema, "table": table},
+        ).fetchall()
+    }
     data.pop("rowuuid", None)
     data.pop("rowindex", None)
     data.pop("apikey", None)
-    for a_key in key_array:
+    for a_key in keys:
         data.pop(a_key, None)
 
     # field_is_editable answers "true" or "false" for the grid, so it is
-    # compared as such; and the dict cannot shrink while being iterated
+    # compared as such; and the dict cannot shrink while being iterated.
+    # Nothing MySQL derives is written either (CLAUDE.md).
     for a_key in list(data.keys()):
-        if field_is_editable(a_key) == "false":
+        if field_is_editable(a_key) == "false" or columns.get(a_key):
             data.pop(a_key, None)
 
-    fields_not_found = []
-    for a_key in data.keys():
-        if a_key not in field_array:
-            fields_not_found.append(a_key)
+    fields_not_found = [a_key for a_key in data.keys() if a_key not in columns]
     if len(fields_not_found) == 0:
-        sql = "UPDATE {}.`{}`".format(schema, table) + " SET "
-        updates = []
-        for a_key in data.keys():
-            updates.append("`{}` = '{}'".format(a_key, data[a_key]))
-        sql = sql + ",".join(updates)
-        sql = sql + " WHERE rowuuid = '" + rowuuid + "'"
+        # The names are the table's own, checked above; the values go in as
+        # parameters, never into the statement.
+        try:
+            updates = [
+                "{} = :v{}".format(_quoted(a_key), index)
+                for index, a_key in enumerate(data.keys())
+            ]
+            sql = sqlalchemy_text(
+                "UPDATE {}.{} SET {} WHERE rowuuid = :rowuuid".format(
+                    _quoted(schema), _quoted(table), ",".join(updates)
+                )
+            )
+        except ValueError as e:
+            return False, str(e)
+        values = {
+            "v{}".format(index): data[a_key] for index, a_key in enumerate(data.keys())
+        }
+        values["rowuuid"] = rowuuid
         sql_url = request.registry.settings.get("sqlalchemy.url")
         engine = create_engine(sql_url, poolclass=NullPool)
         session = Session(bind=engine)
         try:
-            session.execute("SET @odktools_current_user = '" + user + "'")
-            session.execute(sql)
+            session.execute(
+                sqlalchemy_text("SET @odktools_current_user = :user"), {"user": user}
+            )
+            session.execute(sql, values)
             session.commit()
             return True, ""
         except Exception as e:
+            refusal = _write_refusal(e, request.translate, for_api=True)
+            if refusal is not None:
+                return False, refusal
             return False, str(e)
         finally:
             # Closing rolls back what a failed statement left open, and with

@@ -257,8 +257,14 @@ class PerformAction(AssistantView):
                     post_data.pop("oper")
                     post_data.pop("id")
                     post_data.pop("csrf_token", None)
+                    # Each value is written on its own, and what was refused
+                    # is said, field by field: the grid used to be told
+                    # nothing, so a refused value -- an answer in clear in an
+                    # encrypted column, an option not in its lookup -- looked
+                    # saved.
+                    errors = []
                     for key, value in post_data.items():
-                        update_data(
+                        result = update_data(
                             self.request,
                             who_updates,
                             self.projectID,
@@ -268,6 +274,12 @@ class PerformAction(AssistantView):
                             key,
                             value,
                         )
+                        for a_error in result.get("fieldErrors", []):
+                            errors.append(
+                                {"field": a_error["name"], "message": a_error["status"]}
+                            )
+                    if errors:
+                        return {"errors": errors}
                     return {}
                 else:
                     raise HTTPNotFound()

@@ -28,10 +28,18 @@ def masked_command(args):
     """A tool's command line, as a list of arguments, with the database
     password masked: for a record kept beside a submission's log, which the
     logger's own masking never sees. RSTools takes the password as "-p
-    <password>" in one argument, or as "-p=<password>"."""
+    <password>" in one argument, as "-p=<password>", or as "-p" followed by
+    the password (as the SubmissionProcessing plugin passes it)."""
     masked = []
+    after_flag = False
     for an_arg in args:
-        if an_arg.startswith("-p ") or an_arg.startswith("-p="):
+        if after_flag:
+            masked.append("xxxxxxxx")
+            after_flag = False
+        elif an_arg == "-p":
+            masked.append(an_arg)
+            after_flag = True
+        elif an_arg.startswith("-p ") or an_arg.startswith("-p="):
             masked.append(an_arg[:3] + "xxxxxxxx")
         else:
             masked.append(an_arg)

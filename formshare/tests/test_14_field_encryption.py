@@ -808,6 +808,10 @@ def test_the_stored_command_hides_the_password():
     assert masked_command(
         ["jsontomysql", "-u root", "-p s3cret", "-p=other", "-s FS_x"]
     ) == ("jsontomysql -u root -p xxxxxxxx -p=xxxxxxxx -s FS_x")
+    # The password as an argument of its own, after "-p".
+    assert masked_command(["jsontomysql", "-u", "root", "-p", "s3cret", "-s", "x"]) == (
+        "jsontomysql -u root -p xxxxxxxx -s x"
+    )
 
 
 def test_a_plugin_sees_the_submission_sealed():

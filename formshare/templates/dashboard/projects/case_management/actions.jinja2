@@ -5,7 +5,7 @@
 
 {% block css %}
     {{ super() }}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jQuery-QueryBuilder/3.0.0/css/query-builder.default.min.css">
+    {% cssresource request,'formshare','querybuilder' %}
     <style>
       #act-preview, #act-module { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
       #act-preview { background: #f8f9fa; border: 1px solid #e5e7eb; padding: 10px; max-height: 420px; overflow: auto; white-space: pre; }
@@ -21,7 +21,7 @@
 
 {% block topScripts %}
     {{ super() }}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-QueryBuilder/3.0.0/js/query-builder.standalone.min.js"></script>
+    {% jsresource request,'formshare','querybuilder' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}

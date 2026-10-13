@@ -44,7 +44,7 @@
 
 {% block topScripts %}
     {{ super() }}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsPlumb/2.15.6/js/jsplumb.min.js"></script>
+    {% jsresource request,'formshare','jsplumb' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}

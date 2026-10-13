@@ -6,13 +6,13 @@
 {% block css %}
     {{ super() }}
     {% cssresource request,'formshare','select2' %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jQuery-QueryBuilder/3.0.0/css/query-builder.default.min.css">
+    {% cssresource request,'formshare','querybuilder' %}
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','select2' %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-QueryBuilder/3.0.0/js/query-builder.standalone.min.js"></script>
+    {% jsresource request,'formshare','querybuilder' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}

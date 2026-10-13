@@ -253,3 +253,42 @@ def create_resources(apppath, config):
         "js/plugins/tour/bootstrap-tour-standalone.min.js",
         "bootstrap",
     )
+
+    # ------------------- Libraries that pages loaded from CDNs -------------------
+    # Bundled so that no script from another origin runs on a FormShare page:
+    # the Encryption plugin's vault opens answers for any page of the origin,
+    # so a CDN's script anywhere could read them
+    # (docs/formshare_field_encryption/formshare.md 13.4). Each file is the
+    # published one, checked against the CDNs' integrity hashes or a second
+    # CDN (2026-10-13): htmx 2.0.4 (npm htmx.org), highlight.js 9.9.0 with its
+    # scala language and github style, jQuery UI 1.12.1 (jqGrid carries its
+    # own 1.11.2), jQuery QueryBuilder 3.0.0 standalone, jsPlumb 2.15.6.
+    r.add_js_resource("formshare", "htmx", "js/plugins/htmx/htmx.min.js", None)
+    r.add_js_resource(
+        "formshare", "highlightjs", "js/plugins/highlightjs/highlight.min.js", None
+    )
+    r.add_js_resource(
+        "formshare",
+        "highlightjs_scala",
+        "js/plugins/highlightjs/languages/scala.min.js",
+        "highlightjs",
+    )
+    r.add_css_resource(
+        "formshare", "highlightjs", "js/plugins/highlightjs/github.min.css", None
+    )
+    r.add_js_resource(
+        "formshare", "jqueryui", "js/plugins/jquery-ui-1.12.1/jquery-ui.min.js", None
+    )
+    r.add_js_resource(
+        "formshare",
+        "querybuilder",
+        "js/plugins/querybuilder/js/query-builder.standalone.min.js",
+        None,
+    )
+    r.add_css_resource(
+        "formshare",
+        "querybuilder",
+        "js/plugins/querybuilder/css/query-builder.default.min.css",
+        None,
+    )
+    r.add_js_resource("formshare", "jsplumb", "js/plugins/jsplumb/jsplumb.min.js", None)

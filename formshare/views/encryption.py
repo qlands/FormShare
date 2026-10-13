@@ -17,7 +17,10 @@ from formshare.views.classes import AssistantView, PrivateView
 
 def project_keys_document(request, project_id):
     """{"project_id", "public_key": the one to seal with, or None, "keys":
-    every version, oldest first}."""
+    every version, oldest first}. Each version carries its signing key and
+    the signature of the version that vouched for it (README 3.6), so that a
+    client which knows the project's first key id can check that the key it
+    seals with descends from it."""
     keys = get_project_keys(request, project_id)
     active = [a_key["public_key"] for a_key in keys if a_key["key_status"] == "active"]
     return {
@@ -28,6 +31,9 @@ def project_keys_document(request, project_id):
                 "key_id": a_key["key_id"],
                 "public_key": a_key["public_key"],
                 "key_status": a_key["key_status"],
+                "sign_public_key": a_key["sign_public_key"],
+                "signed_by": a_key["signed_by"],
+                "key_signature": a_key["key_signature"],
             }
             for a_key in keys
         ],

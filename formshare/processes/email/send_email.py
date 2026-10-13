@@ -195,3 +195,64 @@ def send_token_email(request, email_to, token_expires_on):  # pragma: no cover
         text,
         reply_to,
     )
+
+
+def _encryption_notice(request, template, subject, context, email_to):
+    """A field encryption security notice (docs/formshare_field_encryption/,
+    formshare.md 14.2). Setting up a project's encryption and registering a
+    person's key are done with a session alone, and a stolen one could do
+    either for its own ends with nothing to see: the notice makes sure the
+    person hears of it at once."""
+    jinjaEnv.add_extension(ext.i18n)
+    jinjaEnv.add_extension(ExtendThis)
+    _ = request.translate
+    email_from = request.registry.settings.get("mail.from", None)
+    if email_from is None:
+        log.error(
+            "FormShare has no email settings in place. Email service is disabled."
+        )
+        return False
+    if email_from == "":
+        return False
+    context = dict(
+        context,
+        _=_,
+        formshare_site=request.application_url,
+        ip=getattr(request, "client_addr", None),
+    )
+    return send_email(
+        request, email_from, email_to, subject, render_template(template, context)
+    )
+
+
+def send_encryption_setup_email(request, email_to, project_name, key_id):
+    """Tells a project's owner that encryption was set up for it."""
+    _ = request.translate
+    return _encryption_notice(
+        request,
+        "email/encryption_setup_email.jinja2",
+        _("FormShare - Encryption was set up for your project"),
+        {
+            "project_name": project_name,
+            "key_id": key_id,
+            "setup_date": readble_date(datetime.datetime.now(), request.locale_name),
+        },
+        email_to,
+    )
+
+
+def send_encryption_enrolled_email(request, email_to, account_id, project_name=None):
+    """Tells a person that an encryption key was registered for them: a user
+    (project_name None) or an assistant of a project."""
+    _ = request.translate
+    return _encryption_notice(
+        request,
+        "email/encryption_enrolled_email.jinja2",
+        _("FormShare - An encryption key was registered for you"),
+        {
+            "account_id": account_id,
+            "project_name": project_name,
+            "enrolled_date": readble_date(datetime.datetime.now(), request.locale_name),
+        },
+        email_to,
+    )

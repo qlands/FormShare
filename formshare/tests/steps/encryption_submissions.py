@@ -33,6 +33,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
 from formshare.processes.db.encryption import (
+    member_name,
     b64u_decode,
     enroll_member,
     get_member,
@@ -51,7 +52,7 @@ from .encryption_forms import (
     _upload,
     _workbook,
 )
-from .encryption_keys import _Person, _Request, _grant, _project_key
+from .encryption_keys import _Person, _Request, _grant, _project_key, _signed
 from .sql import get_form_details
 
 CODE = "enc_subs"
@@ -196,10 +197,15 @@ def _run(login, testapp, config, work, engine, session):
         project_id,
         public_key,
         owner_id,
-        _grant(project_private, owner_public),
+        _grant(project_private, member_name("user", login), owner_public),
         recovery.public_key,
-        _grant(project_private, recovery.public_key),
+        _grant(
+            project_private,
+            member_name("recovery", project_id),
+            recovery.public_key,
+        ),
         login,
+        **_signed(project_private),
     )
     assert ok, key_id
     for form_id in ("enc_testing", "enc_sub"):

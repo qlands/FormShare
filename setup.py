@@ -178,6 +178,7 @@ setup(
             "import_elasticsearch = formshare.scripts.importelasticsearch:main",
             "index_geometries = formshare.scripts.indexgeometries:main",
             "regenerate_audit_triggers = formshare.scripts.regenerateaudittriggers:main",
+            "remove_project_encryption = formshare.scripts.removeprojectencryption:main",
         ],
     },
 )

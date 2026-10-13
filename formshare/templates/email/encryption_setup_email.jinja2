@@ -1,0 +1,19 @@
+{% block email_body %}
+    {% block email_hello %}
+        {{ _('Hello from FormShare') }}
+        {{ formshare_site }}
+    {% endblock email_hello %}
+    {% block email_message %}
+        {{ _('This email is a security notice') }}.
+        {{ _('Encryption was set up for your project') }} "{{ project_name }}" {{ _('on') }} {{ setup_date }}{% if ip %}, {{ _('from') }} {{ ip }}{% endif %}.
+        {{ _('The key of the project is') }} {{ key_id }}.
+
+        {{ _('If you set it up, keep the recovery kit you saved in a safe place: it carries this key.') }}
+
+        {{ _('If you did not, someone used your session and holds the key of the project: the answers sent to it from now on are theirs to read. Change your password, let no one submit to the project, and ask the administrator of this FormShare to remove its encryption so that you can set it up again.') }}
+    {% endblock email_message %}
+    {% block email_goodbye %}
+        {{ _('Regards') }},
+        {{ _('The FormShare team') }}
+    {% endblock email_goodbye %}
+{% endblock email_body %}

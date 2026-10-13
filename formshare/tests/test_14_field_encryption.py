@@ -27,19 +27,31 @@ from formshare.processes.db.encryption import (
     EncryptionFormatError,
     b64u_decode,
     b64u_encode,
+    check_grant,
+    check_key_signature,
     check_locked_key,
     check_unlock_params,
+    format_member_key,
     format_public_key,
+    format_sign_public_key,
     is_envelope,
     key_id,
+    member_name,
     marked_columns,
     marked_xmlcodes,
     parse_grant,
     parse_member_key,
     parse_public_key,
+    parse_sign_public_key,
     seal,
     seal_submission,
     seal_xml,
+)
+from formshare.tests.steps.encryption_keys import (
+    _grant,
+    _kdf,
+    _sign_public_key,
+    _signed,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -47,6 +59,10 @@ with open(os.path.join(HERE, "resources", "encryption", "test_vectors.json")) as
     VECTORS = json.load(f)
 PUBLIC_KEY = VECTORS["public_key"]
 PRIVATE_KEY = b64u_decode(VECTORS["private_key_b64url"])
+# Signed key versions and version 2 grants (README 3.6), made with libsodium's
+# own key derivation from the plugin's vector keys: what the vault must make.
+with open(os.path.join(HERE, "resources", "encryption", "signing_vectors.json")) as f:
+    SIGNING = json.load(f)
 
 
 def _open(envelope, private_key=PRIVATE_KEY):
@@ -155,12 +171,18 @@ def test_member_keys_grants_and_locked_keys_have_their_sizes():
             parse_member_key(text)
 
     kid = VECTORS["key_id"]
-    grant = "fsenc-grant:1:{}:{}".format(kid, b64u_encode(bytes(80)))
+    sealed, signature = b64u_encode(bytes(80)), b64u_encode(bytes(64))
+    grant = "fsenc-grant:3:{}:{}:{}".format(kid, sealed, signature)
     assert parse_grant(grant) == kid
     for text in (
-        "fsenc-grant:1:{}:{}".format(kid, b64u_encode(bytes(81))),
-        "fsenc-grant:1:{}:{}".format(kid.upper(), b64u_encode(bytes(80))),
-        "fsenc-grant:2:{}:{}".format(kid, b64u_encode(bytes(80))),
+        "fsenc-grant:3:{}:{}:{}".format(kid, b64u_encode(bytes(81)), signature),
+        "fsenc-grant:3:{}:{}:{}".format(kid.upper(), sealed, signature),
+        "fsenc-grant:3:{}:{}:{}".format(kid, sealed, b64u_encode(bytes(63))),
+        "fsenc-grant:3:{}:{}".format(kid, sealed),
+        # Version 1 had no signature: nothing shows who made it. Version 2's
+        # named the key but not the member (formshare.md 15.1).
+        "fsenc-grant:1:{}:{}".format(kid, sealed),
+        "fsenc-grant:2:{}:{}:{}".format(kid, sealed, signature),
         VECTORS["vectors"][0]["envelope"],
     ):
         with pytest.raises(EncryptionFormatError):
@@ -177,6 +199,139 @@ def test_member_keys_grants_and_locked_keys_have_their_sizes():
     ):
         with pytest.raises(EncryptionFormatError):
             check_locked_key(bad)
+
+
+def test_a_versions_signing_key_is_derived_as_libsodium_derives_it():
+    # The vectors' seeds came from libsodium's crypto_kdf_derive_from_key; the
+    # suite's browser derives them with BLAKE2b, as libsodium defines it.
+    for version in (SIGNING["first_version"], SIGNING["second_version"]):
+        private = b64u_decode(version["private_key_b64url"])
+        assert b64u_encode(_kdf("fskeysig", private)) == version["seed_b64url"]
+        assert _sign_public_key(PrivateKey(private)) == version["sign_public_key"]
+        signed = _signed(PrivateKey(private), PrivateKey(private))
+        assert signed["sign_public_key"] == version["sign_public_key"]
+    first = SIGNING["first_version"]
+    # The first version vouches for itself, as set-up signs it.
+    assert _signed(PrivateKey(b64u_decode(first["private_key_b64url"]))) == {
+        "sign_public_key": first["sign_public_key"],
+        "key_signature": first["key_signature"],
+    }
+
+
+def test_a_key_version_is_vouched_for_by_the_one_it_replaced():
+    first, second = SIGNING["first_version"], SIGNING["second_version"]
+    check_key_signature(
+        first["key_signature"],
+        first["key_id"],
+        first["sign_public_key"],
+        first["public_key"],
+    )
+    check_key_signature(
+        second["key_signature"],
+        second["signed_by"],
+        first["sign_public_key"],
+        second["public_key"],
+    )
+    refused = (
+        # The new version vouching for itself.
+        (
+            second["key_signature"],
+            second["key_id"],
+            second["sign_public_key"],
+            second["public_key"],
+        ),
+        # The first version's signature, said to vouch for another key.
+        (
+            first["key_signature"],
+            first["key_id"],
+            first["sign_public_key"],
+            second["public_key"],
+        ),
+        # A signing key that is not the signer's.
+        (
+            second["key_signature"],
+            first["key_id"],
+            second["sign_public_key"],
+            second["public_key"],
+        ),
+        (
+            b64u_encode(bytes(64)),
+            first["key_id"],
+            first["sign_public_key"],
+            first["public_key"],
+        ),
+        (None, first["key_id"], first["sign_public_key"], first["public_key"]),
+    )
+    for signature, signer, sign_key, public_key in refused:
+        with pytest.raises(EncryptionFormatError):
+            check_key_signature(signature, signer, sign_key, public_key)
+
+
+def test_a_grant_is_signed_by_its_version_for_its_member():
+    first, second = SIGNING["first_version"], SIGNING["second_version"]
+    grant = SIGNING["grant"]
+    member, key = grant["member"], grant["member_public_key"]
+    assert member == member_name("user", "vector_member")
+    check_grant(grant["grant"], member, key, first["sign_public_key"])
+    # A member key stored with spaces around it reads the same.
+    check_grant(grant["grant"], member, " " + key + "\n", first["sign_public_key"])
+    other = "fsenc-mk:1:" + b64u_encode(bytes(PrivateKey.generate().public_key))
+    for name, member_key, sign_key in (
+        (member, other, first["sign_public_key"]),  # another key
+        # Another person, with this key put in beside the grant (15.1).
+        (member_name("user", "someone_else"), key, first["sign_public_key"]),
+        (member_name("recovery", "vector_member"), key, first["sign_public_key"]),
+        (member, key, second["sign_public_key"]),  # another version's
+        (None, key, first["sign_public_key"]),
+    ):
+        with pytest.raises(EncryptionFormatError):
+            check_grant(grant["grant"], name, member_key, sign_key)
+    the_key_id, sealed, _signature = grant["grant"].split(":")[2:]
+    with pytest.raises(EncryptionFormatError):
+        check_grant(
+            "fsenc-grant:3:{}:{}:{}".format(the_key_id, sealed, b64u_encode(bytes(64))),
+            member,
+            key,
+            first["sign_public_key"],
+        )
+    # The suite's browser makes grants core accepts, and signs nothing it
+    # should not.
+    private = PrivateKey(b64u_decode(first["private_key_b64url"]))
+    check_grant(_grant(private, member, key), member, key, first["sign_public_key"])
+    with pytest.raises(EncryptionFormatError):
+        check_grant(
+            _grant(private, member, key, PrivateKey.generate()),
+            member,
+            key,
+            first["sign_public_key"],
+        )
+    assert format_member_key(parse_member_key(key)) == key
+
+
+def test_a_member_is_named_by_who_they_are():
+    assert member_name("user", "alice") == "user:alice"
+    assert member_name("assistant", "4c1d") == "assistant:4c1d"
+    assert member_name("recovery", "p1") == "recovery:p1"
+    for member_type, identity in (("partner", "x"), ("user", ""), ("user", None)):
+        with pytest.raises(EncryptionFormatError):
+            member_name(member_type, identity)
+
+
+def test_a_signing_key_names_its_version():
+    first = SIGNING["first_version"]
+    the_key_id, key = parse_sign_public_key(first["sign_public_key"])
+    assert the_key_id == first["key_id"] and len(key) == 32
+    assert format_sign_public_key(the_key_id, key) == first["sign_public_key"]
+    encoded = first["sign_public_key"].split(":")[3]
+    for text in (
+        "fsenc-spk:2:{}:{}".format(the_key_id, encoded),
+        "fsenc-spk:1:{}:{}".format(the_key_id.upper(), encoded),
+        "fsenc-spk:1:{}:{}".format(the_key_id, b64u_encode(bytes(31))),
+        "fsenc-pk:1:{}:{}".format(the_key_id, encoded),
+        None,
+    ):
+        with pytest.raises(EncryptionFormatError):
+            parse_sign_public_key(text)
 
 
 def test_an_unlock_method_is_never_weaker_than_the_design_allows():

@@ -11,6 +11,14 @@ sealed -- checking that each has the shape the formats give it and that the
 person asking may do what they ask. Nothing here can open an envelope, a
 grant or a locked key, and nothing here should ever be able to.
 
+What the server cannot open it can still check. A version of a project's key
+has a signing key, derived in a browser from its private key, and every write
+that carries key material -- a new version, a grant, a recovery kit -- is
+signed by the version it concerns (README 3.6). Checking a signature takes no
+secret, so the server tells a key holder's write from a stolen session's, and
+a vault checks the same signatures when it unlocks, which tells a version a
+holder made from one put straight into the database.
+
 The sealing is libsodium's sealed box, through PyNaCl: an ephemeral X25519
 key and XSalsa20-Poly1305, the answer padded to 32-byte blocks first so that
 a short answer does not give away its length. It is byte for byte what
@@ -34,7 +42,9 @@ import re
 import uuid
 
 import nacl.bindings
+import nacl.signing
 from lxml import etree
+from nacl.exceptions import BadSignatureError
 from sqlalchemy import and_, or_, text
 
 from formshare.models import (
@@ -66,7 +76,15 @@ __all__ = [
     "parse_public_key",
     "format_public_key",
     "parse_member_key",
+    "format_member_key",
+    "member_name",
     "parse_grant",
+    "parse_sign_public_key",
+    "format_sign_public_key",
+    "key_version_message",
+    "grant_message",
+    "check_key_signature",
+    "check_grant",
     "check_locked_key",
     "check_unlock_params",
     "is_envelope",
@@ -119,6 +137,7 @@ __all__ = [
     "record_deleted_grants",
     "list_project_access",
     "replace_recovery_member",
+    "remove_project_encryption",
     "log_encryption_event",
     "list_encryption_events",
 ]
@@ -131,6 +150,10 @@ SEALBYTES = nacl.bindings.crypto_box_SEALBYTES
 KEY_BYTES = nacl.bindings.crypto_box_PUBLICKEYBYTES
 # A grant is the project's 32-byte private key sealed to a member: no padding.
 GRANT_BYTES = nacl.bindings.crypto_box_SECRETKEYBYTES + SEALBYTES
+# A key version signs with Ed25519 (README 3.6): a 32-byte public key, a
+# 64-byte detached signature.
+SIGN_KEY_BYTES = nacl.bindings.crypto_sign_PUBLICKEYBYTES
+SIGNATURE_BYTES = nacl.bindings.crypto_sign_BYTES
 # A locked member key is crypto_secretbox_easy of the member's 32-byte
 # private key: a 24-byte nonce beside it, a 16-byte MAC inside it.
 NONCE_BYTES = nacl.bindings.crypto_secretbox_NONCEBYTES
@@ -229,22 +252,157 @@ def parse_member_key(text):
     return _decoded(parts[2], KEY_BYTES, "its key")
 
 
+def format_member_key(member_public_key_bytes):
+    """``fsenc-mk:1:<key>``, written the one way every side writes it: what
+    a grant's signature names (README 3.3), whatever spelling a member's key
+    was stored with."""
+    return "fsenc-mk:1:" + b64u_encode(member_public_key_bytes)
+
+
+MEMBER_TYPES = ("user", "assistant", "recovery")
+
+
+def member_name(member_type, identity):
+    """Who a member is, as a grant's signature names them (README 3.3):
+    ``user:<user id>``, ``assistant:<assistant's uuid>`` or
+    ``recovery:<project id>`` for a project's kit. Named by who they are,
+    not by their member id, which core makes for a kit only once its grant
+    has been signed."""
+    if member_type not in MEMBER_TYPES or not identity:
+        raise EncryptionFormatError("it is not a member")
+    return "{}:{}".format(member_type, identity)
+
+
+def _named(member):
+    """member_name of a member row for the record, or None for a row that
+    does not say who it is: an event is never lost over it."""
+    try:
+        return _member_name_of(member)
+    except EncryptionFormatError:
+        return None
+
+
+def _member_name_of(member):
+    """member_name of a member row."""
+    identity = {
+        "user": member.user_id,
+        "assistant": member.coll_uuid,
+        "recovery": member.project_id,
+    }.get(member.member_type)
+    return member_name(member.member_type, identity)
+
+
+def _grant_parts(text):
+    """(key id, sealed key as given, signature bytes) of
+    ``fsenc-grant:3:<key id>:<sealed key>:<signature>``."""
+    parts = text.strip().split(":") if isinstance(text, str) else []
+    if (
+        len(parts) != 5
+        or parts[0] != "fsenc-grant"
+        or parts[1] != "3"
+        or not _KEY_ID.fullmatch(parts[2])
+    ):
+        raise EncryptionFormatError(
+            "it is not a grant of the form "
+            "fsenc-grant:3:<key id>:<sealed key>:<signature>"
+        )
+    _decoded(parts[3], GRANT_BYTES, "its sealed key")
+    return parts[2], parts[3], _decoded(parts[4], SIGNATURE_BYTES, "its signature")
+
+
 def parse_grant(text):
-    """The key id a grant gives, from ``fsenc-grant:1:<key id>:<sealed key>``.
-    What it seals cannot be checked here -- only the grantee can open it --
-    but its size can: a 32-byte private key in a sealed box."""
+    """The key id a grant gives, from
+    ``fsenc-grant:3:<key id>:<sealed key>:<signature>``. What it seals cannot
+    be checked here -- only the grantee can open it -- but its size can (a
+    32-byte private key in a sealed box), and so can who made it and for
+    whom: the signature is the given version's, over the member's name and
+    key, and check_grant verifies it. Version 1 had no signature, and
+    version 2 named the key but not the member: both are refused."""
+    return _grant_parts(text)[0]
+
+
+def parse_sign_public_key(text):
+    """(key id, the key's 32 bytes) of a key version's signing key,
+    ``fsenc-spk:1:<key id>:<key>``. The key id is the version's: the signing
+    key is derived from that version's private key (README 3.6), which only
+    a browser holding it can check."""
     parts = text.strip().split(":") if isinstance(text, str) else []
     if (
         len(parts) != 4
-        or parts[0] != "fsenc-grant"
+        or parts[0] != "fsenc-spk"
         or parts[1] != "1"
         or not _KEY_ID.fullmatch(parts[2])
     ):
         raise EncryptionFormatError(
-            "it is not a grant of the form fsenc-grant:1:<key id>:<sealed key>"
+            "it is not a signing key of the form fsenc-spk:1:<key id>:<key>"
         )
-    _decoded(parts[3], GRANT_BYTES, "its sealed key")
-    return parts[2]
+    return parts[2], _decoded(parts[3], SIGN_KEY_BYTES, "its key")
+
+
+def format_sign_public_key(the_key_id, sign_key_bytes):
+    """``fsenc-spk:1:<key id>:<key>``."""
+    return "fsenc-spk:1:{}:{}".format(the_key_id, b64u_encode(sign_key_bytes))
+
+
+def key_version_message(signer_key_id, public_key_text):
+    """What a key version's signature covers (README 3.6): the version that
+    vouches, and the public key it vouches for, as format_public_key writes
+    it."""
+    return "fsenc-kv:1:{}:{}".format(signer_key_id, public_key_text).encode("utf-8")
+
+
+def grant_message(the_key_id, sealed, member, member_public_key_text):
+    """What a grant's signature covers (README 3.3): the grant without its
+    signature, the member it is for (member_name) and the key it is sealed to
+    (as format_member_key writes it). A grant signed for one member cannot be
+    stored for another, even with their key put in beside it (formshare.md
+    15.1)."""
+    return "fsenc-grant:3:{}:{}:{}:{}".format(
+        the_key_id, sealed, member, member_public_key_text
+    ).encode("utf-8")
+
+
+def _verify(sign_key_bytes, message, signature, what):
+    try:
+        nacl.signing.VerifyKey(sign_key_bytes).verify(message, signature)
+    except BadSignatureError:
+        raise EncryptionFormatError("{} is not signed by its key".format(what))
+
+
+def check_key_signature(signature, signer_key_id, signer_sign_public_key, public_key):
+    """Raises EncryptionFormatError unless ``signature`` (b64u) is the signer
+    version's signature of the public key: the proof that whoever put in a
+    version holds the one it replaced -- or, for a project's first, the
+    version itself."""
+    signed = _decoded(signature, SIGNATURE_BYTES, "the key's signature")
+    signer, sign_key = parse_sign_public_key(signer_sign_public_key)
+    if signer != signer_key_id:
+        raise EncryptionFormatError("the signing key is not of the version that signs")
+    key = parse_public_key(public_key)[1]
+    _verify(
+        sign_key,
+        key_version_message(signer_key_id, format_public_key(key)),
+        signed,
+        "the key",
+    )
+
+
+def check_grant(grant, member, member_public_key, sign_public_key):
+    """Raises EncryptionFormatError unless the grant is signed by the key
+    version it gives, for this member (member_name) and this member key: the
+    proof that it was made by someone holding that version, for that person.
+    The server still cannot tell what it seals; the grantee's browser checks
+    that (README 3.3)."""
+    the_key_id, sealed, signature = _grant_parts(grant)
+    signer, sign_key = parse_sign_public_key(sign_public_key)
+    if signer != the_key_id:
+        raise EncryptionFormatError("the signing key is not of the grant's version")
+    key = format_member_key(parse_member_key(member_public_key))
+    if not isinstance(member, str) or not member:
+        raise EncryptionFormatError("it is not a member")
+    _verify(
+        sign_key, grant_message(the_key_id, sealed, member, key), signature, "a grant"
+    )
 
 
 def check_locked_key(locked_key):
@@ -783,6 +941,7 @@ EVENT_TYPES = (
     "rotate",
     "recovery_used",
     "recovery_replaced",
+    "encryption_removed",
     "key_alarm",
     "decrypted",
 )
@@ -906,12 +1065,23 @@ def log_encryption_event(
     opened on a page (decrypted). Only those, and only from someone who
     holds the project's key: the record of a grant or a revocation is
     written by the function that made it, and cannot be made up here.
-    actor_id is the person logged in. Returns (True, "") or (False, message)."""
+
+    A key alarm is also taken from the project's owner holding nothing: an
+    owner using the recovery kit often holds no grant, which is why they use
+    it, and the alarm the kit's page raises must reach the record
+    (formshare.md 15.2). actor_id is the person logged in. Returns (True, "")
+    or (False, message)."""
     _ = request.translate
     if event_type not in BROWSER_EVENTS or actor_type not in PEOPLE:
         return False, _("This is not an event a browser records")
     member = _active_member(request, actor_type, actor_id)
-    if member is None or not _grants_of(request, project_id, member.member_id):
+    holds = member is not None and _grants_of(request, project_id, member.member_id)
+    owner_alarm = (
+        event_type == "key_alarm"
+        and actor_type == "user"
+        and get_user_role(request, project_id, actor_id) == OWNER
+    )
+    if not holds and not owner_alarm:
         return False, _("Only someone who holds the project's key records its events")
     try:
         _event(request, project_id, actor_type, actor_id, event_type, detail)
@@ -1018,6 +1188,56 @@ def get_member(request, member_type, identity):
     return _member_dict(member) if member is not None else None
 
 
+def _notice(request, sender, *args):
+    """Sends a security notice by email (formshare.md 14.2). Never fails what
+    it follows: the write is done, and a mail server that is down must not
+    undo it."""
+    try:
+        from formshare.processes.email import send_email
+
+        getattr(send_email, sender)(request, *args)
+    except Exception as e:
+        log.error("Error {} while sending the notice {}".format(str(e), sender))
+
+
+def _email_of_user(request, user_id):
+    """A user's address, or None. Read inside the transaction of the write a
+    notice follows, so that nothing is left open after its commit."""
+    try:
+        row = (
+            request.dbsession.query(User.user_email)
+            .filter(User.user_id == user_id)
+            .first()
+        )
+        return row[0] if row is not None and row[0] else None
+    except Exception as e:
+        log.error("Error {} while reading the address of {}".format(str(e), user_id))
+        return None
+
+
+def _enrolled_notice(request, member_type, identity):
+    """(address, account, project name) to tell a person that a key was
+    registered for them, or None when they have no address. A stolen session
+    could register a key of its own for them and receive every key given to
+    them afterwards (formshare.md 14.2)."""
+    if member_type == "user":
+        email = _email_of_user(request, identity)
+        return (email, identity, None) if email else None
+    try:
+        row = (
+            request.dbsession.query(
+                Collaborator.coll_email, Collaborator.coll_id, Project.project_name
+            )
+            .join(Project, Project.project_id == Collaborator.project_id)
+            .filter(Collaborator.coll_uuid == identity)
+            .first()
+        )
+        return (row[0], row[1], row[2]) if row is not None and row[0] else None
+    except Exception as e:
+        log.error("Error {} while reading the address of {}".format(str(e), identity))
+        return None
+
+
 def _lock(request, model, column, value):
     """Locks a row until the transaction ends, so that two requests that
     would each find nothing in the way cannot both act."""
@@ -1101,7 +1321,10 @@ def enroll_member(request, member_type, identity, public_key, first_unlock):
             "enroll",
             {"member_id": member_id, "unlock_method": unlock.unlock_method},
         )
+        notice = _enrolled_notice(request, member_type, identity)
         request.dbsession.commit()
+        if notice is not None:
+            _notice(request, "send_encryption_enrolled_email", *notice)
         return True, member_id
     except Exception as e:
         request.dbsession.rollback()
@@ -1299,6 +1522,8 @@ def unlock_method_used(request, member_id, unlock_id):
 
 
 def _key_dict(key):
+    """A key version, with what a vault checks it by: its signing key and
+    the signature of the version that vouched for it (README 3.6)."""
     return {
         "key_id": key.key_id,
         "public_key": key.public_key,
@@ -1306,6 +1531,9 @@ def _key_dict(key):
         "created_by": key.created_by,
         "created_date": key.created_date,
         "retired_date": key.retired_date,
+        "sign_public_key": key.sign_public_key,
+        "signed_by": key.signed_by,
+        "key_signature": key.key_signature,
     }
 
 
@@ -1455,6 +1683,45 @@ def _grant_list(grants):
     return given
 
 
+def _new_sign_key(sign_public_key, the_key_id):
+    """The signing key a browser gives for a new version, as it is stored.
+    Raises EncryptionFormatError unless it names that version."""
+    signer, sign_key = parse_sign_public_key(sign_public_key)
+    if signer != the_key_id:
+        raise EncryptionFormatError("the signing key is not of the new key")
+    return format_sign_public_key(signer, sign_key)
+
+
+def _member_keys(request, member_ids):
+    """{member_id: (member_name, public key)} of the members some grants name
+    (never none: _grant_list refuses an empty list)."""
+    rows = (
+        request.dbsession.query(EncryptionMember)
+        .filter(EncryptionMember.member_id.in_(sorted(member_ids)))
+        .all()
+    )
+    return {row.member_id: (_member_name_of(row), row.public_key) for row in rows}
+
+
+def _check_grant_signatures(given, member_keys, sign_keys):
+    """Raises EncryptionFormatError unless every grant of a list -- [(member
+    id, grant, key id)] -- is signed by the version it gives, for the member
+    it names (README 3.3). sign_keys maps a key id to its version's signing
+    key, None for a version set up before versions were signed: nothing more
+    is given of such a version, since nobody can show they hold it."""
+    for member_id, grant, the_key_id in given:
+        sign_key = sign_keys.get(the_key_id)
+        if not sign_key:
+            raise EncryptionFormatError(
+                "the key {} was set up before key versions were signed, and "
+                "cannot be given any more".format(the_key_id)
+            )
+        # Every caller has made sure the members exist; one that did not
+        # would be refused here, its key being none.
+        member, member_key = member_keys.get(member_id, (None, None))
+        check_grant(grant, member, member_key, sign_key)
+
+
 def _put_grant(request, project_id, the_key_id, member_id, grant, granted_by, now):
     """Adds a grant, or replaces the one there: a browser made it again."""
     existing = request.dbsession.query(EncryptionGrant).get(
@@ -1486,12 +1753,16 @@ def set_up_project_encryption(
     recovery_public_key,
     recovery_grant,
     user_id,
+    sign_public_key=None,
+    key_signature=None,
 ):
     """Encryption for a project, set up in its owner's browser (README 5):
     the project's first key, granted to the owner and to the recovery kit,
     whose member is made here. All of it or nothing.
 
-    Returns (True, the key id) or (False, message)."""
+    The key comes with its signing key and its own signature (README 3.6),
+    and each grant is signed by it: the version every later one descends
+    from. Returns (True, the key id) or (False, message)."""
     _ = request.translate
     if get_user_role(request, project_id, user_id) != OWNER:
         return False, _("Only the owner of the project can set up encryption")
@@ -1501,6 +1772,14 @@ def set_up_project_encryption(
         for a_grant in (owner_grant, recovery_grant):
             if parse_grant(a_grant) != new_key_id:
                 raise EncryptionFormatError("a grant is not of the new key")
+        sign_key = _new_sign_key(sign_public_key, new_key_id)
+        check_key_signature(key_signature, new_key_id, sign_key, public_key)
+        check_grant(
+            recovery_grant,
+            member_name("recovery", project_id),
+            recovery_public_key,
+            sign_key,
+        )
     except EncryptionFormatError as e:
         return False, _("The encryption set up is not valid:") + " " + str(e)
     try:
@@ -1515,6 +1794,13 @@ def set_up_project_encryption(
         if owner is None or owner.member_id != owner_member_id:
             request.dbsession.rollback()
             return False, _("The owner must have an encryption key first")
+        try:
+            check_grant(
+                owner_grant, member_name("user", user_id), owner.public_key, sign_key
+            )
+        except EncryptionFormatError as e:
+            request.dbsession.rollback()
+            return False, _("The encryption set up is not valid:") + " " + str(e)
         now = datetime.datetime.now()
         recovery_id = str(uuid.uuid4())
         request.dbsession.add(
@@ -1525,6 +1811,9 @@ def set_up_project_encryption(
                 key_status="active",
                 created_by=user_id,
                 created_date=now,
+                sign_public_key=sign_key,
+                signed_by=new_key_id,
+                key_signature=key_signature.strip(),
             )
         )
         request.dbsession.add(
@@ -1551,15 +1840,35 @@ def set_up_project_encryption(
                 now,
             )
         project.project_encrypted = 1
+        project_name = project.project_name
         _event(
             request,
             project_id,
             "user",
             user_id,
             "setup",
-            {"key_id": new_key_id, "recovery_member_id": recovery_id},
+            {
+                "key_id": new_key_id,
+                "recovery_member_id": recovery_id,
+                "member_names": [
+                    member_name("user", user_id),
+                    member_name("recovery", project_id),
+                ],
+            },
         )
+        # A project with no key has no version to vouch for the first, so a
+        # stolen session could set it up with a key of its own (formshare.md
+        # 14.2): the owner hears of every set-up.
+        owner_email = _email_of_user(request, user_id)
         request.dbsession.commit()
+        if owner_email is not None:
+            _notice(
+                request,
+                "send_encryption_setup_email",
+                owner_email,
+                project_name,
+                new_key_id,
+            )
         return True, new_key_id
     except Exception as e:
         request.dbsession.rollback()
@@ -1594,11 +1903,26 @@ def _grantees_may_hold(request, project_id, given, recovery_allowed):
     return True
 
 
-def rotate_project_key(request, project_id, public_key, grants, user_id):
+def rotate_project_key(
+    request,
+    project_id,
+    public_key,
+    grants,
+    user_id,
+    sign_public_key=None,
+    key_signature=None,
+):
     """A new version of the project's key, made in the owner's browser and
     granted there to everyone who holds the current one, the recovery kit
     included, so that nobody who may read the project loses it. The current
     version is retired and stays, to open what was sealed to it.
+
+    The current version vouches for the new one: key_signature is its
+    signature of the new public key, which only a browser holding the current
+    private key can make (README 3.6). The owner's session alone -- a stolen
+    cookie, a script on a page -- could otherwise put in a key of its own and
+    read every answer sealed after. The new version's grants are signed by
+    the new version, whose signing key comes in sign_public_key.
 
     Returns (True, the new key id) or (False, message)."""
     _ = request.translate
@@ -1607,6 +1931,8 @@ def rotate_project_key(request, project_id, public_key, grants, user_id):
     try:
         new_key_id, new_key = parse_public_key(public_key)
         given = _grant_list(grants)
+        sign_key = _new_sign_key(sign_public_key, new_key_id)
+        _decoded(key_signature, SIGNATURE_BYTES, "the key's signature")
     except EncryptionFormatError as e:
         return False, _("The new key is not valid:") + " " + str(e)
     if any(a_key != new_key_id for _member, _grant, a_key in given):
@@ -1624,6 +1950,19 @@ def rotate_project_key(request, project_id, public_key, grants, user_id):
         if any(key.key_id == new_key_id for key in keys):
             request.dbsession.rollback()
             return False, _("The project has used this key before")
+        if not current.sign_public_key:
+            request.dbsession.rollback()
+            return False, _(
+                "The project's key was set up before key versions were signed, "
+                "and cannot be changed"
+            )
+        try:
+            check_key_signature(
+                key_signature, current.key_id, current.sign_public_key, public_key
+            )
+        except EncryptionFormatError:
+            request.dbsession.rollback()
+            return False, _("The new key must be signed by the project's current key")
         owner = _active_member(request, "user", user_id)
         if owner is None:
             request.dbsession.rollback()
@@ -1642,6 +1981,12 @@ def rotate_project_key(request, project_id, public_key, grants, user_id):
                 "The new key must be given to everyone who holds the current "
                 "one, the recovery kit included"
             )
+        members = _member_keys(request, {a_member for a_member, _grant, _key in given})
+        try:
+            _check_grant_signatures(given, members, {new_key_id: sign_key})
+        except EncryptionFormatError as e:
+            request.dbsession.rollback()
+            return False, _("The new key is not valid:") + " " + str(e)
         now = datetime.datetime.now()
         current.key_status = "retired"
         current.retired_date = now
@@ -1656,6 +2001,9 @@ def rotate_project_key(request, project_id, public_key, grants, user_id):
                 key_status="active",
                 created_by=user_id,
                 created_date=now,
+                sign_public_key=sign_key,
+                signed_by=current.key_id,
+                key_signature=key_signature.strip(),
             )
         )
         request.dbsession.flush()
@@ -1675,7 +2023,14 @@ def rotate_project_key(request, project_id, public_key, grants, user_id):
             "user",
             user_id,
             "rotate",
-            {"from": current.key_id, "to": new_key_id, "members": len(given)},
+            {
+                "from": current.key_id,
+                "to": new_key_id,
+                "members": len(given),
+                "member_names": sorted(
+                    {members[a_member][0] for a_member, _grant, _key in given}
+                ),
+            },
         )
         request.dbsession.commit()
         return True, new_key_id
@@ -1718,7 +2073,10 @@ def add_grants(request, project_id, grants, granted_by):
             if granter is not None
             else set()
         )
-        keys = {key.key_id for key in _project_keys(request, project_id)}
+        keys = {
+            key.key_id: key.sign_public_key
+            for key in _project_keys(request, project_id)
+        }
         refusal = None
         if any(a_key not in keys for _member, _grant, a_key in given):
             refusal = _("A grant is for a key the project does not have")
@@ -1729,6 +2087,15 @@ def add_grants(request, project_id, grants, granted_by):
         if refusal is not None:
             request.dbsession.rollback()
             return False, refusal
+        # Holding a grant shows the granter may give the key, not that they
+        # made these: a stolen session could replace every member's grant
+        # with one that opens nothing. The version's signature shows it.
+        members = _member_keys(request, {a_member for a_member, _grant, _key in given})
+        try:
+            _check_grant_signatures(given, members, keys)
+        except EncryptionFormatError as e:
+            request.dbsession.rollback()
+            return False, _("The grants are not valid:") + " " + str(e)
         now = datetime.datetime.now()
         for member_id, a_grant, a_key in given:
             _put_grant(
@@ -1743,6 +2110,7 @@ def add_grants(request, project_id, grants, granted_by):
                 "grant",
                 {
                     "member_id": member_id,
+                    "member_name": members[member_id][0],
                     "key_ids": sorted(
                         a_key
                         for a_member, _grant, a_key in given
@@ -1791,6 +2159,21 @@ def grant_with_recovery(request, project_id, grants, user_id):
         if refusal is not None:
             request.dbsession.rollback()
             return False, refusal
+        # The browser that opened the kit's grants holds every version, and
+        # signs with each: a session without the kit gives nothing.
+        members = _member_keys(request, {a_member for a_member, _grant, _key in given})
+        try:
+            _check_grant_signatures(
+                given,
+                members,
+                {
+                    key.key_id: key.sign_public_key
+                    for key in _project_keys(request, project_id)
+                },
+            )
+        except EncryptionFormatError as e:
+            request.dbsession.rollback()
+            return False, _("The grants are not valid:") + " " + str(e)
         now = datetime.datetime.now()
         for member_id, a_grant, a_key in given:
             _put_grant(
@@ -1804,6 +2187,9 @@ def grant_with_recovery(request, project_id, grants, user_id):
             "recovery_used",
             {
                 "member_ids": sorted({a_member for a_member, _grant, _key in given}),
+                "member_names": sorted(
+                    {members[a_member][0] for a_member, _grant, _key in given}
+                ),
                 "key_ids": sorted({a_key for _member, _grant, a_key in given}),
             },
         )
@@ -1835,6 +2221,7 @@ def _revoke_grants(request, project_id, member, actor_type, actor_id, reason):
         "revoke",
         {
             "member_id": member.member_id,
+            "member_name": _named(member),
             "key_ids": [grant.key_id for grant in grants],
             "reason": reason,
         },
@@ -1979,28 +2366,27 @@ def member_access_changed(request, member_type, identity):
 
 def grants_before_deletion(request, member_type=None, identity=None, project_id=None):
     """What a deletion is about to take with it through ON DELETE CASCADE --
-    a person's grants, or a project's -- as {(project_id, member_id): [key
-    ids]}. Read before the deletion and recorded after it succeeds
-    (record_deleted_grants): taking the grants first would leave a project
-    nobody can read if the deletion then failed."""
+    a person's grants, or a project's -- as {(project_id, member_id):
+    {"key_ids", "member_name"}}. Read before the deletion and recorded after
+    it succeeds (record_deleted_grants): taking the grants first would leave a
+    project nobody can read if the deletion then failed, and the member rows
+    may be gone by then."""
     query = request.dbsession.query(
-        EncryptionGrant.project_id, EncryptionGrant.member_id, EncryptionGrant.key_id
-    )
+        EncryptionGrant.project_id, EncryptionGrant.key_id, EncryptionMember
+    ).join(EncryptionMember, EncryptionMember.member_id == EncryptionGrant.member_id)
     if project_id is not None:
         query = query.filter(EncryptionGrant.project_id == project_id)
     if member_type is not None:
-        query = (
-            query.join(
-                EncryptionMember,
-                EncryptionMember.member_id == EncryptionGrant.member_id,
-            )
-            .filter(EncryptionMember.member_type == member_type)
-            .filter(_MEMBER_OF[member_type] == identity)
+        query = query.filter(EncryptionMember.member_type == member_type).filter(
+            _MEMBER_OF[member_type] == identity
         )
     held = {}
     try:
-        for a_project, a_member, a_key in query.all():
-            held.setdefault((a_project, a_member), []).append(a_key)
+        for a_project, a_key, member in query.all():
+            held.setdefault(
+                (a_project, member.member_id),
+                {"key_ids": [], "member_name": _named(member)},
+            )["key_ids"].append(a_key)
     except Exception as e:
         log.error("Error {} while reading the grants a deletion takes".format(str(e)))
     return held
@@ -2013,14 +2399,19 @@ def record_deleted_grants(request, held, reason):
         return
     try:
         actor_type, actor_id = _actor(request)
-        for (project_id, member_id), key_ids in sorted(held.items()):
+        for (project_id, member_id), lost in sorted(held.items()):
             _event(
                 request,
                 project_id,
                 actor_type,
                 actor_id,
                 "revoke",
-                {"member_id": member_id, "key_ids": sorted(key_ids), "reason": reason},
+                {
+                    "member_id": member_id,
+                    "member_name": lost["member_name"],
+                    "key_ids": sorted(lost["key_ids"]),
+                    "reason": reason,
+                },
             )
         request.dbsession.commit()
     except Exception as e:
@@ -2032,21 +2423,30 @@ def list_project_access(request, project_id):
     """Who may read the project and who can: the users and assistants who may
     hold its key, enrolled or not, with the versions each holds; anyone with a
     grant who may no longer hold one; and the recovery kit. Each member comes
-    with its public key, which a granting browser seals to."""
+    with its public key, which a granting browser seals to.
+
+    And with its grants (formshare.md 14.1). A grant's signature covers the
+    member key it was made for, so before sealing a new version to a member
+    the browser checks that their grant of the current one verifies for the
+    key listed now: a key swapped in the database fails, and receives
+    nothing. Grants are no secret, each being sealed to its member."""
     held = {}
     for grant in (
         request.dbsession.query(EncryptionGrant)
         .filter(EncryptionGrant.project_id == project_id)
+        .order_by(EncryptionGrant.key_id)
         .all()
     ):
-        held.setdefault(grant.member_id, []).append(grant.key_id)
+        held.setdefault(grant.member_id, []).append(
+            {"key_id": grant.key_id, "grant": grant.grant_value}
+        )
 
     def entry(member, **extra):
         found = dict(extra)
         found["member"] = _member_dict(member) if member is not None else None
-        found["key_ids"] = (
-            sorted(held.get(member.member_id, [])) if member is not None else []
-        )
+        grants = held.get(member.member_id, []) if member is not None else []
+        found["key_ids"] = [a_grant["key_id"] for a_grant in grants]
+        found["grants"] = grants
         return found
 
     people = []
@@ -2129,7 +2529,9 @@ def replace_recovery_member(request, project_id, recovery_public_key, grants, us
     """A new recovery kit (README 3.4). Its member, granted every version of
     the project's key in the owner's browser, takes the place of the old
     one, which is revoked and kept for the record. grants are the grant
-    texts, one for each version.
+    texts, one for each version, each signed by its version: the old kit's
+    grants are deleted here, and a session alone must not be able to swap
+    them for some that open nothing.
 
     Returns (True, the new member id) or (False, message)."""
     _ = request.translate
@@ -2155,14 +2557,26 @@ def replace_recovery_member(request, project_id, recovery_public_key, grants, us
         if old is None:
             request.dbsession.rollback()
             return False, _("Encryption is not set up for this project")
-        keys = {key.key_id for key in _project_keys(request, project_id)}
-        if set(given) != keys:
+        keys = {
+            key.key_id: key.sign_public_key
+            for key in _project_keys(request, project_id)
+        }
+        if set(given) != set(keys):
             request.dbsession.rollback()
             return False, _("The new kit must be given every version of the key")
         owner = _active_member(request, "user", user_id)
         if owner is None:
             request.dbsession.rollback()
             return False, _("The owner must have an encryption key first")
+        try:
+            _check_grant_signatures(
+                [("kit", a_grant, a_key) for a_key, a_grant in given.items()],
+                {"kit": (member_name("recovery", project_id), recovery_public_key)},
+                keys,
+            )
+        except EncryptionFormatError as e:
+            request.dbsession.rollback()
+            return False, _("The recovery kit is not valid:") + " " + str(e)
         now = datetime.datetime.now()
         for grant in _grants_of(request, project_id, old.member_id):
             request.dbsession.delete(grant)
@@ -2189,7 +2603,11 @@ def replace_recovery_member(request, project_id, recovery_public_key, grants, us
             "user",
             user_id,
             "recovery_replaced",
-            {"from": old.member_id, "to": new_id},
+            {
+                "from": old.member_id,
+                "to": new_id,
+                "member_name": member_name("recovery", project_id),
+            },
         )
         request.dbsession.commit()
         return True, new_id
@@ -2201,3 +2619,68 @@ def replace_recovery_member(request, project_id, recovery_public_key, grants, us
             )
         )
         return False, _("The recovery kit could not be replaced")
+
+
+def remove_project_encryption(request, project_id, actor_id=None, reason=None):
+    """Removes a project's encryption: every version of its key, their grants,
+    and its recovery kit, so that its owner can set it up again (formshare.md
+    16.2). For a project whose key someone else set up, or one set up before
+    versions were signed.
+
+    For the server's administrator, from the command line
+    (scripts/removeprojectencryption.py), and never from a page: a session
+    that could remove a project's key could put in one of its own.
+
+    Answers sealed with the removed versions can no longer be opened through
+    FormShare. Until a key is set up again, a form that encrypts takes no
+    submission, as in any project without one. The members keep their keys;
+    the kit's member is kept for the record, revoked; the event names the
+    versions removed. actor_id is who ran it, written as a system actor.
+
+    Returns (True, the key ids removed) or (False, message)."""
+    _ = request.translate
+    try:
+        project = _lock(request, Project, Project.project_id, project_id)
+        if project is None:
+            request.dbsession.rollback()
+            return False, _("There is no such project")
+        keys = _project_keys(request, project_id)
+        if not keys:
+            request.dbsession.rollback()
+            return False, _("Encryption is not set up for this project")
+        key_ids = [key.key_id for key in keys]
+        grants = (
+            request.dbsession.query(EncryptionGrant)
+            .filter(EncryptionGrant.project_id == project_id)
+            .delete(synchronize_session=False)
+        )
+        request.dbsession.query(EncryptionProjectKey).filter(
+            EncryptionProjectKey.project_id == project_id
+        ).delete(synchronize_session=False)
+        kit = _active_member(request, "recovery", project_id)
+        if kit is not None:
+            kit.revoked_date = datetime.datetime.now()
+        project.project_encrypted = 0
+        _event(
+            request,
+            project_id,
+            "system",
+            actor_id,
+            "encryption_removed",
+            {
+                "key_ids": key_ids,
+                "grants": grants,
+                "recovery_member_id": kit.member_id if kit is not None else None,
+                "reason": reason,
+            },
+        )
+        request.dbsession.commit()
+        return True, key_ids
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while removing the encryption of project {}".format(
+                str(e), project_id
+            )
+        )
+        return False, _("The encryption of the project could not be removed")

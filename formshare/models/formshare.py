@@ -1196,6 +1196,18 @@ class EncryptionProjectKey(Base):
     created_by = Column(Unicode(120))
     created_date = Column(DATETIME(fsp=6))
     retired_date = Column(DATETIME(fsp=6))
+    # The version's signing key, derived in a browser from its private key:
+    # fsenc-spk:1:<key id>:<key>. Its signature vouches for the next version
+    # and for every grant of this one (README 3.6), so that a write only a
+    # holder of the key can make is told from one a stolen session makes.
+    sign_public_key = Column(Unicode(100))
+    # The version whose signing key signed this one's public key: the one it
+    # replaced, or itself for the project's first. A vault follows these
+    # from the first version to the active one.
+    signed_by = Column(Unicode(16))
+    # b64u of the Ed25519 signature of fsenc-kv:1:<signed_by>:<public key>.
+    # The three are NULL only for a key set up before versions were signed.
+    key_signature = Column(Unicode(100))
 
     project = relationship("Project")
 
@@ -1260,7 +1272,8 @@ class EncryptionUnlock(Base):
 
 class EncryptionGrant(Base):
     """A version of a project's private key, sealed in a browser to a
-    member's public key: fsenc-grant:1:<key id>:<sealed key>. One per member
+    member's public key and signed by that version's signing key, for that
+    member: fsenc-grant:3:<key id>:<sealed key>:<signature>. One per member
     per version."""
 
     __tablename__ = "encryption_grant"

@@ -1,0 +1,32 @@
+{
+  "about": "Signed key versions and version 3 grants (README 3.6 and 3.3), made by FormShare core with PyNaCl and libsodium's own crypto_kdf_derive_from_key, from the project and member keys of plugin_vectors.json. Ed25519 signatures are deterministic, so a correct implementation reproduces every value here.",
+  "derivation": "seed = crypto_kdf_derive_from_key(32, 1, 'fskeysig', the version's private key); (sign pk, sign sk) = crypto_sign_seed_keypair(seed); signatures are crypto_sign_detached, written b64u",
+  "first_version": {
+    "private_key_b64url": "zKWHmLPb-F6_IIKPbRT8PVVtkMsGA6Kwa79XunzzzCo",
+    "public_key": "fsenc-pk:1:9653f4079c692b1e:IzBErUT6pZ5FapSOCwp0FrsMjaSQa2Hal_c-CzTjRFI",
+    "key_id": "9653f4079c692b1e",
+    "seed_b64url": "79mBUFDqwUrGvt0HKNwowK5Y6HzLMnBHkJS60y7zn5I",
+    "sign_public_key": "fsenc-spk:1:9653f4079c692b1e:UBjw8fhXgsnb1E1Cq2hrKVvCFAT2wOIPOU53OOvdQQA",
+    "signed_by": "9653f4079c692b1e",
+    "message": "fsenc-kv:1:9653f4079c692b1e:fsenc-pk:1:9653f4079c692b1e:IzBErUT6pZ5FapSOCwp0FrsMjaSQa2Hal_c-CzTjRFI",
+    "key_signature": "SC-xFQN4Gjv27xxUQ2NNrqzV-sykeachmKZkf6XEfXZQKBgAokZ2nYux6PSDULBTtPcvC9C6QW7CBKEQXi_cDw"
+  },
+  "second_version": {
+    "private_key_b64url": "XxwbzWKtZxpMqsewUMkyjqT6nTwKjWZW4YOJ_W4UvYk",
+    "public_key": "fsenc-pk:1:7cec9780f192fa15:ExcVQxQRaGLdWKj8gdfY3_3VmlOaBQ9MHQ7PwQBmml8",
+    "key_id": "7cec9780f192fa15",
+    "seed_b64url": "ue3-RIBCgHGBCkMZ5GzdK2mSRjDYESqjw8pVzjZz45Q",
+    "sign_public_key": "fsenc-spk:1:7cec9780f192fa15:c_Wfc50n_lTaHJyJxh8pqxNT5SvRchlCzi-5GWcj8SQ",
+    "signed_by": "9653f4079c692b1e",
+    "message": "fsenc-kv:1:9653f4079c692b1e:fsenc-pk:1:7cec9780f192fa15:ExcVQxQRaGLdWKj8gdfY3_3VmlOaBQ9MHQ7PwQBmml8",
+    "key_signature": "Q2zZ7MF7HAv2WGGU4waeqmugxS-_gGn4ZT-FiuJvzqyK03eAZClMVUbOskjk84Xg2nYY3bRRqaHtFjFaG6NjDw"
+  },
+  "grant": {
+    "member": "user:vector_member",
+    "member_public_key": "fsenc-mk:1:-0xCr48z1Vizz5pgIeBbpwXyIidJ6NTSxWjOnR8Oam8",
+    "member_private_key_b64url": "2V1TMSmZv50KWZjZZ7GIfAPmiqwcRIsIDQjI-2wDW2w",
+    "message": "fsenc-grant:3:9653f4079c692b1e:buj8hPmABXJe4A75_u3IPzkju6kebcluatZPfFMgaBptIFvmlskvMShJn6rj1-bBvBGSyamF2hLmgLsiI_k2i7fxkabJKLlCKHfG-iVWVGE:user:vector_member:fsenc-mk:1:-0xCr48z1Vizz5pgIeBbpwXyIidJ6NTSxWjOnR8Oam8",
+    "grant": "fsenc-grant:3:9653f4079c692b1e:buj8hPmABXJe4A75_u3IPzkju6kebcluatZPfFMgaBptIFvmlskvMShJn6rj1-bBvBGSyamF2hLmgLsiI_k2i7fxkabJKLlCKHfG-iVWVGE:7JwYzXfe70kbQO0ZY8x1XuyteY3xSLlkbM031QNFMtCrnKjqF0Vkhs1xsVqA3Cf5csV_rMoPTH1xmEmGHZy5Ag",
+    "note": "the sealed part is plugin_vectors.json's grant; it opens to first_version's private key. The member is named as member_name writes it: user:<user id>, assistant:<uuid>, recovery:<project id>"
+  }
+}

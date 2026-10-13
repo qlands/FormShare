@@ -1,0 +1,19 @@
+{% block email_body %}
+    {% block email_hello %}
+        {{ _('Hello from FormShare') }}
+        {{ formshare_site }}
+    {% endblock email_hello %}
+    {% block email_message %}
+        {{ _('This email is a security notice') }}.
+        {% if project_name %}{{ _('An encryption key was registered for your assistant account') }} {{ account_id }} ({{ project_name }}){% else %}{{ _('An encryption key was registered for your account') }} {{ account_id }}{% endif %} {{ _('on') }} {{ enrolled_date }}{% if ip %}, {{ _('from') }} {{ ip }}{% endif %}.
+        {{ _('It opens the answers that your projects keep encrypted.') }}
+
+        {{ _('If you registered it, there is nothing to do.') }}
+
+        {{ _('If you did not, someone used your session, and every project key given to you from now on would be theirs. Change your password, open your encryption key in FormShare, start again with a key of your own, and tell the owners of your projects.') }}
+    {% endblock email_message %}
+    {% block email_goodbye %}
+        {{ _('Regards') }},
+        {{ _('The FormShare team') }}
+    {% endblock email_goodbye %}
+{% endblock email_body %}

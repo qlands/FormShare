@@ -30,6 +30,7 @@ from formshare.processes.db.collaborator import (
     set_collaborator_role,
 )
 from formshare.processes.db.encryption import (
+    member_name,
     add_grants,
     enroll_member,
     get_member,
@@ -52,7 +53,7 @@ from .encryption_forms import (
     _upload,
     _workbook,
 )
-from .encryption_keys import _Person, _Request, _grant, _project_key
+from .encryption_keys import _Person, _Request, _grant, _project_key, _signed
 
 CODE = "enc_access"
 DOOMED = "enc_access_gone"
@@ -102,10 +103,15 @@ def _set_up(request, project_id, login):
         project_id,
         public_key,
         owner_id,
-        _grant(project_private, owner_public),
+        _grant(project_private, member_name("user", login), owner_public),
         recovery.public_key,
-        _grant(project_private, recovery.public_key),
+        _grant(
+            project_private,
+            member_name("recovery", project_id),
+            recovery.public_key,
+        ),
         login,
+        **_signed(project_private),
     )
     assert ok, key_id
     return project_private
@@ -154,6 +160,12 @@ def _run(test_object, login, testapp, config, work, engine, session):
         "cleaner": _member(request, "assistant", cleaner[1]),
         "grouped": _member(request, "assistant", grouped[1]),
     }
+    # Who each is, as a grant's signature names them (formshare.md 15.1).
+    member_names = {
+        "editor": member_name("user", collaborator),
+        "cleaner": member_name("assistant", cleaner[1]),
+        "grouped": member_name("assistant", grouped[1]),
+    }
 
     def grant(*names):
         ok, count = add_grants(
@@ -162,7 +174,9 @@ def _run(test_object, login, testapp, config, work, engine, session):
             [
                 {
                     "member_id": members[name][0],
-                    "grant": _grant(project_private, members[name][1]),
+                    "grant": _grant(
+                        project_private, member_names[name], members[name][1]
+                    ),
                 }
                 for name in names
             ],
@@ -195,6 +209,7 @@ def _run(test_object, login, testapp, config, work, engine, session):
     revoked = last_revoke()
     assert (revoked["actor_type"], revoked["actor_id"]) == ("user", login)
     assert revoked["event_detail"]["member_id"] == members["editor"][0]
+    assert revoked["event_detail"]["member_name"] == member_names["editor"]
     assert revoked["event_detail"]["reason"] == "not eligible"
     # An editor again may be given it again.
     assert set_collaborator_role(request, project_id, collaborator, 3)[0]
@@ -243,6 +258,8 @@ def _run(test_object, login, testapp, config, work, engine, session):
     revoked = last_revoke()
     assert revoked["event_detail"]["member_id"] == members["cleaner"][0]
     assert revoked["event_detail"]["reason"] == "assistant deleted"
+    # Named, though the member row went with the assistant (formshare.md 16.1).
+    assert revoked["event_detail"]["member_name"] == member_names["cleaner"]
     session.rollback()
     assert get_member(request, "assistant", cleaner[1]) is None
 
@@ -257,6 +274,10 @@ def _run(test_object, login, testapp, config, work, engine, session):
     gone = list_encryption_events(request, doomed, "revoke")
     assert len(gone) == holders, gone
     assert {event["event_detail"]["reason"] for event in gone} == {"project deleted"}
+    assert all(event["event_detail"]["member_name"] for event in gone)
+    assert member_name("recovery", doomed) in {
+        event["event_detail"]["member_name"] for event in gone
+    }
     assert (
         _query(
             engine,

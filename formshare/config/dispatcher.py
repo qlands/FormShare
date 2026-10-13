@@ -23,6 +23,7 @@ Flow per request
 """
 
 import asyncio
+import datetime
 import functools
 import logging
 from http import HTTPStatus
@@ -301,6 +302,23 @@ def _run_view(view_class, fs_request):
     return view_instance()
 
 
+def _json_default(value):
+    """What the json renderer writes for a value json.dumps does not know: a
+    date, a time or a datetime, in ISO 8601. A view's result often holds one
+    straight from the database, and the route failed on it
+    (docs/formshare_field_encryption/formshare.md 13.3).
+
+    Nothing else is converted. Bytes above all keep failing: a raw geometry
+    is bytes, and json.dumps refusing it is how both data grids were found
+    to read one raw (CLAUDE.md). Written as text it would only look like
+    data."""
+    if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
+        return value.isoformat()
+    raise TypeError(
+        "Object of type {} is not JSON serializable".format(type(value).__name__)
+    )
+
+
 def _result_to_fs_response(result, renderer, jinja_env, fs_request):
     """Convert a view return value to a FormShare ``Response``.
 
@@ -341,14 +359,14 @@ def _result_to_fs_response(result, renderer, jinja_env, fs_request):
         if renderer == "json" or renderer is None:
             import json as _json
 
-            body = _json.dumps(result).encode()
+            body = _json.dumps(result, default=_json_default).encode()
             return FSResponse(body=body, status=200, content_type="application/json")
         if renderer and (renderer.endswith(".jinja2") or renderer.endswith(".html")):
             return _render_jinja2_to_fs(result, renderer, jinja_env, fs_request)
         # Unknown renderer – fall back to JSON
         import json as _json
 
-        body = _json.dumps(result).encode()
+        body = _json.dumps(result, default=_json_default).encode()
         return FSResponse(body=body, status=200, content_type="application/json")
 
     if result is None:

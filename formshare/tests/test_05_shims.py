@@ -7,6 +7,7 @@ them that live in formshare.middleware and formshare.config.dispatcher and
 need no server to be exercised, so they are checked here, one call each.
 """
 
+import datetime
 import json
 import os
 import uuid
@@ -238,6 +239,31 @@ def test_the_transaction_manager_commits_rolls_back_and_nests():
 
 
 # ------------------------------------------------------------------ dispatcher
+
+
+def test_the_json_renderer_writes_dates_and_still_refuses_bytes():
+    # A date straight from the database used to fail the route (field
+    # encryption's formshare.md 13.3); it is written in ISO 8601.
+    when = datetime.datetime(2026, 10, 13, 7, 36, 0, 123456)
+    response = dispatcher._result_to_fs_response(
+        {"when": when, "day": when.date(), "at": when.time(), "n": 1},
+        "json",
+        None,
+        None,
+    )
+    assert json.loads(response.body) == {
+        "when": "2026-10-13T07:36:00.123456",
+        "day": "2026-10-13",
+        "at": "07:36:00.123456",
+        "n": 1,
+    }
+    # Bytes -- a raw geometry -- still fail, through either branch, rather
+    # than being written as text that only looks like data.
+    for renderer in ("json", "unknown"):
+        with pytest.raises(TypeError):
+            dispatcher._result_to_fs_response(
+                {"geometry": b"\x00\x01"}, renderer, None, None
+            )
 
 
 def test_the_dispatcher_maps_results_and_errors_to_responses():

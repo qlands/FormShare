@@ -260,6 +260,7 @@ def _run(test_object, login, testapp, config, work, engine, session):
     assert revoked["event_detail"]["reason"] == "assistant deleted"
     # Named, though the member row went with the assistant (formshare.md 16.1).
     assert revoked["event_detail"]["member_name"] == member_names["cleaner"]
+    assert revoked["event_detail"]["member_key_id"]
     session.rollback()
     assert get_member(request, "assistant", cleaner[1]) is None
 
@@ -275,6 +276,7 @@ def _run(test_object, login, testapp, config, work, engine, session):
     assert len(gone) == holders, gone
     assert {event["event_detail"]["reason"] for event in gone} == {"project deleted"}
     assert all(event["event_detail"]["member_name"] for event in gone)
+    assert all(event["event_detail"]["member_key_id"] for event in gone)
     assert member_name("recovery", doomed) in {
         event["event_detail"]["member_name"] for event in gone
     }

@@ -282,6 +282,18 @@ def _named(member):
         return None
 
 
+def _member_key_id(member_public_key):
+    """The fingerprint of a member key, as the record names it (formshare.md
+    17.1): the key id of its 32 bytes, which a recovery kit's sheets print.
+    A name is shared by every key a person or a kit has had; the fingerprint
+    tells them apart, so a key taken and put back is still told. None for
+    text that is not a member key."""
+    try:
+        return key_id(parse_member_key(member_public_key))
+    except EncryptionFormatError:
+        return None
+
+
 def _member_name_of(member):
     """member_name of a member row."""
     identity = {
@@ -1854,6 +1866,10 @@ def set_up_project_encryption(
                     member_name("user", user_id),
                     member_name("recovery", project_id),
                 ],
+                "member_key_ids": [
+                    _member_key_id(owner.public_key),
+                    _member_key_id(recovery_public_key),
+                ],
             },
         )
         # A project with no key has no version to vouch for the first, so a
@@ -2030,6 +2046,12 @@ def rotate_project_key(
                 "member_names": sorted(
                     {members[a_member][0] for a_member, _grant, _key in given}
                 ),
+                "member_key_ids": sorted(
+                    {
+                        _member_key_id(members[a_member][1])
+                        for a_member, _grant, _key in given
+                    }
+                ),
             },
         )
         request.dbsession.commit()
@@ -2111,6 +2133,7 @@ def add_grants(request, project_id, grants, granted_by):
                 {
                     "member_id": member_id,
                     "member_name": members[member_id][0],
+                    "member_key_id": _member_key_id(members[member_id][1]),
                     "key_ids": sorted(
                         a_key
                         for a_member, _grant, a_key in given
@@ -2190,6 +2213,12 @@ def grant_with_recovery(request, project_id, grants, user_id):
                 "member_names": sorted(
                     {members[a_member][0] for a_member, _grant, _key in given}
                 ),
+                "member_key_ids": sorted(
+                    {
+                        _member_key_id(members[a_member][1])
+                        for a_member, _grant, _key in given
+                    }
+                ),
                 "key_ids": sorted({a_key for _member, _grant, a_key in given}),
             },
         )
@@ -2222,6 +2251,7 @@ def _revoke_grants(request, project_id, member, actor_type, actor_id, reason):
         {
             "member_id": member.member_id,
             "member_name": _named(member),
+            "member_key_id": _member_key_id(member.public_key),
             "key_ids": [grant.key_id for grant in grants],
             "reason": reason,
         },
@@ -2385,7 +2415,11 @@ def grants_before_deletion(request, member_type=None, identity=None, project_id=
         for a_project, a_key, member in query.all():
             held.setdefault(
                 (a_project, member.member_id),
-                {"key_ids": [], "member_name": _named(member)},
+                {
+                    "key_ids": [],
+                    "member_name": _named(member),
+                    "member_key_id": _member_key_id(member.public_key),
+                },
             )["key_ids"].append(a_key)
     except Exception as e:
         log.error("Error {} while reading the grants a deletion takes".format(str(e)))
@@ -2409,6 +2443,7 @@ def record_deleted_grants(request, held, reason):
                 {
                     "member_id": member_id,
                     "member_name": lost["member_name"],
+                    "member_key_id": lost["member_key_id"],
                     "key_ids": sorted(lost["key_ids"]),
                     "reason": reason,
                 },
@@ -2607,6 +2642,8 @@ def replace_recovery_member(request, project_id, recovery_public_key, grants, us
                 "from": old.member_id,
                 "to": new_id,
                 "member_name": member_name("recovery", project_id),
+                "from_key_id": _member_key_id(old.public_key),
+                "to_key_id": _member_key_id(recovery_public_key),
             },
         )
         request.dbsession.commit()
@@ -2649,6 +2686,18 @@ def remove_project_encryption(request, project_id, actor_id=None, reason=None):
             request.dbsession.rollback()
             return False, _("Encryption is not set up for this project")
         key_ids = [key.key_id for key in keys]
+        taken = sorted(
+            {
+                _member_key_id(row[0])
+                for row in request.dbsession.query(EncryptionMember.public_key)
+                .join(
+                    EncryptionGrant,
+                    EncryptionGrant.member_id == EncryptionMember.member_id,
+                )
+                .filter(EncryptionGrant.project_id == project_id)
+                .all()
+            }
+        )
         grants = (
             request.dbsession.query(EncryptionGrant)
             .filter(EncryptionGrant.project_id == project_id)
@@ -2671,6 +2720,7 @@ def remove_project_encryption(request, project_id, actor_id=None, reason=None):
                 "key_ids": key_ids,
                 "grants": grants,
                 "recovery_member_id": kit.member_id if kit is not None else None,
+                "member_key_ids": taken,
                 "reason": reason,
             },
         )

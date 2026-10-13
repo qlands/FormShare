@@ -50,6 +50,7 @@ from formshare.processes.db.encryption import (
 from formshare.tests.steps.encryption_keys import (
     _grant,
     _kdf,
+    _key_taken,
     _sign_public_key,
     _signed,
 )
@@ -315,6 +316,21 @@ def test_a_member_is_named_by_who_they_are():
     for member_type, identity in (("partner", "x"), ("user", ""), ("user", None)):
         with pytest.raises(EncryptionFormatError):
             member_name(member_type, identity)
+
+
+def test_a_removal_recorded_before_keys_were_named_takes_none():
+    # The plugin's flag by key, as the suite writes it (formshare.md 17.1). A
+    # removal from before 17.1 has no member_key_ids (formshare.md 18.1).
+    old_removal = {
+        "event_type": "encryption_removed",
+        "event_detail": {"key_ids": ["9653f4079c692b1e"], "grants": 3},
+    }
+    grant = {"event_type": "grant", "event_detail": {"member_key_id": "abcd"}}
+    revoke = {"event_type": "revoke", "event_detail": {"member_key_id": "abcd"}}
+    assert not _key_taken([old_removal, grant], "abcd")
+    assert _key_taken([old_removal, revoke, grant], "abcd")
+    named = dict(old_removal, event_detail={"member_key_ids": ["abcd"]})
+    assert _key_taken([named, grant], "abcd")
 
 
 def test_a_signing_key_names_its_version():

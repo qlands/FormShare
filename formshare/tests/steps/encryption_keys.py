@@ -282,6 +282,40 @@ def _members_unvouched(access, keys, project_id):
     return failed
 
 
+def _fingerprint(member_public_key):
+    """A member key's fingerprint, as the record names it (formshare.md 17.1)
+    and a kit's sheets print it."""
+    return key_id_of(b64u_decode(member_public_key.split(":")[2]))
+
+
+def _key_taken(events, fingerprint):
+    """The plugin's flag, by key (formshare.md 17.1), as the plugin must write
+    it: whether the latest event that gives or takes this member key takes it.
+    A rotation gives nothing back: a key put back would be included in exactly
+    that way. events: the record, newest first."""
+    for event in events:
+        kind, detail = event["event_type"], event["event_detail"] or {}
+        if kind == "revoke" and detail.get("member_key_id") == fingerprint:
+            return True
+        # A removal recorded before keys were named (formshare.md 18.1) names
+        # none, and takes none.
+        if kind == "encryption_removed" and fingerprint in detail.get(
+            "member_key_ids", []
+        ):
+            return True
+        if kind == "recovery_replaced" and fingerprint == detail.get("from_key_id"):
+            return True
+        if kind == "recovery_replaced" and fingerprint == detail.get("to_key_id"):
+            return False
+        if kind == "grant" and detail.get("member_key_id") == fingerprint:
+            return False
+        if kind in ("setup", "recovery_used") and fingerprint in detail.get(
+            "member_key_ids", []
+        ):
+            return False
+    return False
+
+
 @contextmanager
 def _notices(request):
     """The security notices FormShare dispatches while the block runs, caught
@@ -475,6 +509,11 @@ def _removing(request, session, config, login, project_id):
     removed = list_encryption_events(request, project_id, "encryption_removed")[0]
     assert removed["actor_type"] == "system" and removed["actor_id"]
     assert sorted(removed["event_detail"]["key_ids"]) == before
+    # Every key whose grants went is named, so a kit set aside this way is
+    # flagged if it is ever put back (formshare.md 17.1).
+    owner_key = _fingerprint(get_member(request, "user", login)["public_key"])
+    assert owner_key in removed["event_detail"]["member_key_ids"]
+    assert _key_taken(list_encryption_events(request, project_id), owner_key)
     assert removed["event_detail"]["reason"] == "the suite"
     assert remove_encryption(["--yes", ini, login, CODE]) == 1
     # Set up again by its owner, with a key of their own.
@@ -493,6 +532,8 @@ def _removing(request, session, config, login, project_id):
         **_signed(project_private),
     )
     assert ok and key_id == key_id_of(bytes(project_private.public_key)), key_id
+    # The set-up gives the owner's key back.
+    assert not _key_taken(list_encryption_events(request, project_id), owner_key)
 
 
 def _run(
@@ -797,10 +838,18 @@ def _run(
     )
     # The record names the person, not only the member row (formshare.md 16.1).
     named = {
-        event["event_detail"]["member_id"]: event["event_detail"]["member_name"]
+        event["event_detail"]["member_id"]: (
+            event["event_detail"]["member_name"],
+            event["event_detail"]["member_key_id"],
+        )
         for event in list_encryption_events(request, project_id, "grant")[:2]
     }
-    assert named == {editor_id: editor.name, assistant_id: assistant.name}
+    # And the key, which a name shares with every key the person has had
+    # (formshare.md 17.1).
+    assert named == {
+        editor_id: (editor.name, _fingerprint(editor.public_key)),
+        assistant_id: (assistant.name, _fingerprint(assistant.public_key)),
+    }
     # An admin who holds the key may give it.
     set_role(2)
     # A new transaction, to see what the request just committed.
@@ -953,6 +1002,10 @@ def _run(
     assert rotated["event_detail"]["member_names"] == sorted(
         [owner.name, editor.name, assistant.name, recovery.name]
     )
+    assert rotated["event_detail"]["member_key_ids"] == sorted(
+        _fingerprint(person.public_key)
+        for person in (owner, editor, assistant, recovery)
+    )
     assert get_active_project_key(request, project_id) == new_public
     keys = get_project_keys(request, project_id)
     assert {key["key_id"]: (key["key_status"], key["signed_by"]) for key in keys} == {
@@ -1026,6 +1079,10 @@ def _run(
     assert revoke_member(request, project_id, editor_id, login) == (True, 2)
     taken = list_encryption_events(request, project_id, "revoke")[0]["event_detail"]
     assert (taken["member_id"], taken["member_name"]) == (editor_id, editor.name)
+    assert taken["member_key_id"] == _fingerprint(editor.public_key)
+    assert _key_taken(
+        list_encryption_events(request, project_id), _fingerprint(editor.public_key)
+    )
     ok, message = revoke_member(request, project_id, assistant_id, collaborator)
     assert not ok and "holds the project's key" in message
 
@@ -1073,6 +1130,15 @@ def _run(
     assert get_member(request, "recovery", project_id)["member_id"] == new_recovery_id
     replaced = list_encryption_events(request, project_id, "recovery_replaced")[0]
     assert replaced["event_detail"]["member_name"] == new_recovery.name
+    # Every kit is recovery:<project>; its key tells a replaced one, put back
+    # under a new row, from the one that replaced it (formshare.md 17.1).
+    assert (
+        replaced["event_detail"]["from_key_id"],
+        replaced["event_detail"]["to_key_id"],
+    ) == (_fingerprint(recovery.public_key), _fingerprint(new_recovery.public_key))
+    record = list_encryption_events(request, project_id)
+    assert _key_taken(record, _fingerprint(recovery.public_key))
+    assert not _key_taken(record, _fingerprint(new_recovery.public_key))
     assert get_recovery_bundle(request, project_id, collaborator) is None
     kit = get_recovery_bundle(request, project_id, login)
     assert sorted(grant["key_id"] for grant in kit["project"]["grants"]) == sorted(
@@ -1111,9 +1177,19 @@ def _run(
     used = list_encryption_events(request, project_id, "recovery_used")[0]
     assert used["event_detail"]["member_ids"] == [editor_id]
     assert used["event_detail"]["member_names"] == [editor.name]
+    assert used["event_detail"]["member_key_ids"] == [_fingerprint(editor.public_key)]
+    # Given back: the revoke above no longer flags the editor's key.
+    assert not _key_taken(
+        list_encryption_events(request, project_id), _fingerprint(editor.public_key)
+    )
 
     # --- Starting again --------------------------------------------------------------------
     assert retire_member(request, "user", collaborator) == (True, 1)
+    started_again = list_encryption_events(request, project_id, "revoke")[0]
+    assert started_again["event_detail"]["reason"] == "key replaced"
+    assert started_again["event_detail"]["member_key_id"] == _fingerprint(
+        editor.public_key
+    )
     assert get_member(request, "user", collaborator) is None
     ok, editor_id = enroll_member(
         request, "user", collaborator, editor.public_key, editor.unlock()
@@ -1158,6 +1234,10 @@ def _run(
     )
     assert json.loads(json.dumps(setup["event_detail"]))["key_id"] == key_id
     assert setup["event_detail"]["member_names"] == [owner.name, recovery.name]
+    assert setup["event_detail"]["member_key_ids"] == [
+        _fingerprint(owner.public_key),
+        _fingerprint(recovery.public_key),
+    ]
 
     # --- A key set up before versions were signed ---------------------------------
     # Nobody can show they hold it, so nothing more is given of it and it is

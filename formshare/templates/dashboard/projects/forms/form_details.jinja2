@@ -237,6 +237,12 @@
 
 {% block scripts %}
     {% jsresource request,'formshare','htmx' %}
+    <script>
+        // htmx evaluates strings only for hx-on, hx-vars and js: values,
+        // none of which FormShare uses, and the Content-Security-Policy
+        // refuses eval (formshare/config/csp.py).
+        htmx.config.allowEval = false;
+    </script>
     {{ super() }}
     {% block form_extra_imports %}
 

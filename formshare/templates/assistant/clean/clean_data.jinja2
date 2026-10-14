@@ -108,6 +108,40 @@
             }
         );
         {% if table != None %}
+            // A cell shows its value as text. jqGrid would put it in as HTML,
+            // and answers come from devices. Editing gets the value back:
+            // $.unformat decodes a cell whose formatter is its own. jqGrid's
+            // autoencode would show it the same way, but it also encodes
+            // what the edit form posts, and that would be stored encoded.
+            function fsText(value) {
+                if (value === null || value === undefined || value === "") {
+                    return "&#160;";
+                }
+                return $.jgrid.htmlEncode(String(value));
+            }
+            // A lookup's label, as text (formatoptions.labels: code -> label).
+            function fsLookupLabel(value, options) {
+                let labels = options.colModel.formatoptions.labels;
+                return fsText(Object.prototype.hasOwnProperty.call(labels, value) ? labels[value] : "");
+            }
+            // The code of the label a cell shows, for the edit form.
+            function fsLookupCode(text, options) {
+                let labels = options.colModel.formatoptions.labels;
+                for (let code in labels) {
+                    if (Object.prototype.hasOwnProperty.call(labels, code) && labels[code] === text) {
+                        return code;
+                    }
+                }
+                return "";
+            }
+            // The edit form's options: jqGrid writes each label as HTML.
+            function fsLookupOptions(labels) {
+                let options = {};
+                Object.keys(labels).forEach(function (code) {
+                    options[code] = $.jgrid.htmlEncode(labels[code]);
+                });
+                return options;
+            }
             //Construct the editor
             let update_button = 0;
             let cancel_button = 0;
@@ -120,7 +154,7 @@
                     postData: {csrf_token: '{{ request.session.get_csrf_token() }}'},
                     styleUI : 'Bootstrap4',
                     iconSet: 'fontAwesome',
-                    datatype: "jsonp",
+                    datatype: "json",
                     loadComplete: function(data) {
                         pulled_data = data.rows;
                     },
@@ -129,11 +163,14 @@
                             {% for field in fields -%}
                                 {% if field.name != "rowuuid" %}
                                     {label: '{{ field.name }}', name: '{{ field.name }}' , key: false, editable: {{ field.editable }},
+                                        {% if field.rlookup != 'true' %}formatter: fsText,{% endif %}
                                         {% if field.rlookup == 'true' %}
-                                            formatter:'select',
+                                            formatter: fsLookupLabel,
+                                            unformat: fsLookupCode,
+                                            formatoptions: {labels: {{ field.lookupvalues }}},
                                             edittype:'select',
                                             editoptions : {
-                                                value: {{ field.lookupvalues }}
+                                                value: fsLookupOptions({{ field.lookupvalues }})
                                             }
                                         {% else %}
                                             {% if field.field_selecttype > 0 and field.related_to_case == "false" %}
@@ -143,7 +180,7 @@
                                                     table_name: '{{ table }}',
                                                     dataInit: function (elem) {
                                                         $(elem).click(function () {
-                                                            $("#update_title").text('{{ _("Update multi select field") }} "{{ field.desc }}"');
+                                                            $("#update_title").text({{ _("Update multi select field")|tojson }} + ' "' + {{ field.desc|tojson }} + '"');
                                                             let info_url = "{{ request.route_url('cleanmultiselect', userid=userid, projcode=projcode, formid=formid, table='table-to-change', mseltable= 'mseltable-to-change',rowuuid='rowuuid-to-change')}}";
                                                             info_url_final = info_url.replace("mseltable-to-change", $(elem).attr("mseltable_name")) + " #msel_content";
                                                             info_url_final = info_url_final.replace("rowuuid-to-change",$(elem).attr("rowid"))
@@ -168,11 +205,14 @@
                                 {% if field.checked -%}
                                     {% if field.name != "rowuuid" %}
                                         {label: '{{ field.name }}', name: '{{ field.name }}' , key: false, editable: {{ field.editable }},
+                                            {% if field.rlookup != 'true' %}formatter: fsText,{% endif %}
                                             {% if field.rlookup == 'true' %}
-                                                formatter:'select',
+                                                formatter: fsLookupLabel,
+                                                unformat: fsLookupCode,
+                                                formatoptions: {labels: {{ field.lookupvalues }}},
                                                 edittype:'select',
                                                 editoptions : {
-                                                    value: {{ field.lookupvalues }}
+                                                    value: fsLookupOptions({{ field.lookupvalues }})
                                                 }
                                             {% else %}
                                                 {% if field.field_selecttype > 0 and field.related_to_case == "false" %}
@@ -182,7 +222,7 @@
                                                         table_name: '{{ table }}',
                                                         dataInit: function (elem) {
                                                             $(elem).click(function () {
-                                                                $("#update_title").text('{{ _("Update multi select field") }} "{{ field.desc }}"');
+                                                                $("#update_title").text({{ _("Update multi select field")|tojson }} + ' "' + {{ field.desc|tojson }} + '"');
                                                                 let info_url = "{{ request.route_url('cleanmultiselect', userid=userid, projcode=projcode, formid=formid, table='table-to-change', mseltable= 'mseltable-to-change',rowuuid='rowuuid-to-change')}}";
                                                                 let info_url_final = info_url.replace("mseltable-to-change", $(elem).attr("mseltable_name")) + " #msel_content";
                                                                 info_url_final = info_url_final.replace("rowuuid-to-change",$(elem).attr("rowid"))
@@ -204,7 +244,7 @@
                                 {% endif -%}
                             {% endfor -%}
                         {% endif %}
-                        {label: 'Row unique ID', name: 'rowuuid', key: true, editable: false}
+                        {label: 'Row unique ID', name: 'rowuuid', key: true, editable: false, formatter: fsText}
                     ],
                     viewrecords: true,
                     height: 'auto',

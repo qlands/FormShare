@@ -73,6 +73,7 @@ from formshare.views.collaborators import (
     AcceptCollaboration,
 )
 from formshare.views.dashboard import UserDashBoardView
+from formshare.views.csp_report import CSPReportView
 from formshare.views.encryption import (
     AssistantEncryptionKeysView,
     ProjectEncryptionKeysView,
@@ -261,6 +262,9 @@ def load_routes(config, settings):
 
     # FormShare routes
     routes.append(add_route("home", "/", HomeView, "landing/index.jinja2"))
+    # Where browsers report what the Content-Security-Policy blocked, or would
+    # (formshare/config/csp.py).
+    routes.append(add_route("csp_report", "/csp/report", CSPReportView, "json"))
     routes.append(add_route("health", "/health", HealthView, "json"))
     routes.append(
         add_route("task_stream", "/task_stream/{task_id}", TaskStreamView, None)
@@ -1227,7 +1231,7 @@ def load_routes(config, settings):
             "getFormSubmissions",
             "/user/{userid}/project/{projcode}/form/{formid}/submissions/get",
             GetFormSubmissions,
-            "string",
+            "json",
         )
     )
 
@@ -1236,7 +1240,7 @@ def load_routes(config, settings):
             "getFormAudit",
             "/user/{userid}/project/{projcode}/form/{formid}/audit/get",
             GetFormAudit,
-            "string",
+            "json",
         )
     )
 
@@ -1502,7 +1506,7 @@ def load_routes(config, settings):
             "request",
             "/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/{tablename}/request",
             DataRequest,
-            "string",
+            "json",
         )
     )
 

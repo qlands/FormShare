@@ -26,6 +26,10 @@ auth.partner.cookie = formshare_partner_auth_tkt
 # as the proxy's X-Forwarded-Proto or the URL says), true or false. true also
 # marks the session cookie, which auto cannot. Field encryption needs HTTPS.
 auth.secure_cookies = auto
+# The Content-Security-Policy of FormShare's pages: report (browsers only report
+# what it would block, which FormShare logs), enforce, or off. Enforce it once
+# the log shows nothing, from core or from the plugins installed.
+security.csp = report
 
 auth.secret = {{ auth_secret }}
 aes.key = {{ aes_key }}

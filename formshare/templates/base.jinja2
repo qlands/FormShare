@@ -25,6 +25,10 @@
 
             {% endblock topScripts %}
 
+            {# data-href, data-invalid-message, data-allowed-chars: what inline
+               event handlers did, which the Content-Security-Policy refuses. #}
+            {% jsresource request,'formshare','behaviours' %}
+
             {% if rtl %}
                 {% cssresource request,'formshare','rtl' %}
             {% endif %}

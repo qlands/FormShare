@@ -55,10 +55,14 @@
                 postData: {csrf_token: '{{ request.session.get_csrf_token() }}'},
                 styleUI : 'Bootstrap4',
                 iconSet: 'fontAwesome',
-                datatype: "jsonp",
+                datatype: "json",
+                // Cells show the answers as text: jqGrid would put them in as
+                // HTML, and they come from devices. Nothing here is edited, so
+                // what autoencode does to an edit form's post does not apply.
+                autoencode: true,
                 colModel: [
                     {% for field in fields %}
-                        {label: '{{ field.desc }}', name: '{{ field.name }}' {% if field.name == 'audit_id' %}, key: true{% endif %}, editable: false},
+                        {label: {{ field.desc|e|tojson }}, name: '{{ field.name }}' {% if field.name == 'audit_id' %}, key: true{% endif %}, editable: false},
                     {% endfor %}
                 ],
                 viewrecords: true,

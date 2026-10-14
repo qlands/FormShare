@@ -43,7 +43,7 @@
                             </div>
                             <div class="col-md-3">
                                 {% if projectDetails.access_type < 4 %}
-                                    <button  onclick="location.href='{{ request.route_url('group_add',userid=userid,projcode=projectDetails.project_code) }}';" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add group') }}</button>
+                                    <button  data-href="{{ request.route_url('group_add',userid=userid,projcode=projectDetails.project_code) }}" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add group') }}</button>
                                 {% endif %}
                             </div>
                         </div>

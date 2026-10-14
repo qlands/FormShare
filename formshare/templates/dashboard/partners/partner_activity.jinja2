@@ -87,15 +87,15 @@
                         {% for a_year in years %}
                             {% if year == None %}
                                 {% if loop.index ==1 %}
-                                    <button onclick="location.href='{{ request.route_url('partner_activity',userid=userid,partnerid=partnerid,_query={'year': a_year}) }}';" class="btn btn-block btn-primary">{{ a_year }}</button>
+                                    <button data-href="{{ request.route_url('partner_activity',userid=userid,partnerid=partnerid,_query={'year': a_year}) }}" class="btn btn-block btn-primary">{{ a_year }}</button>
                                 {% else %}
-                                    <button onclick="location.href='{{ request.route_url('partner_activity',userid=userid,partnerid=partnerid,_query={'year': a_year}) }}';" class="btn btn-block btn-default">{{ a_year }}</button>
+                                    <button data-href="{{ request.route_url('partner_activity',userid=userid,partnerid=partnerid,_query={'year': a_year}) }}" class="btn btn-block btn-default">{{ a_year }}</button>
                                 {% endif %}
                             {% else %}
                                 {% if a_year == year %}
-                                    <button onclick="location.href='{{ request.route_url('partner_activity',userid=userid,partnerid=partnerid,_query={'year': a_year}) }}';" class="btn btn-block btn-primary">{{ a_year }}</button>
+                                    <button data-href="{{ request.route_url('partner_activity',userid=userid,partnerid=partnerid,_query={'year': a_year}) }}" class="btn btn-block btn-primary">{{ a_year }}</button>
                                 {% else %}
-                                    <button onclick="location.href='{{ request.route_url('partner_activity',userid=userid,partnerid=partnerid,_query={'year': a_year}) }}';" class="btn btn-block btn-default">{{ a_year }}</button>
+                                    <button data-href="{{ request.route_url('partner_activity',userid=userid,partnerid=partnerid,_query={'year': a_year}) }}" class="btn btn-block btn-default">{{ a_year }}</button>
                                 {% endif %}
                             {% endif %}
                         {% endfor %}

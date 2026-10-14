@@ -56,7 +56,14 @@
     {{ super() }}
     <script>
         $(document).ready(function() {
-            var simplemde = new SimpleMDE({ element: $("#notes")[0] });
+            // Font Awesome is the page's, and there is no spell checker: SimpleMDE
+            // would fetch the one and the checker's dictionaries from a CDN,
+            // which the Content-Security-Policy refuses.
+            var simplemde = new SimpleMDE({
+                element: $("#notes")[0],
+                autoDownloadFontAwesome: false,
+                spellChecker: false
+            });
         });
     </script>
 {% endblock scripts -%}

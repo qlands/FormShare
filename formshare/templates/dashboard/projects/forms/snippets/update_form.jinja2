@@ -31,7 +31,7 @@
                                     <hr>
                                     <div style="margin-top: 10px" class="form-group">
                                         <label><b>{{ _('In the ODK Form that you are uploading into FormShare, which variable will be used to control duplicate submissions?') }}</b></label>
-                                        <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to control duplicate submissions') }}')"  oninput="setCustomValidity('')">
+                                        <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required data-invalid-message="{{ _('You need to indicate the variable to control duplicate submissions') }}">
                                         <span class="form-text m-b-none text-success">{{ _('To control duplicate submissions, you need to select a variable from your ODK Form whose values will be UNIQUE across all the submissions that you expect to have. If you need to join two or more variables to become UNIQUE, then use an ODK Calculate to merge them into one variable. This variable will become the Primary Key of your ODK Form and CANNOT BE CHANGED afterward.') }}</span>
                                     </div>
                                 {% else %}
@@ -40,19 +40,19 @@
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
                                             <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to identify each case?') }}</b></label>
-                                            <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to identify each case') }}')"  oninput="setCustomValidity('')">
+                                            <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required data-invalid-message="{{ _('You need to indicate the variable to identify each case') }}">
                                             <span class="form-text m-b-none text-success">{{ _('Each case must be UNIQUE. You need to select a variable from your ODK Form whose values will be UNIQUE across all the cases that you expect to have. If you need to join two or more variables to become UNIQUE, then use an ODK Calculate to merge them into one variable. This variable will become the Primary Key of your ODK Form and CANNOT BE CHANGED afterward.') }}</span>
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
                                             <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to label each case?') }}</b></label>
-                                            <input type="text" name="form_caselabel" {% if formDetails.form_caselabel != None %}value="{{ formDetails.form_caselabel }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to label each case') }}')"  oninput="setCustomValidity('')">
+                                            <input type="text" name="form_caselabel" {% if formDetails.form_caselabel != None %}value="{{ formDetails.form_caselabel }}" {% endif %} class="form-control" required data-invalid-message="{{ _('You need to indicate the variable to label each case') }}">
                                             <span class="form-text m-b-none text-success">{{ _('Each case needs to have a label. You need to select a variable from your ODK Form to label each case. Follow-up forms will use this variable to search and select each case. If you need to join two or more variables to create a label, then use an ODK Calculate to merge them into one variable.') }}</span>
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
                                             <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to record the date of a case?') }}</b></label>
-                                            <input type="text" name="form_casedatetime" {% if formDetails.form_casedatetime != None %}value="{{ formDetails.form_casedatetime }}"{% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case datetime variable') }}')"  oninput="setCustomValidity('')">
+                                            <input type="text" name="form_casedatetime" {% if formDetails.form_casedatetime != None %}value="{{ formDetails.form_casedatetime }}"{% endif %} class="form-control" required data-invalid-message="{{ _('You need to indicate the case datetime variable') }}">
                                             <span class="form-text m-b-none text-success">{{ _('Each case must be registered in a date. This variable MUST BE either "date" or "datetime".') }}</span>
                                         </div>
                                     {% else %}
@@ -66,19 +66,19 @@
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
                                             <label><b>{{ _('In the ODK Form that you are uploading into FormShare, which variable will be used to search and select a case?') }}</b></label>
-                                            <input type="text" name="form_caseselector" {% if formDetails.form_caseselector != None %}value="{{ formDetails.form_caseselector }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to search and select cases') }}')"  oninput="setCustomValidity('')">
+                                            <input type="text" name="form_caseselector" {% if formDetails.form_caseselector != None %}value="{{ formDetails.form_caseselector }}" {% endif %} class="form-control" required data-invalid-message="{{ _('You need to indicate the variable to search and select cases') }}">
                                             <span class="form-text m-b-none text-success">{{ _('This variable MUST BE either a "select_one_from_file" (The file MUST BE CSV) or a "barcode".') }}<br/>{{ _('Download an example the CSV file ') }} <a style="color: orange" href="" target="_blank">{{ _('here') }}</a></span>
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
                                             <label><b>{{ _('In the ODK Form that you are uploading into FormShare, which variable will be used to record the date or the date and time of a new data point attached to a case?') }}</b></label>
-                                            <input type="text" name="form_casedatetime" {% if formDetails.form_casedatetime != None %}value="{{ formDetails.form_casedatetime }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to record date or date and time.') }}')"  oninput="setCustomValidity('')">
+                                            <input type="text" name="form_casedatetime" {% if formDetails.form_casedatetime != None %}value="{{ formDetails.form_casedatetime }}" {% endif %} class="form-control" required data-invalid-message="{{ _('You need to indicate the variable to record date or date and time.') }}">
                                             <span class="form-text m-b-none text-success">{{ _('Follow-up case forms attach data to a case. Each case can have different data at different points in time. Each data point must have a date. This variable MUST BE either "date" or "datetime".') }}</span>
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
                                             <label><b>{{ _('In the ODK Form that you are uploading into FormShare, which variable will be used to control duplicate cases?') }}</b></label>
-                                            <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to control duplicate cases') }}')"  oninput="setCustomValidity('')">
+                                            <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required data-invalid-message="{{ _('You need to indicate the variable to control duplicate cases') }}">
                                             <span class="form-text m-b-none text-success">{{ _('To control duplicate cases, you need to join two or more variables to become UNIQUE. For example, use an ODK Calculate to join the variable that you selected above to search and select a case with the variable that you selected above to record the date of new data point attached to a case. This ODK Calculate will become the Primary Key of your ODK Form and CANNOT BE CHANGED afterwards.') }}</span>
                                         </div>
                                     {% endif %}

@@ -17,6 +17,7 @@ import os
 import re
 import uuid
 
+from jinja2.utils import htmlsafe_json_dumps
 from sqlalchemy import text
 
 from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
@@ -1091,10 +1092,14 @@ class ActionsView(ListSection):
             "mode": mode,
             "module": module,
             "compiled": compiled,
-            "filters": json.dumps(catalogue_for_querybuilder(catalogue)),
-            "targets": json.dumps(targets),
-            "variables": json.dumps(catalogue.variables),
-            "repeats": json.dumps(catalogue.repeats),
+            # Printed into the page's script: the names and labels come from
+            # the form, and json.dumps would leave a "</script>" in one to
+            # close the script. These are escaped for it, and print as they
+            # are.
+            "filters": htmlsafe_json_dumps(catalogue_for_querybuilder(catalogue)),
+            "targets": htmlsafe_json_dumps(targets),
+            "variables": htmlsafe_json_dumps(catalogue.variables),
+            "repeats": htmlsafe_json_dumps(catalogue.repeats),
             "hasCase": catalogue.source is not None,
             "source": catalogue.source,
             "submissions": self._submissions(form_data),

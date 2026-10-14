@@ -74,7 +74,11 @@
                 displayIndicator: false
             });
 
+            // emojione is bundled (mainresources.py); the picker draws each
+            // emoji as an image, since the sprite is a stylesheet from a CDN
+            // that the Content-Security-Policy refuses.
             $("#emojiarea").emojioneArea({
+                sprite: false,
                 pickerPosition: "bottom",
                 filtersPosition: "bottom",
                 tonesStyle: "checkbox"

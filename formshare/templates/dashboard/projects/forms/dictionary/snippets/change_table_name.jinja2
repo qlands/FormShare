@@ -21,7 +21,7 @@
                 {% block edit_table_desc_form_fields_actions %}
                     <div class="modal-footer">
                         <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
-                        <button type="button" onclick="post_table_change();" class="btn btn-primary">{{ _('Change description') }}</button>
+                        <button type="button" data-post-table-change class="btn btn-primary">{{ _('Change description') }}</button>
                     </div>
                 {% endblock edit_table_desc_form_fields_actions %}
             {% endblock edit_table_desc_form %}

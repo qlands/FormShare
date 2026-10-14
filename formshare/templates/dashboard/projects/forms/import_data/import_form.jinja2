@@ -67,7 +67,7 @@
                             <label class="col-sm-2 col-form-label">{{ _('Data file') }}</label>
                             <div class="col-sm-10">
                                 <div class="custom-file">
-                                    <input oninput="this.setCustomValidity('')" oninvalid="this.setCustomValidity('{{ _('You need to select a file') }}')" id="file" name="file" type="file" class="custom-file-input" required="">
+                                    <input data-invalid-message="{{ _('You need to select a file') }}" id="file" name="file" type="file" class="custom-file-input" required="">
                                     <label for="file" class="custom-file-label">{{ _('Choose file...') }}</label>
                                 </div>
                             </div>

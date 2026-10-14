@@ -6,7 +6,9 @@ so a test can flip a key for a few requests and put it back.
 """
 
 import contextlib
+import json
 import os
+import re
 import time
 import uuid
 
@@ -54,21 +56,63 @@ def t_e_s_t_config_switches(test_object):
     # A partial whose markers are not in the page comes back whole
     testapp.get(dashboard + "?partial=no_such_partial", status=200)
 
-    # secure.javascript moves inline scripts into an ephemeral file
-    with settings_set_to({"secure.javascript": "true"}):
+    # The Content-Security-Policy (formshare/config/csp.py): reported by
+    # default, and every script of a page carries the request's nonce.
+    res = testapp.get(dashboard, status=200)
+    policy = res.headers["Content-Security-Policy-Report-Only"]
+    assert "Content-Security-Policy" not in res.headers
+    nonce = re.search(r"'nonce-([^']+)'", policy).group(1)
+    tags = re.findall(rb"<script(?=[\s>/])[^>]*>", res.body)
+    assert tags and all(
+        'nonce="{}"'.format(nonce).encode() in a_tag for a_tag in tags
+    ), [a_tag for a_tag in tags if b"nonce=" not in a_tag]
+    with settings_set_to({"security.csp": "enforce"}):
         res = testapp.get(dashboard, status=200)
-        assert b"/fstatic/ephemeral/" in res.body
-        # A partial skips it, the fragment has no body to attach a script to
-        testapp.get(dashboard + "?partial=main", status=200)
-        # The public, assistant and partner pages register it too
-        testapp.get("/", status=200)
-        testapp.get(
+        assert "'strict-dynamic'" in res.headers["Content-Security-Policy"]
+        # The public, assistant and partner pages carry it too
+        for page in (
+            "/",
             "/user/{}/project/{}/assistantaccess/login".format(
                 login, test_object.project
             ),
-            status=200,
+            "/partneraccess/login",
+        ):
+            assert "Content-Security-Policy" in testapp.get(page, status=200).headers
+        # A partial is a fragment htmx inserts, trusted through strict-dynamic
+        testapp.get(dashboard + "?partial=main", status=200)
+        # An error page has the policy of its own request, whose nonce its
+        # scripts carry: the error views' callbacks run too.
+        res = testapp.get("/no/such/page", status=404)
+        policy = res.headers["Content-Security-Policy"]
+        nonce = re.search(r"'nonce-([^']+)'", policy).group(1)
+        tags = re.findall(rb"<script(?=[\s>/])[^>]*>", res.body)
+        assert tags and all(
+            'nonce="{}"'.format(nonce).encode() in a_tag for a_tag in tags
         )
-        testapp.get("/partneraccess/login", status=200)
+    with settings_set_to({"security.csp": "off"}):
+        res = testapp.get(dashboard, status=200)
+        assert not {
+            "Content-Security-Policy",
+            "Content-Security-Policy-Report-Only",
+        } & set(res.headers.keys())
+    # What a browser reports is logged, in either format it uses
+    violation = {
+        "document-uri": "http://localhost/user/x",
+        "effective-directive": "script-src-attr",
+        "blocked-uri": "inline",
+        "source-file": "http://localhost/user/x",
+        "line-number": 12,
+    }
+    for body, kind in (
+        (json.dumps({"csp-report": violation}), "application/csp-report"),
+        (
+            json.dumps([{"type": "csp-violation", "body": violation}]),
+            "application/reports+json",
+        ),
+        ("not json", "application/csp-report"),
+    ):
+        testapp.post("/csp/report", body, headers={"Content-Type": kind}, status=200)
+    testapp.get("/csp/report", status=200)
 
     # The server clock in a zone the time zone table knows
     with system_timezone("EST"):

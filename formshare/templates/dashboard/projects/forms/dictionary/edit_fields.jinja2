@@ -169,6 +169,16 @@
 
         });
 
+        // The dialog's button (set_field_as_sensitive.jinja2), and each
+        // field's "Set as not sensitive" (field_item.jinja2). On the document,
+        // so that a field's markup loaded again after a change keeps working.
+        $(document).on("click", "[data-post-sensitive-change]", function () {
+            post_sensitive_change();
+        });
+        $(document).on("click", "[data-not-sensitive-field]", function () {
+            post_not_sensitive_change($(this).attr("data-not-sensitive-field"));
+        });
+
         function post_sensitive_change() {
             var field_name = $("#field_name").val();
             var field_protection = $("#protection").val();

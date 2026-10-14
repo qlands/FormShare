@@ -3,6 +3,7 @@ from formshare.processes.logging.loggerclass import SecretLogger
 import os
 
 import formshare.resources as r
+from formshare.config.csp import csp_nonce_attribute, nonce_template_source
 from jinja2 import Environment
 from jinja2 import FileSystemLoader, TemplateNotFound as JinjaTemplateNotFound
 from jinja2 import ext, nodes
@@ -46,6 +47,8 @@ def initialize(path_to_templates):
     jinjaEnv.add_extension(ExtendThis)
     jinjaEnv.add_extension(PartialStartExtension)
     jinjaEnv.add_extension(PartialEndExtension)
+    jinjaEnv.add_extension(CSPNonceExtension)
+    jinjaEnv.globals["csp_nonce_attribute"] = csp_nonce_attribute
 
 
 def render_resource(
@@ -74,14 +77,26 @@ def render_resource(
                 request.activeResources.add_resource(
                     library_name, resource["resourceID"], resource_type
                 )
+                # The request gives the <script> its nonce (CSPNonceExtension).
                 resources_to_include.append(
                     jinjaEnv.from_string(html).render(
-                        file=request.application_url + "/" + resource["filePath"]
+                        file=request.application_url + "/" + resource["filePath"],
+                        request=request,
                     )
                 )
         return literal("\n".join(resources_to_include))
     else:
         return ""
+
+
+class CSPNonceExtension(ext.Extension):
+    """Gives every <script> a template writes the request's nonce, as the
+    template is compiled (formshare/config/csp.py). It works on the template's
+    source, not on the rendered page, so a <script> that comes in with data
+    gets no nonce and the Content-Security-Policy refuses it."""
+
+    def preprocess(self, source, name, filename=None):
+        return nonce_template_source(source)
 
 
 class ExtendThis(ext.Extension):  # pragma: no cover

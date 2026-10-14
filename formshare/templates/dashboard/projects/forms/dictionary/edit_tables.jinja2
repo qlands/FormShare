@@ -172,6 +172,11 @@
 
         });
 
+        // The description dialog's button (change_table_name.jinja2).
+        $(document).on("click", "[data-post-table-change]", function () {
+            post_table_change();
+        });
+
         function post_table_change() {
             var table_name = $("#table_name").val();
             var table_desc = $("#table_desc").val();

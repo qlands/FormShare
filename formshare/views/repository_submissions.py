@@ -1,5 +1,3 @@
-import json
-
 from formshare.config.auth import get_user_data
 from formshare.processes.db import (
     get_form_data,
@@ -166,7 +164,6 @@ class GetFormSubmissions(PrivateView):
             if self.request.method == "GET":
                 raise HTTPNotFound
             request_data = self.get_post_dict()
-            call_back = self.request.params.get("callback")
 
             search_field = request_data.get("searchField", None)
             search_string = request_data.get("searchString", "")
@@ -202,7 +199,7 @@ class GetFormSubmissions(PrivateView):
                 form_id,
             )
 
-            return call_back + "(" + json.dumps(data) + ")"
+            return data
         else:
             raise HTTPNotFound
 
@@ -239,7 +236,6 @@ class GetFormAudit(PrivateView):
             if self.request.method == "GET":
                 raise HTTPNotFound
             request_data = self.get_post_dict()
-            call_back = self.request.params.get("callback")
 
             search_field = request_data.get("searchField", None)
             search_string = request_data.get("searchString", "")
@@ -315,7 +311,7 @@ class GetFormAudit(PrivateView):
                 search_operator,
             )
 
-            return call_back + "(" + json.dumps(data) + ")"
+            return data
         else:
             raise HTTPNotFound
 

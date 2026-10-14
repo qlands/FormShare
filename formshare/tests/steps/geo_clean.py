@@ -130,10 +130,12 @@ def _audit_geometry_as_before(config, schema):
 
 
 def _grid(res):
-    """The data a jqGrid request returned, out of its JSONP wrapper."""
-    body = res.body.decode("utf-8")
-    assert body.startswith(CALLBACK + "(") and body.endswith(")"), body[:300]
-    return json.loads(body[len(CALLBACK) + 1 : -1])
+    """The data a jqGrid request returned. The grids ask for JSON, not
+    JSONP: a JSONP endpoint echoes the callback name it is sent into script,
+    a way around the Content-Security-Policy (formshare/config/csp.py), so a
+    callback in the URL is ignored."""
+    assert res.content_type == "application/json", res.content_type
+    return json.loads(res.body.decode("utf-8"))
 
 
 def t_e_s_t_geo_clean(test_object):

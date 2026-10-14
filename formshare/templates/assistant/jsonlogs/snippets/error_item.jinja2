@@ -110,7 +110,7 @@
                             <a class="btn btn-primary btn-sm action-buttons action-required" data-title="{{ _('Check-out revision') }}" data-message="{{ _('Are you sure that you want to check-out this submission?') }}" urn="{{ request.route_url('checkoutjson', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Check-out file') }}"><i style="color: white" class="fa fa-arrow-right"></i></a>
                             <a class="btn btn-danger btn-sm action-buttons" href="{{ request.route_url('disregard',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Disregard error') }}"><i class="fa fa-ban"></i></a>
                             {% if error.lastentry != None %}
-                                <a class="btn btn-default btn-sm action-buttons button-note" data-error="notes-{{ error.log_short }}" data-toggle="modal" data-target="#see_notes" onclick="ShowNotes('notes-');" title="{{ _('See notes') }}"><i class="fa fa-comment-o"></i></a>
+                                <a class="btn btn-default btn-sm action-buttons button-note" data-error="notes-{{ error.log_short }}" data-toggle="modal" data-target="#see_notes" title="{{ _('See notes') }}"><i class="fa fa-comment-o"></i></a>
                             {% endif %}
                         {% endif %}
                         {% if error.status == 2 %}
@@ -132,7 +132,7 @@
                         {% if error.status == 4 %}
                             <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('comparejsons',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Compare submission') }}"><i style="color: orange" class="fa fa-random"></i></a>
                             <a class="btn btn-default btn-sm action-buttons" title="{{ _('Cancel disregard') }}" href="{{ request.route_url('canceldisregard',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}"><i style="color: red" class="fa fa-ban"></i></a>
-                            <a class="btn btn-default btn-sm action-buttons button-note" data-error="notes-{{ error.log_short }}" data-toggle="modal" data-target="#see_notes" onclick="ShowNotes('notes-');" title="{{ _('See notes') }}"><i class="fa fa-comment-o"></i></a>
+                            <a class="btn btn-default btn-sm action-buttons button-note" data-error="notes-{{ error.log_short }}" data-toggle="modal" data-target="#see_notes" title="{{ _('See notes') }}"><i class="fa fa-comment-o"></i></a>
                         {% endif %}
                     {% endif %}
                 {% else %}

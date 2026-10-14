@@ -21,7 +21,7 @@ from starlette.requests import Request as StarletteRequest
 from starlette.responses import PlainTextResponse
 from starlette.responses import Response as StarletteResponse
 
-from formshare.config import dispatcher
+from formshare.config import csp, dispatcher
 from formshare.config.fastapi_config import FormShareConfig
 from formshare.middleware import FormShareRequest, _MatchedRoute, _PostData
 from formshare.middleware.httpexceptions import HTTPBadRequest, HTTPFound
@@ -239,6 +239,147 @@ def test_the_transaction_manager_commits_rolls_back_and_nests():
 
 
 # ------------------------------------------------------------------ dispatcher
+
+
+def test_a_template_s_scripts_get_the_nonce_and_its_data_s_do_not():
+    from jinja2 import Environment
+    from formshare.config.jinja_extensions import CSPNonceExtension
+
+    env = Environment(autoescape=True, extensions=[CSPNonceExtension])
+    env.globals["csp_nonce_attribute"] = csp.csp_nonce_attribute
+    template = env.from_string(
+        "<head><script src='/a.js'></script><SCRIPT type=\"x\">1</SCRIPT>"
+        '<script>2</script><script nonce="old">3</script>'
+        "<noscript>no</noscript><script\n>4</script></head>"
+        "<script>var a = {{ label }};</script>{{ label|safe }}"
+    )
+    # A label that closes the script it is printed in, and opens its own.
+    label = "</script><script>alert(1)</script>"
+    page = template.render(request=SimpleNamespace(csp_nonce="N1"), label=label)
+    assert page.count('nonce="N1"') == 5
+    assert 'nonce="old"' in page and "<noscript>" in page
+    assert "<script>alert(1)</script>" in page
+    assert "&lt;script&gt;alert(1)" in page
+    # No request, as for an email, or a request with no nonce, as when the
+    # policy is off: no attribute at all.
+    for page in (
+        template.render(label=label),
+        template.render(request=SimpleNamespace(), label=label),
+    ):
+        assert page.count("nonce=") == 1
+
+
+def test_the_policy_and_how_it_is_sent():
+    assert csp.csp_mode({}) == "report"
+    assert csp.csp_mode({"security.csp": " Enforce "}) == "enforce"
+    assert csp.csp_mode({"security.csp": "off"}) == "off"
+    assert csp.csp_mode({"security.csp": "nonsense"}) == "report"
+    policy = csp.content_security_policy("N1", "https://x/csp/report")
+    assert "script-src 'self' 'nonce-N1' 'strict-dynamic'" in policy
+    assert "object-src 'none'" in policy and "unsafe-eval" not in policy
+    assert policy.endswith("report-uri https://x/csp/report")
+
+    def request_with(mode, nonce="N1"):
+        return SimpleNamespace(
+            csp_nonce=nonce,
+            registry=SimpleNamespace(settings={"security.csp": mode}),
+            application_url="https://x",
+        )
+
+    def page(headers=None, content_type="text/html"):
+        return SimpleNamespace(
+            content_type=content_type,
+            body=b"<script>1</script>",
+            headers=dict(headers or {}),
+        )
+
+    reported = page()
+    csp.content_security_callback(request_with("report"), reported)
+    # The page is sent as it was rendered: the nonce is the templates' work.
+    assert reported.body == b"<script>1</script>"
+    assert "nonce-N1" in reported.headers["Content-Security-Policy-Report-Only"]
+    enforced = page()
+    csp.content_security_callback(request_with("enforce"), enforced)
+    assert "Content-Security-Policy" in enforced.headers
+    # A page that set a policy of its own -- the plugin's -- keeps it.
+    own = page({"Content-Security-Policy": "default-src 'none'"})
+    csp.content_security_callback(request_with("enforce"), own)
+    assert own.headers == {"Content-Security-Policy": "default-src 'none'"}
+    # JSON, and a request without a nonce, are left alone.
+    data = page(content_type="application/json")
+    csp.content_security_callback(request_with("enforce"), data)
+    assert not data.headers
+    bare = page()
+    csp.content_security_callback(request_with("enforce", nonce=None), bare)
+    assert not bare.headers
+
+    registered = []
+    request = SimpleNamespace(
+        registry=SimpleNamespace(settings={"security.csp": "off"}),
+        add_response_callback=registered.append,
+    )
+    csp.apply_content_security_policy(request)
+    assert registered == [] and not hasattr(request, "csp_nonce")
+    request.registry.settings["security.csp"] = "report"
+    csp.apply_content_security_policy(request)
+    assert registered == [csp.content_security_callback] and request.csp_nonce
+
+
+def test_a_lookup_s_labels_cannot_close_the_grid_s_script(monkeypatch):
+    """The cleaning grid prints a lookup's codes and labels into its script.
+    A label is the form's, and "</script>" in one must not close it."""
+    from formshare.processes.submission import api as submission_api
+
+    monkeypatch.setattr(submission_api, "get_form_schema", lambda *args: "FS_x")
+    rows = [("c1", "</script><script>alert(1)</script>"), ("c2", "Rice & beans")]
+    executed = []
+
+    def execute(sql):
+        executed.append(sql)
+        return SimpleNamespace(fetchall=lambda: rows)
+
+    request = SimpleNamespace(dbsession=SimpleNamespace(execute=execute))
+    printed = submission_api.get_lookup_values(
+        request, "project", "form", "lkpcrops", "crops_cod"
+    )
+    assert "</script>" not in printed and "<" not in printed
+    # Markup: the template prints it as it is, and it reads back the same.
+    assert str(printed.__html__()) == str(printed)
+    assert list(json.loads(printed).items()) == [
+        ("", ""),
+        ("c1", "</script><script>alert(1)</script>"),
+        ("c2", "Rice & beans"),
+    ]
+    assert executed[0].startswith("SELECT `crops_cod`,`crops_des` FROM FS_x.")
+
+
+def test_a_violation_is_logged_once_whatever_its_format():
+    from formshare.views import csp_report
+
+    violation = {
+        "document-uri": "https://x/user/u?a=1",
+        "effective-directive": "script-src-attr",
+        "blocked-uri": "inline",
+        "source-file": "https://x/user/u",
+        "line-number": 7,
+        "script-sample": "location.href=...",
+    }
+    assert csp_report._violations({"csp-report": violation}) == [violation]
+    assert csp_report._violations(
+        [{"type": "csp-violation", "body": violation}, {"type": "other"}]
+    ) == [violation]
+    assert csp_report._violations("nonsense") == []
+    first = dict(violation, **{"line-number": uuid.uuid4().int % 100000})
+    assert csp_report.log_violation(first)
+    assert not csp_report.log_violation(first)
+    # The Reporting API names the fields in camelCase.
+    camel = {
+        "documentURL": "https://x/other",
+        "effectiveDirective": "script-src",
+        "blockedURL": "https://cdn.example/x.js",
+        "lineNumber": uuid.uuid4().int % 100000,
+    }
+    assert csp_report.log_violation(camel)
 
 
 def test_the_json_renderer_writes_dates_and_still_refuses_bytes():

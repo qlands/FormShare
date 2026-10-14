@@ -56,7 +56,7 @@ from sqlalchemy import exc
 from sqlalchemy import text as sqlalchemy_text
 from sqlalchemy.orm.session import Session
 from sqlalchemy.pool import NullPool
-from webhelpers2.html import literal
+from jinja2.utils import htmlsafe_json_dumps
 
 __all__ = [
     "get_submission_media_files",
@@ -1026,7 +1026,10 @@ def get_lookup_values(request, project, form, rtable, rfield):
     res_dict = {"": ""}
     for record in records:
         res_dict[record[0]] = record[1]
-    return literal(json.dumps(res_dict))
+    # The cleaning grid prints this into its script. The labels are the
+    # form's, and json.dumps would leave a "</script>" in one to close the
+    # script; this escapes it, and prints as it is.
+    return htmlsafe_json_dumps(res_dict)
 
 
 def get_protection_desc(request, protection_code):

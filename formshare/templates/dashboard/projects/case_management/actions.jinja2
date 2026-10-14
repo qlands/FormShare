@@ -51,7 +51,7 @@
                         <form method="post" action="{{ request.url }}" style="display: inline">
 {{ form.secure_form(request) }}
                             <input type="hidden" name="action_mode" value="table">
-                            <button type="submit" name="set_mode" value="1" class="btn btn-sm {% if mode == 'table' %}btn-primary active{% else %}btn-white{% endif %}" {% if mode == 'expert' %}onclick="return confirmTable(this.form)"{% endif %}>{{ _('Table mode') }}</button>
+                            <button type="submit" name="set_mode" value="1" class="btn btn-sm {% if mode == 'table' %}btn-primary active{% else %}btn-white{% endif %}" {% if mode == 'expert' %}data-confirm-table{% endif %}>{{ _('Table mode') }}</button>
                         </form>
                         <form method="post" action="{{ request.url }}" style="display: inline">
 {{ form.secure_form(request) }}
@@ -257,10 +257,10 @@
 {% block scripts %}
     {{ super() }}
     <script>
-      var actFilters = {{ filters|safe }};
-      var actTargets = {{ targets|safe }};
-      var actVariables = {{ variables|safe }};
-      var actRepeats = {{ repeats|safe }};
+      var actFilters = {{ filters }};
+      var actTargets = {{ targets }};
+      var actVariables = {{ variables }};
+      var actRepeats = {{ repeats }};
       var actTestUrl = "{{ request.route_url('form_case_actions_test', userid=userid, projcode=projcode, formid=formData.form_id) }}";
 
       function confirmTable(form) {
@@ -276,6 +276,12 @@
         }, function (isConfirm) { if (isConfirm) { $("#busy").show(); form.submit(); } });
         return false;
       }
+
+      // The table-mode button asks first in expert mode (data-confirm-table).
+      $(document).on("click", "[data-confirm-table]", function (event) {
+        event.preventDefault();
+        confirmTable(this.form);
+      });
 
       function fillSelect(select, items, selected) {
         select.empty();

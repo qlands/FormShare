@@ -41,7 +41,7 @@
 
                             </div>
                             <div class="col-md-3">
-                                <button onclick="location.href='{{ request.route_url('add_partner',userid=userid) }}';" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add partner') }}</button>
+                                <button data-href="{{ request.route_url('add_partner',userid=userid) }}" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add partner') }}</button>
                             </div>
                         </div>
 

@@ -18,7 +18,7 @@ Flow per request
      - Response / FileResponse  →  .to_starlette()
      - HTTPException raised     →  appropriate Starlette response
 5. Apply ``request.response`` header/status mutations.
-6. Run response callbacks (e.g. the JS-inlining ``resource_callback``).
+6. Run response callbacks (e.g. the Content-Security-Policy's).
 7. Close the session.
 """
 
@@ -116,7 +116,7 @@ def make_endpoint(view_class, renderer, db_session_factory, jinja_env, app_state
                 raise
 
             # Convert to an intermediate FSResponse so that response callbacks
-            # (e.g. the JS-extraction resource_callback) can read/write .body
+            # (e.g. the Content-Security-Policy's) can read/write .body
             # and .content_type before we produce the final Starlette response.
             try:
                 fs_response = _result_to_fs_response(
@@ -242,6 +242,10 @@ def make_error_endpoint(view_class, renderer, db_session_factory, jinja_env, app
             if fs_request.response.status_code != 200:
                 fs_response.status_code = fs_request.response.status_code
 
+            # The error view's callbacks: the Content-Security-Policy of an
+            # error page, whose scripts carry this request's nonce.
+            fs_request.run_response_callbacks(fs_response)
+
             from formshare.middleware.response import FileResponse as FSFileResponse
 
             if isinstance(fs_response, FSFileResponse):
@@ -323,7 +327,7 @@ def _result_to_fs_response(result, renderer, jinja_env, fs_request):
     """Convert a view return value to a FormShare ``Response``.
 
     We use FSResponse (not Starlette) here so that response callbacks
-    (e.g. ``resource_callback``) can access ``.body`` and ``.content_type``
+    (e.g. the Content-Security-Policy's) can access ``.body`` and ``.content_type``
     before the final Starlette conversion.
     """
     from formshare.middleware.httpexceptions import HTTPException as FSHTTPException

@@ -13,7 +13,7 @@
                             <a href="{{ request.route_url("editDictFieldMetadata",userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, tableid=table_name, fieldid=field.name) }}" class="btn btn-xs btn-white"><i class="fas fa-pencil-alt"></i> {{ _('Edit metadata') }}</a>
                             {% if field.sensitive == 'true' or field.encrypted == 'true' %}
                                 {% if field.encrypted != 'true' %}
-                                    <a onclick="post_not_sensitive_change('{{ field.name }}');" class="btn btn-xs btn-white set-not-sensi"><i class="far fa-eye"></i> {{ _('Set as not sensitive') }} </a>
+                                    <a data-not-sensitive-field="{{ field.name }}" class="btn btn-xs btn-white set-not-sensi"><i class="far fa-eye"></i> {{ _('Set as not sensitive') }} </a>
                                 {% endif %}
                             {% else %}
                                 <a data-field-type="{% if field.key == 'false' and field.rlookup == 'false' %}normal{% else %}{% if field.key == 'true' %}key{% else %}lookup{% endif %}{% endif %}" data-field-name="{{ field.name }}" data-field-protection="{{ field.protection }}" data-toggle="modal" data-target="#set_as_sensible" class="btn btn-xs btn-white field-item-sensitive"><i class="far fa-eye-slash"></i> {{ _('Set as sensitive') }}</a>

@@ -184,7 +184,6 @@ class DataRequest(AssistantView):
         if permissions["enum_canclean"] == 1:
             if self.request.method == "POST":
                 request_data = self.get_post_dict()
-                call_back = self.request.params.get("callback")
                 search_field = request_data.get("searchField", None)
                 search_string = request_data.get("searchString", "")
                 search_operator = request_data.get("searchOper", None)
@@ -217,7 +216,7 @@ class DataRequest(AssistantView):
                     search_operator,
                 )
 
-                return call_back + "(" + json.dumps(data) + ")"
+                return data
             else:
                 raise HTTPNotFound()
         else:

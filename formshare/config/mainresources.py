@@ -96,11 +96,19 @@ def create_resources(apppath, config):
         "js/plugins/emojiarea/emojionearea.css",
         None,
     )
+    # EmojioneArea loads emojione from a CDN when the page has none
+    # (emojione.min.js, below).
+    r.add_js_resource(
+        "formshare",
+        "emojione",
+        "js/plugins/emojiarea/emojione.min.js",
+        None,
+    )
     r.add_js_resource(
         "formshare",
         "emoji",
         "js/plugins/emojiarea/emojionearea.js",
-        None,
+        "emojione",
     )
 
     # ------------------------------Project details --------------------------------------
@@ -263,6 +271,11 @@ def create_resources(apppath, config):
     # CDN (2026-10-13): htmx 2.0.4 (npm htmx.org), highlight.js 9.9.0 with its
     # scala language and github style, jQuery UI 1.12.1 (jqGrid carries its
     # own 1.11.2), jQuery QueryBuilder 3.0.0 standalone, jsPlumb 2.15.6.
+    # emojione 3.1.2 (MIT code, js/plugins/emojiarea) was a CDN script that
+    # EmojioneArea fetched at runtime, which the policy's 'strict-dynamic'
+    # lets through: the npm tarball's, which jsDelivr's npm mirror and cdnjs
+    # serve identically (2026-10-14). Its artwork stays on jsDelivr as
+    # images (sprite: false where the picker is made).
     r.add_js_resource("formshare", "htmx", "js/plugins/htmx/htmx.min.js", None)
     r.add_js_resource(
         "formshare", "highlightjs", "js/plugins/highlightjs/highlight.min.js", None
@@ -292,3 +305,8 @@ def create_resources(apppath, config):
         None,
     )
     r.add_js_resource("formshare", "jsplumb", "js/plugins/jsplumb/jsplumb.min.js", None)
+
+    # The page behaviours declared with data-* attributes instead of inline
+    # event handlers, which the Content-Security-Policy refuses
+    # (formshare/config/csp.py). base.jinja2 loads it on every page.
+    r.add_js_resource("formshare", "behaviours", "js/formshare-behaviours.js", None)

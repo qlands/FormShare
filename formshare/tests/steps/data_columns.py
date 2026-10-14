@@ -147,7 +147,9 @@ def t_e_s_t_data_columns(test_object):
         status=200,
     )
     test_object.root.assertTrue(b"Edit metadata" in res.body)
-    test_object.root.assertTrue(b"post_not_sensitive_change('hr_qst_005')" in res.body)
+    # The button that takes a field's sensitivity off names it in data-*:
+    # the page's script binds it (edit_fields.jinja2, no inline handlers).
+    test_object.root.assertTrue(b'data-not-sensitive-field="hr_qst_005"' in res.body)
 
     # Get the fields of a table
     res = test_object.testapp.get(

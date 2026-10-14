@@ -27,7 +27,7 @@
                 {% block edit_field_desc_form_fields_actions %}
                     <div class="modal-footer">
                         <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
-                        <button type="button" onclick="post_sensitive_change();" class="btn btn-primary">{{ _('Set as sensitive') }}</button>
+                        <button type="button" data-post-sensitive-change class="btn btn-primary">{{ _('Set as sensitive') }}</button>
                     </div>
                 {% endblock edit_field_desc_form_fields_actions %}
             {% endblock edit_field_desc_form %}

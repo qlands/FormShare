@@ -997,7 +997,12 @@ class FormDetails(PrivateView):
                     )
                 )
 
-        error_string = json.dumps({"errors": errors})
+        merge_errors = {"errors": errors}
+        if created == KEY_NEEDED:
+            # The form's page offers the Encryption plugin's set-up link beside
+            # these errors (merge_errors.jinja2, block merge_key_needed_extra).
+            merge_errors["key_needed"] = True
+        error_string = json.dumps(merge_errors)
         # form_data = {"form_abletomerge": 0, "form_mergerrors": error_string}
         # update_form(self.request, project_id, new_form_id, form_data)
         return created, error_string

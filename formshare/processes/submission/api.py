@@ -964,6 +964,18 @@ def _table_columns(request, schema, table):
     return {row[0]: bool(row[1]) for row in rows}
 
 
+def _grid_tables(request, project, form):
+    """The tables the cleaning grid offers for a form: its dictionary's data
+    tables, the multi-selects' included (get_tables_from_form). A table that
+    comes with a request -- the URL names it -- is written only if it is one
+    of them: not a case's property table, which only actions change
+    (CLAUDE.md), nor a lookup, nor anything else the repository holds."""
+    return {
+        table["table_name"]
+        for table in get_dictionary_tables(request, project, form, 1)
+    }
+
+
 def _write_refusal(error, translate, for_api=False):
     """What to tell whoever wrote a value MySQL refused for being an answer
     in clear in an encrypted column (3819); None for any other error."""
@@ -1447,6 +1459,9 @@ def update_multiselect_data(
     _ = request.translate
     sql_url = request.registry.settings.get("sqlalchemy.url")
     schema = get_form_schema(request, project, form)
+    # Both tables come with the request: only the grid's own are written.
+    if not {parent_table, multiselect_table} <= _grid_tables(request, project, form):
+        return False
 
     # Update the multiselect field in the parent table; no option is NULL
     string_value = " ".join(multiselect_values)
@@ -1536,7 +1551,8 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
     # (CLAUDE.md, "never write a generated column") goes into the statement,
     # and the value only as a parameter.
     try:
-        columns = _table_columns(request, schema, table_name) if schema else {}
+        offered = schema and table_name in _grid_tables(request, project, form)
+        columns = _table_columns(request, schema, table_name) if offered else {}
         known = (
             field in columns
             and not columns[field]

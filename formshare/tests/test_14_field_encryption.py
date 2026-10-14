@@ -776,11 +776,14 @@ def test_exit_39_is_told_question_by_question():
 
 def test_enc_says_which_way_the_mark_changed():
     unmarked = encryption_change_message(_same, "maintable", "farmer", True)
+    rule = "A new version cannot change the encryption setting on a field."
+    assert unmarked.startswith(rule)
     assert "encrypted in the repository and not in the new version" in unmarked
     assert "mark it fs_encrypted again" in unmarked
     marked = encryption_change_message(_same, "maintable", "notes", False)
     assert "not encrypted in the repository and is in the new version" in marked
     assert "remove fs_encrypted from it" in marked
+    assert marked.startswith(rule)
     assert KEY_NEEDED not in range(0, 100)  # outside RSTools' codes
     assert "farmer, age" in key_needed_message(_same, ["farmer", "age"])
 
@@ -1132,7 +1135,8 @@ def test_an_answer_in_clear_in_an_encrypted_column_is_told_apart():
     )
     assert not is_encrypted_refusal(ValueError("fsenc_"))
     assert "unlock it to edit" in encrypted_edit_message(_same)
-    assert "public key" in encrypted_edit_message(_same, for_api=True)
+    # The API leaves encrypted answers alone (/api_update ignores them).
+    assert "does not change encrypted" in encrypted_edit_message(_same, for_api=True)
 
 
 def test_a_name_from_a_request_is_quoted_only_when_it_is_one():

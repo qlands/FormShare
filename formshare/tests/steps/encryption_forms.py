@@ -363,6 +363,8 @@ def _run(test_object, login, testapp, config, work, engine, session):
     body = res.body.decode("utf-8")
     assert "farmer_name" in body and "is encrypted in the repository and not" in body
     assert "notes" in body and "is not encrypted in the repository and is" in body
+    assert "A new version cannot change the encryption setting on a field." in body
+    assert 'class="merge-key-needed"' not in body
 
     # --- Nor bring marks into a project without a key ----------------------------
     _new_project(testapp, login, NO_KEY)
@@ -409,3 +411,6 @@ def _run(test_object, login, testapp, config, work, engine, session):
     )
     assert b"Unable to merge" in res.body
     assert b"This form encrypts the answers to secret" in res.body
+    # The form's page offers the plugin's set-up link beside the errors
+    # (merge_errors.jinja2, block merge_key_needed_extra).
+    assert b'class="merge-key-needed"' in res.body

@@ -11,6 +11,7 @@ from formshare.processes.db import (
     get_project_access_type,
     get_project_details,
 )
+from formshare.processes.db.encryption import encrypted_columns
 from formshare.processes.elasticsearch.record_index import (
     get_project_and_form,
     get_table,
@@ -538,6 +539,25 @@ class API1UpdateRepository(UpdateAPIView):
                 ),
             )
         if "rowuuid" in self.json.keys():
+            # The API leaves encrypted fields alone: only the Encryption
+            # plugin's cleaning grid changes them, sealed in a browser. The
+            # rest of the update goes ahead, and the answer names what was
+            # left out.
+            encrypted = encrypted_columns(self.request, project_id, form_id, table)
+            ignored = sorted(a_key for a_key in self.json.keys() if a_key in encrypted)
+            data = {
+                a_key: a_value
+                for a_key, a_value in self.json.items()
+                if a_key not in encrypted
+            }
+            if ignored and not set(data) - {"rowuuid", "rowindex", "apikey"}:
+                return {
+                    "status": "OK",
+                    "message": self._(
+                        "Nothing was updated: the API does not change encrypted fields"
+                    ),
+                    "ignored": ignored,
+                }
             try:
                 modified, error = update_record_with_id(
                     self.request,
@@ -545,10 +565,13 @@ class API1UpdateRepository(UpdateAPIView):
                     schema,
                     table,
                     self.json["rowuuid"],
-                    self.json,
+                    data,
                 )
                 if modified:
-                    return {"status": "OK", "message": self._("Update completed")}
+                    result = {"status": "OK", "message": self._("Update completed")}
+                    if ignored:
+                        result["ignored"] = ignored
+                    return result
                 else:
                     self.error_code = 500
                     self.error = True

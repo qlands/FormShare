@@ -763,19 +763,26 @@ def encryption_change_message(translate, table, field, marked_in_repository):
     gives the two field definitions, which do not say which; the
     repository's create.xml does."""
     _ = translate
+    rule = _("A new version cannot change the encryption setting on a field.")
     if marked_in_repository:
-        return _(
-            'The question "{}" of the table "{}" is encrypted in the repository '
-            "and not in the new version. Its answers would have to be decrypted, "
-            "which a form update cannot do: mark it fs_encrypted again before "
-            "merging."
+        return (
+            rule
+            + " "
+            + _(
+                'The question "{}" of the table "{}" is encrypted in the '
+                "repository and not in the new version: mark it fs_encrypted "
+                "again before merging."
+            ).format(field, table)
+        )
+    return (
+        rule
+        + " "
+        + _(
+            'The question "{}" of the table "{}" is not encrypted in the '
+            "repository and is in the new version: remove fs_encrypted from it, "
+            "or ask it as a new question, before merging."
         ).format(field, table)
-    return _(
-        'The question "{}" of the table "{}" is not encrypted in the repository '
-        "and is in the new version. Its answers would have to be encrypted, "
-        "which a form update cannot do: remove fs_encrypted from it, or ask it "
-        "as a new question, before merging."
-    ).format(field, table)
+    )
 
 
 # create_repository's own code, outside RSTools' range: a form that encrypts
@@ -840,12 +847,14 @@ def is_encrypted_refusal(error):
 
 def encrypted_edit_message(translate, for_api=False):
     """What a person, or an API client, is told when the database refused an
-    answer in clear in an encrypted column."""
+    answer in clear in an encrypted column. The API leaves encrypted fields
+    alone (/api_update ignores them), so it meets this only if the dictionary
+    did not know the column was encrypted."""
     _ = translate
     if for_api:
         return _(
-            "This answer is encrypted: send it sealed with the project's "
-            "public key, or null to clear it."
+            "This answer is encrypted, and the API does not change encrypted "
+            "answers: only the Encryption plugin's cleaning grid does."
         )
     return _("This answer is encrypted: unlock it to edit.")
 

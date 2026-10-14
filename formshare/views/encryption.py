@@ -59,4 +59,7 @@ class ProjectEncryptionKeysView(PrivateView):
 class AssistantEncryptionKeysView(AssistantView):
     def process_view(self):
         self.returnRawViewResult = True
+        # A client signed in with the assistant's token gets the document
+        # too: an API client pushing submissions seals them with it.
+        self.rawViewResultForAPI = True
         return project_keys_document(self.request, self.projectID)

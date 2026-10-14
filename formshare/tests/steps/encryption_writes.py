@@ -14,7 +14,6 @@ An assistant's rights through a group come from that group's rights on the
 form asked about, not from whichever form the group happens to have.
 """
 
-import json
 import os
 import shutil
 import uuid
@@ -192,6 +191,14 @@ def _run(login, testapp, config, work, engine, session):
         result = edit(**{field: "x"})
         assert result["errors"][0]["message"] == "This column cannot be changed", field
     assert stored("notes") is None
+    # Nor a table it does not offer, though the URL may name any: here the
+    # repository's audit log, as a case's property table would be.
+    result = testapp.post(
+        action.replace("/maintable/action", "/audit_log/action"),
+        {"oper": "edit", "id": row_uuid, "audit_user": "x"},
+        status=200,
+    ).json
+    assert result["errors"][0]["message"] == "This column cannot be changed"
 
     # --- The API --------------------------------------------------------------------
     api_key = str(uuid.uuid4())
@@ -200,25 +207,55 @@ def _run(login, testapp, config, work, engine, session):
             "UPDATE collaborator SET coll_apikey = %(k)s WHERE coll_uuid = %(u)s",
             {"k": api_key, "u": assistant[1]},
         )
+    # The API leaves encrypted fields alone, in clear or sealed: only the
+    # Encryption plugin's cleaning grid changes them. The rest of an update
+    # goes ahead, and the answer names what was left out.
+    for value in ("Clear from API", seal("Sealed by the client", public_key)):
+        res = testapp.post_json(
+            "/api_update",
+            {
+                "apikey": api_key,
+                "rowuuid": row_uuid,
+                "farmer_name": value,
+                "notes": tricky,
+            },
+            status=200,
+        )
+        assert (res.json["status"], res.json["ignored"]) == ("OK", ["farmer_name"])
+        assert _open(stored("farmer_name"), project_private) == "Edited Name"
+        assert stored("notes") == tricky
+    # Clearing it is a change too.
     res = testapp.post_json(
         "/api_update",
-        {"apikey": api_key, "rowuuid": row_uuid, "farmer_name": "Clear from API"},
-        status=500,
-    )
-    assert "send it sealed with the project's public key" in json.dumps(res.json)
-    assert _open(stored("farmer_name"), project_private) == "Edited Name"
-    testapp.post_json(
-        "/api_update",
-        {
-            "apikey": api_key,
-            "rowuuid": row_uuid,
-            "farmer_name": seal("Sealed by the client", public_key),
-            "notes": tricky,
-        },
+        {"apikey": api_key, "rowuuid": row_uuid, "farmer_name": None},
         status=200,
     )
-    assert _open(stored("farmer_name"), project_private) == "Sealed by the client"
-    assert stored("notes") == tricky
+    assert res.json["ignored"] == ["farmer_name"]
+    assert "Nothing was updated" in res.json["message"]
+    assert _open(stored("farmer_name"), project_private) == "Edited Name"
+    # An update with nothing encrypted says nothing about it.
+    res = testapp.post_json(
+        "/api_update",
+        {"apikey": api_key, "rowuuid": row_uuid, "notes": "plain"},
+        status=200,
+    )
+    assert "ignored" not in res.json and stored("notes") == "plain"
+
+    # --- The public keys, to an API client with the assistant's token ----------------
+    token = uuid.uuid4().hex
+    with engine.begin() as connection:
+        connection.execute(
+            "UPDATE collaborator SET coll_apitoken = %(t)s, "
+            "coll_apitoken_expires_on = NOW() + INTERVAL 1 HOUR "
+            "WHERE coll_uuid = %(u)s",
+            {"t": token, "u": assistant[1]},
+        )
+    by_token = testapp.get(
+        "/user/{}/project/{}/assistantaccess/encryption/keys".format(login, CODE),
+        headers={"Authorization": "Bearer " + token},
+        status=200,
+    ).json
+    assert by_token["public_key"] == public_key, by_token
     # The assistant's session ends here: a later step logs in its own, and
     # the login page sends a logged-in assistant away.
     res = testapp.post(

@@ -11,6 +11,14 @@
             </div>
             <div class="modal-body">
                 <textarea readonly style="width: 100%; min-height: 200px">{% for error in merging_errors.errors %}{{ error }}&#13;&#13;{% endfor %}</textarea>
+                {% if merging_errors.key_needed %}
+                    {# The version encrypts answers and the project has no key: where a
+                       plugin offers to set one up (the Encryption plugin links its
+                       set-up page, docs/formshare_field_encryption/plugin.md). #}
+                    <div class="merge-key-needed">
+                        {% block merge_key_needed_extra %}{% endblock merge_key_needed_extra %}
+                    </div>
+                {% endif %}
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Close') }}</button>

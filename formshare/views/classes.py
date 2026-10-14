@@ -1151,6 +1151,11 @@ class AssistantView(object):
             self.resultDict["rtl"] = True
         self.resultDict["timezones"] = get_timezones(self.request)
         self.returnRawViewResult = False
+        # A view whose raw result is the answer an API client asks for -- the
+        # project's public keys -- gives it to a client with a token as it
+        # is, as PrivateView does for a user. Every other raw view keeps the
+        # API's usual envelope, with an empty result.
+        self.rawViewResultForAPI = False
         self.project_assistant = None
         self.checkCrossPost = True
         self.resultDict["selected_timezone"] = self.request.cookies.get(
@@ -1435,6 +1440,12 @@ class AssistantView(object):
             if not self.api:
                 return process_dict
             else:
+                if (
+                    self.rawViewResultForAPI
+                    and not self.error_occurred
+                    and isinstance(process_dict, dict)
+                ):
+                    return process_dict
                 if self.error_occurred:
                     data_result = {
                         "error": self.error_occurred,

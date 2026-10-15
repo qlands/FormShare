@@ -156,6 +156,7 @@ from formshare.products.export.zip_json import (
     generate_private_zip_json_file,
     generate_public_zip_json_file,
 )
+from formshare.processes.project_logo import LOGO_FILE_NAME
 from formshare.views.classes import PrivateView
 from lxml import etree
 from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
@@ -2266,6 +2267,17 @@ class AddFileToForm(PrivateView):
                     slash_index = file_name.find("\\")
                     if slash_index >= 0:
                         file_name = file_name[slash_index + 1 :]
+                    if file_name == LOGO_FILE_NAME:
+                        # Every form's manifest carries the project's logo
+                        # under this name (processes/project_logo.py).
+                        messages.append(
+                            self._(
+                                "{} is the name FormShare gives the project's "
+                                "logo in every form. Rename the file."
+                            ).format(file_name)
+                        )
+                        error = True
+                        break
                     md5sum = md5(file.file.read()).hexdigest()
                     csv_is_lookup = False
                     geo_json_is_lookup = False

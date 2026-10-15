@@ -17,6 +17,7 @@ from formshare.processes.db import (
     get_assistant_uuid_password,
     modify_assistant,
 )
+from formshare.processes.project_logo import collect_project_section
 from formshare.views.classes import AssistantView
 from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
 from formshare.middleware.response import FileResponse
@@ -217,6 +218,7 @@ class GetQRCode(AssistantView):
         assistant_password = get_assistant_uuid_password(
             self.request, self.assistantUUID
         )
+        project_details = get_project_details(self.request, self.projectID)
         odk_settings = {
             "admin": {"change_server": True, "change_form_metadata": False},
             "general": {
@@ -226,6 +228,8 @@ class GetQRCode(AssistantView):
                 "username": self.assistantID,
                 "password": assistant_password.decode(),
             },
+            # The same as the project's QR: its name, emoji, colour and logo.
+            "project": collect_project_section(self.request, project_details),
         }
         qr_json = json.dumps(odk_settings).encode()
         zip_json = zlib.compress(qr_json)

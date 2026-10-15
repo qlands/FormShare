@@ -176,6 +176,9 @@ class Project(Base):
     project_icon = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_formlist_auth = Column(INTEGER, server_default=text("'1'"))
     project_hexcolor = Column(Unicode(60))
+    # The MD5 of the project's logo, which the storage keeps under one name
+    # (processes/project_logo.py). NULL when the project has none.
+    project_logo_md5 = Column(Unicode(32))
     project_blob_storage = Column(INTEGER, server_default=text("'0'"))
     project_timezone = Column(
         ForeignKey("timezone.timezone_code", ondelete="RESTRICT"),

@@ -9,6 +9,7 @@ import importlib.metadata
 
 from .steps.api import t_e_s_t_api
 from .steps.assistant_access import t_e_s_t_assistant_access
+from .steps.project_logo import t_e_s_t_project_logo
 from .steps.assistant_groups import t_e_s_t_assistant_groups
 from .steps.assistants import t_e_s_t_assistants
 from .steps.audit import t_e_s_t_audit
@@ -279,6 +280,8 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_assistant_access(self.test_object)
             print("Testing the API with an assistant token")
             t_e_s_t_api_token_assistant(self.test_object)
+            print("Testing the project logo")
+            t_e_s_t_project_logo(self.test_object)
             print("Testing logs 1")
             t_e_s_t_json_logs(self.test_object)
             print("Testing logs 2")

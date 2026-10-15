@@ -1522,6 +1522,32 @@ def modify_project(request, project, project_data):
     return True, ""
 
 
+def set_project_logo_md5(request, project, logo_md5):
+    """Records which logo the project has, by its MD5 (None: it has none).
+    processes/project_logo.py stores the image itself."""
+    try:
+        request.dbsession.query(Project).filter(Project.project_id == project).update(
+            {"project_logo_md5": logo_md5}
+        )
+        request.dbsession.commit()
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while recording the logo of project {}".format(str(e), project)
+        )
+        return False
+    return True
+
+
+def get_project_logo_md5(request, project):
+    """The MD5 of the project's logo, or None when it has none."""
+    return (
+        request.dbsession.query(Project.project_logo_md5)
+        .filter(Project.project_id == project)
+        .scalar()
+    )
+
+
 def delete_project(request, user, project):
     _ = request.translate
     # The project's keys and every grant to them go with it (ON DELETE

@@ -180,6 +180,7 @@ from formshare.views.products import (
 from formshare.views.profile import UserProfileView, EditProfileView
 from formshare.views.projects import (
     AddProjectView,
+    ProjectLogoView,
     ProjectListView,
     ProjectDetailsView,
     ProjectStoredFileView,
@@ -350,6 +351,16 @@ def load_routes(config, settings):
         )
     )
     routes.append(add_route("gravatar", "/gravatar", Gravatar, None))
+    # A project's logo, public: devices read it from the QR and from every
+    # form's manifest (processes/project_logo.py).
+    routes.append(
+        add_route(
+            "project_logo",
+            "/project/{projectid}/_fs_project_logo.png",
+            ProjectLogoView,
+            None,
+        )
+    )
 
     # Projects
     routes.append(

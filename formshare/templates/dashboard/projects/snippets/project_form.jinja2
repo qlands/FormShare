@@ -24,6 +24,58 @@
             <div class="col-sm-10"><div style="max-width: 100px"><input id="emojiarea" name="project_icon" value="{{ projectDetails.project_icon }}" /></div><span class="form-text m-b-none">{{ _('You will use this in ODK Collect to identify your project. Only the first Emoji will be used.') }}</span></div>
         </div>
         <div class="hr-line-dashed"></div>
+        {% block project_form_logo %}
+            {# The logo FormShare Collect shows on its main menu (processes/project_logo.py),
+               drawn as the apps draw it: at most 64 points tall, on a light and a dark background. #}
+            {% set logo_swatch = "display: inline-block; padding: 8px 12px; margin: 0 8px 8px 0; border: 1px solid #e5e6e7; border-radius: 4px; line-height: 0;" %}
+            {% set logo_size = "max-height: 64px; max-width: 360px;" %}
+            <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Logo') }}</label>
+                <div class="col-sm-10">
+                    {% if projectDetails.project_logo_md5 %}
+                        {% set logo_src = request.route_url('project_logo', projectid=projectDetails.project_id, _query={'v': projectDetails.project_logo_md5}) %}
+                        <div id="project_logo_current">
+                            <span style="{{ logo_swatch }} background: #ffffff;"><img src="{{ logo_src }}" alt="{{ projectDetails.project_name }}" style="{{ logo_size }}"></span>
+                            <span style="{{ logo_swatch }} background: #1f1f1f;"><img src="{{ logo_src }}" alt="" style="{{ logo_size }}"></span>
+                            <div><label><input type="checkbox" name="remove_logo" value="1"> {{ _('Remove the logo') }}</label></div>
+                        </div>
+                    {% endif %}
+                    <input type="file" class="form-control-file" id="project_logo_file" name="project_logo_file" accept="image/png,image/webp">
+                    <div id="project_logo_preview" class="m-t-sm" hidden>
+                        <span style="{{ logo_swatch }} background: #ffffff;"><img alt="" style="{{ logo_size }}"></span>
+                        <span style="{{ logo_swatch }} background: #1f1f1f;"><img alt="" style="{{ logo_size }}"></span>
+                    </div>
+                    <span class="form-text m-b-none">{{ _('Shown on the main menu of FormShare Collect, at most 64 points tall. A PNG with a transparent background, about four times as wide as it is tall, such as 1200 × 300 px: from square to 6:1, at least 192 px tall and at most 200 KB. A wider image is scaled down to 1600 px. Check that it reads on both backgrounds.') }}</span>
+                </div>
+            </div>
+            <script>
+                // The chosen file, drawn before it is sent. The server checks it on saving.
+                document.addEventListener("DOMContentLoaded", function () {
+                    var input = document.getElementById("project_logo_file");
+                    var preview = document.getElementById("project_logo_preview");
+                    if (!input || !preview) {
+                        return;
+                    }
+                    var shown = null;
+                    input.addEventListener("change", function () {
+                        if (shown) {
+                            URL.revokeObjectURL(shown);
+                            shown = null;
+                        }
+                        var file = input.files && input.files[0];
+                        if (!file) {
+                            preview.hidden = true;
+                            return;
+                        }
+                        shown = URL.createObjectURL(file);
+                        preview.querySelectorAll("img").forEach(function (img) {
+                            img.src = shown;
+                        });
+                        preview.hidden = false;
+                    });
+                });
+            </script>
+            <div class="hr-line-dashed"></div>
+        {% endblock project_form_logo %}
         {% block project_timezone %}
             {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
                 <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Time zone') }}</label>

@@ -51,8 +51,18 @@ from formshare.processes.storage import (
     delete_stream,
     delete_bucket,
 )
+from formshare.processes.project_logo import (
+    collect_project_section,
+    prepare_logo,
+    read_project_logo,
+    read_upload,
+    remove_project_logo,
+    save_project_logo,
+    uploaded_file,
+)
+from formshare.processes.db.project import get_project_logo_md5
 from formshare.processes.submission.api import get_gps_points_from_project
-from formshare.views.classes import ProjectsView
+from formshare.views.classes import ProjectsView, PublicView
 from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
 from formshare.middleware.response import FileResponse
 from formshare.middleware.response import Response
@@ -84,6 +94,44 @@ class ProjectStoredFileView(ProjectsView):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
+
+
+def posted_logo(request, project_details):
+    """The logo a project form sent, prepared: (PNG, None), or (None, why it
+    was refused), or (None, None) when no file was chosen. The file leaves the
+    posted data, which goes on to the database and to plugins."""
+    upload = uploaded_file(project_details.pop("project_logo_file", None))
+    if upload is None:
+        return None, None
+    accepted, result = prepare_logo(request, read_upload(upload))
+    if accepted:
+        return result, None
+    return None, result
+
+
+class ProjectLogoView(PublicView):
+    """A project's logo, without login (processes/project_logo.py). Devices
+    read it from the QR's logo_url and from every form's manifest. The ETag is
+    its MD5, so a client asks again cheaply and notices a new one."""
+
+    def process_view(self):
+        self.returnRawViewResult = True
+        project_id = self.request.matchdict["projectid"]
+        logo_md5 = get_project_logo_md5(self.request, project_id)
+        if not logo_md5:
+            raise HTTPNotFound()
+        etag = '"{}"'.format(logo_md5)
+        headers = [
+            ("ETag", etag),
+            ("Cache-Control", "public, no-cache"),
+            ("X-Content-Type-Options", "nosniff"),
+        ]
+        if etag in self.request.headers.get("If-None-Match", ""):
+            return Response(b"", 304, headers)
+        logo = read_project_logo(self.request, project_id)
+        if logo is None:
+            raise HTTPNotFound()
+        return Response(logo, 200, headers + [("Content-Type", "image/png")])
 
 
 class ProjectListView(ProjectsView):
@@ -192,6 +240,9 @@ class AddProjectView(ProjectsView):
 
         if self.request.method == "POST":
             project_details = self.get_post_dict()
+            # The logo is checked first: one that is refused stops the creation,
+            # as a plugin's refusal does (processes/project_logo.py).
+            logo, logo_error = posted_logo(self.request, project_details)
             project_details["project_public"] = 0
             project_details["project_tenant"] = self.user.tenant
 
@@ -226,8 +277,8 @@ class AddProjectView(ProjectsView):
                         projcode=project_details["project_code"],
                     )
 
-                    continue_creation = True
-                    message = ""
+                    continue_creation = logo_error is None
+                    message = logo_error or ""
                     for plugin in p.PluginImplementations(p.IProject):
                         if continue_creation:
                             (
@@ -246,6 +297,8 @@ class AddProjectView(ProjectsView):
                             self.request, self.user.login, project_details
                         )
                         if added:
+                            if logo is not None:
+                                save_project_logo(self.request, message, logo)
                             for plugin in p.PluginImplementations(p.IProject):
                                 plugin.after_creating_project(
                                     self.request, self.user.login, project_details
@@ -346,9 +399,14 @@ class EditProjectView(ProjectsView):
 
         total_forms = get_forms_number(self.request, project_id)
         project_details["total_forms"] = total_forms
+        stored_logo_md5 = project_details.get("project_logo_md5")
 
         if self.request.method == "POST":
             project_details = self.get_post_dict()
+            logo, logo_error = posted_logo(self.request, project_details)
+            remove_logo = project_details.pop("remove_logo", None) is not None
+            # A page shown again shows the logo the project still has.
+            project_details["project_logo_md5"] = stored_logo_md5
             project_details["total_forms"] = total_forms
             project_details["project_public"] = 0
 
@@ -382,8 +440,8 @@ class EditProjectView(ProjectsView):
             if project_details["project_name"] != "":
                 next_page = self.request.params.get("next") or self.request.url
 
-                continue_modify = True
-                message = ""
+                continue_modify = logo_error is None
+                message = logo_error or ""
                 for plugin in p.PluginImplementations(p.IProject):
                     if continue_modify:
                         continue_modify, message = plugin.before_editing_project(
@@ -394,6 +452,10 @@ class EditProjectView(ProjectsView):
                         self.request, project_id, project_details
                     )
                     if modified:
+                        if logo is not None:
+                            save_project_logo(self.request, project_id, logo)
+                        elif remove_logo:
+                            remove_project_logo(self.request, project_id)
                         for plugin in p.PluginImplementations(p.IProject):
                             plugin.after_editing_project(
                                 self.request, user_id, project_id, project_details
@@ -866,7 +928,7 @@ class GetProjectQRCode(ProjectsView):
                     project_details["odk_update_period"]
                 ),
                 "automatic_update": bool(project_details["odk_update_auto"]),
-                "hide_old_form_versions": bool(project_details["odk_update_auto"]),
+                "hide_old_form_versions": bool(project_details["odk_hide_old"]),
                 "autosend": get_auto_send(project_details["odk_auto_send"]),
                 "delete_send": bool(project_details["odk_delete_after_send"]),
                 "high_resolution": bool(project_details["odk_high_res_video"]),
@@ -874,11 +936,7 @@ class GetProjectQRCode(ProjectsView):
                 "external_app_recording": bool(project_details["odk_audio_app"]),
                 "navigation": get_navigation_type(project_details["odk_navigation"]),
             },
-            "project": {
-                "name": project_details["project_name"],
-                "icon": project_details["project_icon"],
-                "color": project_details["project_hexcolor"],
-            },
+            "project": collect_project_section(self.request, project_details),
         }
         qr_json = json.dumps(odk_settings).encode()
         zip_json = zlib.compress(qr_json)

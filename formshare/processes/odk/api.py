@@ -126,6 +126,7 @@ from formshare.processes.odk.processes import (
     update_form_repository_info,
     get_form_case_params,
 )
+from formshare.processes.project_logo import logo_manifest_entries
 from formshare.processes.storage import (
     get_stream,
     response_stream,
@@ -3864,10 +3865,13 @@ def get_manifest(request, user, project, project_id, form):
         file_array.extend(
             repository_manifest_entries(request, user, project, project_id, form)
         )
+        # The project's logo, when it has one (processes/project_logo.py).
+        file_array.extend(logo_manifest_entries(request, project_id, form_files))
         return generate_manifest(file_array)
     else:
         return generate_manifest(
             repository_manifest_entries(request, user, project, project_id, form)
+            + logo_manifest_entries(request, project_id)
         )
 
 

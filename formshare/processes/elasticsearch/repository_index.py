@@ -1,4 +1,5 @@
 from elasticsearch import Elasticsearch
+from elasticsearch.helpers import scan
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.exceptions import RequestError
 from elasticsearch.exceptions import ConnectionError as ESConnectionError
@@ -433,6 +434,48 @@ def delete_dataset_from_index(settings, project_id, form_id):
                 raise e
     else:
         raise ESConnectionError("Cannot connect to ElasticSearch")
+
+
+def get_dataset_ids(settings, project_id, form_id):
+    """The submission ids of a form's documents in the dataset index: each
+    document's id is its submission's (add_dataset)."""
+    connection = create_connection(settings)
+    if connection is None:
+        raise ESConnectionError("Cannot connect to ElasticSearch")
+    try:
+        return [
+            hit["_id"]
+            for hit in scan(
+                connection,
+                index=get_index_name(settings),
+                query=_get_dateset_search_dict(project_id, form_id),
+                _source=False,
+            )
+        ]
+    finally:
+        connection.close()
+
+
+def delete_datasets_by_id(settings, project_id, form_id, submission_ids):
+    """Deletes these submissions of a form from the dataset index and no
+    other, where delete_dataset_from_index takes every document of the form,
+    a submission that has just arrived included (processes/testing_data.py)."""
+    submission_ids = list(submission_ids)
+    if not submission_ids:
+        return
+    connection = create_connection(settings)
+    if connection is None:
+        raise ESConnectionError("Cannot connect to ElasticSearch")
+    try:
+        index_name = get_index_name(settings)
+        for start in range(0, len(submission_ids), 1000):
+            query = _get_dateset_search_dict(project_id, form_id)
+            query["query"]["bool"]["must"].append(
+                {"terms": {"submission_id": submission_ids[start : start + 1000]}}
+            )
+            connection.delete_by_query(index=index_name, body=query)
+    finally:
+        connection.close()
 
 
 def delete_dataset_index_by_project(settings, project_id):

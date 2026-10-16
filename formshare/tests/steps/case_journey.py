@@ -76,6 +76,33 @@ def _has_table(config, schema, table):
         engine.dispose()
 
 
+def _latest_submission_files(test_object, form_id):
+    """The id of a form's latest submission and the names of its files in the
+    form's submissions directory, which keeps them beside the row."""
+    engine = _engine(test_object.server_config)
+    try:
+        submission_id = engine.execute(
+            "SELECT submission_id FROM submission WHERE project_id=%s "
+            "AND form_id=%s ORDER BY submission_dtime DESC LIMIT 1",
+            (test_object.projectID, form_id),
+        ).scalar()
+    finally:
+        engine.dispose()
+    form_directory = get_form_details(
+        test_object.server_config, test_object.projectID, form_id
+    )["form_directory"]
+    submissions = os.path.join(
+        test_object.server_config["repository.path"],
+        "odk",
+        "forms",
+        form_directory,
+        "submissions",
+    )
+    return submission_id, {
+        name for name in os.listdir(submissions) if name.split(".")[0] == submission_id
+    }
+
+
 def _wait_for_build(test_object, form_id, timeout=180):
     """Poll until the form's repository maintable exists; return its schema."""
     for _ in range(timeout // 3):
@@ -1770,6 +1797,12 @@ def t_e_s_t_case_journey(test_object):
     )
     assert "FS_error" not in res.headers
     assert _maintable_count(test_object.server_config, schema2) == before + 1
+    # With its files: the merge task used to delete whatever the new
+    # version's submissions directory held once it had handed it the schema,
+    # so this submission could lose them silently or, caught half way, get a
+    # 500 (CI build 880; processes/testing_data.py).
+    submission_id, files = _latest_submission_files(test_object, tool2_v6)
+    assert {submission_id + ".xml", submission_id + ".json"} <= files, files
 
     # --- The device's QA, answered (formshare.md 8) -------------------------
     # A counting module on the version that receives the follow-ups now: every

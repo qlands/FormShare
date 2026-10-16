@@ -1,5 +1,4 @@
 import gettext
-import glob
 import os
 import shutil
 import traceback
@@ -27,9 +26,9 @@ from formshare.processes.db.encryption import (
     field_is_encrypted,
     field_labelled_encrypted,
 )
-from formshare.processes.elasticsearch.repository_index import delete_dataset_from_index
 from formshare.processes.email.send_async_email import send_async_email
 from formshare.processes.sse.messaging import send_task_status_to_form
+from formshare.processes.testing_data import record_testing_data
 from formshare.products.fs1import.celery_task import internal_import_json_files
 from lxml import etree
 from sqlalchemy.exc import IntegrityError
@@ -441,6 +440,19 @@ def update_form(db_session, project, form, form_data):
         raise BuildDataBaseError(str(e))
 
 
+def set_form_blocked(session_factory, project, form, blocked):
+    """Blocks (1) or unblocks (0) a form, in a transaction of its own, so that
+    the web process sees it at once."""
+    db_session = session_factory()
+    try:
+        with db_session.begin():
+            db_session.query(Odkform).filter(Odkform.project_id == project).filter(
+                Odkform.form_id == form
+            ).update({"form_blocked": blocked})
+    finally:
+        db_session.close()
+
+
 def internal_create_mysql_repository(
     settings,
     user,
@@ -503,6 +515,14 @@ def internal_create_mysql_repository(
     engine = get_engine(settings)
     session_factory = get_session_factory(engine)
 
+    # The form takes no submission from here until the commit that hands it
+    # its schema, so that what its testing left can be recorded and told
+    # apart from the real submissions that come after
+    # (processes/testing_data.py). It is blocked for no longer than that:
+    # the form page reads a blocked form as one that failed to merge. A
+    # submission that passed the check just before may still be writing its
+    # files, and the dictionary update stands between this and the record.
+    set_form_blocked(session_factory, project_id, form, 1)
     db_session = session_factory()
     try:
         with db_session.begin():
@@ -514,6 +534,7 @@ def internal_create_mysql_repository(
                 "form_createxmlfile": create_xml_file,
                 "form_insertxmlfile": insert_xml_file,
                 "form_hasdictionary": 1,
+                "form_blocked": 0,
             }
             update_form(db_session, project_id, form, form_data)
             if not discard_testing_data:
@@ -528,42 +549,26 @@ def internal_create_mysql_repository(
                 survey_data_columns,
                 create_xml_file,
             )
+            testing = record_testing_data(
+                settings, odk_dir, form_directory, project_id, form
+            )
+    except Exception:
+        set_form_blocked(session_factory, project_id, form, 0)
+        raise
     finally:
         db_session.close()
     engine.dispose()
-    delete_dataset_from_index(settings, project_id, form)
+    # The testing data, and only what was recorded before the hand-over: the
+    # form has taken submissions since
+    testing.forget_documents(settings)
     if discard_testing_data:
-        # Remove any test submissions if any.
-        submissions_path = os.path.join(
-            odk_dir, *["forms", form_directory, "submissions", "*.*"]
-        )
-        files = glob.glob(submissions_path)
-        if files:
-            for file in files:
-                try:
-                    os.remove(file)
-                except Exception as e:
-                    log.error(str(e))
-        submissions_path = os.path.join(
-            odk_dir, *["forms", form_directory, "submissions", "*/"]
-        )
-        files = glob.glob(submissions_path)
-        if files:
-            for file in files:
-                if file[-5:] != "logs/" and file[-5:] != "maps/":
-                    try:
-                        shutil.rmtree(file)
-                    except Exception as e:
-                        log.error(str(e))
+        testing.remove_files()
     else:
         unique_id = str(uuid.uuid4())
         temp_path = os.path.join(settings["repository.path"], *["tmp", unique_id])
         os.makedirs(temp_path)
 
-        submissions_path = os.path.join(
-            odk_dir, *["forms", form_directory, "submissions", "*.json"]
-        )
-        files = glob.glob(submissions_path)
+        files = testing.json_files
         if files:
             for file in files:
                 shutil.copy(file, temp_path)

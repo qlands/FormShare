@@ -1,5 +1,4 @@
 import gettext
-import glob
 import json
 import os
 import shutil
@@ -24,9 +23,9 @@ from formshare.models import (
     DictField,
     Project,
 )
-from formshare.processes.elasticsearch.repository_index import delete_dataset_from_index
 from formshare.processes.email.send_async_email import send_async_email
 from formshare.processes.sse.messaging import send_task_status_to_form
+from formshare.processes.testing_data import record_testing_data
 from formshare.processes.db.encryption import (
     field_is_encrypted,
     field_labelled_encrypted,
@@ -901,6 +900,14 @@ def internal_merge_into_repository(
             # in between the critical parts then all the involved forms are broken and then technical team will need
             # to deal with them. A log indicating the involved forms are posted
 
+            # What the new version's testing left, recorded while it is still
+            # blocked: the commit below lets it take real submissions, and the
+            # testing data is discarded or imported only after the dictionary
+            # update (processes/testing_data.py).
+            testing = record_testing_data(
+                settings, odk_dir, a_form_directory, project_id, a_form_id
+            )
+
             log.info("Updating related forms")
             send_task_status_to_form(settings, task_id, _("Updating related forms"))
 
@@ -1043,41 +1050,18 @@ def internal_merge_into_repository(
     finally:
         db_session.close()
         engine.dispose()
-    # Delete the dataset index
+    # The testing data, and only what was recorded before the hand-over: the
+    # new version has taken submissions since
     try:
-        delete_dataset_from_index(settings, project_id, a_form_id)
+        testing.forget_documents(settings)
         if discard_testing_data:
-            # Remove any test submissions if any
-            submissions_path = os.path.join(
-                odk_dir, *["forms", a_form_directory, "submissions", "*.*"]
-            )
-            files = glob.glob(submissions_path)
-            if files:
-                for file in files:
-                    try:
-                        os.remove(file)
-                    except Exception as e:
-                        log.error(str(e))
-            submissions_path = os.path.join(
-                odk_dir, *["forms", a_form_directory, "submissions", "*/"]
-            )
-            files = glob.glob(submissions_path)
-            if files:
-                for file in files:
-                    if file[-5:] != "logs/" and file[-5:] != "maps/":
-                        try:
-                            shutil.rmtree(file)
-                        except Exception as e:
-                            log.error(str(e))
+            testing.remove_files()
         else:
             unique_id = str(uuid.uuid4())
             temp_path = os.path.join(settings["repository.path"], *["tmp", unique_id])
             os.makedirs(temp_path)
 
-            submissions_path = os.path.join(
-                odk_dir, *["forms", a_form_directory, "submissions", "*.json"]
-            )
-            files = glob.glob(submissions_path)
+            files = testing.json_files
             if files:
                 for file in files:
                     shutil.copy(file, temp_path)

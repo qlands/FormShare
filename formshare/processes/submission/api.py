@@ -1003,6 +1003,7 @@ def field_is_editable(field_name):
         "_cellxpos",
         "_cellypos",
         "link_rowuuid",
+        "_device_uuid",
     ]
     if field_name in read_only_fields:
         return "false"

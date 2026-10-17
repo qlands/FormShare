@@ -34,6 +34,7 @@ import os
 import uuid
 
 from lxml import etree
+from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from formshare.processes.list_filter import (
@@ -127,7 +128,12 @@ __all__ = [
     "LIST_MODES",
     "NO_CASES",
     "valid_list_mode",
-    "submitted_by_clause",
+    "MODE_COLUMNS",
+    "login_clause",
+    "repository_assigns_cases",
+    "manifest_assigns_cases",
+    "assign_case_to_registrar",
+    "assign_unassigned_cases",
     "list_variant_clause",
     "variant_key",
     "variant_file_name",
@@ -757,7 +763,10 @@ def generate_published_list_file(request, list_data, out_path, variant_sql=None)
 # list's SELECT with a clause of theirs ANDed in, chosen by who the manifest
 # and media requests authenticate, never by a parameter. "assigned_to" and
 # "filters" come with the next slices of stage 8.
-LIST_MODES = ("all", "submitted_by")
+LIST_MODES = ("all", "submitted_by", "assigned_to")
+# The control column of maintable that names the assistant of each mode: who
+# registered a case, or who it is assigned to (rstools.md 3; jxformtomysql -a).
+MODE_COLUMNS = {"submitted_by": "_submitted_by", "assigned_to": "_assigned_to"}
 # The clause of a variant that serves no case: the list serves assistants one
 # by one, and no assistant is asking.
 NO_CASES = "1 = 0"
@@ -771,23 +780,105 @@ def valid_list_mode(mode, crowdsourcing):
     return mode in LIST_MODES
 
 
-def submitted_by_clause(schema, table, login):
-    """The rows an assistant registered: those of the submissions that carry
-    their login in _submitted_by. The control columns live on maintable, so a
-    row of a repeat table is matched through its root_rowuuid. The login is
-    compared by its bytes, as the list's own filter compares text (the
-    repository's collation ignores case and trailing spaces), and spelled in
-    hexadecimal, so that no login can change the statement."""
+def login_clause(schema, table, column, login):
+    """The rows whose submission names the assistant in a control column of
+    maintable: _submitted_by, who registered them, or _assigned_to, who they
+    are assigned to. Those columns live on maintable, so a row of a repeat
+    table is matched through its root_rowuuid. The login is compared by its
+    bytes, as the list's own filter compares text (the repository's collation
+    ignores case and trailing spaces), and spelled in hexadecimal, so that no
+    login can change the statement."""
     login_hex = str(login).encode("utf-8").hex().upper()
     if table == "maintable":
-        return "HEX({t}`_submitted_by`) = '" + login_hex + "'"
+        return "HEX({t}`" + column + "`) = '" + login_hex + "'"
     return (
         "{t}`root_rowuuid` IN (SELECT `rowuuid` FROM "
         + _quoted(schema)
-        + ".`maintable` WHERE HEX(`_submitted_by`) = '"
+        + ".`maintable` WHERE HEX(`"
+        + column
+        + "`) = '"
         + login_hex
         + "')"
     )
+
+
+def repository_assigns_cases(request, schema):
+    """Whether a repository's maintable has _assigned_to: every one built or
+    merged since stage 8 has it (jxformtomysql -a); one built before gets it
+    when a new version is merged into it."""
+    res = request.dbsession.execute(
+        text(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS "
+            "WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = 'maintable' "
+            "AND COLUMN_NAME = '_assigned_to'"
+        ),
+        {"schema": schema},
+    ).scalar()
+    return bool(res)
+
+
+def manifest_assigns_cases(manifest_file):
+    """Whether a form's manifest maps _assigned_to, so that JSONToMySQL stores
+    the stamp's value: true of a form uploaded since stage 8, false of an older
+    version of a form whose repository a merge has given the column."""
+    try:
+        with open(manifest_file, encoding="utf-8") as a_file:
+            return 'xmlcode="_assigned_to"' in a_file.read()
+    except OSError:
+        return True
+
+
+def assign_case_to_registrar(request, schema, rowuuid):
+    """Assigns a case loaded unassigned to whoever registered it: one sent with
+    an older version of a form, whose manifest does not map _assigned_to, to a
+    repository that has it since a merge. A repository without the column has
+    no assignments to keep."""
+    if not rowuuid or not repository_assigns_cases(request, schema):
+        return False
+    try:
+        request.dbsession.execute(
+            text(
+                "UPDATE {}.`maintable` SET `_assigned_to` = `_submitted_by` "
+                "WHERE `rowuuid` = :rowuuid AND `_assigned_to` IS NULL".format(
+                    _quoted(schema)
+                )
+            ),
+            {"rowuuid": rowuuid},
+        )
+        request.dbsession.commit()
+        return True
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while assigning case {} of {} to its registrar".format(
+                str(e), rowuuid, schema
+            )
+        )
+        return False
+
+
+def assign_unassigned_cases(request, schema):
+    """Assigns every case of a repository that is assigned to nobody to whoever
+    registered it: the rows that were there before a merge gave the
+    repository _assigned_to. A case is assigned to its registrar until it is
+    given to someone else."""
+    try:
+        request.dbsession.execute(
+            text(
+                "UPDATE {}.`maintable` SET `_assigned_to` = `_submitted_by` "
+                "WHERE `_assigned_to` IS NULL".format(_quoted(schema))
+            )
+        )
+        request.dbsession.commit()
+        return True
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while assigning the cases of {} to their registrars".format(
+                str(e), schema
+            )
+        )
+        return False
 
 
 def list_variant_clause(list_data, schema, login):
@@ -799,8 +890,9 @@ def list_variant_clause(list_data, schema, login):
         return None
     if not login or login == "public":
         return NO_CASES
-    if mode == "submitted_by":
-        return submitted_by_clause(schema, list_data["source_table"], login)
+    column = MODE_COLUMNS.get(mode)
+    if column is not None:
+        return login_clause(schema, list_data["source_table"], column, login)
     # A mode this server does not know serves nothing rather than everything
     return NO_CASES
 

@@ -989,6 +989,9 @@ def field_is_editable(field_name):
         "surveyid",
         "originid",
         "_submitted_by",
+        # Who a case is assigned to changes by the rule decided for it, not
+        # by editing a cell (formshare.md 3.8)
+        "_assigned_to",
         "_xform_id_string",
         "_submitted_date",
         "_geopoint",

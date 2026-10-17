@@ -24,7 +24,7 @@ from formshare.processes.option_values import (
     invalid_option_values_heading,
     describe_invalid_option_values,
 )
-from formshare.processes.actions.server import run_after_load
+from formshare.processes.actions.server import main_rowuuid_of, run_after_load
 from formshare.processes.db.encryption import (
     KEY_NEEDED,
     describe_invalid_encrypted_fields,
@@ -55,6 +55,8 @@ from formshare.processes.db import (
     list_variant_clause,
     variant_key,
     variant_file_name,
+    manifest_assigns_cases,
+    assign_case_to_registrar,
     get_list_variant,
     record_list_variant,
     list_is_stale,
@@ -787,6 +789,10 @@ def check_jxform_file(
         "-e " + os.path.join(os.path.dirname(json_file), *["tmp"]),
         "-o m",
         "-K",
+        # Every repository has _assigned_to, the assistant a case is
+        # assigned to (formshare.md 3.8), so the check makes what the build
+        # will: the same create.xml and manifest.xml
+        "-a",
     ]
     if request.registry.settings.get("ignore_too_many_selects", "false") == "true":
         args.append("-x")
@@ -4245,6 +4251,10 @@ def create_repository(
             "-j " + survey_file,
             "-t maintable",
             "-v " + primary_key,
+            # maintable gets _assigned_to, the assistant a case is assigned
+            # to (formshare.md 3.8): every repository, so that any list may
+            # serve each assistant the cases assigned to them
+            "-a",
             "-c "
             + os.path.join(
                 odk_dir, *["forms", xform_directory, "repository", "create.sql"]
@@ -4762,6 +4772,10 @@ def store_json_file(
                 submission_data["_submitted_by"] = get_assistant_login(
                     request, assistant_uuid
                 )
+                # A case is assigned to whoever registers it (formshare.md
+                # 3.8); a revision reloads this JSON, so editing a submission
+                # does not move its case
+                submission_data["_assigned_to"] = submission_data["_submitted_by"]
                 submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
                 submission_data["_user_id"] = user
                 submission_data.pop("_version", "")
@@ -5092,6 +5106,15 @@ def store_json_file(
                                 log.error(message)
                                 return 1, message
                         else:
+                            # An older version of a form whose repository a
+                            # merge gave _assigned_to does not map it, so the
+                            # load left the case unassigned: it goes to whoever
+                            # registered it, as every case does (formshare.md
+                            # 3.8)
+                            if not manifest_assigns_cases(manifest_file):
+                                assign_case_to_registrar(
+                                    request, schema, main_rowuuid_of(uuid_file)
+                                )
                             # The form's actions run now, before anything
                             # answers the device, over the rows the load just
                             # wrote (actions-api.md; formshare.md 3.3). A
@@ -5377,6 +5400,8 @@ def store_json_file(
                 submission_data["_submitted_by"] = get_assistant_login(
                     request, assistant_uuid
                 )
+                # Assigned to whoever registers it, as at a repository's load
+                submission_data["_assigned_to"] = submission_data["_submitted_by"]
                 submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
                 submission_data["_user_id"] = user
                 submission_data["_submission_id"] = submission_id
@@ -6653,6 +6678,10 @@ def push_revision(request, user, project, form, submission):
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
+        # An unassigned case goes to whoever registered it, as after a live
+        # load (store_json_file)
+        if not manifest_assigns_cases(manifest_file):
+            assign_case_to_registrar(request, schema, main_rowuuid_of(uuid_file))
         # The form's actions, as after a live load (store_json_file).
         run_after_load(
             request,

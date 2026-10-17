@@ -57,7 +57,7 @@
                                     <td>{{ a_list.source_table }}</td>
                                     <td>{{ a_list.label_column }}</td>
                                     <td>{% if a_list.list_key_column %}<code>{{ a_list.list_key_column }}</code> {{ _('(distinct values)') }}{% else %}rowuuid{% endif %}</td>
-                                    <td>{% if a_list.list_active == 0 %}{{ _('Inactive') }}{% else %}{{ _('Active') }}{% endif %}{% if a_list.list_filter_mode == 'submitted_by' %}<br><small>{{ _('each assistant those they registered') }}</small>{% endif %}</td>
+                                    <td>{% if a_list.list_active == 0 %}{{ _('Inactive') }}{% else %}{{ _('Active') }}{% endif %}{% if a_list.list_filter_mode == 'submitted_by' %}<br><small>{{ _('Per assistant: the cases they registered') }}</small>{% elif a_list.list_filter_mode == 'assigned_to' %}<br><small>{{ _('Per assistant: the cases assigned to them') }}</small>{% endif %}</td>
                                     <td>{{ a_list.list_seq }}</td>
                                     <td>{% if a_list.list_lastgen %}{{ a_list.list_lastgen }}{% else %}{{ _('Never') }}{% endif %}</td>
                                     <td>

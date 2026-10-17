@@ -39,6 +39,8 @@ from formshare.processes.db.case_management import (
     invalidate_list_copies,
     forget_list_variants,
     valid_list_mode,
+    repository_assigns_cases,
+    assign_unassigned_cases,
     sync_form_consumers,
     update_published_list,
     valid_list_filename,
@@ -439,6 +441,14 @@ class EditPublishedListView(ListSection):
                         )
                     else:
                         self.append_to_errors(self._("Select who receives which cases"))
+                elif mode == "assigned_to" and not self.assigns_cases(list_data):
+                    self.append_to_errors(
+                        self._(
+                            "The repository of {} was built before cases could be "
+                            "assigned. Merge a new version of the form into it: the "
+                            "merge adds who each case is assigned to"
+                        ).format(list_data["source_form"])
+                    )
                 elif mode == (list_data.get("list_filter_mode") or "all"):
                     self.returnRawViewResult = True
                     return HTTPFound(self.request.url)
@@ -452,6 +462,12 @@ class EditPublishedListView(ListSection):
                     if not updated:
                         self.append_to_errors(message)
                     else:
+                        schema = get_list_source_schema(self.request, list_data)
+                        if mode == "assigned_to" and schema:
+                            # The cases there before a merge gave the
+                            # repository _assigned_to go to whoever registered
+                            # them, as every case does
+                            assign_unassigned_cases(self.request, schema)
                         forget_list_variants(self.request, project_id, list_id)
                         invalidate_list_copies(self.request, project_id, list_id)
                         self.returnRawViewResult = True
@@ -559,6 +575,14 @@ class EditPublishedListView(ListSection):
             "geometryColumns": geometry_columns(table_columns),
             "crowdsourcing": crowdsourcing,
         }
+
+    def assigns_cases(self, list_data):
+        """Whether the list's source records who each case is assigned to. A
+        source with no repository yet will, when it is built."""
+        schema = get_list_source_schema(self.request, list_data)
+        if not schema:
+            return True
+        return repository_assigns_cases(self.request, schema)
 
     def try_filter(self, project_id, list_id, list_data, filter_sql):
         """Runs the list's SELECT with the new filter over its source, one

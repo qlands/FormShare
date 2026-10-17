@@ -1906,8 +1906,11 @@ def test_a_variant_clause_takes_the_alias_when_properties_are_joined():
 
 
 def test_submitted_by_reads_maintable_and_a_repeat_row_its_root():
-    assert cm.submitted_by_clause("FS_abc", "maintable", "ana") == _SUBMITTED_BY_ANA
-    assert cm.submitted_by_clause("FS_abc", "rpt_members", "ana") == (
+    assert (
+        cm.login_clause("FS_abc", "maintable", "_submitted_by", "ana")
+        == _SUBMITTED_BY_ANA
+    )
+    assert cm.login_clause("FS_abc", "rpt_members", "_submitted_by", "ana") == (
         "{t}`root_rowuuid` IN (SELECT `rowuuid` FROM `FS_abc`.`maintable` "
         "WHERE HEX(`_submitted_by`) = '616E61')"
     )
@@ -1917,7 +1920,7 @@ def test_a_login_cannot_change_the_statement():
     """The login is spelled in hexadecimal: whatever it holds, the clause is
     the same statement with other digits."""
     login = "o'neil@x.org; DROP"
-    clause = cm.submitted_by_clause("FS_abc", "maintable", login)
+    clause = cm.login_clause("FS_abc", "maintable", "_submitted_by", login)
     assert clause == (
         "HEX({t}`_submitted_by`) = '" + login.encode("utf-8").hex().upper() + "'"
     )
@@ -1943,8 +1946,23 @@ def test_no_assistant_and_an_unknown_mode_receive_no_cases():
 def test_a_crowdsourcing_project_serves_every_case_to_everyone():
     assert cm.valid_list_mode("all", True)
     assert not cm.valid_list_mode("submitted_by", True)
+    assert not cm.valid_list_mode("assigned_to", True)
     assert cm.valid_list_mode("submitted_by", False)
+    assert cm.valid_list_mode("assigned_to", False)
     assert not cm.valid_list_mode("whoever", False)
+
+
+def test_assigned_to_reads_who_a_case_is_assigned_to():
+    roster = {"source_table": "maintable", "list_filter_mode": "assigned_to"}
+    assert cm.list_variant_clause(roster, "FS_abc", "ana") == (
+        "HEX({t}`_assigned_to`) = '616E61'"
+    )
+    roster["source_table"] = "rpt_members"
+    assert cm.list_variant_clause(roster, "FS_abc", "ana") == (
+        "{t}`root_rowuuid` IN (SELECT `rowuuid` FROM `FS_abc`.`maintable` "
+        "WHERE HEX(`_assigned_to`) = '616E61')"
+    )
+    assert cm.list_variant_clause(roster, "FS_abc", None) == cm.NO_CASES
 
 
 def test_assistants_with_the_same_clause_share_a_variant():

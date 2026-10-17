@@ -28,6 +28,7 @@ FORM = "LB_Sequia_MAG_20190123"
 LIST_ID = "households"
 LIST_FILE = "households.csv"
 ANA, BEN = "pa_ana", "pa_ben"
+OLD_FORM = "tormenta20201105"
 OPENROSA_MANIFEST = "{http://openrosa.org/xforms/xformsManifest}"
 
 
@@ -105,6 +106,36 @@ def _cases_by_assistant(config, schema):
     finally:
         engine.dispose()
     return {a_row[0]: a_row[1] for a_row in rows}
+
+
+def _assign(config, schema, rowuuid, assistant):
+    """Assigns a case to an assistant. By hand for now: how a case is
+    reassigned is decided with the rest of stage 8."""
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        engine.execute(
+            "UPDATE `{}`.maintable SET _assigned_to = %s WHERE rowuuid = %s".format(
+                schema
+            ),
+            (assistant, rowuuid),
+        )
+    finally:
+        engine.dispose()
+
+
+def _assigned(config, schema):
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        rows = engine.execute(
+            "SELECT _submitted_by, _assigned_to FROM `{}`.maintable".format(schema)
+        ).fetchall()
+    finally:
+        engine.dispose()
+    # Nobody's case (None) sorts before anyone's
+    return sorted(
+        ((a_row[0], a_row[1]) for a_row in rows),
+        key=lambda pair: (pair[0], pair[1] or ""),
+    )
 
 
 def _set_crowdsourcing(config, project_id, crowdsourcing):
@@ -185,10 +216,11 @@ def t_e_s_t_per_assistant_lists(test_object):
     )
     _push(test_object, ANA, 801)
     _push(test_object, BEN, 802)
-    cases = _cases_by_assistant(
-        config, form_row(config, project_id, FORM)["form_schema"]
-    )
+    schema = form_row(config, project_id, FORM)["form_schema"]
+    cases = _cases_by_assistant(config, schema)
     assert sorted(cases) == [ANA, BEN]
+    # Each case is assigned to whoever registered it
+    assert _assigned(config, schema) == [(ANA, ANA), (BEN, BEN)]
 
     # A list of them, attached to the form by its name
     res = testapp.post(
@@ -198,7 +230,7 @@ def t_e_s_t_per_assistant_lists(test_object):
             "list_filename": LIST_FILE,
             "source_form": FORM,
             "source_table": "maintable",
-            "label_column": "I_D",
+            "label_column": "i_d",
         },
         status=302,
     )
@@ -230,7 +262,7 @@ def t_e_s_t_per_assistant_lists(test_object):
     res = testapp.get(
         "/user/{}/project/{}/caselists".format(login, PROJECT), status=200
     )
-    assert b"each assistant those they registered" in res.body
+    assert b"Per assistant: the cases they registered" in res.body
     ana_hash, received = _received(test_object, ANA)
     assert received == [cases[ANA]]
     # A device that downloads without asking for the manifest first gets its
@@ -253,6 +285,33 @@ def t_e_s_t_per_assistant_lists(test_object):
     assert "FS_error" not in res.headers
     assert _received(test_object, ANA) == (ana_hash, [cases[ANA]])
 
+    # In mode assigned_to, each receives the cases assigned to them: at first
+    # the ones they registered. A case assigned to nobody -- loaded before a
+    # merge gave the repository the column -- goes to its registrar when the
+    # mode is chosen.
+    _assign(config, schema, cases[BEN], None)
+    res = testapp.post(
+        edit, {"list_filter_mode": "assigned_to", "change_mode": "1"}, status=302
+    )
+    assert "FS_error" not in res.headers
+    assert _assigned(config, schema) == [(ANA, ANA), (BEN, BEN)]
+    res = testapp.get(
+        "/user/{}/project/{}/caselists".format(login, PROJECT), status=200
+    )
+    assert b"Per assistant: the cases assigned to them" in res.body
+    assert _received(test_object, ANA)[1] == [cases[ANA]]
+    assert _received(test_object, BEN)[1] == [cases[BEN]]
+    # A case assigned to Ben leaves Ana's device for his at their next pull
+    _assign(config, schema, cases[ANA], BEN)
+    assert _received(test_object, ANA)[1] == []
+    assert _received(test_object, BEN)[1] == every_case
+    # Who registered it does not change
+    res = testapp.post(
+        edit, {"list_filter_mode": "submitted_by", "change_mode": "1"}, status=302
+    )
+    assert "FS_error" not in res.headers
+    assert _received(test_object, ANA)[1] == [cases[ANA]]
+
     # A mode the server does not know is refused
     res = testapp.post(
         edit, {"list_filter_mode": "whoever", "change_mode": "1"}, status=200
@@ -264,8 +323,10 @@ def t_e_s_t_per_assistant_lists(test_object):
     _set_crowdsourcing(config, project_id, True)
     try:
         assert _received(test_object, None)[1] == []
+        # The page says why, and offers to serve everyone
         res = testapp.get(edit, status=200)
         assert b'id="list-mode-crowdsourcing"' in res.body
+        assert b'id="list-mode-to-all"' in res.body
         res = testapp.post(
             edit, {"list_filter_mode": "all", "change_mode": "1"}, status=302
         )
@@ -275,8 +336,98 @@ def t_e_s_t_per_assistant_lists(test_object):
         )
         assert "FS_error" in res.headers
         assert b"no assistants to tell apart" in res.body
+        res = testapp.get(edit, status=200)
+        assert b'id="list-mode-to-all"' not in res.body
     finally:
         _set_crowdsourcing(config, project_id, False)
 
     # Back in mode all, everyone receives every case again
     assert _received(test_object, BEN) == (all_hash, every_case)
+
+    # A repository built before stage 8 does not say who a case is assigned
+    # to, so a list drawn from it cannot serve the cases assigned to each
+    merge = os.path.join(test_object.path, "resources", "forms", "merge")
+    res = testapp.post(
+        "/user/{}/project/{}/forms/add".format(login, PROJECT),
+        {"form_pkey": "numero_de_cedula"},
+        status=302,
+        upload_files=[("xlsx", os.path.join(merge, "A", "A.xls"))],
+    )
+    assert "FS_error" not in res.headers
+    build_in_process(
+        test_object,
+        project_id,
+        PROJECT,
+        OLD_FORM,
+        "numero_de_cedula",
+        [os.path.join(merge, "A", name) for name in ("cantones.csv", "distritos.csv")],
+        assigns_cases=False,
+    )
+    res = testapp.post(
+        "/user/{}/project/{}/caselists/add".format(login, PROJECT),
+        {
+            "list_id": "old_cases",
+            "list_filename": "old_cases.csv",
+            "source_form": OLD_FORM,
+            "source_table": "maintable",
+            "label_column": "numero_de_cedula",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    old_edit = "/user/{}/project/{}/caselists/old_cases/edit".format(login, PROJECT)
+    res = testapp.post(
+        old_edit, {"list_filter_mode": "assigned_to", "change_mode": "1"}, status=200
+    )
+    assert "FS_error" in res.headers
+    assert b"built before cases could be assigned" in res.body
+    # Who registered each case it does say
+    res = testapp.post(
+        old_edit, {"list_filter_mode": "submitted_by", "change_mode": "1"}, status=302
+    )
+    assert "FS_error" not in res.headers
+
+    # A case sent with an older version of the form, whose manifest does not
+    # map _assigned_to, is assigned to whoever registered it all the same
+    manifest = os.path.join(
+        config["repository.path"],
+        "odk",
+        "forms",
+        form_row(config, project_id, FORM)["form_directory"],
+        "repository",
+        "manifest.xml",
+    )
+    with open(manifest, encoding="utf-8") as a_file:
+        current = a_file.read()
+    try:
+        with open(manifest, "w", encoding="utf-8") as a_file:
+            a_file.write(
+                "\n".join(
+                    line
+                    for line in current.split("\n")
+                    if 'xmlcode="_assigned_to"' not in line
+                )
+            )
+        # Without the assignment after the load, such a case is nobody's: the
+        # load does not store a key its manifest does not map
+        from formshare.processes.odk import api as odk_api
+
+        assign = odk_api.assign_case_to_registrar
+        odk_api.assign_case_to_registrar = lambda request, schema, rowuuid: False
+        try:
+            _push(test_object, BEN, 803)
+        finally:
+            odk_api.assign_case_to_registrar = assign
+        assert (BEN, None) in _assigned(config, schema)
+        _push(test_object, ANA, 804)
+    finally:
+        with open(manifest, "w", encoding="utf-8") as a_file:
+            a_file.write(current)
+    # Ana's first case was given to Ben above, Ben's unassigned one stays
+    # unassigned, and Ana's new one is hers
+    assert _assigned(config, schema) == [
+        (ANA, ANA),
+        (ANA, BEN),
+        (BEN, None),
+        (BEN, BEN),
+    ]

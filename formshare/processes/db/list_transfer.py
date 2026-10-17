@@ -43,6 +43,8 @@ from formshare.processes.db.case_management import (
     set_list_columns,
     valid_list_filename,
     valid_list_mode,
+    repository_assigns_cases,
+    assign_unassigned_cases,
     validate_property_default,
 )
 from formshare.processes.db.encryption import encrypted_columns
@@ -478,6 +480,15 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
             problems.append(
                 _('the table has no column "{}" to key with').format(key_column)
             )
+        if receivers == "assigned_to" and not repository_assigns_cases(
+            request, get_form_data(request, project_id, form_id)["form_schema"]
+        ):
+            problems.append(
+                _(
+                    "it serves each assistant the cases assigned to them, and the "
+                    'repository of "{}" was built before cases could be assigned'
+                ).format(form_id)
+            )
         # A device reads, searches and picks by a list's label and key, and
         # a filter compares: none can be a column only FormShare's interface
         # can read (field encryption). It may be served, sealed.
@@ -671,5 +682,14 @@ def import_lists(request, project_id, document, user):
                 '{} "{}": {}'.format(_("List"), list_data["list_id"], message)
             )
             return done, errors, warnings
+        if list_data.get("list_filter_mode") == "assigned_to":
+            # As when the mode is chosen on the list's page: the cases assigned
+            # to nobody go to whoever registered them
+            assign_unassigned_cases(
+                request,
+                get_form_data(request, project_id, list_data["source_form"])[
+                    "form_schema"
+                ],
+            )
         done["lists"].append(list_data["list_id"])
     return done, errors, warnings

@@ -50,11 +50,18 @@ def add_task(config, project_id, form_id, product_id, user):
 
 
 def build_in_process(
-    test_object, project_id, project_code, form_id, primary_key, files
+    test_object,
+    project_id,
+    project_code,
+    form_id,
+    primary_key,
+    files,
+    assigns_cases=True,
 ):
     """Builds a form's repository in this process, discarding its testing
     data, as create_mysql_repository does in the worker. files are the CSV
-    and GeoJSON files the form selects from."""
+    and GeoJSON files the form selects from. assigns_cases=False leaves out
+    _assigned_to, as in a repository built before stage 8."""
     from formshare.products.repository.celery_task import (
         internal_create_mysql_repository,
     )
@@ -92,7 +99,10 @@ def build_in_process(
         "-e " + os.path.join(work, "temp"),
         "-L",
         "-o m",
-    ] + files
+    ]
+    if assigns_cases:
+        args.append("-a")
+    args = args + files
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     assert p.returncode == 0, stdout + stderr

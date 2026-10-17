@@ -64,6 +64,10 @@ class _Project:
         self.deleted = []
         self.fail_columns_of = None
         self.crowdsourcing = False
+        # Whether the repositories record who each case is assigned to
+        self.assigns = True
+        # The repositories whose unassigned cases went to their registrars
+        self.backfilled = []
 
     def install(self, test):
         replaced = {
@@ -88,6 +92,8 @@ class _Project:
                 self.encrypted.get((f, t), set())
             ),
             "project_has_crowdsourcing": lambda r, p: self.crowdsourcing,
+            "repository_assigns_cases": lambda r, schema: self.assigns,
+            "assign_unassigned_cases": lambda r, schema: self.backfilled.append(schema),
         }
         for name, function in replaced.items():
             original = getattr(lt, name)
@@ -808,6 +814,18 @@ class WhoReceivesWhichCases(unittest.TestCase):
         _, errors, _ = self.run_import(_farmers(receivers="whoever"))
         self.assertEqual(self.project.added_lists, [])
         self.assertIn('"whoever" is not a way of serving a list', errors[0])
+
+    def test_assigned_to_needs_a_repository_that_records_it(self):
+        _, errors, _ = self.run_import(_farmers(receivers="assigned_to"))
+        self.assertEqual(errors, [])
+        self.assertEqual(self.project.added_lists[0]["list_filter_mode"], "assigned_to")
+        # The cases assigned to nobody went to their registrars
+        self.assertEqual(self.project.backfilled, ["FS_reg"])
+        self.project.added_lists = []
+        self.project.assigns = False
+        _, errors, _ = self.run_import(_farmers(receivers="assigned_to"))
+        self.assertEqual(self.project.added_lists, [])
+        self.assertIn("built before cases could be assigned", errors[0])
 
     def test_a_crowdsourcing_project_serves_everyone(self):
         self.project.crowdsourcing = True

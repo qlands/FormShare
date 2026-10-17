@@ -241,6 +241,9 @@ def store_json_file(
         else:
             submission_data["_xform_id_string"] = form
         submission_data["_submitted_by"] = get_assistant_name(engine, assistant_uuid)
+        # The case is assigned to whoever the import attributes it to
+        # (formshare.md 3.8)
+        submission_data["_assigned_to"] = submission_data["_submitted_by"]
         submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
         submission_data["_user_id"] = user
         submission_data.pop("_version", "")

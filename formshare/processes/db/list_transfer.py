@@ -45,6 +45,8 @@ from formshare.processes.db.case_management import (
     valid_list_mode,
     repository_assigns_cases,
     assign_unassigned_cases,
+    get_list_filters,
+    save_list_filter,
     validate_property_default,
 )
 from formshare.processes.db.encryption import encrypted_columns
@@ -95,6 +97,7 @@ _LIST_KEYS = (
     "format",
     "geometry_column",
     "receivers",
+    "receiver_filters",
 )
 
 
@@ -150,6 +153,16 @@ def list_document(request, project_id, list_ids=None):
             # server that cannot serve assistants one by one refuses the key
             # rather than serve every case to everyone.
             entry["receivers"] = receivers
+        if receivers == "filters":
+            # The filters travel without whom they are given to: assistants and
+            # groups are the exporting project's
+            entry["receiver_filters"] = [
+                {
+                    "name": a_filter["filter_name"],
+                    "filter": _stored_rules(a_filter["filter_rules"]) or None,
+                }
+                for a_filter in get_list_filters(request, project_id, a_list["list_id"])
+            ]
         if a_list.get("list_format") == "geojson":
             entry["format"] = "geojson"
             entry["geometry_column"] = a_list.get("geometry_column")
@@ -587,6 +600,19 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
                     problems.append(_("its filter: {}").format(str(e)))
                 if filter_sql:
                     filter_rules = json.dumps(rules)
+        receiver_filters = _receiver_filters(
+            request,
+            project_id,
+            entry,
+            receivers,
+            form_id,
+            table,
+            properties,
+            defined,
+            encrypted,
+            problems,
+            _,
+        )
         if problems:
             errors.append("{}: {}".format(where, "; ".join(problems)))
             continue
@@ -610,9 +636,81 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
                     "list_filter_mode": receivers,
                 },
                 served,
+                receiver_filters,
             )
         )
     return to_add
+
+
+def _receiver_filters(
+    request,
+    project_id,
+    entry,
+    receivers,
+    form_id,
+    table,
+    properties,
+    defined,
+    encrypted,
+    problems,
+    _,
+):
+    """The filters of a list in mode "filters" (formshare.md 3.8), checked and
+    compiled against the importing table: [(name, rules, sql), ...]. A filter
+    with no condition gives every case."""
+    entries = entry.get("receiver_filters")
+    if entries in (None, []):
+        return []
+    if receivers != "filters":
+        problems.append(_("its receiver filters serve only a list in mode filters"))
+        return []
+    if not isinstance(entries, list):
+        problems.append(_("its receiver filters are not a list"))
+        return []
+    pending = [
+        {"property_name": key[2], "property_type": value[0]}
+        for key, value in defined.items()
+        if key[:2] == (form_id, table) and key[2] not in properties
+    ]
+    fields = filter_fields(
+        get_table_columns(request, project_id, form_id, table),
+        get_table_properties(request, project_id, form_id, table) + pending,
+    )
+    result = []
+    names = set()
+    for a_filter in entries:
+        if not isinstance(a_filter, dict):
+            problems.append(_("a receiver filter is not a name and a rule set"))
+            continue
+        name = _text(a_filter.get("name"))[0] or ""
+        if name == "" or name in names:
+            problems.append(
+                _('a receiver filter has no name, or the name of another: "{}"').format(
+                    name
+                )
+            )
+        names.add(name)
+        rules = a_filter.get("filter")
+        sql = "1 = 1"
+        if rules not in (None, "", {}):
+            if not isinstance(rules, dict):
+                problems.append(
+                    _('the receiver filter "{}" is not a rule set').format(name)
+                )
+                continue
+            read = sorted(referenced_columns(rules) & encrypted)
+            if read:
+                problems.append(
+                    _('the receiver filter "{}" reads "{}", which is encrypted').format(
+                        name, read[0]
+                    )
+                )
+            try:
+                sql = compile_filter(rules, fields) or "1 = 1"
+            except FilterError as e:
+                problems.append(_('the receiver filter "{}": {}').format(name, str(e)))
+        result.append((name, json.dumps(rules) if rules else None, sql))
+    return result
 
 
 def import_lists(request, project_id, document, user):
@@ -669,7 +767,7 @@ def import_lists(request, project_id, document, user):
             )
             return done, errors, warnings
         done["properties"].append(name)
-    for list_data, served in to_add:
+    for list_data, served, receiver_filters in to_add:
         added, message = add_published_list(request, project_id, list_data)
         if added:
             added, message = set_list_columns(
@@ -682,6 +780,21 @@ def import_lists(request, project_id, document, user):
                 '{} "{}": {}'.format(_("List"), list_data["list_id"], message)
             )
             return done, errors, warnings
+        for name, rules, sql in receiver_filters:
+            save_list_filter(
+                request, project_id, list_data["list_id"], None, name, rules, sql, []
+            )
+        if receiver_filters:
+            warnings.append(
+                '{} "{}": {}'.format(
+                    _("List"),
+                    list_data["list_id"],
+                    _(
+                        "its filters arrived given to nobody. Give them to "
+                        "assistants and groups on the list's page"
+                    ),
+                )
+            )
         if list_data.get("list_filter_mode") == "assigned_to":
             # As when the mode is chosen on the list's page: the cases assigned
             # to nobody go to whoever registered them

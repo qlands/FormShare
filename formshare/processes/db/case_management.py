@@ -47,6 +47,9 @@ from formshare.models import (
     PublishedList,
     PublishedListColumn,
     ListVariant,
+    ListFilter,
+    ListFilterAssignee,
+    Collingroup,
     ListConsumer,
     MediaFile,
     TableProperty,
@@ -134,6 +137,12 @@ __all__ = [
     "manifest_assigns_cases",
     "assign_case_to_registrar",
     "assign_unassigned_cases",
+    "get_list_filters",
+    "get_list_filter",
+    "save_list_filter",
+    "delete_list_filter",
+    "assistant_filter_sql",
+    "count_list_cases",
     "list_variant_clause",
     "variant_key",
     "variant_file_name",
@@ -763,7 +772,7 @@ def generate_published_list_file(request, list_data, out_path, variant_sql=None)
 # list's SELECT with a clause of theirs ANDed in, chosen by who the manifest
 # and media requests authenticate, never by a parameter. "assigned_to" and
 # "filters" come with the next slices of stage 8.
-LIST_MODES = ("all", "submitted_by", "assigned_to")
+LIST_MODES = ("all", "submitted_by", "assigned_to", "filters")
 # The control column of maintable that names the assistant of each mode: who
 # registered a case, or who it is assigned to (rstools.md 3; jxformtomysql -a).
 MODE_COLUMNS = {"submitted_by": "_submitted_by", "assigned_to": "_assigned_to"}
@@ -881,15 +890,25 @@ def assign_unassigned_cases(request, schema):
         return False
 
 
-def list_variant_clause(list_data, schema, login):
+def list_variant_clause(list_data, schema, login, assistant_filters=None):
     """The clause of the variant of a list that an assistant receives, or None
     for a list in mode "all", which everyone receives alike. login is the
-    assistant's (get_assistant_login), or None when no assistant asks."""
+    assistant's (get_assistant_login), or None when no assistant asks.
+    assistant_filters, in mode "filters", are the compiled filters given to
+    the assistant (assistant_filter_sql), in a fixed order so that the same
+    filters make the same clause."""
     mode = list_data.get("list_filter_mode") or "all"
     if mode == "all":
         return None
     if not login or login == "public":
         return NO_CASES
+    if mode == "filters":
+        # The cases any of their filters matches; none, with no filter: an
+        # assistant nobody gave a filter to receives an empty list rather
+        # than every case (formshare.md 3.8)
+        if not assistant_filters:
+            return NO_CASES
+        return "(" + ") OR (".join(assistant_filters) + ")"
     column = MODE_COLUMNS.get(mode)
     if column is not None:
         return login_clause(schema, list_data["source_table"], column, login)
@@ -989,6 +1008,176 @@ def forget_list_variants(request, project_id, list_id):
             )
         )
         return False
+
+
+def _list_filter_dict(a_filter, assignees):
+    data = map_from_schema(a_filter)
+    data["assignees"] = [
+        {
+            "assignee_type": an_assignee.assignee_type,
+            "assignee_id": an_assignee.assignee_id,
+        }
+        for an_assignee in assignees
+        if an_assignee.filter_id == a_filter.filter_id
+    ]
+    return data
+
+
+def get_list_filters(request, project_id, list_id):
+    """The filters of a list, by name, each with whom it is given to."""
+    filters = (
+        request.dbsession.query(ListFilter)
+        .filter(ListFilter.project_id == project_id)
+        .filter(ListFilter.list_id == list_id)
+        .order_by(ListFilter.filter_name)
+        .all()
+    )
+    assignees = (
+        request.dbsession.query(ListFilterAssignee)
+        .filter(ListFilterAssignee.project_id == project_id)
+        .filter(ListFilterAssignee.list_id == list_id)
+        .all()
+    )
+    return [_list_filter_dict(a_filter, assignees) for a_filter in filters]
+
+
+def get_list_filter(request, project_id, list_id, filter_id):
+    for a_filter in get_list_filters(request, project_id, list_id):
+        if a_filter["filter_id"] == filter_id:
+            return a_filter
+    return None
+
+
+def save_list_filter(
+    request, project_id, list_id, filter_id, name, rules, sql, assignees
+):
+    """Adds a filter to a list (filter_id None) or changes one, and gives it to
+    assignees, [(assignee_type, assignee_id), ...], replacing whom it was
+    given to. Returns (True, filter_id) or (False, why not)."""
+    _ = request.translate
+    new = filter_id is None
+    if new:
+        filter_id = str(uuid.uuid4())
+    try:
+        if new:
+            request.dbsession.add(
+                ListFilter(
+                    project_id=project_id,
+                    list_id=list_id,
+                    filter_id=filter_id,
+                    filter_name=name,
+                    filter_rules=rules,
+                    filter_sql=sql,
+                    filter_cdate=datetime.datetime.now(),
+                )
+            )
+        else:
+            request.dbsession.query(ListFilter).filter(
+                ListFilter.project_id == project_id
+            ).filter(ListFilter.list_id == list_id).filter(
+                ListFilter.filter_id == filter_id
+            ).update(
+                {"filter_name": name, "filter_rules": rules, "filter_sql": sql}
+            )
+            request.dbsession.query(ListFilterAssignee).filter(
+                ListFilterAssignee.project_id == project_id
+            ).filter(ListFilterAssignee.list_id == list_id).filter(
+                ListFilterAssignee.filter_id == filter_id
+            ).delete()
+        request.dbsession.flush()
+        for assignee_type, assignee_id in sorted(set(assignees)):
+            request.dbsession.add(
+                ListFilterAssignee(
+                    project_id=project_id,
+                    list_id=list_id,
+                    filter_id=filter_id,
+                    assignee_type=assignee_type,
+                    assignee_id=assignee_id,
+                )
+            )
+        request.dbsession.commit()
+        return True, filter_id
+    except IntegrityError:
+        request.dbsession.rollback()
+        return False, _('The list already has a filter called "{}"').format(name)
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while saving filter {} of list {} of project {}".format(
+                str(e), filter_id, list_id, project_id
+            )
+        )
+        return False, str(e)
+
+
+def delete_list_filter(request, project_id, list_id, filter_id):
+    try:
+        request.dbsession.query(ListFilter).filter(
+            ListFilter.project_id == project_id
+        ).filter(ListFilter.list_id == list_id).filter(
+            ListFilter.filter_id == filter_id
+        ).delete()
+        request.dbsession.commit()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while deleting filter {} of list {} of project {}".format(
+                str(e), filter_id, list_id, project_id
+            )
+        )
+        return False, str(e)
+
+
+def count_list_cases(request, list_data, variant_sql=None):
+    """How many cases a list serves, or serves under a clause (a filter of
+    mode "filters"); None when its source has no repository yet."""
+    schema = get_list_source_schema(request, list_data)
+    if not schema:
+        return None
+    try:
+        sql, _ = build_list_select(
+            schema,
+            list_data["source_table"],
+            list_data["label_column"],
+            [],
+            list_data.get("filter_sql"),
+            active=list_data.get("list_active", 1),
+            key_column=list_data.get("list_key_column"),
+            variant_sql=variant_sql,
+        )
+        return request.dbsession.execute(
+            text("SELECT COUNT(*) FROM ({}) AS served".format(sql))
+        ).scalar()
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while counting the cases of list {} of project {}".format(
+                str(e), list_data["list_id"], list_data["project_id"]
+            )
+        )
+        return None
+
+
+def assistant_filter_sql(request, project_id, list_id, assistant_uuid):
+    """The compiled filters of a list given to an assistant, directly or to a
+    group of the project they belong to, ordered by filter id: the same
+    filters make the same clause, and so the same variant."""
+    groups = [
+        a_row[0]
+        for a_row in request.dbsession.query(Collingroup.group_id)
+        .filter(Collingroup.project_id == project_id)
+        .filter(Collingroup.coll_uuid == assistant_uuid)
+        .all()
+    ]
+    given = [("assistant", assistant_uuid)] + [("group", a_group) for a_group in groups]
+    filters = {}
+    for a_filter in get_list_filters(request, project_id, list_id):
+        for an_assignee in a_filter["assignees"]:
+            if (an_assignee["assignee_type"], an_assignee["assignee_id"]) in given:
+                if a_filter["filter_sql"]:
+                    filters[a_filter["filter_id"]] = a_filter["filter_sql"]
+    return [filters[a_key] for a_key in sorted(filters)]
 
 
 # ---------------------------------------------------------------------------

@@ -109,9 +109,48 @@
                                 <option value="all" {% if (listData.list_filter_mode or 'all') == 'all' %}selected{% endif %}>{{ _('Every assistant receives every case') }}</option>
                                 <option value="submitted_by" {% if listData.list_filter_mode == 'submitted_by' %}selected{% endif %}>{{ _('Each assistant receives the cases they registered') }}</option>
                                 <option value="assigned_to" {% if listData.list_filter_mode == 'assigned_to' %}selected{% endif %}>{{ _('Each assistant receives the cases assigned to them') }}</option>
+                                <option value="filters" {% if listData.list_filter_mode == 'filters' %}selected{% endif %}>{{ _('Each assistant receives the cases of the filters given to them') }}</option>
                             </select>
                             <button type="submit" name="change_mode" value="1" class="btn btn-white">{{ _('Change') }}</button>
                         </form>
+                        {% if listData.list_filter_mode == 'filters' %}
+                            <div id="list-filters" class="m-t-md">
+                                <p class="text-muted">{{ _('An assistant receives the cases of the filters given to them, or to a group they belong to. An assistant with no filter receives none.') }}</p>
+                                {% if listFilters %}
+                                    <table class="table table-sm" id="list-filters-table">
+                                        <thead>
+                                        <tr>
+                                            <th>{{ _('Filter') }}</th>
+                                            <th>{{ _('Serves the cases where') }}</th>
+                                            <th>{{ _('Given to') }}</th>
+                                            <th>{{ _('Cases now') }}</th>
+                                            <th></th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for a_filter in listFilters %}
+                                            <tr>
+                                                <td>{{ a_filter.filter_name }}</td>
+                                                <td>{% if a_filter.words %}{{ a_filter.words }}{% else %}<i>{{ _('every case') }}</i>{% endif %}</td>
+                                                <td>{% if a_filter.given %}{{ a_filter.given|join(', ') }}{% else %}<span class="text-warning">{{ _('nobody yet') }}</span>{% endif %}</td>
+                                                <td>{% if a_filter.cases is not none %}{{ a_filter.cases }}{% endif %}</td>
+                                                <td class="text-nowrap">
+                                                    <a class="btn btn-xs btn-white" href="{{ request.route_url('project_case_list_filter_edit', userid=userid, projcode=projcode, listid=listData.list_id, filterid=a_filter.filter_id) }}">{{ _('Edit') }}</a>
+                                                    <form method="post" style="display: inline" action="{{ request.route_url('project_case_list_filter_delete', userid=userid, projcode=projcode, listid=listData.list_id, filterid=a_filter.filter_id) }}">
+                                                        {{ form.secure_form(request) }}
+                                                        <button type="submit" class="btn btn-xs btn-danger">{{ _('Delete') }}</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% else %}
+                                    <p class="text-warning" id="list-filters-none">{{ _('The list has no filter yet, so no assistant receives any case.') }}</p>
+                                {% endif %}
+                                <a class="btn btn-primary btn-sm" id="list-filter-add" href="{{ request.route_url('project_case_list_filter_add', userid=userid, projcode=projcode, listid=listData.list_id) }}">{{ _('Add a filter') }}</a>
+                            </div>
+                        {% endif %}
                     {% endif %}
                     <div class="hr-line-dashed"></div>
                     <h3>{{ _('Label') }}</h3>

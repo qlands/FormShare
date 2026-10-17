@@ -11,6 +11,7 @@ assistant receives no case.
 
 import csv
 import io
+import json
 import os
 import re
 import uuid
@@ -27,7 +28,8 @@ PROJECT = "perassistant"
 FORM = "LB_Sequia_MAG_20190123"
 LIST_ID = "households"
 LIST_FILE = "households.csv"
-ANA, BEN = "pa_ana", "pa_ben"
+ANA, BEN, CAROL = "pa_ana", "pa_ben", "pa_carol"
+GROUP = "pagrp1"
 OLD_FORM = "tormenta20201105"
 OPENROSA_MANIFEST = "{http://openrosa.org/xforms/xformsManifest}"
 
@@ -138,6 +140,31 @@ def _assigned(config, schema):
     )
 
 
+def _i_d_is(value):
+    """The rule set of a filter: the case whose I_D is value."""
+    return json.dumps(
+        {
+            "condition": "AND",
+            "rules": [
+                {"id": "t.i_d", "field": "t.i_d", "operator": "equal", "value": value}
+            ],
+            "valid": True,
+        }
+    )
+
+
+def _filter_id(config, project_id, name):
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        return engine.execute(
+            "SELECT filter_id FROM listfilter WHERE project_id = %s "
+            "AND list_id = %s AND filter_name = %s",
+            (project_id, LIST_ID, name),
+        ).scalar()
+    finally:
+        engine.dispose()
+
+
 def _set_crowdsourcing(config, project_id, crowdsourcing):
     engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
     try:
@@ -177,8 +204,10 @@ def t_e_s_t_per_assistant_lists(test_object):
         upload_files=[("xlsx", os.path.join(complex_form, "B.xlsx"))],
     )
     assert "FS_error" not in res.headers
-    for assistant in (ANA, BEN):
+    uuids = {}
+    for assistant in (ANA, BEN, CAROL):
         assistant_uuid = str(uuid.uuid4())
+        uuids[assistant] = assistant_uuid
         res = testapp.post(
             "/user/{}/project/{}/assistants/add".format(login, PROJECT),
             {
@@ -311,6 +340,102 @@ def t_e_s_t_per_assistant_lists(test_object):
     )
     assert "FS_error" not in res.headers
     assert _received(test_object, ANA)[1] == [cases[ANA]]
+
+    # In mode filters, each receives what the filters given to them, or to a
+    # group they belong to, match. Ben is in the group; Carol has no filter.
+    res = testapp.post(
+        "/user/{}/project/{}/groups/add".format(login, PROJECT),
+        {"group_desc": "Supervisors", "group_id": GROUP},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        "/user/{}/project/{}/group/{}/members".format(login, PROJECT, GROUP),
+        {"assistants": "{}|{}|{}".format(project_id, BEN, uuids[BEN])},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        edit, {"list_filter_mode": "filters", "change_mode": "1"}, status=302
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.get(edit, status=200)
+    assert b'id="list-filters-none"' in res.body
+    assert _received(test_object, ANA)[1] == []
+    add = "/user/{}/project/{}/caselists/{}/filters/add".format(login, PROJECT, LIST_ID)
+    res = testapp.get(add, status=200)
+    assert b'id="filter-builder"' in res.body
+    assert "group:{}".format(GROUP).encode() in res.body
+    assert "assistant:{}".format(uuids[CAROL]).encode() in res.body
+    res = testapp.post(
+        add,
+        {
+            "filter_name": "Ana only",
+            "filter_rules": _i_d_is(801),
+            "assignees": "assistant:" + uuids[ANA],
+            "save_filter": "1",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    assert _received(test_object, ANA)[1] == [cases[ANA]]
+    assert _received(test_object, BEN)[1] == []
+    # A filter with no condition gives every case, here to the group
+    res = testapp.post(
+        add,
+        {
+            "filter_name": "Everything",
+            "filter_rules": "",
+            "assignees": "group:" + GROUP,
+            "save_filter": "1",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    assert _received(test_object, BEN)[1] == every_case
+    assert _received(test_object, ANA)[1] == [cases[ANA]]
+    assert _received(test_object, CAROL)[1] == []
+    res = testapp.get(edit, status=200)
+    assert b'id="list-filters-table"' in res.body
+    assert b"Supervisors" in res.body
+    res = testapp.get(
+        "/user/{}/project/{}/caselists".format(login, PROJECT), status=200
+    )
+    assert b"Per assistant: the cases of their filters" in res.body
+    # A name is a filter of the list's once
+    res = testapp.post(
+        add,
+        {"filter_name": "Everything", "filter_rules": "", "save_filter": "1"},
+        status=200,
+    )
+    assert "FS_error" in res.headers
+    # Changed, a filter serves its assistants what it matches now
+    ana_only = "/user/{}/project/{}/caselists/{}/filters/{}/edit".format(
+        login, PROJECT, LIST_ID, _filter_id(config, project_id, "Ana only")
+    )
+    res = testapp.get(ana_only, status=200)
+    assert b'id="filter-cases"' in res.body
+    res = testapp.post(
+        ana_only,
+        {
+            "filter_name": "Ana only",
+            "filter_rules": _i_d_is(802),
+            "assignees": "assistant:" + uuids[ANA],
+            "save_filter": "1",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    assert _received(test_object, ANA)[1] == [cases[BEN]]
+    # Deleted, it serves nobody
+    res = testapp.post(
+        "/user/{}/project/{}/caselists/{}/filters/{}/delete".format(
+            login, PROJECT, LIST_ID, _filter_id(config, project_id, "Everything")
+        ),
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    assert _received(test_object, BEN)[1] == []
 
     # A mode the server does not know is refused
     res = testapp.post(

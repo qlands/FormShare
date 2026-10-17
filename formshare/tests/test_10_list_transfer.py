@@ -68,6 +68,9 @@ class _Project:
         self.assigns = True
         # The repositories whose unassigned cases went to their registrars
         self.backfilled = []
+        # The filters of lists in mode filters, by list, and those saved
+        self.list_filters = {}
+        self.saved_filters = []
 
     def install(self, test):
         replaced = {
@@ -94,6 +97,10 @@ class _Project:
             "project_has_crowdsourcing": lambda r, p: self.crowdsourcing,
             "repository_assigns_cases": lambda r, schema: self.assigns,
             "assign_unassigned_cases": lambda r, schema: self.backfilled.append(schema),
+            "get_list_filters": lambda r, p, list_id: list(
+                self.list_filters.get(list_id, [])
+            ),
+            "save_list_filter": self.save_list_filter,
         }
         for name, function in replaced.items():
             original = getattr(lt, name)
@@ -113,6 +120,10 @@ class _Project:
             return False, "the database said no"
         self.columns_set[list_id] = list(columns)
         return True, ""
+
+    def save_list_filter(self, r, p, list_id, filter_id, name, rules, sql, given):
+        self.saved_filters.append((list_id, name, rules, sql, given))
+        return True, "f-" + name
 
     def delete_published_list(self, r, p, list_id):
         self.deleted.append(list_id)
@@ -863,3 +874,123 @@ class WhoReceivesWhichCases(unittest.TestCase):
         farmers, mine = lt.list_document(self.request, "P")["lists"]
         self.assertNotIn("receivers", farmers)
         self.assertEqual(mine["receivers"], "submitted_by")
+
+
+class ReceiverFilters(unittest.TestCase):
+    """The filters of a list in mode "filters" travel with it, given to
+    nobody: assistants and groups are the exporting project's."""
+
+    def setUp(self):
+        self.project = _Project()
+        self.project.install(self)
+        self.request = _Request()
+
+    def run_import(self, a_list):
+        return lt.import_lists(
+            self.request, "P", _document([a_list], [VISITS]), "owner"
+        )
+
+    def test_they_are_exported_without_whom_they_are_given_to(self):
+        self.project.lists = [
+            {
+                "list_id": "zones",
+                "list_filename": "zones.csv",
+                "list_format": "csv",
+                "geometry_column": None,
+                "source_project": "P",
+                "source_form": "reg",
+                "source_table": "maintable",
+                "label_column": "farmer_name",
+                "list_key_column": None,
+                "list_active": 1,
+                "list_createdate": datetime.datetime(2026, 10, 17, 9, 0),
+                "filter_rules": None,
+                "list_filter_mode": "filters",
+            }
+        ]
+        kitui = {
+            "condition": "AND",
+            "rules": [{"id": "t.county", "operator": "equal", "value": "kitui"}],
+        }
+        self.project.list_filters["zones"] = [
+            {
+                "filter_name": "Kitui",
+                "filter_rules": json.dumps(kitui),
+                "assignees": [{"assignee_type": "group", "assignee_id": "g1"}],
+            },
+            {"filter_name": "Everyone", "filter_rules": None, "assignees": []},
+        ]
+        original = lt.get_list_columns
+        lt.get_list_columns = lambda r, p, list_id: []
+        self.addCleanup(setattr, lt, "get_list_columns", original)
+        (zones,) = lt.list_document(self.request, "P")["lists"]
+        self.assertEqual(zones["receivers"], "filters")
+        self.assertEqual(
+            zones["receiver_filters"],
+            [{"name": "Kitui", "filter": kitui}, {"name": "Everyone", "filter": None}],
+        )
+
+    def test_they_are_imported_compiled_and_given_to_nobody(self):
+        kitui = {
+            "condition": "AND",
+            "rules": [{"id": "t.county", "operator": "equal", "value": "kitui"}],
+        }
+        _, errors, warnings = self.run_import(
+            _farmers(
+                receivers="filters",
+                receiver_filters=[
+                    {"name": "Kitui", "filter": kitui},
+                    {"name": "Everyone", "filter": None},
+                ],
+            )
+        )
+        self.assertEqual(errors, [])
+        kitui_saved, everyone = self.project.saved_filters
+        self.assertEqual(kitui_saved[:3], ("farmers", "Kitui", json.dumps(kitui)))
+        self.assertIn("county", kitui_saved[3])
+        self.assertEqual(kitui_saved[4], [])
+        self.assertEqual(everyone, ("farmers", "Everyone", None, "1 = 1", []))
+        self.assertEqual(
+            warnings,
+            [
+                'List "farmers": its filters arrived given to nobody. Give them '
+                "to assistants and groups on the list's page"
+            ],
+        )
+
+    def test_what_is_refused(self):
+        def refusal(**changes):
+            _, errors, _ = self.run_import(_farmers(**changes))
+            self.assertEqual(self.project.added_lists, [])
+            self.assertEqual(self.project.saved_filters, [])
+            self.assertEqual(len(errors), 1)
+            return errors[0]
+
+        self.assertIn(
+            "serve only a list in mode filters",
+            refusal(receiver_filters=[{"name": "Kitui", "filter": None}]),
+        )
+        self.assertIn(
+            "the name of another",
+            refusal(
+                receivers="filters",
+                receiver_filters=[{"name": "A"}, {"name": "A"}],
+            ),
+        )
+        self.assertIn(
+            'the receiver filter "A"',
+            refusal(
+                receivers="filters",
+                receiver_filters=[
+                    {
+                        "name": "A",
+                        "filter": {
+                            "condition": "AND",
+                            "rules": [
+                                {"id": "t.nowhere", "operator": "equal", "value": "x"}
+                            ],
+                        },
+                    }
+                ],
+            ),
+        )

@@ -288,6 +288,9 @@ def db_request():
         PublishedList,
         PublishedListColumn,
         ListVariant,
+        ListFilter,
+        ListFilterAssignee,
+        Collingroup,
         ListConsumer,
         MediaFile,
     )
@@ -312,6 +315,9 @@ def db_request():
             PublishedList.__table__,
             PublishedListColumn.__table__,
             ListVariant.__table__,
+            ListFilter.__table__,
+            ListFilterAssignee.__table__,
+            Collingroup.__table__,
             ListConsumer.__table__,
             MediaFile.__table__,
         ],
@@ -2016,3 +2022,91 @@ def test_forgetting_a_lists_variants_deletes_their_files(db_request, monkeypatch
     ]
     assert cm.get_list_variant(db_request, "p", "roster", "k1") is None
     assert cm.get_list_variant(db_request, "p", "centre_lists", "k1") is not None
+
+
+def test_in_mode_filters_an_assistant_receives_what_any_filter_matches():
+    roster = {"source_table": "maintable", "list_filter_mode": "filters"}
+    assert cm.list_variant_clause(roster, "FS_abc", "ana", []) == cm.NO_CASES
+    assert cm.list_variant_clause(roster, "FS_abc", "ana", None) == cm.NO_CASES
+    assert (
+        cm.list_variant_clause(roster, "FS_abc", None, ["{t}`zone` = 2"]) == cm.NO_CASES
+    )
+    assert cm.list_variant_clause(
+        roster, "FS_abc", "ana", ["{t}`zone` = 2", "{p}`risk` > 3"]
+    ) == ("({t}`zone` = 2) OR ({p}`risk` > 3)")
+
+
+def test_a_filter_of_a_property_joins_the_properties():
+    sql, _ = cm.build_list_select(
+        "FS_abc", "maintable", "hh_name", [], variant_sql="({p}`risk` > 3)"
+    )
+    assert "LEFT JOIN `FS_abc`.`maintable_properties` AS p" in sql
+    assert "(p.`risk` > 3)" in sql
+
+
+def test_filters_are_saved_given_and_resolved_through_groups(db_request):
+    from formshare.models.formshare import Collingroup
+
+    db_request.dbsession.add(
+        Collingroup(project_id="p", group_id="g1", coll_uuid="ben-uuid", coll_id="ben")
+    )
+    db_request.dbsession.commit()
+    saved, zone2 = cm.save_list_filter(
+        db_request,
+        "p",
+        "roster",
+        None,
+        "Zone 2",
+        '{"rules": []}',
+        "{t}`zone` = 2",
+        [("assistant", "ana-uuid"), ("group", "g1")],
+    )
+    assert saved
+    saved, zone3 = cm.save_list_filter(
+        db_request,
+        "p",
+        "roster",
+        None,
+        "Zone 3",
+        None,
+        "{t}`zone` = 3",
+        [("assistant", "ben-uuid")],
+    )
+    assert saved
+    # A name is a list's once
+    assert cm.save_list_filter(
+        db_request, "p", "roster", None, "Zone 2", None, "1 = 1", []
+    ) == (False, 'The list already has a filter called "Zone 2"')
+    filters = cm.get_list_filters(db_request, "p", "roster")
+    assert [a_filter["filter_name"] for a_filter in filters] == ["Zone 2", "Zone 3"]
+    assert sorted(
+        (an["assignee_type"], an["assignee_id"]) for an in filters[0]["assignees"]
+    ) == [("assistant", "ana-uuid"), ("group", "g1")]
+    # Ben has Zone 3 himself and Zone 2 through his group; the order is the
+    # filters' ids, so the same filters make the same clause
+    expected = [
+        sql for _, sql in sorted([(zone2, "{t}`zone` = 2"), (zone3, "{t}`zone` = 3")])
+    ]
+    assert cm.assistant_filter_sql(db_request, "p", "roster", "ben-uuid") == expected
+    assert cm.assistant_filter_sql(db_request, "p", "roster", "ana-uuid") == [
+        "{t}`zone` = 2"
+    ]
+    assert cm.assistant_filter_sql(db_request, "p", "roster", "carol-uuid") == []
+    # Changed, it is given anew
+    assert cm.save_list_filter(
+        db_request,
+        "p",
+        "roster",
+        zone2,
+        "Zone 2 north",
+        None,
+        "{t}`zone` = 22",
+        [("assistant", "carol-uuid")],
+    ) == (True, zone2)
+    assert cm.assistant_filter_sql(db_request, "p", "roster", "carol-uuid") == [
+        "{t}`zone` = 22"
+    ]
+    assert cm.assistant_filter_sql(db_request, "p", "roster", "ana-uuid") == []
+    assert cm.delete_list_filter(db_request, "p", "roster", zone3) == (True, "")
+    assert cm.assistant_filter_sql(db_request, "p", "roster", "ben-uuid") == []
+    assert cm.get_list_filter(db_request, "p", "roster", zone3) is None

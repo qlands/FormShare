@@ -30,6 +30,8 @@ from formshare.models.formshare import (
     PublishedList,
     PublishedListColumn,
     ListVariant,
+    ListFilter,
+    ListFilterAssignee,
     TableProperty,
     PropertyAction,
     ActionRun,

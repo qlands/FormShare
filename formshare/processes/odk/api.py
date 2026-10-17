@@ -57,6 +57,7 @@ from formshare.processes.db import (
     variant_file_name,
     manifest_assigns_cases,
     assign_case_to_registrar,
+    assistant_filter_sql,
     get_list_variant,
     record_list_variant,
     list_is_stale,
@@ -3070,17 +3071,32 @@ def is_csv_a_select(request, project_id, form_id, file_name, file_path):
     return True
 
 
-def refresh_list_variant(request, project_id, list_data, schema, login):
-    """Makes sure the variant of a list that an assistant receives is current,
-    generating it when it is missing or older than its source's last change
-    (formshare.md 3.8). Returns its MD5 and the name its file is kept under in
-    the project's storage, or (None, None) when it could not be generated.
+def caller_clause(request, project_id, list_data, schema, assistant_uuid):
+    """The clause of the variant of a list that the assistant asking receives
+    (list_variant_clause): their login, and in mode "filters" the filters
+    given to them. assistant_uuid is None when nobody is asking."""
+    login = None
+    assistant_filters = None
+    if assistant_uuid is not None:
+        login = get_assistant_login(request, assistant_uuid)
+        if list_data.get("list_filter_mode") == "filters":
+            assistant_filters = assistant_filter_sql(
+                request, project_id, list_data["list_id"], assistant_uuid
+            )
+    return list_variant_clause(list_data, schema, login, assistant_filters)
+
+
+def refresh_list_variant(request, project_id, list_data, schema, clause):
+    """Makes sure the variant of a list with this clause (caller_clause) is
+    current, generating it when it is missing or older than its source's last
+    change (formshare.md 3.8). Returns its MD5 and the name its file is kept
+    under in the project's storage, or (None, None) when it could not be
+    generated.
 
     Assistants whose clauses are the same share the variant, so one pull
     generates it for all of them, under the same freshness rule as a form's
     copy of a list in mode "all".
     """
-    clause = list_variant_clause(list_data, schema, login)
     key = variant_key(clause)
     file_name = variant_file_name(list_data, key)
     variant = get_list_variant(request, project_id, list_data["list_id"], key)
@@ -3139,7 +3155,6 @@ def refresh_published_lists(request, project_id, form, form_files, assistant_uui
     for a_list in published:
         lists_by_filename[a_list["list_filename"]] = a_list
     refreshed = {}
-    login = None
     for a_file in form_files:
         a_list = lists_by_filename.get(a_file["file_name"])
         if a_list is None:
@@ -3150,9 +3165,13 @@ def refresh_published_lists(request, project_id, form, form_files, assistant_uui
             # generate from and the stored file (if any) stands.
             continue
         if (a_list.get("list_filter_mode") or "all") != "all":
-            if login is None and assistant_uuid is not None:
-                login = get_assistant_login(request, assistant_uuid)
-            md5sum, _ = refresh_list_variant(request, project_id, a_list, schema, login)
+            md5sum, _ = refresh_list_variant(
+                request,
+                project_id,
+                a_list,
+                schema,
+                caller_clause(request, project_id, a_list, schema, assistant_uuid),
+            )
             if md5sum is not None:
                 refreshed[a_file["file_name"]] = md5sum
             continue
@@ -3977,12 +3996,9 @@ def get_media_file(request, project_id, form_id, file_id, assistant_uuid=None):
         ):
             schema = get_list_source_schema(request, list_data)
             if schema:
-                login = (
-                    get_assistant_login(request, assistant_uuid)
-                    if assistant_uuid is not None
-                    else None
+                clause = caller_clause(
+                    request, project_id, list_data, schema, assistant_uuid
                 )
-                clause = list_variant_clause(list_data, schema, login)
                 file_name = variant_file_name(list_data, variant_key(clause))
                 stream = get_stream(request, project_id, file_name)
                 if stream is None:
@@ -3990,7 +4006,7 @@ def get_media_file(request, project_id, form_id, file_id, assistant_uuid=None):
                     # variant is made now. One the manifest made is served as
                     # it is, so that its hash is the one the manifest gave.
                     _, file_name = refresh_list_variant(
-                        request, project_id, list_data, schema, login
+                        request, project_id, list_data, schema, clause
                     )
                     if file_name is not None:
                         stream = get_stream(request, project_id, file_name)

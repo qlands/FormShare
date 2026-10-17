@@ -1,0 +1,107 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{% if filterData %}{{ _("Edit filter") }}{% else %}{{ _("Add a filter") }}{% endif %}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','select2' %}
+    {% cssresource request,'formshare','querybuilder' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','select2' %}
+    {% jsresource request,'formshare','querybuilder' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% set crumb_current = listData.list_filename %}
+    {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_lists.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-lg-12">
+            {% block form_errors %}
+                {{ form.display_errors(errors) }}
+            {% endblock form_errors %}
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h2>{% if filterData %}{{ _('Filter') }} <b>{{ filterData.filter_name }}</b>{% else %}{{ _('A new filter') }}{% endif %}</h2>
+                    <p>
+                        {{ _('The assistants and groups it is given to receive the cases of') }} <code>{{ listData.list_filename }}</code> {{ _('it matches, and an assistant with several filters what any of them matches. A filter with no condition gives every case, for someone who follows the whole study.') }}
+                    </p>
+                    {% if filterData and filterCases is not none %}
+                        <p id="filter-cases">{{ _('It matches this many cases now:') }} <b>{{ filterCases }}</b></p>
+                    {% endif %}
+                    <form method="post" id="list-filter-form">
+                        {{ form.secure_form(request) }}
+                        <div class="form-group">
+                            <label for="filter_name">{{ _('Name') }}</label>
+                            <input type="text" class="form-control" name="filter_name" id="filter_name" value="{{ filterName }}" maxlength="120" required>
+                        </div>
+                        <div class="form-group">
+                            <label>{{ _('Cases where') }}</label>
+                            {% if filterWords %}
+                                <p class="text-muted" id="filter-words">{{ filterWords }}</p>
+                            {% endif %}
+                            <div id="filter-builder"></div>
+                            <input type="hidden" name="filter_rules" id="filter-rules" value="">
+                        </div>
+                        <div class="form-group">
+                            <label for="assignees">{{ _('Given to') }}</label>
+                            <select name="assignees" id="assignees" class="form-control" multiple="multiple" style="width: 100%">
+                                {% if groups %}
+                                    <optgroup label="{{ _('Groups') }}">
+                                        {% for a_group in groups %}
+                                            {% set value = 'group:' + a_group.group_id %}
+                                            <option value="{{ value }}" {% if value in chosen %}selected{% endif %}>{{ a_group.group_desc }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endif %}
+                                {% for a_project in assistants %}
+                                    <optgroup label="{{ _('Assistants of') }} {{ a_project.project_desc }}">
+                                        {% for an_assistant in a_project.assistants %}
+                                            {% set value = 'assistant:' + an_assistant.uuid %}
+                                            <option value="{{ value }}" {% if value in chosen %}selected{% endif %}>{{ an_assistant.name }} ({{ an_assistant.id }})</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" name="save_filter" value="1" class="btn btn-primary" id="filter-save">{{ _('Save the filter') }}</button>
+                        <a class="btn btn-white" href="{{ request.route_url('project_case_list_edit', userid=userid, projcode=projcode, listid=listData.list_id) }}">{{ _('Back to the list') }}</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        var filterFields = {{ filterFields|tojson }};
+        var filterRules = {{ filterRules|tojson }};
+        $(document).ready(function() {
+            $("#assignees").select2();
+            if (filterFields.length) {
+                $("#filter-builder").queryBuilder({
+                    filters: filterFields,
+                    allow_empty: true,
+                    plugins: ["not-group"],
+                    icons: { add_group: "fas fa-plus-circle", add_rule: "fas fa-plus", remove_group: "fas fa-times", remove_rule: "fas fa-times", error: "fas fa-exclamation-triangle" }
+                });
+                $("#filter-builder").queryBuilder("setRules", filterRules && filterRules.rules ? filterRules : {condition: "AND", rules: []});
+            }
+            $("#list-filter-form").on("submit", function () {
+                if (!filterFields.length) { return true; }
+                var rules = $("#filter-builder").queryBuilder("getRules", {allow_invalid: false});
+                if (rules === null) { return false; }
+                $("#filter-rules").val(rules.rules && rules.rules.length ? JSON.stringify(rules) : "");
+                return true;
+            });
+        });
+    </script>
+{% endblock scripts %}

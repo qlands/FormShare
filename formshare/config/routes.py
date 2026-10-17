@@ -83,6 +83,8 @@ from formshare.views.case_management import (
     AddPublishedListView,
     EditPublishedListView,
     DeletePublishedListView,
+    ListFilterView,
+    DeleteListFilterView,
     FormTablesApiView,
     TableFieldsApiView,
     SampleListView,
@@ -465,6 +467,35 @@ def load_routes(config, settings):
             "project_case_list_delete",
             "/user/{userid}/project/{projcode}/caselists/{listid}/delete",
             DeletePublishedListView,
+            None,
+        )
+    )
+
+    # The filters of a list in mode "filters" (formshare.md 3.8): who receives
+    # which cases
+    routes.append(
+        add_route(
+            "project_case_list_filter_add",
+            "/user/{userid}/project/{projcode}/caselists/{listid}/filters/add",
+            ListFilterView,
+            "dashboard/projects/case_management/list_filter.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_case_list_filter_edit",
+            "/user/{userid}/project/{projcode}/caselists/{listid}/filters/{filterid}/edit",
+            ListFilterView,
+            "dashboard/projects/case_management/list_filter.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_case_list_filter_delete",
+            "/user/{userid}/project/{projcode}/caselists/{listid}/filters/{filterid}/delete",
+            DeleteListFilterView,
             None,
         )
     )

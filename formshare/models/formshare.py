@@ -1035,6 +1035,58 @@ class ListVariant(Base):
     publishedlist = relationship("PublishedList")
 
 
+class ListFilter(Base):
+    """A named filter of a list in mode "filters" (feature 7, formshare.md
+    3.8): "Kajiado North", "the schools of zone 2". The assistants and groups
+    it is given to receive the cases it matches; an assistant with several
+    receives what any of them matches. filter_rules is QueryBuilder's JSON,
+    the stored truth, and filter_sql is compiled from it
+    (processes/list_filter.py) as the list's own filter is."""
+
+    __tablename__ = "listfilter"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "list_id"],
+            ["publishedlist.project_id", "publishedlist.list_id"],
+            ondelete="CASCADE",
+        ),
+        UniqueConstraint("project_id", "list_id", "filter_name"),
+    )
+
+    project_id = Column(Unicode(64), primary_key=True, nullable=False)
+    list_id = Column(Unicode(120), primary_key=True, nullable=False)
+    filter_id = Column(Unicode(64), primary_key=True, nullable=False)
+    filter_name = Column(Unicode(120), nullable=False)
+    filter_rules = Column(MEDIUMTEXT())
+    filter_sql = Column(MEDIUMTEXT())
+    filter_cdate = Column(DateTime)
+
+    publishedlist = relationship("PublishedList")
+
+
+class ListFilterAssignee(Base):
+    """Who a list's filter is given to: an assistant, by coll_uuid -- one of
+    the project's, one shared from another project of its owner, or a global
+    one -- or a group of the project, by group_id."""
+
+    __tablename__ = "listfilterassignee"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "list_id", "filter_id"],
+            ["listfilter.project_id", "listfilter.list_id", "listfilter.filter_id"],
+            ondelete="CASCADE",
+        ),
+    )
+
+    project_id = Column(Unicode(64), primary_key=True, nullable=False)
+    list_id = Column(Unicode(120), primary_key=True, nullable=False)
+    filter_id = Column(Unicode(64), primary_key=True, nullable=False)
+    assignee_type = Column(Unicode(10), primary_key=True, nullable=False)
+    assignee_id = Column(Unicode(120), primary_key=True, nullable=False)
+
+    listfilter = relationship("ListFilter")
+
+
 class ListConsumer(Base):
     """A form that feeds, reads or updates a published list.
 

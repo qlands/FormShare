@@ -41,6 +41,11 @@ from formshare.processes.db.case_management import (
     valid_list_mode,
     repository_assigns_cases,
     assign_unassigned_cases,
+    get_list_filters,
+    get_list_filter,
+    save_list_filter,
+    delete_list_filter,
+    count_list_cases,
     sync_form_consumers,
     update_published_list,
     valid_list_filename,
@@ -67,6 +72,8 @@ from formshare.processes.odk.api import (
     get_odk_path,
 )
 from formshare.processes.db.form import get_project_forms
+from formshare.processes.db.assistant import get_all_assistants
+from formshare.processes.db.assistant_group import get_project_groups
 from formshare.processes.db.project import (
     project_has_crowdsourcing,
     get_project_access_type,
@@ -574,7 +581,34 @@ class EditPublishedListView(ListSection):
             "filterWords": describe_filter(list_data.get("filter_rules"), fields),
             "geometryColumns": geometry_columns(table_columns),
             "crowdsourcing": crowdsourcing,
+            "listFilters": self.list_filters(user_id, project_id, list_data, fields),
         }
+
+    def list_filters(self, user_id, project_id, list_data, fields):
+        """The list's filters as its page shows them, in mode "filters": the
+        conditions in words, whom each is given to, and how many cases it
+        matches now."""
+        if list_data.get("list_filter_mode") != "filters":
+            return []
+        _, _, names = assignable(self.request, self.user, user_id, project_id)
+        filters = get_list_filters(self.request, project_id, list_data["list_id"])
+        for a_filter in filters:
+            a_filter["words"] = (
+                describe_filter(a_filter["filter_rules"], fields)
+                if a_filter["filter_rules"]
+                else ""
+            )
+            a_filter["given"] = sorted(
+                names.get(
+                    (an_assignee["assignee_type"], an_assignee["assignee_id"]),
+                    self._("(removed)"),
+                )
+                for an_assignee in a_filter["assignees"]
+            )
+            a_filter["cases"] = count_list_cases(
+                self.request, list_data, a_filter["filter_sql"]
+            )
+        return filters
 
     def assigns_cases(self, list_data):
         """Whether the list's source records who each case is assigned to. A
@@ -664,6 +698,208 @@ class DeletePublishedListView(ListSection):
         )
         if deleted:
             self.request.session.flash(self._("The list was deleted"))
+            return HTTPFound(location=next_page)
+        self.append_to_errors(message)
+        return HTTPFound(location=next_page, headers={"FS_error": "true"})
+
+
+def assignable(request, user, user_id, project_id):
+    """Who a list's filter can be given to: (groups, assistants, names). The
+    groups are the project's; the assistants are those its forms can be
+    given to, grouped by project as the form page offers them. names maps
+    (assignee_type, assignee_id) to what the pages show."""
+    groups = get_project_groups(request, project_id)
+    assistants = get_all_assistants(request, user_id, project_id, user.tenant)
+    names = {}
+    for a_group in groups:
+        names[("group", a_group["group_id"])] = a_group["group_desc"]
+    for a_project in assistants:
+        for an_assistant in a_project["assistants"]:
+            an_assistant["uuid"] = an_assistant["code"].split("|")[-1]
+            names[("assistant", an_assistant["uuid"])] = "{} ({})".format(
+                an_assistant["name"], an_assistant["id"]
+            )
+    return groups, assistants, names
+
+
+class ListFilterView(EditPublishedListView):
+    """A filter of a list in mode "filters" (formshare.md 3.8): its name, its
+    conditions, built with QueryBuilder over the list's columns and
+    properties as the list's own filter is, and the assistants and groups it
+    is given to, who receive the cases it matches."""
+
+    def process_view(self):
+        user_id, project_code, project_id, project_details = self.project_or_404()
+        list_id = self.request.matchdict["listid"]
+        list_data = get_published_list(self.request, project_id, list_id)
+        if list_data is None or list_data.get("list_filter_mode") != "filters":
+            raise HTTPNotFound
+        filter_id = self.request.matchdict.get("filterid")
+        filter_data = None
+        if filter_id is not None:
+            filter_data = get_list_filter(self.request, project_id, list_id, filter_id)
+            if filter_data is None:
+                raise HTTPNotFound
+        source = (
+            list_data["source_project"],
+            list_data["source_form"],
+            list_data["source_table"],
+        )
+        fields = filter_fields(
+            get_table_columns(self.request, *source),
+            get_table_properties(self.request, *source),
+        )
+        encrypted = encrypted_columns(self.request, *source)
+        groups, assistants, names = assignable(
+            self.request, self.user, user_id, project_id
+        )
+        chosen = [
+            (an_assignee["assignee_type"], an_assignee["assignee_id"])
+            for an_assignee in (filter_data or {}).get("assignees", [])
+        ]
+        name = (filter_data or {}).get("filter_name", "")
+        rules = (filter_data or {}).get("filter_rules")
+        if self.request.method == "POST":
+            post_data = self.get_post_dict()
+            name = str(post_data.get("filter_name", "") or "").strip()
+            rules = str(post_data.get("filter_rules", "") or "").strip()
+            given = post_data.get("assignees", [])
+            if not isinstance(given, list):
+                given = [given]
+            chosen = []
+            for a_value in given:
+                assignee_type, _, assignee_id = str(a_value).partition(":")
+                if (assignee_type, assignee_id) in names:
+                    chosen.append((assignee_type, assignee_id))
+            error = None
+            filter_sql = None
+            if name == "":
+                error = self._("Name the filter")
+            elif sorted(referenced_columns(rules) & encrypted):
+                error = encrypted_column_message(
+                    self._,
+                    sorted(referenced_columns(rules) & encrypted)[0],
+                    self._("read by a list's filter"),
+                )
+            else:
+                try:
+                    # No condition is every case: the filter of a supervisor
+                    # who follows the whole study
+                    filter_sql = compile_filter(rules, fields) or "1 = 1"
+                except FilterError as e:
+                    error = str(e)
+            if error is None:
+                error = self.try_variant(list_data, filter_sql)
+            if error is not None:
+                self.append_to_errors(error)
+            else:
+                saved, result = save_list_filter(
+                    self.request,
+                    project_id,
+                    list_id,
+                    filter_id,
+                    name,
+                    rules or None,
+                    filter_sql,
+                    chosen,
+                )
+                if not saved:
+                    self.append_to_errors(result)
+                else:
+                    # Who receives what has changed: every variant is made
+                    # again at the next pull that asks for it
+                    forget_list_variants(self.request, project_id, list_id)
+                    self.request.session.flash(self._("The filter was saved"))
+                    self.returnRawViewResult = True
+                    return HTTPFound(
+                        location=self.request.route_url(
+                            "project_case_list_edit",
+                            userid=user_id,
+                            projcode=project_code,
+                            listid=list_id,
+                        )
+                    )
+        try:
+            stored_rules = json.loads(rules) if rules else None
+        except ValueError:
+            stored_rules = None
+        return {
+            "projectDetails": project_details,
+            "userid": user_id,
+            "projcode": project_code,
+            "listData": list_data,
+            "filterData": filter_data,
+            "filterName": name,
+            "filterFields": querybuilder_filters(
+                fields, self.select_choices(list_data, fields)
+            ),
+            "filterRules": stored_rules,
+            "filterWords": describe_filter(rules, fields) if rules else "",
+            "filterCases": (
+                count_list_cases(self.request, list_data, filter_data["filter_sql"])
+                if filter_data
+                else None
+            ),
+            "groups": groups,
+            "assistants": assistants,
+            "chosen": ["{}:{}".format(*an_assignee) for an_assignee in chosen],
+        }
+
+    def try_variant(self, list_data, filter_sql):
+        """Runs the list's SELECT with the filter as an assistant's clause,
+        one row at most, so that a filter the database refuses is refused
+        here and not at the next pull."""
+        schema = get_list_source_schema(self.request, list_data)
+        if not schema:
+            return None
+        try:
+            sql, _ = build_list_select(
+                schema,
+                list_data["source_table"],
+                list_data["label_column"],
+                [],
+                list_data.get("filter_sql"),
+                limit=1,
+                active=list_data.get("list_active", 1),
+                key_column=list_data.get("list_key_column"),
+                variant_sql=filter_sql,
+            )
+            self.request.dbsession.execute(text(sql)).fetchall()
+        except Exception as e:
+            self.request.dbsession.rollback()
+            return self._("The filter could not run on the list's source: {}").format(
+                str(e)
+            )
+        return None
+
+
+class DeleteListFilterView(ListSection):
+    def __init__(self, request):
+        ListSection.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+
+    def process_view(self):
+        user_id, project_code, project_id, project_details = self.project_or_404()
+        if self.request.method != "POST":
+            raise HTTPNotFound
+        list_id = self.request.matchdict["listid"]
+        filter_id = self.request.matchdict["filterid"]
+        if get_list_filter(self.request, project_id, list_id, filter_id) is None:
+            raise HTTPNotFound
+        self.returnRawViewResult = True
+        deleted, message = delete_list_filter(
+            self.request, project_id, list_id, filter_id
+        )
+        next_page = self.request.route_url(
+            "project_case_list_edit",
+            userid=user_id,
+            projcode=project_code,
+            listid=list_id,
+        )
+        if deleted:
+            forget_list_variants(self.request, project_id, list_id)
+            self.request.session.flash(self._("The filter was deleted"))
             return HTTPFound(location=next_page)
         self.append_to_errors(message)
         return HTTPFound(location=next_page, headers={"FS_error": "true"})

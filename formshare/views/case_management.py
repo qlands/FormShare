@@ -46,6 +46,7 @@ from formshare.processes.db.case_management import (
     save_list_filter,
     delete_list_filter,
     count_list_cases,
+    list_coverage,
     sync_form_consumers,
     update_published_list,
     valid_list_filename,
@@ -582,6 +583,11 @@ class EditPublishedListView(ListSection):
             "geometryColumns": geometry_columns(table_columns),
             "crowdsourcing": crowdsourcing,
             "listFilters": self.list_filters(user_id, project_id, list_data, fields),
+            "listCoverage": (
+                None
+                if crowdsourcing
+                else list_coverage(self.request, project_id, list_data)
+            ),
         }
 
     def list_filters(self, user_id, project_id, list_data, fields):

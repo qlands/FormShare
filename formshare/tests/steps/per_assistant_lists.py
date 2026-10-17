@@ -334,6 +334,16 @@ def t_e_s_t_per_assistant_lists(test_object):
     _assign(config, schema, cases[ANA], BEN)
     assert _received(test_object, ANA)[1] == []
     assert _received(test_object, BEN)[1] == every_case
+    res = testapp.get(edit, status=200)
+    assert b"Every case of the list reaches an assistant" in res.body
+    # One assigned to someone who cannot download the list reaches nobody,
+    # and the page says which
+    _assign(config, schema, cases[BEN], "someone_else")
+    res = testapp.get(edit, status=200)
+    assert b'id="coverage-cases"' in res.body
+    assert b"assigned to nobody, or to someone" in res.body
+    assert cases[BEN].encode() in res.body
+    _assign(config, schema, cases[BEN], BEN)
     # Who registered it does not change
     res = testapp.post(
         edit, {"list_filter_mode": "submitted_by", "change_mode": "1"}, status=302
@@ -380,6 +390,12 @@ def t_e_s_t_per_assistant_lists(test_object):
     assert "FS_error" not in res.headers
     assert _received(test_object, ANA)[1] == [cases[ANA]]
     assert _received(test_object, BEN)[1] == []
+    # Ben and Carol have no filter yet, and Ben's case no filter matches
+    res = testapp.get(edit, status=200)
+    assert b'id="coverage-assistants"' in res.body
+    assert b"pa_ben (pa_ben)" in res.body and b"pa_carol (pa_carol)" in res.body
+    assert b"No filter matches them" in res.body
+    assert cases[BEN].encode() in res.body
     # A filter with no condition gives every case, here to the group
     res = testapp.post(
         add,
@@ -398,6 +414,11 @@ def t_e_s_t_per_assistant_lists(test_object):
     res = testapp.get(edit, status=200)
     assert b'id="list-filters-table"' in res.body
     assert b"Supervisors" in res.body
+    # Only Carol is left without a filter, and every case reaches someone
+    coverage = res.body[res.body.index(b'id="coverage-assistants"') :]
+    coverage = coverage[: coverage.index(b"</p>")]
+    assert b"pa_carol (pa_carol)" in coverage and b"pa_ben" not in coverage
+    assert b"Every case of the list reaches an assistant" in res.body
     res = testapp.get(
         "/user/{}/project/{}/caselists".format(login, PROJECT), status=200
     )

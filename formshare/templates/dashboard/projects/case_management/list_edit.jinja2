@@ -151,6 +151,38 @@
                                 <a class="btn btn-primary btn-sm" id="list-filter-add" href="{{ request.route_url('project_case_list_filter_add', userid=userid, projcode=projcode, listid=listData.list_id) }}">{{ _('Add a filter') }}</a>
                             </div>
                         {% endif %}
+                        {% if listCoverage %}
+                            <div id="list-coverage" class="m-t-md">
+                                <h4>{{ _('Who receives nothing') }}</h4>
+                                {% if listCoverage.receivers == 0 %}
+                                    <p class="text-warning" id="coverage-receivers">{{ _('No active assistant can download a form that carries this list yet.') }}</p>
+                                {% endif %}
+                                {% if listCoverage.mode == 'filters' and listCoverage.receivers %}
+                                    {% if listCoverage.without_filters %}
+                                        <p class="text-warning" id="coverage-assistants">{{ _('These assistants can download the list and have no filter, so they receive no case:') }} {{ listCoverage.without_filters|join(', ') }}</p>
+                                    {% else %}
+                                        <p id="coverage-assistants">{{ _('Every assistant who can download the list has a filter.') }}</p>
+                                    {% endif %}
+                                {% endif %}
+                                {% if listCoverage.unreceived %}
+                                    <p class="text-warning" id="coverage-cases">
+                                        {{ _('Cases no assistant receives:') }} <b>{{ listCoverage.unreceived }}</b>.
+                                        {% if listCoverage.mode == 'filters' %}{{ _('No filter matches them.') }}{% elif listCoverage.mode == 'submitted_by' %}{{ _('Whoever registered them cannot download the list.') }}{% else %}{{ _('They are assigned to nobody, or to someone who cannot download the list.') }}{% endif %}
+                                        {% if listCoverage.unreceived > listCoverage.examples|length %}{{ _('The first ones:') }}{% endif %}
+                                    </p>
+                                    <table class="table table-sm" id="coverage-examples">
+                                        <thead><tr><th>{{ _('Label') }}</th><th>{{ _('Name (the row identity)') }}</th></tr></thead>
+                                        <tbody>
+                                        {% for a_name, a_label in listCoverage.examples %}
+                                            <tr><td>{{ a_label }}</td><td><code>{{ a_name }}</code></td></tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% elif listCoverage.unreceived == 0 %}
+                                    <p id="coverage-cases">{{ _('Every case of the list reaches an assistant.') }}</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
                     {% endif %}
                     <div class="hr-line-dashed"></div>
                     <h3>{{ _('Label') }}</h3>

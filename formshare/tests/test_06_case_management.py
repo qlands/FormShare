@@ -2110,3 +2110,28 @@ def test_filters_are_saved_given_and_resolved_through_groups(db_request):
     assert cm.delete_list_filter(db_request, "p", "roster", zone3) == (True, "")
     assert cm.assistant_filter_sql(db_request, "p", "roster", "ben-uuid") == []
     assert cm.get_list_filter(db_request, "p", "roster", zone3) is None
+
+
+def test_the_cases_nobody_receives():
+    """The coverage warning (formshare.md 3.8): in mode filters the cases no
+    filter matches, otherwise those whose registrar or assignee cannot
+    download the list."""
+    roster = {"source_table": "maintable", "list_filter_mode": "filters"}
+    assert cm.unreceived_clause(roster, "FS_abc", [], []) == "1 = 1"
+    assert (
+        cm.unreceived_clause(roster, "FS_abc", [], ["{t}`zone` = 2", "1 = 1"])
+        == "NOT COALESCE(({t}`zone` = 2) OR (1 = 1), 0)"
+    )
+    roster["list_filter_mode"] = "assigned_to"
+    assert cm.unreceived_clause(roster, "FS_abc", [], None) == "1 = 1"
+    assert cm.unreceived_clause(roster, "FS_abc", ["ben", "ana", "ana"], None) == (
+        "({t}`_assigned_to` IS NULL OR HEX({t}`_assigned_to`) NOT IN "
+        "('616E61','62656E'))"
+    )
+    roster.update(source_table="rpt_members", list_filter_mode="submitted_by")
+    assert cm.unreceived_clause(roster, "FS_abc", ["ana"], None) == (
+        "{t}`root_rowuuid` NOT IN (SELECT `rowuuid` FROM `FS_abc`.`maintable` "
+        "WHERE HEX(`_submitted_by`) IN ('616E61'))"
+    )
+    roster["list_filter_mode"] = "all"
+    assert cm.unreceived_clause(roster, "FS_abc", ["ana"], None) is None

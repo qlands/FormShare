@@ -50,6 +50,9 @@ from formshare.models import (
     ListFilter,
     ListFilterAssignee,
     Collingroup,
+    Collaborator,
+    Formacces,
+    Formgrpacces,
     ListConsumer,
     MediaFile,
     TableProperty,
@@ -60,6 +63,7 @@ from formshare.models import (
 )
 from formshare.processes.logging.loggerclass import SecretLogger
 from formshare.processes.storage import delete_stream
+from formshare.processes.db.assistant import get_assistant_login
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -143,6 +147,9 @@ __all__ = [
     "delete_list_filter",
     "assistant_filter_sql",
     "count_list_cases",
+    "list_receivers",
+    "unreceived_clause",
+    "list_coverage",
     "list_variant_clause",
     "variant_key",
     "variant_file_name",
@@ -1178,6 +1185,166 @@ def assistant_filter_sql(request, project_id, list_id, assistant_uuid):
                 if a_filter["filter_sql"]:
                     filters[a_filter["filter_id"]] = a_filter["filter_sql"]
     return [filters[a_key] for a_key in sorted(filters)]
+
+
+def list_receivers(request, project_id, list_data):
+    """The active assistants who can download a form that carries a list:
+    those given one of the project's forms that attach its file, directly or
+    through a group. [{"coll_uuid", "coll_id", "coll_name", "login"}], by
+    name."""
+    forms = [
+        a_row[0]
+        for a_row in request.dbsession.query(MediaFile.form_id)
+        .filter(MediaFile.project_id == project_id)
+        .filter(MediaFile.file_name == list_data["list_filename"])
+        .all()
+    ]
+    if not forms:
+        return []
+    direct = (
+        request.dbsession.query(Collaborator)
+        .filter(Collaborator.coll_uuid == Formacces.coll_uuid)
+        .filter(Formacces.form_project == project_id)
+        .filter(Formacces.form_id.in_(forms))
+        .filter(Collaborator.coll_active == 1)
+        .all()
+    )
+    through_groups = (
+        request.dbsession.query(Collaborator)
+        .filter(Formgrpacces.project_id == Collingroup.project_id)
+        .filter(Formgrpacces.group_id == Collingroup.group_id)
+        .filter(Collingroup.coll_uuid == Collaborator.coll_uuid)
+        .filter(Formgrpacces.form_project == project_id)
+        .filter(Formgrpacces.form_id.in_(forms))
+        .filter(Collaborator.coll_active == 1)
+        .all()
+    )
+    receivers = {}
+    for a_collaborator in direct + through_groups:
+        if a_collaborator.coll_uuid not in receivers:
+            receivers[a_collaborator.coll_uuid] = {
+                "coll_uuid": a_collaborator.coll_uuid,
+                "coll_id": a_collaborator.coll_id,
+                "coll_name": a_collaborator.coll_name or a_collaborator.coll_id,
+                "login": get_assistant_login(request, a_collaborator.coll_uuid),
+            }
+    return sorted(
+        receivers.values(),
+        key=lambda a_receiver: (a_receiver["coll_name"], a_receiver["coll_id"]),
+    )
+
+
+def unreceived_clause(list_data, schema, logins, filters):
+    """The clause of the cases a list in a mode other than "all" serves to
+    nobody: in "filters", the cases no filter matches (filters, compiled);
+    otherwise those whose registrar or assignee is none of logins, the
+    assistants who can download the list, or nobody. None in mode "all"."""
+    mode = list_data.get("list_filter_mode") or "all"
+    if mode == "filters":
+        if not filters:
+            return "1 = 1"
+        # A case no filter matches, NULL included: a comparison with a
+        # missing value matches nothing
+        return "NOT COALESCE((" + ") OR (".join(filters) + "), 0)"
+    column = MODE_COLUMNS.get(mode)
+    if column is None:
+        return None
+    hexes = sorted(
+        {
+            "'" + str(a_login).encode("utf-8").hex().upper() + "'"
+            for a_login in logins
+            if a_login
+        }
+    )
+    if not hexes:
+        return "1 = 1"
+    if list_data["source_table"] == "maintable":
+        return (
+            "({t}`"
+            + column
+            + "` IS NULL OR HEX({t}`"
+            + column
+            + "`) NOT IN ("
+            + ",".join(hexes)
+            + "))"
+        )
+    return (
+        "{t}`root_rowuuid` NOT IN (SELECT `rowuuid` FROM "
+        + _quoted(schema)
+        + ".`maintable` WHERE HEX(`"
+        + column
+        + "`) IN ("
+        + ",".join(hexes)
+        + "))"
+    )
+
+
+def list_coverage(request, project_id, list_data, examples=20):
+    """What a list that serves each assistant their own cases leaves out
+    (formshare.md 3.8, the two coverage warnings): the assistants who can
+    download it and whom no filter is given to, in mode "filters", and the
+    cases no assistant receives, with the first few. None in mode "all" or
+    before the source has a repository."""
+    mode = list_data.get("list_filter_mode") or "all"
+    if mode == "all":
+        return None
+    schema = get_list_source_schema(request, list_data)
+    if not schema:
+        return None
+    receivers = list_receivers(request, project_id, list_data)
+    filters = None
+    without_filters = []
+    if mode == "filters":
+        filters = [
+            a_filter["filter_sql"]
+            for a_filter in sorted(
+                get_list_filters(request, project_id, list_data["list_id"]),
+                key=lambda a_filter: a_filter["filter_id"],
+            )
+            if a_filter["filter_sql"]
+        ]
+        without_filters = [
+            "{} ({})".format(a_receiver["coll_name"], a_receiver["coll_id"])
+            for a_receiver in receivers
+            if not assistant_filter_sql(
+                request, project_id, list_data["list_id"], a_receiver["coll_uuid"]
+            )
+        ]
+    clause = unreceived_clause(
+        list_data,
+        schema,
+        [a_receiver["login"] for a_receiver in receivers],
+        filters,
+    )
+    unreceived = count_list_cases(request, list_data, clause)
+    first = []
+    if unreceived:
+        sql, _ = build_list_select(
+            schema,
+            list_data["source_table"],
+            list_data["label_column"],
+            [],
+            list_data.get("filter_sql"),
+            limit=examples,
+            active=list_data.get("list_active", 1),
+            key_column=list_data.get("list_key_column"),
+            variant_sql=clause,
+        )
+        try:
+            first = [
+                (a_row[0], a_row[1])
+                for a_row in request.dbsession.execute(text(sql)).fetchall()
+            ]
+        except Exception as e:
+            request.dbsession.rollback()
+            log.error("Error {} while listing the cases nobody receives".format(str(e)))
+    return {
+        "mode": mode,
+        "receivers": len(receivers),
+        "without_filters": without_filters,
+        "unreceived": unreceived,
+        "examples": first,
+    }
 
 
 # ---------------------------------------------------------------------------

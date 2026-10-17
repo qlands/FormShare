@@ -334,6 +334,7 @@ class ODKManifest(ODKView):
                                         project_code,
                                         project_id,
                                         form_id,
+                                        assistant_uuid,
                                     )
                                 )
                             else:
@@ -345,7 +346,12 @@ class ODKManifest(ODKView):
                 else:
                     return self.create_xmll_response(
                         get_manifest(
-                            self.request, user_id, project_code, project_id, form_id
+                            self.request,
+                            user_id,
+                            project_code,
+                            project_id,
+                            form_id,
+                            assistant_uuid,
                         )
                     )
             else:
@@ -424,7 +430,11 @@ class ODKMediaFile(ODKView):
                                 get_assistant_password(self.request, assistant_uuid)
                             ):
                                 return get_media_file(
-                                    self.request, project_id, form_id, file_id
+                                    self.request,
+                                    project_id,
+                                    form_id,
+                                    file_id,
+                                    assistant_uuid,
                                 )
                             else:
                                 return self.ask_for_credentials()
@@ -433,7 +443,9 @@ class ODKMediaFile(ODKView):
                     else:
                         return self.ask_for_credentials()
                 else:
-                    return get_media_file(self.request, project_id, form_id, file_id)
+                    return get_media_file(
+                        self.request, project_id, form_id, file_id, assistant_uuid
+                    )
             else:
                 return get_media_file(self.request, project_id, form_id, file_id)
         else:

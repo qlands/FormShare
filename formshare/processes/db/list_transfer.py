@@ -42,10 +42,12 @@ from formshare.processes.db.case_management import (
     get_table_properties,
     set_list_columns,
     valid_list_filename,
+    valid_list_mode,
     validate_property_default,
 )
 from formshare.processes.db.encryption import encrypted_columns
 from formshare.processes.db.form import get_form_data
+from formshare.processes.db.project import project_has_crowdsourcing
 from formshare.processes.list_filter import (
     FilterError,
     compile_filter,
@@ -90,6 +92,7 @@ _LIST_KEYS = (
     "filter",
     "format",
     "geometry_column",
+    "receivers",
 )
 
 
@@ -138,6 +141,13 @@ def list_document(request, project_id, list_ids=None):
         rules = _stored_rules(a_list.get("filter_rules"))
         if rules:
             entry["filter"] = rules
+        receivers = a_list.get("list_filter_mode") or "all"
+        if receivers != "all":
+            # Who receives which cases (stage 8). Written only when it is not
+            # everyone, so a list in mode all exports as it always has, and a
+            # server that cannot serve assistants one by one refuses the key
+            # rather than serve every case to everyone.
+            entry["receivers"] = receivers
         if a_list.get("list_format") == "geojson":
             entry["format"] = "geojson"
             entry["geometry_column"] = a_list.get("geometry_column")
@@ -381,6 +391,7 @@ def _check_properties(request, project_id, document, list_sources, sources, erro
 def _check_lists(request, project_id, document, sources, defined, errors, warnings, _):
     """The lists to add, each with its columns, ready for add_published_list."""
     to_add = []
+    crowdsourcing = project_has_crowdsourcing(request, project_id)
     entries = document.get("lists")
     if not isinstance(entries, list) or not entries:
         errors.append(_("The file has no lists"))
@@ -401,6 +412,7 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
         label_column = _text(entry.get("label_column"))[0] or ""
         key_column = _text(entry.get("key_column"))[0] or None
         rows = _text(entry.get("rows"))[0] or "active"
+        receivers = _text(entry.get("receivers"))[0] or "all"
         list_format = _text(entry.get("format"))[0] or "csv"
         geometry_column = _text(entry.get("geometry_column"))[0] or None
         where = '{} "{}"'.format(_("List"), code or index)
@@ -434,6 +446,18 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
         taken_files.add(file_name)
         if rows not in ("active", "inactive"):
             problems.append(_("its rows are active or inactive"))
+        if not valid_list_mode(receivers, crowdsourcing):
+            if crowdsourcing and valid_list_mode(receivers, False):
+                problems.append(
+                    _(
+                        "it serves each assistant their own cases, and a "
+                        "crowdsourcing project has no assistants to tell apart"
+                    )
+                )
+            else:
+                problems.append(
+                    _('"{}" is not a way of serving a list').format(receivers)
+                )
         unknown = sorted(str(a_key) for a_key in entry if a_key not in _LIST_KEYS)
         if unknown:
             warnings.append(
@@ -572,6 +596,7 @@ def _check_lists(request, project_id, document, sources, defined, errors, warnin
                     "list_key_column": key_column,
                     "filter_rules": filter_rules,
                     "filter_sql": filter_sql,
+                    "list_filter_mode": receivers,
                 },
                 served,
             )

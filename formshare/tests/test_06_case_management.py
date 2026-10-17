@@ -287,6 +287,7 @@ def db_request():
         Odkform,
         PublishedList,
         PublishedListColumn,
+        ListVariant,
         ListConsumer,
         MediaFile,
     )
@@ -310,6 +311,7 @@ def db_request():
             Odkform.__table__,
             PublishedList.__table__,
             PublishedListColumn.__table__,
+            ListVariant.__table__,
             ListConsumer.__table__,
             MediaFile.__table__,
         ],
@@ -1868,3 +1870,131 @@ def test_the_installed_jxformtomysql_keeps_a_select_from_an_empty_list_external(
     )
     assert farm.get("rtable") in (None, "")
     assert create.find(".//table[@name='lkpfarm']") is None
+
+
+# ---------------------------------------------------------------------------
+# Who receives which cases (feature 7, stage 8, formshare.md 3.8)
+# ---------------------------------------------------------------------------
+
+_SUBMITTED_BY_ANA = "HEX({t}`_submitted_by`) = '616E61'"
+
+
+def test_a_variant_clause_comes_after_the_lists_own_filter():
+    sql, _ = cm.build_list_select(
+        "FS_abc",
+        "maintable",
+        "hh_name",
+        [],
+        "status = 'open'",
+        variant_sql=_SUBMITTED_BY_ANA,
+    )
+    assert (
+        " WHERE _active = 1 AND status = 'open' AND HEX(`_submitted_by`) = '616E61' "
+        in sql
+    )
+
+
+def test_a_variant_clause_takes_the_alias_when_properties_are_joined():
+    sql, _ = cm.build_list_select(
+        "FS_abc",
+        "maintable",
+        "hh_name",
+        [("risk", None, "property")],
+        variant_sql=_SUBMITTED_BY_ANA,
+    )
+    assert "HEX(t.`_submitted_by`) = '616E61'" in sql
+
+
+def test_submitted_by_reads_maintable_and_a_repeat_row_its_root():
+    assert cm.submitted_by_clause("FS_abc", "maintable", "ana") == _SUBMITTED_BY_ANA
+    assert cm.submitted_by_clause("FS_abc", "rpt_members", "ana") == (
+        "{t}`root_rowuuid` IN (SELECT `rowuuid` FROM `FS_abc`.`maintable` "
+        "WHERE HEX(`_submitted_by`) = '616E61')"
+    )
+
+
+def test_a_login_cannot_change_the_statement():
+    """The login is spelled in hexadecimal: whatever it holds, the clause is
+    the same statement with other digits."""
+    login = "o'neil@x.org; DROP"
+    clause = cm.submitted_by_clause("FS_abc", "maintable", login)
+    assert clause == (
+        "HEX({t}`_submitted_by`) = '" + login.encode("utf-8").hex().upper() + "'"
+    )
+
+
+def test_a_list_in_mode_all_has_no_variant():
+    roster = {"source_table": "maintable", "list_filter_mode": "all"}
+    assert cm.list_variant_clause(roster, "FS_abc", "ana") is None
+    assert (
+        cm.list_variant_clause({"source_table": "maintable"}, "FS_abc", "ana") is None
+    )
+
+
+def test_no_assistant_and_an_unknown_mode_receive_no_cases():
+    roster = {"source_table": "maintable", "list_filter_mode": "submitted_by"}
+    assert cm.list_variant_clause(roster, "FS_abc", "ana") == _SUBMITTED_BY_ANA
+    assert cm.list_variant_clause(roster, "FS_abc", None) == cm.NO_CASES
+    assert cm.list_variant_clause(roster, "FS_abc", "public") == cm.NO_CASES
+    roster["list_filter_mode"] = "a mode from a newer server"
+    assert cm.list_variant_clause(roster, "FS_abc", "ana") == cm.NO_CASES
+
+
+def test_a_crowdsourcing_project_serves_every_case_to_everyone():
+    assert cm.valid_list_mode("all", True)
+    assert not cm.valid_list_mode("submitted_by", True)
+    assert cm.valid_list_mode("submitted_by", False)
+    assert not cm.valid_list_mode("whoever", False)
+
+
+def test_assistants_with_the_same_clause_share_a_variant():
+    assert cm.variant_key(_SUBMITTED_BY_ANA) == cm.variant_key(_SUBMITTED_BY_ANA)
+    assert cm.variant_key(_SUBMITTED_BY_ANA) != cm.variant_key(cm.NO_CASES)
+    key = cm.variant_key(cm.NO_CASES)
+    assert cm.variant_file_name(
+        {"list_id": "roster", "list_filename": "roster.csv"}, key
+    ) == "_fs_list_roster_{}.csv".format(key)
+
+
+def test_a_variant_is_recorded_once_and_updated(db_request):
+    first = datetime.datetime(2026, 10, 17, 9, 0, 0)
+    second = datetime.datetime(2026, 10, 17, 9, 5, 0)
+    assert cm.record_list_variant(db_request, "p", "roster", "k1", "md5a", first)
+    assert cm.record_list_variant(db_request, "p", "roster", "k1", "md5b", second)
+    variant = cm.get_list_variant(db_request, "p", "roster", "k1")
+    assert (variant["variant_md5"], variant["variant_lastgen"]) == ("md5b", second)
+    assert cm.get_list_variant(db_request, "p", "roster", "k2") is None
+
+
+def test_a_change_to_the_list_makes_its_variants_stale(db_request):
+    when = datetime.datetime(2026, 10, 17, 9, 0, 0)
+    cm.record_list_variant(db_request, "p", "roster", "k1", "md5a", when)
+    cm.record_list_variant(db_request, "p", "centre_lists", "k1", "md5c", when)
+    assert cm.invalidate_list_copies(db_request, "p", "roster")[0]
+    assert (
+        cm.get_list_variant(db_request, "p", "roster", "k1")["variant_lastgen"] is None
+    )
+    assert (
+        cm.get_list_variant(db_request, "p", "centre_lists", "k1")["variant_lastgen"]
+        == when
+    )
+
+
+def test_forgetting_a_lists_variants_deletes_their_files(db_request, monkeypatch):
+    deleted = []
+    monkeypatch.setattr(
+        cm,
+        "delete_stream",
+        lambda request, bucket, name: deleted.append((bucket, name)),
+    )
+    when = datetime.datetime(2026, 10, 17, 9, 0, 0)
+    cm.record_list_variant(db_request, "p", "roster", "k1", "md5a", when)
+    cm.record_list_variant(db_request, "p", "roster", "k2", "md5b", when)
+    cm.record_list_variant(db_request, "p", "centre_lists", "k1", "md5c", when)
+    assert cm.forget_list_variants(db_request, "p", "roster")
+    assert sorted(deleted) == [
+        ("p", "_fs_list_roster_k1.csv"),
+        ("p", "_fs_list_roster_k2.csv"),
+    ]
+    assert cm.get_list_variant(db_request, "p", "roster", "k1") is None
+    assert cm.get_list_variant(db_request, "p", "centre_lists", "k1") is not None

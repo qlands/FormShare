@@ -26,6 +26,7 @@ import datetime
 import decimal
 import logging
 import re
+from hashlib import md5
 from subprocess import Popen, PIPE
 import tempfile
 import shutil
@@ -33,6 +34,7 @@ import os
 import uuid
 
 from lxml import etree
+from sqlalchemy.exc import IntegrityError
 
 from formshare.processes.list_filter import (
     resolve as resolve_filter,
@@ -43,6 +45,7 @@ from formshare.processes.list_filter import (
 from formshare.models import (
     PublishedList,
     PublishedListColumn,
+    ListVariant,
     ListConsumer,
     MediaFile,
     TableProperty,
@@ -52,6 +55,7 @@ from formshare.models import (
     map_from_schema,
 )
 from formshare.processes.logging.loggerclass import SecretLogger
+from formshare.processes.storage import delete_stream
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -65,6 +69,7 @@ __all__ = [
     "update_published_list",
     "delete_published_list",
     "get_published_list",
+    "get_published_list_by_filename",
     "get_project_published_lists",
     "set_list_columns",
     "get_list_columns",
@@ -119,6 +124,16 @@ __all__ = [
     "inherit_properties",
     "generate_published_list_file",
     "project_has_lists",
+    "LIST_MODES",
+    "NO_CASES",
+    "valid_list_mode",
+    "submitted_by_clause",
+    "list_variant_clause",
+    "variant_key",
+    "variant_file_name",
+    "get_list_variant",
+    "record_list_variant",
+    "forget_list_variants",
 ]
 
 # The file name is the entire coupling between the registry and the form
@@ -158,6 +173,7 @@ def build_list_select(
     active=1,
     key_column=None,
     symbolic=False,
+    variant_sql=None,
 ):
     """The SELECT that generates a published list.
 
@@ -173,6 +189,10 @@ def build_list_select(
         ``schema.table`` -- the SELECT a device runs over its mirror
         (lists.xml, formshare.md 3.10); everything else is the same text,
         which SQLite accepts as written
+    :param variant_sql: the clause of the variant an assistant receives
+        (list_variant_clause), with the same markers as filter_sql, ANDed
+        in after the list's own filter. Never in lists.xml: a device's own
+        unsent cases are its own to see
     :return: (sql, headers) -- headers in CSV order
 
     ``name`` is always rowuuid and always first; ``label`` always second.
@@ -180,9 +200,11 @@ def build_list_select(
     # A property column joins <table>_properties; the join and the aliases
     # appear only then, so a list without properties reads as before. A
     # filter that reads a property needs the join too, served or not.
-    uses_properties = any(
-        len(col) > 2 and col[2] == "property" for col in columns
-    ) or filter_uses_properties(filter_sql)
+    uses_properties = (
+        any(len(col) > 2 and col[2] == "property" for col in columns)
+        or filter_uses_properties(filter_sql)
+        or filter_uses_properties(variant_sql)
+    )
     t = "t." if uses_properties else ""
     # A row list is keyed by the source row's rowuuid: one row per source row,
     # linkable as a case. A value list is keyed by a column -- a list of
@@ -236,6 +258,8 @@ def build_list_select(
         # Compiled by processes/list_filter.py, with markers for the
         # aliases, which only this function knows.
         where.append(resolve_filter(filter_sql, t))
+    if variant_sql:
+        where.append(resolve_filter(variant_sql, t))
     if where:
         sql = sql + " WHERE " + " AND ".join(where)
     # A value list has no rowuuid to order by; its values order it instead.
@@ -371,7 +395,9 @@ def write_list_geojson(settings, sql, kind, file_name):
     return False, reason + (": " + detail if detail else ""), 0
 
 
-def geojson_list_select(request, list_data, schema, columns, limit=None):
+def geojson_list_select(
+    request, list_data, schema, columns, limit=None, variant_sql=None
+):
     """The SELECT of a GeoJSON list with its location appended, and the kind
     of that location: (sql, kind), or (None, message) when the location
     column is not a geopoint, geotrace or geoshape of the source table."""
@@ -399,6 +425,7 @@ def geojson_list_select(request, list_data, schema, columns, limit=None):
         list_data.get("filter_sql"),
         limit=limit,
         active=list_data.get("list_active", 1),
+        variant_sql=variant_sql,
     )
     return sql, kind
 
@@ -455,6 +482,8 @@ def update_published_list(request, project_id, list_id, list_data):
 
 
 def delete_published_list(request, project_id, list_id):
+    # Its variants' rows go by cascade; their files are deleted here
+    forget_list_variants(request, project_id, list_id)
     try:
         request.dbsession.query(PublishedList).filter(
             PublishedList.project_id == project_id
@@ -476,6 +505,20 @@ def get_published_list(request, project_id, list_id):
         request.dbsession.query(PublishedList)
         .filter(PublishedList.project_id == project_id)
         .filter(PublishedList.list_id == list_id)
+        .first()
+    )
+    if res is None:
+        return None
+    return map_from_schema(res)
+
+
+def get_published_list_by_filename(request, project_id, file_name):
+    """The project's list served under this file name, or None: the name is
+    unique in a project, and it is the whole coupling with a form."""
+    res = (
+        request.dbsession.query(PublishedList)
+        .filter(PublishedList.project_id == project_id)
+        .filter(PublishedList.list_filename == file_name)
         .first()
     )
     if res is None:
@@ -557,7 +600,8 @@ def invalidate_list_copies(request, project_id, list_id):
     copies are the media files named after the list in its project, which is
     also how the gate finds them: a form that attached the file by name is
     served the regenerated list whether or not it has a ListConsumer row, so
-    it is invalidated the same way.
+    it is invalidated the same way. The variants an assistant receives
+    (ListVariant) are copies too, and go stale with them.
     """
     list_data = get_published_list(request, project_id, list_id)
     if list_data is None:
@@ -567,6 +611,11 @@ def invalidate_list_copies(request, project_id, list_id):
             MediaFile.project_id == project_id
         ).filter(MediaFile.file_name == list_data["list_filename"]).update(
             {"file_lastgen": None}, synchronize_session=False
+        )
+        request.dbsession.query(ListVariant).filter(
+            ListVariant.project_id == project_id
+        ).filter(ListVariant.list_id == list_id).update(
+            {"variant_lastgen": None}, synchronize_session=False
         )
         request.dbsession.commit()
         return True, ""
@@ -635,11 +684,12 @@ def get_list_source_schema(request, list_data):
     return res[0]
 
 
-def generate_published_list_file(request, list_data, out_path):
+def generate_published_list_file(request, list_data, out_path, variant_sql=None):
     """Generates the list's file and stamps the edition.
 
     Bumps list_seq and list_lastgen only when generation succeeded, so a
-    failed generation leaves the previous edition current.
+    failed generation leaves the previous edition current. variant_sql makes
+    it the file of one variant (list_variant_clause).
     """
     schema = get_list_source_schema(request, list_data)
     if schema is None or schema == "":
@@ -660,7 +710,9 @@ def generate_published_list_file(request, list_data, out_path):
             "list_lastgen": datetime.datetime.now(),
         }
         if list_data.get("list_format") == "geojson":
-            sql, kind = geojson_list_select(request, list_data, schema, columns)
+            sql, kind = geojson_list_select(
+                request, list_data, schema, columns, variant_sql=variant_sql
+            )
             if sql is None:
                 return False, kind
             written, message, skipped = write_list_geojson(
@@ -678,6 +730,7 @@ def generate_published_list_file(request, list_data, out_path):
                 list_data.get("filter_sql"),
                 active=list_data.get("list_active", 1),
                 key_column=list_data.get("list_key_column"),
+                variant_sql=variant_sql,
             )
             rows = request.dbsession.execute(sql).fetchall()
             write_list_csv(headers, rows, out_path)
@@ -693,6 +746,157 @@ def generate_published_list_file(request, list_data, out_path):
             )
         )
         return False, str(e)
+
+
+# ---------------------------------------------------------------------------
+# Who receives which cases (feature 7, formshare.md 3.8)
+# ---------------------------------------------------------------------------
+
+# A list's mode. In "all", one file every device receives: the copy each
+# consuming form keeps. In the others each assistant receives a variant, the
+# list's SELECT with a clause of theirs ANDed in, chosen by who the manifest
+# and media requests authenticate, never by a parameter. "assigned_to" and
+# "filters" come with the next slices of stage 8.
+LIST_MODES = ("all", "submitted_by")
+# The clause of a variant that serves no case: the list serves assistants one
+# by one, and no assistant is asking.
+NO_CASES = "1 = 0"
+
+
+def valid_list_mode(mode, crowdsourcing):
+    """Whether a list may take this mode. A crowdsourcing project has no
+    assistants, only "public", so it cannot serve anyone their own cases."""
+    if crowdsourcing:
+        return mode == "all"
+    return mode in LIST_MODES
+
+
+def submitted_by_clause(schema, table, login):
+    """The rows an assistant registered: those of the submissions that carry
+    their login in _submitted_by. The control columns live on maintable, so a
+    row of a repeat table is matched through its root_rowuuid. The login is
+    compared by its bytes, as the list's own filter compares text (the
+    repository's collation ignores case and trailing spaces), and spelled in
+    hexadecimal, so that no login can change the statement."""
+    login_hex = str(login).encode("utf-8").hex().upper()
+    if table == "maintable":
+        return "HEX({t}`_submitted_by`) = '" + login_hex + "'"
+    return (
+        "{t}`root_rowuuid` IN (SELECT `rowuuid` FROM "
+        + _quoted(schema)
+        + ".`maintable` WHERE HEX(`_submitted_by`) = '"
+        + login_hex
+        + "')"
+    )
+
+
+def list_variant_clause(list_data, schema, login):
+    """The clause of the variant of a list that an assistant receives, or None
+    for a list in mode "all", which everyone receives alike. login is the
+    assistant's (get_assistant_login), or None when no assistant asks."""
+    mode = list_data.get("list_filter_mode") or "all"
+    if mode == "all":
+        return None
+    if not login or login == "public":
+        return NO_CASES
+    if mode == "submitted_by":
+        return submitted_by_clause(schema, list_data["source_table"], login)
+    # A mode this server does not know serves nothing rather than everything
+    return NO_CASES
+
+
+def variant_key(clause):
+    """A variant's name: the MD5 of its clause, so that assistants whose
+    clauses are the same share a file."""
+    return md5(clause.encode("utf-8")).hexdigest()
+
+
+def variant_file_name(list_data, key):
+    """The name a variant's file is kept under in the project's storage."""
+    extension = os.path.splitext(list_data["list_filename"])[1]
+    return "_fs_list_{}_{}{}".format(list_data["list_id"], key, extension)
+
+
+def get_list_variant(request, project_id, list_id, key):
+    res = (
+        request.dbsession.query(ListVariant)
+        .filter(ListVariant.project_id == project_id)
+        .filter(ListVariant.list_id == list_id)
+        .filter(ListVariant.variant_key == key)
+        .first()
+    )
+    if res is None:
+        return None
+    return map_from_schema(res)
+
+
+def record_list_variant(request, project_id, list_id, key, md5sum, generated):
+    """Records a variant's file as generated at `generated`: the database's
+    clock read before generating (refresh_published_lists says why)."""
+    stamp = {"variant_md5": md5sum, "variant_lastgen": generated}
+    for _attempt in range(2):
+        try:
+            updated = (
+                request.dbsession.query(ListVariant)
+                .filter(ListVariant.project_id == project_id)
+                .filter(ListVariant.list_id == list_id)
+                .filter(ListVariant.variant_key == key)
+                .update(stamp, synchronize_session=False)
+            )
+            if not updated:
+                request.dbsession.add(
+                    ListVariant(
+                        project_id=project_id,
+                        list_id=list_id,
+                        variant_key=key,
+                        **stamp,
+                    )
+                )
+            request.dbsession.commit()
+            return True
+        except IntegrityError:
+            # Two devices of the same variant pulled at once, and the other
+            # recorded it first: update the row it made
+            request.dbsession.rollback()
+        except Exception as e:
+            request.dbsession.rollback()
+            log.error(
+                "Error {} while recording variant {} of list {} of project {}".format(
+                    str(e), key, list_id, project_id
+                )
+            )
+            return False
+    return False
+
+
+def forget_list_variants(request, project_id, list_id):
+    """Deletes a list's variants with their files: the list changes mode, so
+    no variant of the old one is served again, or the list goes."""
+    list_data = get_published_list(request, project_id, list_id)
+    if list_data is None:
+        return False
+    variants = (
+        request.dbsession.query(ListVariant.variant_key)
+        .filter(ListVariant.project_id == project_id)
+        .filter(ListVariant.list_id == list_id)
+        .all()
+    )
+    for a_variant in variants:
+        delete_stream(request, project_id, variant_file_name(list_data, a_variant[0]))
+    try:
+        request.dbsession.query(ListVariant).filter(
+            ListVariant.project_id == project_id
+        ).filter(ListVariant.list_id == list_id).delete()
+        request.dbsession.commit()
+        return True
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while deleting the variants of list {} of project {}".format(
+                str(e), list_id, project_id
+            )
+        )
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -2027,7 +2231,7 @@ def regenerate_properties_audit(request, schema, table_name):
     settings = request.registry.settings
     tool = os.path.join(
         settings["odktools.path"],
-        *["utilities", "createAuditTriggers", "createaudittriggers"]
+        *["utilities", "createAuditTriggers", "createaudittriggers"],
     )
     out_dir = tempfile.mkdtemp(prefix="fs_properties_")
     try:

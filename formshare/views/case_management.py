@@ -37,6 +37,8 @@ from formshare.processes.db.case_management import (
     set_case_link,
     set_list_columns,
     invalidate_list_copies,
+    forget_list_variants,
+    valid_list_mode,
     sync_form_consumers,
     update_published_list,
     valid_list_filename,
@@ -64,6 +66,7 @@ from formshare.processes.odk.api import (
 )
 from formshare.processes.db.form import get_project_forms
 from formshare.processes.db.project import (
+    project_has_crowdsourcing,
     get_project_access_type,
     get_project_details,
     get_project_id_from_name,
@@ -299,6 +302,7 @@ class EditPublishedListView(ListSection):
             list_data["source_form"],
             list_data["source_table"],
         )
+        crowdsourcing = project_has_crowdsourcing(self.request, project_id)
         # Every definition change below marks the served copies stale
         # (invalidate_list_copies): the devices get the new shape on their
         # next pull, not when the source next receives data.
@@ -421,6 +425,37 @@ class EditPublishedListView(ListSection):
                     invalidate_list_copies(self.request, project_id, list_id)
                     self.returnRawViewResult = True
                     return HTTPFound(self.request.url)
+            if "change_mode" in post_data.keys():
+                # Who receives which cases (formshare.md 3.8). The variants of
+                # the old mode are deleted, so none of them is served again.
+                mode = str(post_data.get("list_filter_mode", "") or "").strip()
+                if not valid_list_mode(mode, crowdsourcing):
+                    if crowdsourcing:
+                        self.append_to_errors(
+                            self._(
+                                "A crowdsourcing project has no assistants to tell "
+                                "apart, so its lists serve every case to everyone"
+                            )
+                        )
+                    else:
+                        self.append_to_errors(self._("Select who receives which cases"))
+                elif mode == (list_data.get("list_filter_mode") or "all"):
+                    self.returnRawViewResult = True
+                    return HTTPFound(self.request.url)
+                else:
+                    updated, message = update_published_list(
+                        self.request,
+                        project_id,
+                        list_id,
+                        {"list_filter_mode": mode},
+                    )
+                    if not updated:
+                        self.append_to_errors(message)
+                    else:
+                        forget_list_variants(self.request, project_id, list_id)
+                        invalidate_list_copies(self.request, project_id, list_id)
+                        self.returnRawViewResult = True
+                        return HTTPFound(self.request.url)
             if (
                 "change_filter" in post_data.keys()
                 or "clear_filter" in post_data.keys()
@@ -522,6 +557,7 @@ class EditPublishedListView(ListSection):
             "filterRules": self.stored_rules(list_data),
             "filterWords": describe_filter(list_data.get("filter_rules"), fields),
             "geometryColumns": geometry_columns(table_columns),
+            "crowdsourcing": crowdsourcing,
         }
 
     def try_filter(self, project_id, list_id, list_data, filter_sql):

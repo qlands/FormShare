@@ -63,6 +63,7 @@ class _Project:
         self.columns_set = {}
         self.deleted = []
         self.fail_columns_of = None
+        self.crowdsourcing = False
 
     def install(self, test):
         replaced = {
@@ -86,6 +87,7 @@ class _Project:
             "encrypted_columns": lambda r, p, f, t: set(
                 self.encrypted.get((f, t), set())
             ),
+            "project_has_crowdsourcing": lambda r, p: self.crowdsourcing,
         }
         for name, function in replaced.items():
             original = getattr(lt, name)
@@ -774,3 +776,72 @@ class GeoJSONLists(unittest.TestCase):
             ],
             [("plots", "geojson", "plot"), ("farmers", "csv", None)],
         )
+
+
+class WhoReceivesWhichCases(unittest.TestCase):
+    """A list that serves each assistant their own cases travels with its mode
+    (stage 8, formshare.md 3.8), and one that serves everyone exports as it
+    always has."""
+
+    def setUp(self):
+        self.project = _Project()
+        self.project.install(self)
+        self.request = _Request()
+
+    def run_import(self, a_list):
+        return lt.import_lists(
+            self.request, "P", _document([a_list], [VISITS]), "owner"
+        )
+
+    def test_the_mode_is_imported(self):
+        _, errors, _ = self.run_import(_farmers(receivers="submitted_by"))
+        self.assertEqual(errors, [])
+        self.assertEqual(
+            self.project.added_lists[0]["list_filter_mode"], "submitted_by"
+        )
+
+    def test_a_list_that_does_not_say_serves_everyone(self):
+        self.run_import(_farmers())
+        self.assertEqual(self.project.added_lists[0]["list_filter_mode"], "all")
+
+    def test_an_unknown_mode_is_refused(self):
+        _, errors, _ = self.run_import(_farmers(receivers="whoever"))
+        self.assertEqual(self.project.added_lists, [])
+        self.assertIn('"whoever" is not a way of serving a list', errors[0])
+
+    def test_a_crowdsourcing_project_serves_everyone(self):
+        self.project.crowdsourcing = True
+        _, errors, _ = self.run_import(_farmers(receivers="submitted_by"))
+        self.assertEqual(self.project.added_lists, [])
+        self.assertIn("no assistants to tell apart", errors[0])
+        _, errors, _ = self.run_import(_farmers(receivers="all"))
+        self.assertEqual(errors, [])
+
+    def test_the_export_says_it_only_when_it_is_not_everyone(self):
+        a_list = {
+            "list_format": "csv",
+            "geometry_column": None,
+            "source_project": "P",
+            "source_form": "reg",
+            "source_table": "maintable",
+            "label_column": "farmer_name",
+            "list_key_column": None,
+            "list_active": 1,
+            "list_createdate": datetime.datetime(2026, 10, 17, 9, 0),
+            "filter_rules": None,
+        }
+        self.project.lists = [
+            dict(a_list, list_id="farmers", list_filename="farmers.csv"),
+            dict(
+                a_list,
+                list_id="mine",
+                list_filename="mine.csv",
+                list_filter_mode="submitted_by",
+            ),
+        ]
+        original = lt.get_list_columns
+        lt.get_list_columns = lambda r, p, list_id: []
+        self.addCleanup(setattr, lt, "get_list_columns", original)
+        farmers, mine = lt.list_document(self.request, "P")["lists"]
+        self.assertNotIn("receivers", farmers)
+        self.assertEqual(mine["receivers"], "submitted_by")

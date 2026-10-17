@@ -19,10 +19,6 @@ import datetime
 import os
 import uuid
 from contextlib import contextmanager
-from subprocess import Popen, PIPE
-
-from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
 
 from formshare.processes.elasticsearch.repository_index import (
     add_dataset,
@@ -31,6 +27,7 @@ from formshare.processes.elasticsearch.repository_index import (
     get_index_name,
 )
 from formshare.processes.testing_data import RecordedTestingData
+from .in_process import add_task, build_in_process, form_row
 
 PROJECT = "handover"
 PARENT = "tormenta20201105"
@@ -42,44 +39,6 @@ SURVEY_COLUMNS = [
     "formshare_ontological_term",
     "formshare_unique",
 ]
-
-
-def _form_row(config, project_id, form_id):
-    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
-    try:
-        row = engine.execute(
-            "SELECT form_directory, form_schema, form_blocked, form_jsonfile, "
-            "form_createxmlfile, form_hexcolor FROM odkform "
-            "WHERE project_id = %s AND form_id = %s",
-            (project_id, form_id),
-        ).fetchone()
-        return dict(row._mapping)
-    finally:
-        engine.dispose()
-
-
-def _add_task(config, project_id, form_id, product_id, user):
-    """The product row a task reports its progress to."""
-    task_id = str(uuid.uuid4())
-    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
-    try:
-        engine.execute(
-            "INSERT INTO product (project_id, form_id, product_id, celery_taskid, "
-            "datetime_added, created_by, process_only, output_id) "
-            "VALUES (%s, %s, %s, %s, %s, %s, 1, %s)",
-            (
-                project_id,
-                form_id,
-                product_id,
-                task_id,
-                datetime.datetime.now(),
-                user,
-                task_id[-12:],
-            ),
-        )
-    finally:
-        engine.dispose()
-    return task_id
 
 
 def _submissions(test_object, form_directory):
@@ -163,7 +122,7 @@ def _a_submission_arrives_after_the_handover(
 
 
 def _check_the_cleanup(test_object, project_id, form_id, testing_id, late):
-    form_directory = _form_row(test_object.server_config, project_id, form_id)[
+    form_directory = form_row(test_object.server_config, project_id, form_id)[
         "form_directory"
     ]
     assert len(late) == 1, "the task never dealt with the testing data"
@@ -178,75 +137,6 @@ def _check_the_cleanup(test_object, project_id, form_id, testing_id, late):
     indexed = _indexed(test_object, project_id, form_id)
     assert testing_id not in indexed, "the testing document is still indexed"
     assert late_id in indexed, "the late submission lost its index document"
-
-
-def _build_in_process(test_object, project_id, form_id, primary_key, files):
-    """Builds a form's repository in this process, discarding its testing
-    data, as create_mysql_repository does in the worker."""
-    from formshare.products.repository.celery_task import (
-        internal_create_mysql_repository,
-    )
-
-    config = test_object.server_config
-    row = _form_row(config, project_id, form_id)
-    work = os.path.join(test_object.working_dir, "handover_" + uuid.uuid4().hex[:8])
-    os.makedirs(work)
-    output = {
-        name: os.path.join(work, name)
-        for name in (
-            "create.sql",
-            "create.xml",
-            "insert.sql",
-            "insert.xml",
-            "drop.sql",
-            "metadata.sql",
-            "manifest.xml",
-            "iso639.sql",
-        )
-    }
-    args = [
-        os.path.join(config["odktools.path"], "JXFormToMysql", "jxformtomysql"),
-        "-j " + row["form_jsonfile"],
-        "-t maintable",
-        "-v " + primary_key,
-        "-c " + output["create.sql"],
-        "-C " + output["create.xml"],
-        "-i " + output["insert.sql"],
-        "-D " + output["drop.sql"],
-        "-I " + output["insert.xml"],
-        "-m " + output["metadata.sql"],
-        "-f " + output["manifest.xml"],
-        "-T " + output["iso639.sql"],
-        "-e " + os.path.join(work, "temp"),
-        "-L",
-        "-o m",
-    ] + files
-    p = Popen(args, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = p.communicate()
-    assert p.returncode == 0, stdout + stderr
-
-    here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[0]
-    internal_create_mysql_repository(
-        config,
-        test_object.randonLogin,
-        project_id,
-        PROJECT,
-        form_id,
-        os.path.join(config["repository.path"], "odk"),
-        row["form_directory"],
-        "FS_" + str(uuid.uuid4()).replace("-", "_"),
-        primary_key,
-        os.path.join(here, "mysql.cnf"),
-        output["create.sql"],
-        output["insert.sql"],
-        output["create.xml"],
-        output["insert.xml"],
-        "",
-        "en",
-        True,
-        [],
-        _add_task(config, project_id, form_id, "repository", test_object.randonLogin),
-    )
 
 
 def t_e_s_t_testing_data_handover(test_object):
@@ -314,8 +204,8 @@ def t_e_s_t_testing_data_handover(test_object):
     record = repository_task.record_testing_data
     repository_task.record_testing_data = a_failing_record
     try:
-        _build_in_process(
-            test_object, project_id, PARENT, "numero_de_cedula", parent_files
+        build_in_process(
+            test_object, project_id, PROJECT, PARENT, "numero_de_cedula", parent_files
         )
     except RuntimeError:
         pass
@@ -323,21 +213,21 @@ def t_e_s_t_testing_data_handover(test_object):
         raise AssertionError("the build did not fail")
     finally:
         repository_task.record_testing_data = record
-    parent = _form_row(config, project_id, PARENT)
+    parent = form_row(config, project_id, PARENT)
     assert parent["form_schema"] is None
     assert parent["form_blocked"] == 0, "a failed build left the form blocked"
 
-    parent = _form_row(config, project_id, PARENT)
+    parent = form_row(config, project_id, PARENT)
     testing_id = _plant_submission(
         test_object, project_id, PARENT, parent["form_directory"]
     )
     with _a_submission_arrives_after_the_handover(
         test_object, project_id, PARENT, parent["form_directory"]
     ) as late:
-        _build_in_process(
-            test_object, project_id, PARENT, "numero_de_cedula", parent_files
+        build_in_process(
+            test_object, project_id, PROJECT, PARENT, "numero_de_cedula", parent_files
         )
-    parent = _form_row(config, project_id, PARENT)
+    parent = form_row(config, project_id, PARENT)
     assert parent["form_schema"] is not None
     assert parent["form_blocked"] == 0, "the build left the form blocked"
     _check_the_cleanup(test_object, project_id, PARENT, testing_id, late)
@@ -369,7 +259,7 @@ def t_e_s_t_testing_data_handover(test_object):
     assert "FS_error" not in res.headers
 
     # A real testing submission this time, through the pipeline
-    version = _form_row(config, project_id, VERSION)
+    version = form_row(config, project_id, VERSION)
     submissions = _submissions(test_object, version["form_directory"])
     testapp.post(
         "/user/{}/project/{}/push".format(login, PROJECT),
@@ -416,12 +306,12 @@ def t_e_s_t_testing_data_handover(test_object):
             "en",
             True,
             SURVEY_COLUMNS,
-            _add_task(config, project_id, VERSION, "merge_form", login),
+            add_task(config, project_id, VERSION, "merge_form", login),
         )
-    version = _form_row(config, project_id, VERSION)
+    version = form_row(config, project_id, VERSION)
     assert version["form_schema"] == parent["form_schema"]
     assert version["form_blocked"] == 0
-    assert _form_row(config, project_id, PARENT)["form_blocked"] == 0
+    assert form_row(config, project_id, PARENT)["form_blocked"] == 0
     _check_the_cleanup(test_object, project_id, VERSION, testing_id, late)
 
     # What the step leaves behind -- the planted submissions survive by

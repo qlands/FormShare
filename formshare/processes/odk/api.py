@@ -49,8 +49,14 @@ from formshare.processes.odk.geojson import (
 )
 from formshare.processes.db import (
     get_project_published_lists,
+    get_published_list_by_filename,
     get_list_source_schema,
     generate_published_list_file,
+    list_variant_clause,
+    variant_key,
+    variant_file_name,
+    get_list_variant,
+    record_list_variant,
     list_is_stale,
     update_media_lastgen,
     get_case_link_consumer,
@@ -3058,7 +3064,52 @@ def is_csv_a_select(request, project_id, form_id, file_name, file_path):
     return True
 
 
-def refresh_published_lists(request, project_id, form, form_files):
+def refresh_list_variant(request, project_id, list_data, schema, login):
+    """Makes sure the variant of a list that an assistant receives is current,
+    generating it when it is missing or older than its source's last change
+    (formshare.md 3.8). Returns its MD5 and the name its file is kept under in
+    the project's storage, or (None, None) when it could not be generated.
+
+    Assistants whose clauses are the same share the variant, so one pull
+    generates it for all of them, under the same freshness rule as a form's
+    copy of a list in mode "all".
+    """
+    clause = list_variant_clause(list_data, schema, login)
+    key = variant_key(clause)
+    file_name = variant_file_name(list_data, key)
+    variant = get_list_variant(request, project_id, list_data["list_id"], key)
+    if variant is not None and variant["variant_md5"]:
+        last_submission = get_last_submission_date_from_schema(request, schema)
+        last_clean = get_last_clean_date_from_schema(request, schema)
+        if not list_is_stale(variant["variant_lastgen"], last_submission, last_clean):
+            stream = get_stream(request, project_id, file_name)
+            if stream is not None:
+                stream.close()
+                return variant["variant_md5"], file_name
+    # The database's clock, read before generating, as for a copy
+    started = request.dbsession.execute(text("SELECT NOW()")).scalar()
+    temp_dir = os.path.join(get_odk_path(request), *["tmp", str(uuid.uuid4())])
+    os.makedirs(temp_dir)
+    temp_file = os.path.join(temp_dir, list_data["list_filename"])
+    generated, message = generate_published_list_file(
+        request, list_data, temp_file, clause
+    )
+    if not generated:
+        log.error(
+            "Unable to generate a variant of list {} of project {}: {}".format(
+                list_data["list_id"], project_id, message
+            )
+        )
+        return None, None
+    with open(temp_file, "rb") as generated_file:
+        md5sum = md5(generated_file.read()).hexdigest()
+    with open(temp_file, "rb") as generated_file:
+        store_file(request, project_id, file_name, generated_file)
+    record_list_variant(request, project_id, list_data["list_id"], key, md5sum, started)
+    return md5sum, file_name
+
+
+def refresh_published_lists(request, project_id, form, form_files, assistant_uuid=None):
     """Regenerates any published list this form attaches, when stale.
 
     A published list is served as a plain attachment -- the registry's whole
@@ -3066,6 +3117,11 @@ def refresh_published_lists(request, project_id, form, form_files):
     built and only replaces the stored file; serving stays the ordinary
     media-file path. Returns {file_name: new_md5} for the entries it
     replaced, so the caller can refresh the hashes it already fetched.
+
+    A list that serves each assistant their own cases (any mode but "all")
+    is not regenerated in the form's copy: the entry takes the MD5 of the
+    variant of the assistant asking, assistant_uuid, which get_media_file
+    serves under the same name.
 
     A list whose generation fails keeps its previous edition: stale data a
     device can use beats a manifest error it cannot.
@@ -3077,6 +3133,7 @@ def refresh_published_lists(request, project_id, form, form_files):
     for a_list in published:
         lists_by_filename[a_list["list_filename"]] = a_list
     refreshed = {}
+    login = None
     for a_file in form_files:
         a_list = lists_by_filename.get(a_file["file_name"])
         if a_list is None:
@@ -3085,6 +3142,13 @@ def refresh_published_lists(request, project_id, form, form_files):
         if schema is None or schema == "":
             # The source repository is not built yet; there is nothing to
             # generate from and the stored file (if any) stands.
+            continue
+        if (a_list.get("list_filter_mode") or "all") != "all":
+            if login is None and assistant_uuid is not None:
+                login = get_assistant_login(request, assistant_uuid)
+            md5sum, _ = refresh_list_variant(request, project_id, a_list, schema, login)
+            if md5sum is not None:
+                refreshed[a_file["file_name"]] = md5sum
             continue
         last_submission = get_last_submission_date_from_schema(request, schema)
         last_clean = get_last_clean_date_from_schema(request, schema)
@@ -3343,11 +3407,16 @@ def formlist_extension(form_data):
     return extension
 
 
-def get_manifest(request, user, project, project_id, form):
+def get_manifest(request, user, project, project_id, form, assistant_uuid=None):
+    """The form's manifest for the assistant asking (assistant_uuid, None in a
+    crowdsourcing project): a list that serves each assistant their own cases
+    carries the hash of theirs."""
     form_files = get_form_files(request, project_id, form)
     if form_files:
         file_array = []
-        refreshed_lists = refresh_published_lists(request, project_id, form, form_files)
+        refreshed_lists = refresh_published_lists(
+            request, project_id, form, form_files, assistant_uuid
+        )
         if refreshed_lists:
             for a_form_file in form_files:
                 if a_form_file["file_name"] in refreshed_lists:
@@ -3890,7 +3959,38 @@ def get_xml_form(request, project, form):
         return None
 
 
-def get_media_file(request, project_id, form_id, file_id):
+def get_media_file(request, project_id, form_id, file_id, assistant_uuid=None):
+    """A form's media file. A published list that serves each assistant their
+    own cases is answered with the variant of the assistant asking
+    (formshare.md 3.8), under the list's name: the manifest gave its hash."""
+    if form_file_exists(request, project_id, form_id, file_id):
+        list_data = get_published_list_by_filename(request, project_id, file_id)
+        if (
+            list_data is not None
+            and (list_data.get("list_filter_mode") or "all") != "all"
+        ):
+            schema = get_list_source_schema(request, list_data)
+            if schema:
+                login = (
+                    get_assistant_login(request, assistant_uuid)
+                    if assistant_uuid is not None
+                    else None
+                )
+                clause = list_variant_clause(list_data, schema, login)
+                file_name = variant_file_name(list_data, variant_key(clause))
+                stream = get_stream(request, project_id, file_name)
+                if stream is None:
+                    # A device that did not ask for the manifest first: the
+                    # variant is made now. One the manifest made is served as
+                    # it is, so that its hash is the one the manifest gave.
+                    _, file_name = refresh_list_variant(
+                        request, project_id, list_data, schema, login
+                    )
+                    if file_name is not None:
+                        stream = get_stream(request, project_id, file_name)
+                if stream is None:
+                    raise HTTPNotFound
+                return response_stream(stream, file_id, Response())
     return retrieve_form_file(request, project_id, form_id, file_id)
 
 

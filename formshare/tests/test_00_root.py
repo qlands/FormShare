@@ -70,6 +70,7 @@ from .steps.repository import t_e_s_t_repository
 from .steps.testing_data_handover import t_e_s_t_testing_data_handover
 from .steps.repository_downloads import t_e_s_t_repository_downloads
 from .steps.case_lists import t_e_s_t_case_lists
+from .steps.per_assistant_lists import t_e_s_t_per_assistant_lists
 from .steps.case_journey import t_e_s_t_case_journey
 from .steps.actions_split import t_e_s_t_actions_split
 from .steps.geo_clean import t_e_s_t_geo_clean
@@ -248,6 +249,8 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_repository_downloads(self.test_object)
             print("Testing published case lists")
             t_e_s_t_case_lists(self.test_object)
+            print("Testing lists that serve each assistant their cases")
+            t_e_s_t_per_assistant_lists(self.test_object)
             print("Testing the case-management journey")
             t_e_s_t_case_journey(self.test_object)
             print("Testing actions over a split form")

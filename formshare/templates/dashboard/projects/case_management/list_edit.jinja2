@@ -91,6 +91,21 @@
                         {% endif %}
                     </form>
                     <div class="hr-line-dashed"></div>
+                    <h3>{{ _('Who receives which cases') }}</h3>
+                    {% if crowdsourcing %}
+                        <p class="text-muted" id="list-mode-crowdsourcing">{{ _('This is a crowdsourcing project: it has no assistants to tell apart, so every device receives every case of the list.') }}</p>
+                    {% else %}
+                        <p class="text-muted">{{ _('Chosen by who downloads the list. A device also keeps the cases it has registered and not sent yet.') }}</p>
+                        <form method="post" class="form-inline">
+                            {{ form.secure_form(request) }}
+                            <select name="list_filter_mode" id="list_filter_mode" class="form-control" style="min-width: 300px">
+                                <option value="all" {% if (listData.list_filter_mode or 'all') == 'all' %}selected{% endif %}>{{ _('Every assistant receives every case') }}</option>
+                                <option value="submitted_by" {% if listData.list_filter_mode == 'submitted_by' %}selected{% endif %}>{{ _('Each assistant receives the cases they registered') }}</option>
+                            </select>
+                            <button type="submit" name="change_mode" value="1" class="btn btn-white">{{ _('Change') }}</button>
+                        </form>
+                    {% endif %}
+                    <div class="hr-line-dashed"></div>
                     <h3>{{ _('Label') }}</h3>
                     <form method="post" class="form-inline">
                         {{ form.secure_form(request) }}

@@ -1004,6 +1004,37 @@ class PublishedListColumn(Base):
     publishedlist = relationship("PublishedList")
 
 
+class ListVariant(Base):
+    """A published list as some of its assistants receive it (feature 7,
+    formshare.md 3.8).
+
+    A list in mode "all" is one file: the copy each consuming form keeps as a
+    media file. In any other mode an assistant pulls the rows meant for them,
+    the list's SELECT with a clause of theirs ANDed in. A variant is named by
+    that clause (variant_key, its MD5), so assistants whose clauses are the
+    same share a file. It is generated on the first pull that asks for it and
+    again whenever the source changes after variant_lastgen, and kept in the
+    project's storage.
+    """
+
+    __tablename__ = "listvariant"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "list_id"],
+            ["publishedlist.project_id", "publishedlist.list_id"],
+            ondelete="CASCADE",
+        ),
+    )
+
+    project_id = Column(Unicode(64), primary_key=True, nullable=False)
+    list_id = Column(Unicode(120), primary_key=True, nullable=False)
+    variant_key = Column(Unicode(32), primary_key=True, nullable=False)
+    variant_md5 = Column(Unicode(32))
+    variant_lastgen = Column(DateTime)
+
+    publishedlist = relationship("PublishedList")
+
+
 class ListConsumer(Base):
     """A form that feeds, reads or updates a published list.
 

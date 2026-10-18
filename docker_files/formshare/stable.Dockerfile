@@ -18,7 +18,7 @@ VOLUME /opt/formshare_plugins
 RUN mkdir formshare_uvicorn
 RUN python3.13 -m venv formshare_env
 
-RUN git clone https://github.com/qlands/FormShare.git -b stable-3.0.0 formshare
+RUN git clone https://github.com/qlands/FormShare.git -b stable-3.1.0 formshare
 RUN . ./formshare_env/bin/activate && pip install wheel && pip install -r /opt/formshare/requirements.txt
 
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.6.0/wait /wait

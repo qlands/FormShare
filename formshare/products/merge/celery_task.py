@@ -362,113 +362,118 @@ def make_database_changes(
                             rebuild_table_list.append(an_error.get("table"))
                     if an_error.get("code") == "TNF":
                         new_table_list.append(an_error.get("to"))
-            if len(new_table_list) >= 0 or len(rebuild_table_list) >= 0:
-                if len(rebuild_table_list) > 0:
-                    log.info("Dropping old triggers")
-                    send_task_status_to_form(
-                        settings, task_id, _("Dropping old triggers")
-                    )
-                    engine = create_engine(
-                        settings.get("sqlalchemy.url"), poolclass=NullPool
-                    )
-                    for a_table in rebuild_table_list:
-                        if not error:
-                            sql = (
-                                "SELECT TRIGGER_NAME FROM information_schema.triggers "
-                                "WHERE TRIGGER_SCHEMA = '{}' "
-                                "AND EVENT_OBJECT_TABLE = '{}' "
-                                "AND TRIGGER_NAME LIKE 'audit_%'".format(
-                                    b_schema, a_table
-                                )
-                            )
-                            try:
-                                res = engine.execute(sql).fetchall()
-                                for a_trigger in res:
-                                    sql = "DROP TRIGGER {}.{}".format(
-                                        b_schema, a_trigger[0]
-                                    )
-                                    try:
-                                        engine.execute(sql)
-                                    except Exception as e:
-                                        log.error(
-                                            "Error {} while dropping trigger {} from database {}".format(
-                                                str(e), a_trigger[0], b_schema
-                                            )
-                                        )
-                                        error = True
-                                        break
-                            except Exception as e:
-                                log.error(
-                                    "Error {} while loading triggers from schema {}, table {}".format(
-                                        str(e), b_schema, a_table
-                                    )
-                                )
-                                error = True
-                    engine.dispose()
+            if len(rebuild_table_list) > 0:
+                log.info("Dropping old triggers")
+                send_task_status_to_form(settings, task_id, _("Dropping old triggers"))
+                engine = create_engine(
+                    settings.get("sqlalchemy.url"), poolclass=NullPool
+                )
+                for a_table in rebuild_table_list:
                     if not error:
-                        odk_dir = get_odk_path(settings)
-
-                        str_all_tables = ",".join(rebuild_table_list + new_table_list)
-
-                        create_audit_triggers = os.path.join(
-                            settings["odktools.path"],
-                            *["utilities", "createAuditTriggers", "createaudittriggers"]
+                        sql = (
+                            "SELECT TRIGGER_NAME FROM information_schema.triggers "
+                            "WHERE TRIGGER_SCHEMA = '{}' "
+                            "AND EVENT_OBJECT_TABLE = '{}' "
+                            "AND TRIGGER_NAME LIKE 'audit_%'".format(b_schema, a_table)
                         )
-                        audit_path = os.path.join(
-                            odk_dir, *["forms", a_form_directory, "merging_files"]
-                        )
-                        mysql_host = settings["mysql.host"]
-                        mysql_port = settings["mysql.port"]
-                        mysql_user = settings["mysql.user"]
-                        mysql_password = settings["mysql.password"]
-                        args = [
-                            create_audit_triggers,
-                            "-H " + mysql_host,
-                            "-P " + mysql_port,
-                            "-u " + mysql_user,
-                            "-p " + mysql_password,
-                            "-s " + b_schema,
-                            "-o " + audit_path,
-                            "-t " + str_all_tables,
-                        ]
-                        p = Popen(args, stdout=PIPE, stderr=PIPE)
-                        stdout, stderr = p.communicate()
-                        if p.returncode == 0:
-                            audit_file = os.path.join(
-                                odk_dir,
-                                *[
-                                    "forms",
-                                    a_form_directory,
-                                    "merging_files",
-                                    "mysql_create_audit.sql",
-                                ]
-                            )
-                            log.info("Creating new triggers")
-                            send_task_status_to_form(
-                                settings, task_id, _("Creating new triggers")
-                            )
-                            args = ["mysql", "--defaults-file=" + cnf_file, b_schema]
-                            with open(audit_file) as input_file:
-                                proc = Popen(
-                                    args, stdin=input_file, stderr=PIPE, stdout=PIPE
+                        try:
+                            res = engine.execute(sql).fetchall()
+                            for a_trigger in res:
+                                sql = "DROP TRIGGER {}.{}".format(
+                                    b_schema, a_trigger[0]
                                 )
-                                output, error_str = proc.communicate()
-                                if proc.returncode != 0:  # pragma: no cover
-                                    log_message(
-                                        "Error applying triggers",
-                                        error_str,
-                                        output,
-                                        " ".join(args),
+                                try:
+                                    engine.execute(sql)
+                                except Exception as e:
+                                    log.error(
+                                        "Error {} while dropping trigger {} from database {}".format(
+                                            str(e), a_trigger[0], b_schema
+                                        )
                                     )
                                     error = True
-                        else:  # pragma: no cover
+                                    break
+                        except Exception as e:
+                            log.error(
+                                "Error {} while loading triggers from schema {}, table {}".format(
+                                    str(e), b_schema, a_table
+                                )
+                            )
+                            error = True
+                engine.dispose()
+            # Every merge runs the tool. It used to run only when a table
+            # gained a field, so the tables a merge added and nothing else
+            # were never audited. And the tool converts an older audit_log
+            # to utf8mb4, where an answer with an emoji can be changed
+            # (rstools.md 37), so every merge must reach it.
+            if not error:
+                odk_dir = get_odk_path(settings)
+
+                # A merge that changed no table names audit_log alone: the
+                # tool never audits it, so it writes audit_log's definition
+                # and no trigger. An empty -t would be refused (a missing
+                # value), and no -t at all means every table, which would
+                # duplicate each trigger.
+                str_all_tables = (
+                    ",".join(rebuild_table_list + new_table_list) or "audit_log"
+                )
+
+                create_audit_triggers = os.path.join(
+                    settings["odktools.path"],
+                    *["utilities", "createAuditTriggers", "createaudittriggers"]
+                )
+                audit_path = os.path.join(
+                    odk_dir, *["forms", a_form_directory, "merging_files"]
+                )
+                mysql_host = settings["mysql.host"]
+                mysql_port = settings["mysql.port"]
+                mysql_user = settings["mysql.user"]
+                mysql_password = settings["mysql.password"]
+                args = [
+                    create_audit_triggers,
+                    "-H " + mysql_host,
+                    "-P " + mysql_port,
+                    "-u " + mysql_user,
+                    "-p " + mysql_password,
+                    "-s " + b_schema,
+                    "-o " + audit_path,
+                    "-t " + str_all_tables,
+                ]
+                p = Popen(args, stdout=PIPE, stderr=PIPE)
+                stdout, stderr = p.communicate()
+                if p.returncode == 0:
+                    audit_file = os.path.join(
+                        odk_dir,
+                        *[
+                            "forms",
+                            a_form_directory,
+                            "merging_files",
+                            "mysql_create_audit.sql",
+                        ]
+                    )
+                    log.info("Creating new triggers")
+                    send_task_status_to_form(
+                        settings, task_id, _("Creating new triggers")
+                    )
+                    args = ["mysql", "--defaults-file=" + cnf_file, b_schema]
+                    with open(audit_file) as input_file:
+                        proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
+                        output, error_str = proc.communicate()
+                        if proc.returncode != 0:  # pragma: no cover
                             log_message(
-                                "Error creating triggers",
-                                stderr,
-                                stdout,
+                                "Error applying triggers",
+                                error_str,
+                                output,
                                 " ".join(args),
                             )
                             error = True
+                else:  # pragma: no cover
+                    log_message(
+                        "Error creating triggers",
+                        stderr,
+                        stdout,
+                        " ".join(args),
+                    )
+                    error = True
         except Exception as e:
             log.error(
                 "Error processing merge log file: {}. Error: {}".format(
@@ -799,6 +804,59 @@ def update_form(db_session, project, form, form_data):
         raise MergeDataBaseError(str(e))
 
 
+def merge_manifest_files(odk_dir, a_form_directory):
+    """(the form's manifest, the merged one, where the form's own is kept)."""
+    return (
+        os.path.join(
+            odk_dir, *["forms", a_form_directory, "repository", "manifest.xml"]
+        ),
+        os.path.join(
+            odk_dir, *["forms", a_form_directory, "merging_files", "manifest.xml"]
+        ),
+        os.path.join(
+            odk_dir, *["forms", a_form_directory, "repository", "manifest_own.xml"]
+        ),
+    )
+
+
+def adopt_merged_manifest(odk_dir, a_form_directory):
+    """Makes the manifest mergeversions rewrote to follow C (-M) the new
+    version's own, beside C's create.xml (rstools.md 36.5). A merge keeps a
+    split table's columns where the repository has them, and the version's
+    own manifest follows its own split: through it, a submission of the new
+    version could be sent to a table that does not hold an answer, and
+    JSONToMySQL refuses the whole of it. Every reader of the form's manifest
+    -- the submission pipeline, the import, the encryption marks, the
+    device's repository files -- reads repository/manifest.xml, so the merged
+    one goes there, and the version's own is kept beside it. Returns True
+    when it did."""
+    a_manifest, c_manifest, a_own_manifest = merge_manifest_files(
+        odk_dir, a_form_directory
+    )
+    if not os.path.exists(c_manifest):  # pragma: no cover
+        # merge_versions passes -M whenever A has a manifest, and the build
+        # before it always writes one
+        log.error(
+            "mergeversions wrote no merged manifest at {}. The form keeps its own, "
+            "which may not follow the repository's split".format(c_manifest)
+        )
+        return False
+    if os.path.exists(a_manifest):
+        shutil.copyfile(a_manifest, a_own_manifest)
+    temp_manifest = a_manifest + ".merged"
+    shutil.copyfile(c_manifest, temp_manifest)
+    os.replace(temp_manifest, a_manifest)
+    return True
+
+
+def restore_own_manifest(odk_dir, a_form_directory):
+    """Puts the new version's own manifest back: a merge that failed before
+    the form was moved to the repository leaves it in testing."""
+    a_manifest, _, a_own_manifest = merge_manifest_files(odk_dir, a_form_directory)
+    if os.path.exists(a_own_manifest):
+        os.replace(a_own_manifest, a_manifest)
+
+
 def internal_merge_into_repository(
     settings,
     user,
@@ -867,6 +925,9 @@ def internal_merge_into_repository(
     session_factory = get_session_factory(engine)
     critical_part = False
     form_with_changes = []
+    # True while the merged manifest is the new version's but the forms have
+    # not been moved to the repository yet
+    manifest_adopted = False
     db_session = session_factory()
     try:
         configure_mappers()
@@ -946,7 +1007,11 @@ def internal_merge_into_repository(
                 "form_hasdictionary": 1,
             }
             update_form(db_session, project_id, a_form_id, form_data)
+            # Before the commit unblocks the new version: from then on its
+            # submissions load through the merged manifest
+            manifest_adopted = adopt_merged_manifest(odk_dir, a_form_directory)
             db_session.commit()
+            manifest_adopted = False
             if not discard_testing_data:
                 log.info("Storing testing data")
                 send_task_status_to_form(settings, task_id, _("Storing testing data"))
@@ -965,6 +1030,8 @@ def internal_merge_into_repository(
             db_session.commit()
             critical_part = False
         except Exception as e:
+            if manifest_adopted:
+                restore_own_manifest(odk_dir, a_form_directory)
             if critical_part:
                 status = "Critical error with merging"
             else:

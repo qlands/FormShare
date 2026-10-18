@@ -77,6 +77,7 @@ from .steps.geo_clean import t_e_s_t_geo_clean
 from .steps.geo_index import t_e_s_t_geo_index
 from .steps.geo_lists import t_e_s_t_geo_lists
 from .steps.reserved_names import t_e_s_t_reserved_names
+from .steps.merge_manifest import t_e_s_t_merge_manifest
 from .steps.properties_export import t_e_s_t_properties_export
 from .steps.encryption_keys import t_e_s_t_encryption_keys
 from .steps.encryption_forms import t_e_s_t_encryption_forms
@@ -263,6 +264,8 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_geo_lists(self.test_object)
             print("Testing a form with reserved words as names")
             t_e_s_t_reserved_names(self.test_object)
+            print("Testing a wide form's merge, and emoji in the audit log")
+            t_e_s_t_merge_manifest(self.test_object)
             print("Testing a case's properties in the Go exports")
             t_e_s_t_properties_export(self.test_object)
             print("Testing the record of field encryption's keys")

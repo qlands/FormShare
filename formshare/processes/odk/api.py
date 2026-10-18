@@ -3257,10 +3257,13 @@ def project_uses_registry(request, project_id):
 
 def get_repository_file_content(request, project_id, form_id, file_name):
     """The bytes of one of the files a device mirrors the repository from, or
-    None while the form has no repository. create.xml, insert.xml and
-    manifest.xml are the build's own, as JXFormToMySQL wrote them (create.xml
-    with the registry links applied, section 3.4); properties.xml is made
-    from the registry each time, so a property added an hour ago is in it."""
+    None while the form has no repository. create.xml and insert.xml are the
+    ones the form's repository was built from: the build's own, as
+    JXFormToMySQL wrote them (create.xml with the registry links applied,
+    section 3.4), and after a merge C's, for every version that shares the
+    repository. manifest.xml is the form's own, or the merged one for the
+    version merged in (rstools.md 36.5). properties.xml is made from the
+    registry each time, so a property added an hour ago is in it."""
     if file_name not in REPOSITORY_FILES:
         return None
     if not project_uses_registry(request, project_id):
@@ -3287,6 +3290,18 @@ def get_repository_file_content(request, project_id, form_id, file_name):
         get_odk_path(request),
         *["forms", form_data["form_directory"], "repository", file_name]
     )
+    # The files a form records are the ones its repository was built from.
+    # They are the build's own until a merge moves every version of the
+    # repository to C, which a mirror must follow: the merged manifest puts
+    # answers where C keeps them, and a mirror built from the version's own
+    # create.xml may not have them there.
+    if form_data.get("form_schema"):
+        recorded = {
+            "create.xml": form_data.get("form_createxmlfile"),
+            "insert.xml": form_data.get("form_insertxmlfile"),
+        }.get(file_name)
+        if recorded and os.path.exists(recorded):
+            path = recorded
     if not os.path.exists(path):
         return None
     with open(path, "rb") as a_file:
@@ -4051,6 +4066,20 @@ def merge_versions(
     survey_data_columns,
     ignore_string=None,
 ):
+    """Runs mergeversions over a new version (A) and the repository it merges
+    into (B), writing C and the diff into A's merging_files.
+
+    It also rewrites A's manifest, the one beside A's create.xml, to follow
+    C, as merging_files/manifest.xml (-m, -M; rstools.md 36.5), which the
+    merge task makes the form's own. A merge keeps every column of a split
+    table where B has it, whatever A's own split says, so A's own manifest
+    can send an answer to a table that does not hold it, and JSONToMySQL
+    then refuses the whole submission. -a makes that certain for a wide
+    form whose repository was built before it: the column takes room in
+    A's first table, and A splits a little earlier than B. The check writes
+    it too, so that a manifest the tool cannot rewrite stops the merge
+    there.
+    """
     odk_tools_merge_versions = os.path.join(
         request.registry.settings["odktools.path"],
         *["utilities", "mergeVersions", "mergeversions"]
@@ -4092,6 +4121,22 @@ def merge_versions(
     ]
     if ignore_string is not None:
         args.append("-i " + ignore_string)
+    a_manifest = os.path.join(os.path.dirname(a_create), "manifest.xml")
+    c_manifest = os.path.join(
+        odk_dir, *["forms", xform_directory, "merging_files", "manifest.xml"]
+    )
+    if os.path.exists(a_manifest):
+        args.append("-m " + a_manifest)
+        args.append("-M " + c_manifest)
+    else:  # pragma: no cover
+        # Both callers build A with create_repository first, which writes
+        # the manifest (-f). Nor may an earlier check's be taken for this one
+        if os.path.exists(c_manifest):
+            os.remove(c_manifest)
+        log.warning(
+            "{} has no manifest beside it: the merge cannot rewrite it to follow "
+            "the repository's split".format(a_create)
+        )
 
     log.info(" ".join(args))
 

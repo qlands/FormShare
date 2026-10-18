@@ -11,11 +11,19 @@ mergeversions now rewrites the manifest to follow the repository (-m, -M),
 the merge makes that the form's, and a device is served it with the
 create.xml and insert.xml the repository was built from.
 
-The step builds a form of two hundred selects, which splits, and merges into
+The step builds a form of 190 text questions, which splits, and merges into
 it a version with one more question ahead of the split: the version's own
 manifest puts it in maintable, the merge at the end of the chain. Since
 stage 8, _assigned_to moves a wide version's split the same way when its
 repository was built before it.
+
+The questions are text, not selects, on purpose. A text column takes 42 of
+the 7,600 bytes InnoDB keeps in a row (RSTools' common/rowbudget.h), so 180
+of them split a table, with no lookup table and no lookup trigger. A form of
+200 selects has a lookup table for each, every one audited, and some 400
+lookup triggers on maintable. MySQL parses every trigger of a table into each
+instance it opens, and three merges of such a form, with the copy each makes
+first, were enough to have CI's MySQL killed for memory (build 883).
 
 createaudittriggers writes audit_log utf8mb4 since rstools.md 37 and converts
 an older one whenever it runs, which a build and every merge now do. A merge
@@ -44,7 +52,7 @@ FORM = "wide_merge"
 VERSION = "wide_merge_v2"
 REPEAT = "wide_merge_v3"
 UNCHANGED = "wide_merge_v4"
-SELECTS = 200
+TEXTS = 190
 EMOJI = "Lote con rebrote, sin producción, 💪😊"
 SURVEY_COLUMNS = [
     "formshare_sensitive",
@@ -128,19 +136,14 @@ def _workbook(path, form_id, version, early_question, repeat=False):
         # and a merge adds it at the end of the repository's chain
         survey.append(["text", "early_note", "Early note"])
     survey.append(["text", "remarks", "Remarks"])
-    for i in range(1, SELECTS + 1):
-        survey.append(["select_one l%03d" % i, "q%03d" % i, "Question %d" % i])
+    for i in range(1, TEXTS + 1):
+        survey.append(["text", "t%03d" % i, "Text %d" % i])
     survey.append(["integer", "late_count", "Late count"])
     if repeat:
         # A table of its own and nothing else new
         survey.append(["begin_repeat", "visits", "Visits"])
         survey.append(["text", "visit_note", "Visit note"])
         survey.append(["end_repeat", "", ""])
-    choices = wb.create_sheet("choices")
-    choices.append(["list_name", "name", "label"])
-    for i in range(1, SELECTS + 1):
-        for j in (1, 2):
-            choices.append(["l%03d" % i, "a%d_%d" % (i, j), "Option %d of %d" % (j, i)])
     settings = wb.create_sheet("settings")
     settings.append(["form_title", "form_id", "version"])
     settings.append(["Wide form, merged", form_id, version])
@@ -155,8 +158,8 @@ def _submission(path, form_id, key, early_note=None, visit_note=None):
         "late_count": "4",
         "meta/instanceID": "uuid:{}".format(uuid.uuid4()),
     }
-    for i in range(1, SELECTS + 1):
-        data["q%03d" % i] = "a%d_1" % i
+    for i in range(1, TEXTS + 1):
+        data["t%03d" % i] = "answer %d" % i
     if early_note is not None:
         data["early_note"] = early_note
     if visit_note is not None:

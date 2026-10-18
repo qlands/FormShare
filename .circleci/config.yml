@@ -80,6 +80,11 @@ jobs:
       # MySQL 8.4.7
       # -----------------------------------------------
       - image: mysql:8.4.7
+        # FormShare's repositories are full of triggers, and MySQL parses every
+        # trigger of a table into each instance it keeps open. With the default
+        # caches it grew until the job's machine killed it (exit 137, build
+        # 883). The suite needs neither a large cache nor the performance schema.
+        command: --performance-schema=OFF --table-open-cache=400 --table-definition-cache=600
         environment:
           - MYSQL_ROOT_PASSWORD=circleci
 

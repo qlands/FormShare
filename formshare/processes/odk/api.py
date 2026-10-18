@@ -57,6 +57,7 @@ from formshare.processes.db import (
     variant_file_name,
     manifest_assigns_cases,
     assign_case_to_registrar,
+    assignee_before_deletion,
     assistant_filter_sql,
     get_list_variant,
     record_list_variant,
@@ -4834,8 +4835,8 @@ def store_json_file(
                     request, assistant_uuid
                 )
                 # A case is assigned to whoever registers it (formshare.md
-                # 3.8); a revision reloads this JSON, so editing a submission
-                # does not move its case
+                # 3.8). A revision reloads this JSON; one that edits a case
+                # takes the case's assignee instead (push_revision)
                 submission_data["_assigned_to"] = submission_data["_submitted_by"]
                 submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
                 submission_data["_user_id"] = user
@@ -6713,6 +6714,13 @@ def push_revision(request, user, project, form, submission):
                 }
         except KeyError:
             pass
+    # A resolved edit keeps the case's assignee (owner, 2026-10-18). It is
+    # loaded after the submission it edits was deleted, and its stamp names
+    # its sender: it takes the assignee the case had when its main row was
+    # deleted instead.
+    held = assignee_before_deletion(request, schema, submission_data.get("rowuuid"))
+    if held is not None:
+        submission_data["_assigned_to"] = held
     with open(current_file, "w") as outfile:
         json_string = json.dumps(submission_data, indent=4, ensure_ascii=False)
         outfile.write(json_string)
@@ -6740,9 +6748,9 @@ def push_revision(request, user, project, form, submission):
     stdout, stderr = p.communicate()
     if p.returncode == 0:
         # An unassigned case goes to whoever registered it, as after a live
-        # load (store_json_file)
+        # load (store_json_file), or to whoever held it before the edit
         if not manifest_assigns_cases(manifest_file):
-            assign_case_to_registrar(request, schema, main_rowuuid_of(uuid_file))
+            assign_case_to_registrar(request, schema, main_rowuuid_of(uuid_file), held)
         # The form's actions, as after a live load (store_json_file).
         run_after_load(
             request,

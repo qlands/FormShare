@@ -141,6 +141,9 @@ __all__ = [
     "repository_assigns_cases",
     "manifest_assigns_cases",
     "assign_case_to_registrar",
+    "audited_row_value",
+    "assignee_before_deletion",
+    "reassign_case",
     "assign_unassigned_cases",
     "get_list_filters",
     "get_list_filter",
@@ -860,22 +863,24 @@ def manifest_assigns_cases(manifest_file):
         return True
 
 
-def assign_case_to_registrar(request, schema, rowuuid):
+def assign_case_to_registrar(request, schema, rowuuid, assignee=None):
     """Assigns a case loaded unassigned to whoever registered it: one sent with
     an older version of a form, whose manifest does not map _assigned_to, to a
     repository that has it since a merge. A repository without the column has
-    no assignments to keep."""
+    no assignments to keep. With an assignee, to them instead: a resolved edit
+    keeps the case's (assignee_before_deletion)."""
     if not rowuuid or not repository_assigns_cases(request, schema):
         return False
     try:
         request.dbsession.execute(
             text(
-                "UPDATE {}.`maintable` SET `_assigned_to` = `_submitted_by` "
+                "UPDATE {}.`maintable` "
+                "SET `_assigned_to` = COALESCE(:assignee, `_submitted_by`) "
                 "WHERE `rowuuid` = :rowuuid AND `_assigned_to` IS NULL".format(
                     _quoted(schema)
                 )
             ),
-            {"rowuuid": rowuuid},
+            {"rowuuid": rowuuid, "assignee": assignee},
         )
         request.dbsession.commit()
         return True
@@ -887,6 +892,67 @@ def assign_case_to_registrar(request, schema, rowuuid):
             )
         )
         return False
+
+
+# A column of a row the audit log kept: (name) and the value's bytes in
+# hexadecimal, nothing for NULL (RSTools' createaudittriggers)
+AUDITED_COLUMN = re.compile(r"\(([^()]*)\)([0-9A-Fa-f]*)")
+
+
+def audited_row_value(insdeldata, column):
+    """A column's value in a row the audit log kept when it was deleted
+    (audit_insdeldata), or None. The audit triggers write the row as
+    (name)value pairs joined by commas, each value the column cast as text,
+    its bytes in hexadecimal, and nothing for NULL or an empty text. The
+    rowuuid is not among them: it is the entry's audit_key."""
+    for name, value in AUDITED_COLUMN.findall(insdeldata or ""):
+        if name != column:
+            continue
+        if not value:
+            return None
+        try:
+            return bytes.fromhex(value).decode("utf-8")
+        except ValueError:
+            return None
+    return None
+
+
+def assignee_before_deletion(request, schema, rowuuid):
+    """Whom a case was assigned to when its main row was last deleted, as the
+    audit log keeps the row, or None: a case never deleted, or a repository
+    that assigns no cases.
+
+    An edit resolved on the logs page is loaded after the submission it edits
+    has been deleted, and its stamp names its sender. A resolved edit keeps
+    the case's assignee (owner, 2026-10-18), so push_revision gives it this
+    one. The case is the same only when the device minted its identity
+    (meta/rowuuid), which an edit keeps: an edit from a client that does not
+    gets a new rowuuid, is a new case, and keeps its stamp.
+    """
+    rowuuid = str(rowuuid or "").strip()
+    if not rowuuid or not repository_assigns_cases(request, schema):
+        return None
+    try:
+        res = request.dbsession.execute(
+            text(
+                "SELECT audit_insdeldata FROM {}.`audit_log` "
+                "WHERE audit_action = 'DELETE' AND audit_table = 'maintable' "
+                "AND audit_key = :rowuuid ORDER BY audit_date DESC LIMIT 1".format(
+                    _quoted(schema)
+                )
+            ),
+            {"rowuuid": rowuuid},
+        ).fetchone()
+    except Exception as e:
+        log.error(
+            "Error {} while reading the audit of case {} of {}".format(
+                str(e), rowuuid, schema
+            )
+        )
+        return None
+    if res is None:
+        return None
+    return audited_row_value(res[0], "_assigned_to")
 
 
 def assign_unassigned_cases(request, schema):
@@ -908,6 +974,40 @@ def assign_unassigned_cases(request, schema):
         log.error(
             "Error {} while assigning the cases of {} to their registrars".format(
                 str(e), schema
+            )
+        )
+        return False
+
+
+def reassign_case(request, schema, rowuuid, assignee, user):
+    """Gives a case to another assistant: its submission's _assigned_to, set
+    by a person, audited as them, so the case's history says who did it and
+    when. rowuuid is the main row's: a repeat row's case moves with the
+    submission that registered it.
+
+    Only the Case Explorer reassigns (owner, 2026-10-18): Clean Data shows
+    the column read-only, and actions cannot write it. A list in mode
+    assigned_to serves the case to its new assistant at their next pull,
+    since the audited change makes it stale. Writes nothing when the case is
+    theirs already. Returns whether it succeeded."""
+    try:
+        request.dbsession.execute(text("SET @odktools_current_user = :u"), {"u": user})
+        request.dbsession.execute(
+            text(
+                "UPDATE {}.`maintable` SET `_assigned_to` = :assignee "
+                "WHERE `rowuuid` = :rowuuid "
+                "AND NOT (`_assigned_to` <=> :assignee)".format(_quoted(schema))
+            ),
+            {"assignee": assignee, "rowuuid": rowuuid},
+        )
+        request.dbsession.execute(text("SET @odktools_current_user = NULL"))
+        request.dbsession.commit()
+        return True
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while assigning case {} of {} to {}".format(
+                str(e), rowuuid, schema, assignee
             )
         )
         return False

@@ -72,8 +72,10 @@ def _received(test_object, assistant):
     return list_hash, sorted(a_row[0] for a_row in rows[1:])
 
 
-def _push(test_object, assistant, primary_key):
-    """A submission of the form, sent by the assistant to its repository."""
+def _push(test_object, assistant, primary_key, rowuuid=None):
+    """A submission of the form, sent by the assistant to its repository.
+    With a rowuuid, the device minted the case's identity (meta/rowuuid), as
+    FormShare Collect does."""
     with open(
         os.path.join(
             test_object.path, "resources", "forms", "mimic_complex", "submission001.xml"
@@ -87,6 +89,10 @@ def _push(test_object, assistant, primary_key):
         "<instanceID>uuid:{}</instanceID>".format(uuid.uuid4()),
         xml,
     )
+    if rowuuid is not None:
+        xml = xml.replace(
+            "</instanceID>", "</instanceID><rowuuid>{}</rowuuid>".format(rowuuid)
+        )
     path = os.path.join(test_object.working_dir, "pa_{}.xml".format(primary_key))
     with open(path, "w", encoding="utf-8") as a_file:
         a_file.write(xml)
@@ -111,8 +117,9 @@ def _cases_by_assistant(config, schema):
 
 
 def _assign(config, schema, rowuuid, assistant):
-    """Assigns a case to an assistant. By hand for now: how a case is
-    reassigned is decided with the rest of stage 8."""
+    """Assigns a case to an assistant, by SQL: the Case Explorer, the one
+    place that reassigns (reassign_case, owner 2026-10-18), is a private
+    plugin the suite does not load."""
     engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
     try:
         engine.execute(
@@ -121,6 +128,33 @@ def _assign(config, schema, rowuuid, assistant):
             ),
             (assistant, rowuuid),
         )
+    finally:
+        engine.dispose()
+
+
+def _assignee(config, schema, rowuuid):
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        return engine.execute(
+            "SELECT _assigned_to FROM `{}`.maintable WHERE rowuuid = %s".format(schema),
+            (rowuuid,),
+        ).scalar()
+    finally:
+        engine.dispose()
+
+
+def _logged(config, project_id):
+    """The submissions of the form waiting in its logs."""
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        return {
+            a_row[0]
+            for a_row in engine.execute(
+                "SELECT submission_id FROM submission WHERE submission_status = 2 "
+                "AND sameas IS NULL AND project_id = %s AND form_id = %s",
+                (project_id, FORM),
+            ).fetchall()
+        }
     finally:
         engine.dispose()
 
@@ -634,3 +668,47 @@ def t_e_s_t_per_assistant_lists(test_object):
         (BEN, None),
         (BEN, BEN),
     ]
+
+    # An edit of a case resolved on the logs page keeps the case's assignee
+    # (owner, 2026-10-18). The edit's stamp names its sender, and the case
+    # was given to someone else before it was edited. The case is the same
+    # because the device minted its identity, which the edit keeps.
+    edited = str(uuid.uuid4())
+    _push(test_object, ANA, 805, rowuuid=edited)
+    assert _assignee(config, schema, edited) == ANA
+    _assign(config, schema, edited, BEN)
+    before = _logged(config, project_id)
+    _push(test_object, ANA, 805, rowuuid=edited)
+    edit_ids = _logged(config, project_id) - before
+    assert len(edit_ids) == 1, edit_ids
+    # Resolved as the logs page resolves it: the submission it edits goes to
+    # the logs, and the edit is pushed in its place
+    res = testapp.post(
+        "/user/{}/project/{}/form/{}/submissions/delete".format(login, PROJECT, FORM),
+        {
+            "move_submission": "",
+            "rowuuid": edited,
+            "coll_id": "{}|{}|{}".format(project_id, ANA, uuids[ANA]),
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    assert _assignee(config, schema, edited) is None
+    res = testapp.post(
+        "/user/{}/project/{}/assistantaccess/login".format(login, PROJECT),
+        {"login": ANA, "passwd": "123"},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        "/user/{}/project/{}/assistantaccess/form/{}/{}/push".format(
+            login, PROJECT, FORM, edit_ids.pop()
+        ),
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        "/user/{}/project/{}/assistantaccess/logout".format(login, PROJECT),
+        status=302,
+    )
+    assert _assignee(config, schema, edited) == BEN

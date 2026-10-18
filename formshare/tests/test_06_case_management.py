@@ -2135,3 +2135,112 @@ def test_the_cases_nobody_receives():
     )
     roster["list_filter_mode"] = "all"
     assert cm.unreceived_clause(roster, "FS_abc", ["ana"], None) is None
+
+
+# ---------------------------------------------------------------------------
+# A resolved edit keeps the case's assignee (owner, 2026-10-18)
+# ---------------------------------------------------------------------------
+
+
+class _OneRow:
+    def __init__(self, row):
+        self.row = row
+
+    def fetchone(self):
+        return self.row
+
+
+class _AuditSession:
+    """Answers every statement with one row, and keeps them."""
+
+    def __init__(self, row):
+        self.row = row
+        self.statements = []
+
+    def execute(self, statement, params=None):
+        self.statements.append((str(statement), params))
+        return _OneRow(self.row)
+
+    def commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+
+def test_a_deleted_row_is_read_from_the_audit():
+    """createaudittriggers keeps a deleted row as (name)value pairs, the
+    value cast as text in hexadecimal, nothing for NULL; the rowuuid is the
+    entry's key, not one of them."""
+    row = (
+        "(surveyid)36346664,(_submitted_by)616E61,(_assigned_to)62656E,"
+        "(_cellid),(nombre)4A6F73C3A9,(_lastupdate)323032362D31302D3138"
+    )
+    assert cm.audited_row_value(row, "_assigned_to") == "ben"
+    assert cm.audited_row_value(row, "_submitted_by") == "ana"
+    assert cm.audited_row_value(row, "nombre") == "José"
+    assert cm.audited_row_value(row, "_cellid") is None
+    assert cm.audited_row_value(row, "rowuuid") is None
+    assert cm.audited_row_value("", "_assigned_to") is None
+    assert cm.audited_row_value(None, "_assigned_to") is None
+    # An odd number of digits, or bytes that are not UTF-8: nobody
+    assert cm.audited_row_value("(_assigned_to)ABC", "_assigned_to") is None
+    assert cm.audited_row_value("(_assigned_to)FF", "_assigned_to") is None
+
+
+def test_a_resolved_edit_takes_the_assignee_the_case_had(monkeypatch):
+    monkeypatch.setattr(cm, "repository_assigns_cases", lambda request, schema: True)
+    session = _AuditSession(("(_submitted_by)616E61,(_assigned_to)62656E",))
+    assert cm.assignee_before_deletion(_Req(session), "FS_abc", " r1 ") == "ben"
+    statement, params = session.statements[0]
+    assert "FROM `FS_abc`.`audit_log`" in statement
+    assert "audit_action = 'DELETE' AND audit_table = 'maintable'" in statement
+    assert "ORDER BY audit_date DESC LIMIT 1" in statement
+    assert params == {"rowuuid": "r1"}
+    # A case never deleted
+    assert (
+        cm.assignee_before_deletion(_Req(_AuditSession(None)), "FS_abc", "r1") is None
+    )
+    # An edit with no identity of its own, or a repository that assigns no
+    # cases, asks nothing
+    quiet = _AuditSession(("(_assigned_to)62656E",))
+    assert cm.assignee_before_deletion(_Req(quiet), "FS_abc", "") is None
+    assert cm.assignee_before_deletion(_Req(quiet), "FS_abc", None) is None
+    monkeypatch.setattr(cm, "repository_assigns_cases", lambda request, schema: False)
+    assert cm.assignee_before_deletion(_Req(quiet), "FS_abc", "r1") is None
+    assert quiet.statements == []
+
+
+def test_an_unassigned_case_goes_to_its_registrar_or_to_whoever_held_it(
+    monkeypatch,
+):
+    monkeypatch.setattr(cm, "repository_assigns_cases", lambda request, schema: True)
+    session = _AuditSession(None)
+    assert cm.assign_case_to_registrar(_Req(session), "FS_abc", "r1", "ben")
+    statement, params = session.statements[0]
+    assert "SET `_assigned_to` = COALESCE(:assignee, `_submitted_by`)" in statement
+    assert "`_assigned_to` IS NULL" in statement
+    assert params == {"rowuuid": "r1", "assignee": "ben"}
+    assert cm.assign_case_to_registrar(_Req(session), "FS_abc", "r2")
+    assert session.statements[1][1] == {"rowuuid": "r2", "assignee": None}
+
+
+def test_a_case_is_reassigned_by_a_person_and_audited_as_them():
+    """Only the Case Explorer reassigns (owner, 2026-10-18): the submission's
+    _assigned_to, under the person's name, and nothing when it is theirs."""
+    session = _AuditSession(None)
+    assert cm.reassign_case(_Req(session), "FS_abc", "r1", "ben", "carlos")
+    (who, set_user), (statement, params), (nobody, _) = session.statements
+    assert who == "SET @odktools_current_user = :u" and set_user == {"u": "carlos"}
+    assert statement.startswith("UPDATE `FS_abc`.`maintable` SET `_assigned_to`")
+    assert "NOT (`_assigned_to` <=> :assignee)" in statement
+    assert params == {"assignee": "ben", "rowuuid": "r1"}
+    assert nobody == "SET @odktools_current_user = NULL"
+
+    class _Refusing(_AuditSession):
+        def execute(self, statement, params=None):
+            if str(statement).startswith("UPDATE"):
+                raise RuntimeError("refused")
+            return super().execute(statement, params)
+
+    assert not cm.reassign_case(_Req(_Refusing(None)), "FS_abc", "r1", "ben", "c")

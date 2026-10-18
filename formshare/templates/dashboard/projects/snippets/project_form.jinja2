@@ -110,7 +110,7 @@
         {% endblock project_form_case %}
         <span><b>{{ _('Optional. True by default.') }}</b></span>
         <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Requires authentication to accept data') }}</label>
-            <div class="col-sm-10"><input type="checkbox" name="project_formlist_auth" class="js-switch2" {% if projectDetails.project_formlist_auth == 1 %}checked{% endif %} /><span class="form-text m-b-none">{% block form_list_comment %}{{ _('Uncheck if this project will allow crowdsourcing / public submissions. Please note that this will apply to all forms within this project.') }} {% endblock form_list_comment %}</span></div>
+            <div class="col-sm-10"><input type="checkbox" name="project_formlist_auth" class="js-switch2" {% if projectDetails.project_formlist_auth == 1 %}checked{% endif %} /><span class="form-text m-b-none">{% block form_list_comment %}{{ _('Uncheck if this project will allow crowdsourcing / public submissions. Please note that this will apply to all forms within this project.') }} {% endblock form_list_comment %}</span>{% if listsPerAssistant %}<span class="form-text text-warning m-b-none" id="lists-per-assistant">{{ _('It stays checked while these lists serve each assistant their own cases, since public submissions name no assistant:') }} {{ listsPerAssistant|join(', ') }}. {{ _('Set them to serve every case first.') }}</span>{% endif %}</div>
         </div>
         <div class="hr-line-dashed"></div>
         {% block project_form_controls_extra %}

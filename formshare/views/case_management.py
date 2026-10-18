@@ -740,6 +740,11 @@ class ListFilterView(EditPublishedListView):
         list_data = get_published_list(self.request, project_id, list_id)
         if list_data is None or list_data.get("list_filter_mode") != "filters":
             raise HTTPNotFound
+        # Nothing to give a filter to in crowdsourcing (formshare.md 3.8). A
+        # project is not turned to it while a list is in this mode, but one
+        # changed outside FormShare's pages may still be
+        if project_has_crowdsourcing(self.request, project_id):
+            raise HTTPNotFound
         filter_id = self.request.matchdict.get("filterid")
         filter_data = None
         if filter_id is not None:

@@ -176,6 +176,35 @@ def _set_crowdsourcing(config, project_id, crowdsourcing):
         engine.dispose()
 
 
+def _requires_authentication(config, project_id):
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        return (
+            engine.execute(
+                "SELECT project_formlist_auth FROM project WHERE project_id = %s",
+                (project_id,),
+            ).scalar()
+            == 1
+        )
+    finally:
+        engine.dispose()
+
+
+def _project_form(authentication):
+    """The project's edit form, with or without "Requires authentication to
+    accept data"; without it, the project takes public submissions."""
+    form = {
+        "project_code": PROJECT,
+        "project_name": "Each assistant their own cases",
+        "project_abstract": "",
+        "project_icon": "",
+        "project_hexcolor": "",
+    }
+    if authentication:
+        form["project_formlist_auth"] = 1
+    return form
+
+
 def t_e_s_t_per_assistant_lists(test_object):
     testapp = test_object.testapp
     config = test_object.server_config
@@ -464,11 +493,28 @@ def t_e_s_t_per_assistant_lists(test_object):
     )
     assert "FS_error" in res.headers
 
+    # Crowdsourcing has no assistant to serve, so a project is not turned to
+    # it while a list serves each assistant their own cases. The switch says
+    # so before it is tried, and the project stays as it is
+    project_edit = "/user/{}/project/{}/edit".format(login, PROJECT)
+    res = testapp.get(project_edit, status=200)
+    assert b'id="lists-per-assistant"' in res.body
+    assert LIST_FILE.encode() in res.body
+    res = testapp.post(project_edit, _project_form(False), status=200)
+    assert "FS_error" in res.headers
+    assert b"cannot accept data without authentication" in res.body
+    assert _requires_authentication(config, project_id)
+    # and the page shown again shows the switch as it is: on
+    assert re.search(rb'name="project_formlist_auth"[^>]*checked', res.body)
+
     # Without an assistant there is nobody's cases to serve: a project
-    # turned to crowdsourcing serves the list empty, and refuses the mode
+    # changed outside FormShare's pages serves the list empty, and refuses
+    # the mode
     _set_crowdsourcing(config, project_id, True)
     try:
         assert _received(test_object, None)[1] == []
+        # No filter can be given to anyone either
+        testapp.get(ana_only, status=404)
         # The page says why, and offers to serve everyone
         res = testapp.get(edit, status=200)
         assert b'id="list-mode-crowdsourcing"' in res.body
@@ -489,6 +535,17 @@ def t_e_s_t_per_assistant_lists(test_object):
 
     # Back in mode all, everyone receives every case again
     assert _received(test_object, BEN) == (all_hash, every_case)
+
+    # Every list serving every case, the project may take public
+    # submissions, and go back to assistants
+    res = testapp.get(project_edit, status=200)
+    assert b'id="lists-per-assistant"' not in res.body
+    res = testapp.post(project_edit, _project_form(False), status=302)
+    assert "FS_error" not in res.headers
+    assert not _requires_authentication(config, project_id)
+    res = testapp.post(project_edit, _project_form(True), status=302)
+    assert "FS_error" not in res.headers
+    assert _requires_authentication(config, project_id)
 
     # A repository built before stage 8 does not say who a case is assigned
     # to, so a list drawn from it cannot serve the cases assigned to each

@@ -135,6 +135,7 @@ __all__ = [
     "LIST_MODES",
     "NO_CASES",
     "valid_list_mode",
+    "lists_served_per_assistant",
     "MODE_COLUMNS",
     "login_clause",
     "repository_assigns_cases",
@@ -786,6 +787,21 @@ MODE_COLUMNS = {"submitted_by": "_submitted_by", "assigned_to": "_assigned_to"}
 # The clause of a variant that serves no case: the list serves assistants one
 # by one, and no assistant is asking.
 NO_CASES = "1 = 0"
+
+
+def lists_served_per_assistant(request, project_id):
+    """The file names of a project's lists that serve each assistant their
+    own cases (any mode but "all"). Such a project cannot be turned to
+    crowdsourcing, whose devices name no assistant: the owner sets them to
+    serve every case first (owner, 2026-10-18)."""
+    rows = (
+        request.dbsession.query(
+            PublishedList.list_filename, PublishedList.list_filter_mode
+        )
+        .filter(PublishedList.project_id == project_id)
+        .all()
+    )
+    return sorted(name for name, mode in rows if (mode or "all") != "all")
 
 
 def valid_list_mode(mode, crowdsourcing):

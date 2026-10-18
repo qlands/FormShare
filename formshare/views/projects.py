@@ -12,7 +12,10 @@ from datetime import datetime
 import formshare.plugins as p
 import qrcode
 from formshare.processes.color_hash import ColorHash
-from formshare.processes.db.case_management import project_has_workflow
+from formshare.processes.db.case_management import (
+    lists_served_per_assistant,
+    project_has_workflow,
+)
 from formshare.processes.db import (
     add_project,
     modify_project,
@@ -60,7 +63,10 @@ from formshare.processes.project_logo import (
     save_project_logo,
     uploaded_file,
 )
-from formshare.processes.db.project import get_project_logo_md5
+from formshare.processes.db.project import (
+    get_project_logo_md5,
+    project_has_crowdsourcing,
+)
 from formshare.processes.submission.api import get_gps_points_from_project
 from formshare.views.classes import ProjectsView, PublicView
 from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
@@ -442,6 +448,26 @@ class EditProjectView(ProjectsView):
 
                 continue_modify = logo_error is None
                 message = logo_error or ""
+                # Lists that serve each assistant their own cases have no
+                # assistant to serve in crowdsourcing, whose devices name none
+                # (formshare.md 3.8): the project is not turned to it while it
+                # has one
+                if (
+                    continue_modify
+                    and project_details["project_formlist_auth"] == 0
+                    and not project_has_crowdsourcing(self.request, project_id)
+                ):
+                    served = lists_served_per_assistant(self.request, project_id)
+                    if served:
+                        continue_modify = False
+                        # The page shown again shows the switch as it is
+                        project_details["project_formlist_auth"] = 1
+                        message = self._(
+                            "This project cannot accept data without "
+                            "authentication while these lists serve each "
+                            "assistant their own cases: {}. Set them to serve "
+                            "every case first."
+                        ).format(", ".join(served))
                 for plugin in p.PluginImplementations(p.IProject):
                     if continue_modify:
                         continue_modify, message = plugin.before_editing_project(
@@ -475,6 +501,8 @@ class EditProjectView(ProjectsView):
         return {
             "projectDetails": project_details,
             "timezones": get_timezones(self.request),
+            # Said by the switch, before the owner tries it
+            "listsPerAssistant": lists_served_per_assistant(self.request, project_id),
         }
 
 

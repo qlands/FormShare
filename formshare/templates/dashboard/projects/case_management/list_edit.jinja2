@@ -93,7 +93,7 @@
                     <div class="hr-line-dashed"></div>
                     <h3>{{ _('Who receives which cases') }}</h3>
                     {% if crowdsourcing and (listData.list_filter_mode or 'all') == 'all' %}
-                        <p class="text-muted" id="list-mode-crowdsourcing">{{ _('This is a crowdsourcing project: it has no assistants to tell apart, so every device receives every case of the list.') }}</p>
+                        <p class="text-muted" id="list-mode-crowdsourcing">{{ _('Serving each assistant their own cases is not available in a crowdsourcing project, whose devices name no assistant: every device receives every case of the list.') }}</p>
                     {% elif crowdsourcing %}
                         <p class="text-warning" id="list-mode-crowdsourcing">{{ _('This is a crowdsourcing project, whose devices name no assistant, and this list serves each assistant their own cases: no device receives any. Serve every case to every device, or turn the project back to assistants.') }}</p>
                         <form method="post" class="form-inline">

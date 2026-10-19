@@ -4,8 +4,7 @@ import formshare.plugins as plugins
 import mimetypes
 import os
 import uuid
-from ofs.base import BucketExists
-from ofs.local import PTOFS
+from formshare.processes.storage.ptofs import PTOFS, BucketExists
 from pairtree import FileNotFoundException
 from pairtree import PairtreeStorageClient, ObjectNotFoundException
 

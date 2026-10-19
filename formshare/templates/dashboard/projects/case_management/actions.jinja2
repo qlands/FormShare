@@ -16,6 +16,9 @@
       #builder { margin-bottom: 8px; }
       .act-mode .btn.active { pointer-events: none; }
       .act-inline > * { margin-right: 6px; margin-bottom: 6px; }
+      .act-rows tr.act-editing > td { background-color: #fcf8e3; }
+      details.act-code > summary { cursor: pointer; }
+      details.act-code > summary h3 { display: inline; }
     </style>
 {% endblock css %}
 
@@ -50,13 +53,15 @@
                     <div class="act-mode m-b">
                         <form method="post" action="{{ request.url }}" style="display: inline">
 {{ form.secure_form(request) }}
+                            <input type="hidden" name="set_mode" value="1">
                             <input type="hidden" name="action_mode" value="table">
-                            <button type="submit" name="set_mode" value="1" class="btn btn-sm {% if mode == 'table' %}btn-primary active{% else %}btn-white{% endif %}" {% if mode == 'expert' %}data-confirm-table{% endif %}>{{ _('Table mode') }}</button>
+                            <button type="submit" class="btn btn-sm {% if mode == 'table' %}btn-primary active{% else %}btn-white{% endif %}" {% if mode == 'expert' %}data-confirm-table{% endif %}>{{ _('Table mode') }}</button>
                         </form>
                         <form method="post" action="{{ request.url }}" style="display: inline">
 {{ form.secure_form(request) }}
+                            <input type="hidden" name="set_mode" value="1">
                             <input type="hidden" name="action_mode" value="expert">
-                            <button type="submit" name="set_mode" value="1" class="btn btn-sm {% if mode == 'expert' %}btn-primary active{% else %}btn-white{% endif %}">{{ _('Expert mode') }}</button>
+                            <button type="submit" class="btn btn-sm {% if mode == 'expert' %}btn-primary active{% else %}btn-white{% endif %}">{{ _('Expert mode') }}</button>
                         </form>
                         <span class="text-muted" style="margin-left: 10px">
                             {% if mode == 'table' %}{{ _('FormShare writes the code from the rows below.') }}{% else %}{{ _('You write the code; the table is not consulted.') }}{% endif %}
@@ -114,7 +119,7 @@
                             {% endfor %}
                             </tbody>
                         </table>
-                        <p class="text-muted">{{ _('Rows are applied in this order; for one target, the first row whose condition holds is the one applied.') }}</p>
+                        <p class="text-muted">{{ _('Rules run from top to bottom. When several rules change the same thing, the first one whose condition is true is applied and the others are skipped.') }}</p>
                     {% else %}
                         <p>{{ _('No rules yet.') }}</p>
                     {% endif %}
@@ -147,11 +152,11 @@
                         <div class="form-inline act-inline" id="act-value-row">
                             <select name="value_kind" id="act-vkind" class="form-control">
                                 <option value="constant">{{ _('a constant') }}</option>
-                                <option value="variable">{{ _('the answer to a variable') }}</option>
+                                <option value="variable">{{ _('the answer to a question') }}</option>
                                 <option value="now">{{ _('now') }}</option>
                                 <option value="computed">{{ _('a computed value') }}</option>
                             </select>
-                            <input type="text" name="value" id="act-constant" class="form-control" placeholder="{{ _('Value (empty = NULL)') }}" style="min-width: 220px">
+                            <input type="text" name="value" id="act-constant" class="form-control" placeholder="{{ _('Value (leave empty to clear it)') }}" style="min-width: 220px">
                             <select id="act-variable" class="form-control" style="min-width: 220px; display: none"></select>
                             <select name="computed_aggregate" id="act-aggregate" class="form-control" style="display: none">
                                 <option value="avg">{{ _('average') }}</option>
@@ -170,9 +175,11 @@
                     </form>
 
                     <hr class="hr-line-dashed">
-                    <h3>{{ _('The code FormShare wrote') }}</h3>
-                    <p class="text-muted">{{ _('This is what runs, on the server and on the devices. Read-only in table mode; switch to expert mode to start from it.') }}</p>
-                    <div id="act-preview">{{ compiled if compiled else _('// no rules') }}</div>
+                    <details class="act-code" id="act-code">
+                        <summary><h3>{{ _('The code FormShare wrote') }}</h3></summary>
+                        <p class="text-muted">{{ _('This is what runs, on the server and on the devices. Read-only in table mode; switch to expert mode to start from it.') }}</p>
+                        <div id="act-preview">{{ compiled if compiled else _('// no rules') }}</div>
+                    </details>
                     {% else %}
                     <h3>{{ _('The module') }}</h3>
                     <p class="text-muted">{{ _('One default function run(s, api). What it can read and write is in the case management guide; nothing it does is applied until it returns, and nothing at all if it fails.') }}</p>
@@ -277,9 +284,18 @@
         return false;
       }
 
-      // The table-mode button asks first in expert mode (data-confirm-table).
+      // Back to the table replaces the module with the code FormShare
+      // writes from the rows. It asks first only when the editor holds other
+      // code, written by hand, saved or not.
       $(document).on("click", "[data-confirm-table]", function (event) {
         event.preventDefault();
+        var written = ($("#act-module").val() || "").trim();
+        var compiled = ($("#act-compiled").val() || "").trim();
+        if (written === compiled) {
+          $("#busy").show();
+          this.form.submit();
+          return;
+        }
         confirmTable(this.form);
       });
 
@@ -328,6 +344,12 @@
             filters: actFilters,
             allow_empty: true,
             plugins: ["not-group"],
+            // Its buttons add conditions: "Add rule" beside the page's own
+            // "Add the rule" read as the same thing
+            lang: {
+              add_rule: {{ _('Add condition')|tojson }},
+              add_group: {{ _('Add group of conditions')|tojson }}
+            },
             icons: { add_group: "fas fa-plus-circle", add_rule: "fas fa-plus", remove_group: "fas fa-times", remove_rule: "fas fa-times", error: "fas fa-exclamation-triangle" },
             operators: ["equal", "not_equal", "less", "less_or_equal", "greater", "greater_or_equal", "between", "not_between",
                         "in", "not_in", "begins_with", "not_begins_with", "ends_with", "not_ends_with", "contains", "not_contains",
@@ -382,8 +404,10 @@
           if ($("#builder").length && actFilters.length) {
             $("#builder").queryBuilder("setRules", b.when ? JSON.parse(b.when) : {condition: "AND", rules: []});
           }
-          $("#act-form-title").text("{{ _('Edit the rule') }}");
-          $("#act-submit").attr("name", "update_action").text("{{ _('Save the rule') }}");
+          $(".act-rows tr").removeClass("act-editing");
+          var row = el.closest("tr").addClass("act-editing");
+          $("#act-form-title").text({{ _('Edit rule')|tojson }} + " " + row.children("td").first().text().trim());
+          $("#act-submit").attr("name", "update_action").text({{ _('Save the rule')|tojson }});
           $("#act-cancel").show();
           $("html, body").animate({ scrollTop: $("#act-form-title").offset().top - 20 }, 200);
         });

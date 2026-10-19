@@ -1890,6 +1890,12 @@ def t_e_s_t_case_journey(test_object):
     ], kept
     res = testapp.get(actions_v6, status=200)
     test_object.root.assertIn(visit_instance.encode("utf-8"), res.body)
+    # The mode buttons carry set_mode in a hidden field. Back to the table
+    # asks first, then submits the form from a script, which sends no
+    # button's name: the switch did nothing (2026-10-19).
+    assert res.body.count(b'<input type="hidden" name="set_mode" value="1">') == 2
+    assert b'<button type="submit" name="set_mode"' not in res.body
+    assert b"data-confirm-table" in res.body
 
     # 8.4: deleting the submission takes its run back -- the count it added
     # goes, and the run says so -- and the same submission sent again, as an

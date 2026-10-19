@@ -105,7 +105,12 @@ def load_module(source):
         raise ModuleError(
             "The module is larger than {} KB".format(LIMITS["source_bytes"] // 1024)
         )
-    script, count = _EXPORT.subn("", source, count=1)
+    # What is taken off keeps its line breaks: _EXPORT's \s* also takes the
+    # blank lines above, and without them a failure would name a line that
+    # many above the one the owner wrote (the editor marks that line).
+    script, count = _EXPORT.subn(
+        lambda found: "\n" * found.group(0).count("\n"), source, count=1
+    )
     if count != 1 or not _RUN.search(script):
         raise ModuleError("The module must export a default function run(s, api)")
     return script

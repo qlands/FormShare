@@ -112,6 +112,31 @@ def row(order, kind, name, value_kind="constant", value=None, when=None, scope="
 # ---------------------------------------------------------------------------
 
 
+def test_a_failure_names_the_line_as_written():
+    """Taking export default off a module keeps every line where it was,
+    blank lines above it included: the editor marks the line a failure
+    names."""
+    body = (
+        "export default function run(s, api) {\n"
+        "  api.log(1);\n"
+        '  throw new Error("here");\n'
+        "}\n"
+    )
+    a_input = {
+        "submission": {"rowuuid": "r", "values": {}},
+        "case": None,
+        "lookups": {},
+        "now": "2026-10-19 10:00:00",
+        "user": "u",
+    }
+    for above in ("", "\n\n", "  \n\t\n", "// a comment\n\n"):
+        result = run_module(above + body, a_input)
+        assert result.error == "Error: here (line {})".format(3 + above.count("\n")), (
+            above,
+            result.error,
+        )
+
+
 def test_every_operator_compiles_and_is_null_safe(catalogue):
     expectations = {
         "equal": "(s.years === 3)",

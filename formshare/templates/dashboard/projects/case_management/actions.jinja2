@@ -17,6 +17,7 @@
       .act-mode .btn.active { pointer-events: none; }
       .act-inline > * { margin-right: 6px; margin-bottom: 6px; }
       .act-rows tr.act-editing > td { background-color: #fcf8e3; }
+      .act-keys { margin: 6px 0 0 0; font-size: 12px; }
       details.act-code > summary { cursor: pointer; }
       details.act-code > summary h3 { display: inline; }
     </style>
@@ -25,6 +26,7 @@
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','querybuilder' %}
+    {% if mode == 'expert' %}{% jsresource request,'formshare','actions_editor' %}{% endif %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -185,9 +187,17 @@
                     <p class="text-muted">{{ _('One default function run(s, api). What it can read and write is in the case management guide; nothing it does is applied until it returns, and nothing at all if it fails.') }}</p>
                     <form method="post" action="{{ request.url }}">
 {{ form.secure_form(request) }}
+                        <label for="act-module" class="sr-only">{{ _('The module') }}</label>
                         <textarea name="action_module" id="act-module" class="form-control">{{ module }}</textarea>
+                        {# Shown once the code editor has taken the textarea's place #}
+                        <p class="text-muted act-keys" id="act-keys" style="display: none">
+                            {{ _('Ctrl+Space shows what fits where the cursor is, and the editor marks what the server would refuse.') }}
+                            {{ _('Ctrl+S saves.') }}
+                            {% if submissions|length > 0 %}{{ _('Ctrl+Enter tests with the chosen submission.') }}{% endif %}
+                            {{ _('Tab indents; press Esc and then Tab to leave the editor.') }}
+                        </p>
                         <div class="m-t">
-                            <button type="submit" name="save_module" value="1" class="btn btn-primary">{{ _('Save the module') }}</button>
+                            <button type="submit" name="save_module" value="1" id="act-save" class="btn btn-primary">{{ _('Save the module') }}</button>
                             <button type="button" id="act-copy" class="btn btn-white">{{ _('Copy the code FormShare would write from the table') }}</button>
                         </div>
                     </form>
@@ -264,11 +274,75 @@
 {% block scripts %}
     {{ super() }}
     <script>
-      var actFilters = {{ filters }};
+      var actFilters = {% if mode == 'table' %}{{ filters }}{% else %}[]{% endif %};
       var actTargets = {{ targets }};
       var actVariables = {{ variables }};
       var actRepeats = {{ repeats }};
       var actTestUrl = "{{ request.route_url('form_case_actions_test', userid=userid, projcode=projcode, formid=formData.form_id) }}";
+      // The code editor of expert mode (frontend/actions-editor), when it
+      // could be made; otherwise the module stays a plain textarea.
+      var actEditor = null;
+{% if mode == 'expert' %}
+      var actEditorCatalogue = {{ editorCatalogue }};
+      var actEditorPhrases = {
+        syntax: {{ _("This part can't be read: check the brackets, quotes and operators around it.")|tojson }},
+        noRun: {{ _('The module must export a default function run(s, api).')|tojson }},
+        tooLarge: {{ _('The module is larger than {kb} KB.')|tojson }},
+        noImports: {{ _('A module has no imports: what it reads comes in s and api.')|tojson }},
+        onlyRun: {{ _('A module exports one thing: its default function run.')|tojson }},
+        dynamicImport: {{ _('import() loads nothing: no host has a module loader.')|tojson }},
+        await: {{ _('A module runs at once: nothing after an await runs.')|tojson }},
+        newDate: {{ _('new Date() without arguments is not available: use api.now.')|tojson }},
+        dateCall: {{ _('Date() is not available: use api.now.')|tojson }},
+        dateNow: {{ _('Date.now is not available: use api.now.')|tojson }},
+        mathRandom: {{ _('Math.random is not available: a run must give the same answer on every host.')|tojson }},
+        codeFromText: {{ _('{name} is not available to a module.')|tojson }},
+        locale: {{ _("{name} is not available: formatting is the module's own or api's.")|tojson }},
+        timers: {{ _('{name} is not available: a module runs at once, with no timers.')|tojson }},
+        absent: {{ _('{name} is not available to a module.')|tojson }},
+        unknownQuestion: {{ _('This form has no question named “{name}”.')|tojson }},
+        encryptedRead: {{ _('“{name}” is encrypted: the module reads its envelope, never the answer.')|tojson }},
+        unknownApiMember: {{ _('api has no member “{name}”.')|tojson }},
+        unknownCaseMember: {{ _('The case has no member “{name}”: read a property with property("…") and a column with value("…").')|tojson }},
+        unknownParentMember: {{ _('The case\'s parent has no member “{name}”: read a property with property("…") and a column with value("…").')|tojson }},
+        assignCase: {{ _('Assigning to the case changes nothing: use set(), activate() or deactivate().')|tojson }},
+        noCase: {{ _('This form has no case: api.case is null.')|tojson }},
+        noParent: {{ _('The case has no parent: api.case.parent is null.')|tojson }},
+        unknownRepeat: {{ _('This form has no repeat named “{name}”.')|tojson }},
+        nestedRepeat: {{ _('“{name}” is a repeat inside “{parent}”: read it from one of that repeat\'s rows, as row.repeat("…").')|tojson }},
+        unknownMulti: {{ _('This form has no multi-select named “{name}”.')|tojson }},
+        notMulti: {{ _('“{name}” is not a multi-select, so this finds no code.')|tojson }},
+        unknownChoice: {{ _('“{name}” has no choice “{code}”.')|tojson }},
+        lookupApiName: {{ _("Name run's second parameter api: the server finds the lists to load by api.lookup(…).")|tojson }},
+        lookupNotText: {{ _('Name the list as text, as in api.lookup("list", code): the server loads only the lists named that way.')|tojson }},
+        unknownList: {{ _('This form has no lookup list named “{name}”.')|tojson }},
+        unknownRepeatColumn: {{ _('The repeat “{repeat}” has no column “{name}”.')|tojson }},
+        unknownTarget: {{ _('The case has no property or column named “{name}”.')|tojson }},
+        unknownParentTarget: {{ _("The case's parent has no property or column named “{name}”.")|tojson }},
+        encryptedWrite: {{ _('“{name}” is encrypted: an action can only copy an envelope into it, not write an answer in clear.')|tojson }},
+        unknownProperty: {{ _('The case has no property “{name}”.')|tojson }},
+        unknownParentProperty: {{ _("The case's parent has no property “{name}”.")|tojson }},
+        unknownColumn: {{ _('The case has no column “{name}”.')|tojson }},
+        unknownParentColumn: {{ _("The case's parent has no column “{name}”.")|tojson }},
+        didYouMean: {{ _('Did you mean “{name}”?')|tojson }},
+        sectionQuestions: {{ _('Questions')|tojson }},
+        sectionSubmission: {{ _('The submission')|tojson }},
+        sectionColumns: {{ _('Columns')|tojson }},
+        sectionRow: {{ _('The row')|tojson }},
+        sectionProperties: {{ _('Properties')|tojson }},
+        sectionCaseColumns: {{ _('Columns')|tojson }},
+        typeText: {{ _('text')|tojson }},
+        typeInteger: {{ _('integer')|tojson }},
+        typeDecimal: {{ _('decimal')|tojson }},
+        typeDate: {{ _('date')|tojson }},
+        typeDatetime: {{ _('date and time')|tojson }},
+        typeSelect: {{ _('select one')|tojson }},
+        typeMulti: {{ _('multi-select')|tojson }},
+        typeRepeat: {{ _('repeat')|tojson }},
+        typeList: {{ _('lookup list')|tojson }},
+        runSnippet: {{ _("the module's function")|tojson }}
+      };
+{% endif %}
 
       function confirmTable(form) {
         swal({
@@ -339,6 +413,24 @@
       }
 
       $(document).ready(function () {
+        var moduleArea = document.getElementById("act-module");
+        if (moduleArea && window.FormShareActionsEditor) {
+          try {
+            actEditor = window.FormShareActionsEditor.create(moduleArea, {
+              catalogue: actEditorCatalogue,
+              phrases: actEditorPhrases,
+              ariaLabel: {{ _('The module')|tojson }},
+              onSave: function () { $("#act-save").click(); },
+              onTest: $("#act-test").length ? function () { $("#act-test").click(); } : null
+            });
+            if (/Mac|iPhone|iPad/.test(navigator.platform || "")) {
+              $("#act-keys").text($("#act-keys").text().replace(/Ctrl\+/g, "\u2318"));
+            }
+            $("#act-keys").show();
+          } catch (e) {
+            if (window.console) { console.warn("The code editor could not be made; the module stays a textarea:", e); }
+          }
+        }
         if ($("#builder").length && actFilters.length) {
           $("#builder").queryBuilder({
             filters: actFilters,
@@ -413,17 +505,27 @@
         });
         $("#act-cancel").on("click", function () { window.location.reload(); });
 
-        $("#act-copy").on("click", function () { $("#act-module").val($("#act-compiled").val()); });
+        // One edit in the editor, which Ctrl+Z takes back.
+        $("#act-copy").on("click", function () {
+          var compiled = $("#act-compiled").val();
+          if (actEditor) { actEditor.replace(compiled); actEditor.focus(); } else { $("#act-module").val(compiled); }
+        });
 
         $("#act-test").on("click", function () {
           var payload = { rowuuid: $("#act-test-submission").val() };
           if ($("#act-module").length) { payload.module = $("#act-module").val(); }
           $("#act-result").html("<i class='fa fa-spinner fa-spin'></i>");
+          if (actEditor) { actEditor.clearMark(); }
           fetch(actTestUrl, { method: "POST", headers: {"Content-Type": "application/json", "X-CSRF-Token": "{{ request.session.get_csrf_token() }}"}, body: JSON.stringify(payload), credentials: "same-origin" })
             .then(function (r) { return r.json(); })
             .then(function (r) {
               var html = "";
-              if (r.error) { html += "<div class='alert alert-danger'>" + $("<div>").text(r.error).html() + "</div>"; }
+              if (r.error) {
+                html += "<div class='alert alert-danger'>" + $("<div>").text(r.error).html() + "</div>";
+                // Every host names the module's own line: mark it.
+                var failedAt = /\(line (\d+)\)\s*$/.exec(r.error);
+                if (failedAt && actEditor) { actEditor.markLine(parseInt(failedAt[1], 10), r.error); }
+              }
               else if (r.skipped) { html += "<div class='alert alert-info'>{{ _('This form has no actions.') }}</div>"; }
               else if (!r.changes.length) { html += "<div class='alert alert-info'>{{ _('The run would change nothing.') }}</div>"; }
               else {

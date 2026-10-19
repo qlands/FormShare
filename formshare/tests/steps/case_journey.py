@@ -1239,6 +1239,9 @@ def t_e_s_t_case_journey(test_object):
     test_object.root.assertIn(b"No rules yet", res.body)
     test_object.root.assertIn(b"v.consent_obtained", res.body)
     test_object.root.assertIn(b"p.risk_factor", res.body)
+    # Table mode loads no code editor and prints no names for one.
+    test_object.root.assertNotIn(b"actions_editor.min.js", res.body)
+    test_object.root.assertNotIn(b"var actEditorCatalogue =", res.body)
     res = testapp.get(
         "/user/{}/project/{}/form/{}".format(login, project, TOOL2), status=200
     )
@@ -1436,12 +1439,14 @@ def t_e_s_t_case_journey(test_object):
         status=302,
     )
     assert "FS_error" in res.headers
+    # Lines ended as a browser posts a textarea's, with CR LF: the module is
+    # stored as the owner saw it.
     res = testapp.post(
         actions,
         {
             "save_module": "1",
-            "action_module": "export default function run(s, api) {\n"
-            '  api.case.set("risk_factor", api.case.property("nope"));\n}',
+            "action_module": "export default function run(s, api) {\r\n"
+            '  api.case.set("risk_factor", api.case.property("nope"));\r\n}',
         },
         status=302,
     )
@@ -1454,6 +1459,7 @@ def t_e_s_t_case_journey(test_object):
         )
     )
     assert served["mode"] == "expert" and 'property("nope")' in served["module"]
+    assert "\r" not in served["module"]
     before = _maintable_count(config, schema2)
     valid = _write_tool2_submission(
         resources, test_object.working_dir, centre_id, worker_id
@@ -1477,6 +1483,20 @@ def t_e_s_t_case_journey(test_object):
     assert a_failure is not None and "no property nope" in a_failure[1], a_failure
     res = testapp.get(actions, status=200)
     test_object.root.assertIn(b"no property nope", res.body)
+    # Expert mode's page carries the code editor (frontend/actions-editor)
+    # and the names it completes and checks; QueryBuilder's are not needed.
+    test_object.root.assertIn(b"js/plugins/codemirror6/actions_editor.min.js", res.body)
+    names = json.loads(
+        re.search(rb"var actEditorCatalogue = (.*);\n", res.body).group(1)
+    )
+    assert names["known"] is True
+    assert "consent_obtained" in [q["name"] for q in names["questions"]]
+    assert "risk_factor" in [p["name"] for p in names["case"]["properties"]]
+    test_object.root.assertIn(b"var actFilters = [];", res.body)
+    # The editor fills {name} into its messages: the page hands it over as
+    # it is (2026-10-19: gettext's %(name)s reached the page unfilled).
+    test_object.root.assertIn(b"no question named \\u201c{name}\\u201d", res.body)
+    test_object.root.assertNotIn(b"%(name)s", res.body)
     res = testapp.post(
         actions,
         {

@@ -64,6 +64,7 @@ __all__ = [
     "recompile_form_module",
     "actions_json",
     "build_catalogue",
+    "catalogue_for_editor",
     "catalogue_for_querybuilder",
     "case_source_of",
     "continuations_of",
@@ -434,7 +435,11 @@ def set_expert_module(request, project_id, form_id, module):
     (no default function, too large)."""
     from formshare.processes.actions.host import load_module, ModuleError
 
-    module = module or ""
+    # A browser posts a textarea's lines ended with CR LF. Stored as they
+    # come, the module would not be the text the owner saw, and its size,
+    # which load_module limits, would count a byte more per line than the
+    # editor's check does (frontend/actions-editor).
+    module = re.sub(r"\r\n?", "\n", module or "")
     if module.strip() != "":
         try:
             load_module(module)
@@ -910,6 +915,195 @@ def _add_days_since(catalogue):
                 "optgroup": optgroup,
             }
         )
+
+
+# What JXFormToMysql writes as the description of a field that has no label.
+_NO_LABEL = "Without label"
+
+
+def catalogue_for_editor(request, project_id, form_id, catalogue):
+    """What the expert mode's editor completes and checks names against
+    (frontend/actions-editor): the names a module meets when it runs, by
+    the rules the run's input is built with (processes/actions/server.py).
+
+    - **questions**: the stored columns of the main table and its
+      continuations, less the control columns, the keys and what MySQL
+      generates. ``system`` marks a column of the repository's own (a name
+      starting with _), which the run hands over but the editor does not
+      offer. A select carries its choices.
+    - **repeats**: each with the table it hangs off and its columns.
+    - **case** and **parent**: the properties and the columns of the case's
+      row and of its parent's, or None when there is none.
+    - **lookups**: the lists api.lookup can read, from the form's
+      repository and then the case's source's, as the run looks for them.
+
+    Encrypted names are kept and marked, so that the editor says why one
+    cannot be used rather than that it does not exist. ``known`` is False
+    for a form with no repository yet, and the editor then checks no name.
+    """
+    form = _form(request, project_id, form_id)
+    schema = form.form_schema if form is not None else None
+    out = {
+        "known": bool(schema),
+        "questions": [],
+        "repeats": [],
+        "case": None,
+        "parent": None,
+        "lookups": [],
+    }
+    if not schema:
+        return out
+    tables = _tables_of(request, project_id, form_id)
+    extended = continuations_of(request, project_id, form_id)
+    choices = {}
+
+    def choices_of(lookup_table):
+        if not lookup_table or not lookup_table.startswith("lkp"):
+            return []
+        if lookup_table not in choices:
+            choices[lookup_table] = _choices(
+                request, schema, lookup_table, lookup_table[3:]
+            )
+        return choices[lookup_table]
+
+    def stored(a_field):
+        name = a_field["field_name"]
+        return not (
+            name in CONTROL_COLUMNS
+            or name.endswith("_rowid")
+            or a_field.get("field_generatedas")
+        )
+
+    def answers_of(table_name):
+        """The answers of a table and of the continuations of it."""
+        fields = _fields_of(request, project_id, form_id, table_name)
+        for ext_table, continued in sorted(extended.items()):
+            if continued == table_name:
+                fields = fields + _fields_of(request, project_id, form_id, ext_table)
+        entries = []
+        for a_field in fields:
+            if not stored(a_field):
+                continue
+            name = a_field["field_name"]
+            odk_type = (a_field.get("field_odktype") or "").lower()
+            multi = odk_type == "select all that apply"
+            label = (a_field.get("field_desc") or "").strip()
+            entry = {
+                "name": name,
+                "type": (
+                    "string"
+                    if multi
+                    else js_type_of(a_field.get("field_type"), odk_type)
+                ),
+                "label": "" if label == _NO_LABEL else label,
+            }
+            if odk_type == "select one":
+                # Its choices may come from a file, with no lookup table.
+                entry["select"] = True
+            if multi:
+                entry["multi"] = True
+                # The msel table's own field names the lookup.
+                for f in _fields_of(
+                    request, project_id, form_id, table_name + "_msel_" + name
+                ):
+                    if f["field_name"] == name:
+                        entry["choices"] = choices_of(f.get("field_rtable"))
+            else:
+                values = choices_of(a_field.get("field_rtable"))
+                if values:
+                    entry["choices"] = values
+            if a_field.get("field_encrypted") == 1:
+                entry["encrypted"] = True
+                entry.pop("choices", None)
+            if name.startswith("_"):
+                entry["system"] = True
+            entries.append(entry)
+        return entries
+
+    out["questions"] = answers_of("maintable")
+
+    def module_parent(table_name):
+        while table_name in extended:
+            table_name = extended[table_name]
+        return table_name
+
+    for a_table in tables:
+        name = a_table["table_name"]
+        if name == "maintable" or a_table.get("table_lkp") or _MSEL.search(name):
+            continue
+        if not a_table.get("parent_table") or name in extended:
+            continue
+        out["repeats"].append(
+            {
+                "name": name,
+                "parent": module_parent(a_table["parent_table"]),
+                "columns": answers_of(name),
+            }
+        )
+
+    def case_row(source, table_name):
+        properties = [
+            {
+                "name": a_property["property_name"],
+                "type": property_js_type(a_property["property_type"]),
+            }
+            for a_property in get_table_properties(
+                request, source["project"], source["form"], table_name
+            )
+        ]
+        columns = []
+        for a_field in _fields_of(
+            request, source["project"], source["form"], table_name
+        ):
+            if not stored(a_field):
+                continue
+            label = (a_field.get("field_desc") or "").strip()
+            column = {
+                "name": a_field["field_name"],
+                "type": js_type_of(
+                    a_field.get("field_type"), a_field.get("field_odktype")
+                ),
+                "label": "" if label == _NO_LABEL else label,
+            }
+            if a_field.get("field_encrypted") == 1:
+                column["encrypted"] = True
+            columns.append(column)
+        return {"table": table_name, "properties": properties, "columns": columns}
+
+    source = getattr(catalogue, "source", None)
+    # A source with no repository gives the run no case: api.case is null.
+    if source is not None and source.get("schema"):
+        out["case"] = case_row(source, source["table"])
+        if source.get("parent_table"):
+            out["parent"] = case_row(source, source["parent_table"])
+
+    places = [(project_id, form_id)]
+    if source is not None and (source["project"], source["form"]) != places[0]:
+        places.append((source["project"], source["form"]))
+    named = set()
+    for place_project, place_form in places:
+        for a_table in _tables_of(request, place_project, place_form):
+            if not a_table.get("table_lkp"):
+                continue
+            name = a_table["table_name"][3:]
+            if name in named or not _NAME.match(name):
+                continue
+            named.add(name)
+            out["lookups"].append(
+                {
+                    "name": name,
+                    "columns": [
+                        f["field_name"]
+                        for f in _fields_of(
+                            request, place_project, place_form, a_table["table_name"]
+                        )
+                        if f["field_name"] != "rowuuid"
+                        and not f["field_name"].endswith("_rowid")
+                        and not f.get("field_generatedas")
+                    ],
+                }
+            )
+    return out
 
 
 def catalogue_for_querybuilder(catalogue):

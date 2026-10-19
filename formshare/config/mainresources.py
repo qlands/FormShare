@@ -306,6 +306,17 @@ def create_resources(apppath, config):
     )
     r.add_js_resource("formshare", "jsplumb", "js/plugins/jsplumb/jsplumb.min.js", None)
 
+    # The code editor of a form's actions in expert mode: CodeMirror 6 with
+    # the actions API, one script built from frontend/actions-editor (its
+    # README; THIRD_PARTY_LICENSES.txt beside the bundle). The page runs this
+    # file, never the source: rebuild it with the source change.
+    r.add_js_resource(
+        "formshare",
+        "actions_editor",
+        "js/plugins/codemirror6/actions_editor.min.js",
+        None,
+    )
+
     # The page behaviours declared with data-* attributes instead of inline
     # event handlers, which the Content-Security-Policy refuses
     # (formshare/config/csp.py). base.jinja2 loads it on every page.

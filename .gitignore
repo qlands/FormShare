@@ -137,3 +137,7 @@ test_config.json
 .out.txt.swp
 .isort.cfg
 formshare/tests/resources/forms/complex_form/for_import/xml/report.txtformshare/static/formshare_storage_en.pdf
+
+# The actions editor's npm packages (frontend/actions-editor): installed with
+# npm install, bundled at build time, never served
+node_modules/

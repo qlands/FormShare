@@ -1,0 +1,25 @@
+{
+  "name": "formshare-actions-editor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The code editor of a form's case actions in expert mode: CodeMirror 6 with FormShare's actions API.",
+  "type": "module",
+  "license": "SEE LICENSE IN ../../LICENSE.txt",
+  "scripts": {
+    "build": "esbuild src/bundle.js --bundle --format=iife --minify --target=es2020 --legal-comments=none --banner:js=\"/*! FormShare actions editor. Includes CodeMirror 6 and Lezer (MIT), see THIRD_PARTY_LICENSES.txt */\" --metafile=node_modules/.actions-editor-meta.json --outfile=../../formshare/jsandcss/js/plugins/codemirror6/actions_editor.min.js && node tools/licenses.mjs node_modules/.actions-editor-meta.json ../../formshare/jsandcss/js/plugins/codemirror6/THIRD_PARTY_LICENSES.txt",
+    "test": "node --test test/"
+  },
+  "devDependencies": {
+    "@codemirror/autocomplete": "6.20.3",
+    "@codemirror/commands": "6.11.1",
+    "@codemirror/lang-javascript": "6.2.5",
+    "@codemirror/language": "6.13.1",
+    "@codemirror/lint": "6.9.7",
+    "@codemirror/search": "6.7.2",
+    "@codemirror/state": "6.7.6",
+    "@codemirror/view": "6.43.14",
+    "@lezer/common": "1.5.3",
+    "@lezer/highlight": "1.2.5",
+    "esbuild": "0.28.2"
+  }
+}

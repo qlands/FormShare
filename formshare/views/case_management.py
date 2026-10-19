@@ -105,6 +105,7 @@ from formshare.processes.db.actions import (
     _choices as lookup_choices,
     add_form_action,
     build_catalogue,
+    catalogue_for_editor,
     catalogue_for_querybuilder,
     delete_form_action,
     get_action_mode,
@@ -1407,6 +1408,15 @@ class ActionsView(ListSection):
             "targets": htmlsafe_json_dumps(targets),
             "variables": htmlsafe_json_dumps(catalogue.variables),
             "repeats": htmlsafe_json_dumps(catalogue.repeats),
+            # What the expert mode's editor completes and checks
+            # (frontend/actions-editor).
+            "editorCatalogue": (
+                htmlsafe_json_dumps(
+                    catalogue_for_editor(self.request, project_id, form_id, catalogue)
+                )
+                if mode == "expert"
+                else "null"
+            ),
             "hasCase": catalogue.source is not None,
             "source": catalogue.source,
             "submissions": self._submissions(form_data),

@@ -2365,3 +2365,35 @@ def test_the_lock_names_each_copy_of_a_list():
 
     assert form_copy_key("p1", "f1", "cases.csv") == "p1:f1:cases.csv"
     assert variant_lock_key("p1", "cases", "abc") == "p1:cases:variant:abc"
+
+
+def test_a_submissions_date_is_moved_onto_the_databases_clock():
+    """A list's stamp is the database's clock and _submitted_date
+    FormShare's (2026-10-19): production's MySQL ran in CEST and FormShare
+    in UTC, and every regeneration hid the next two hours of submissions."""
+    from formshare.processes.odk import api
+
+    class _Clock:
+        def __init__(self, ahead):
+            self.ahead = ahead
+
+        def execute(self, statement, params=None):
+            assert str(statement) == "SELECT NOW(6)"
+            return self
+
+        def scalar(self):
+            return datetime.datetime.now() + self.ahead
+
+    class _Request:
+        def __init__(self, ahead):
+            self.dbsession = _Clock(ahead)
+
+    two_hours = datetime.timedelta(hours=2, milliseconds=300)
+    assert api.database_clock_offset(_Request(two_hours)) == datetime.timedelta(hours=2)
+    behind = -datetime.timedelta(hours=5, minutes=30, milliseconds=400)
+    assert api.database_clock_offset(_Request(behind)) == -datetime.timedelta(
+        hours=5, minutes=30
+    )
+    assert api.database_clock_offset(
+        _Request(datetime.timedelta(0))
+    ) == datetime.timedelta(0)

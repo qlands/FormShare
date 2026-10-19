@@ -3108,13 +3108,39 @@ def _list_generation_folder(request):
         shutil.rmtree(folder, ignore_errors=True)
 
 
+def database_clock_offset(request):
+    """How far the database's clock is ahead of FormShare's, to the second:
+    NOW() in the database's session time zone minus datetime.now() here.
+
+    A list's stamp is the database's clock, read before generating, and a
+    submission's _submitted_date is FormShare's own. The two differ when
+    MySQL and FormShare run in different time zones. Production's MySQL ran
+    in CEST and FormShare in UTC (2026-10-19), so every regeneration hid the
+    next two hours of submissions from its copy: a school followed up at
+    11:58 UTC was missing from a list stamped 13:19 CEST.
+    """
+    database_now = request.dbsession.execute(text("SELECT NOW(6)")).scalar()
+    offset = database_now - datetime.datetime.now()
+    return datetime.timedelta(seconds=round(offset.total_seconds()))
+
+
+def _source_last_changes(request, schema):
+    """When a list's source last changed, on the database's clock, which a
+    list's stamp is on: (the newest submission, moved onto it by
+    database_clock_offset; the newest edit, audit_date, which is on it
+    already)."""
+    last_submission = get_last_submission_date_from_schema(request, schema)
+    if last_submission is not None:
+        last_submission += database_clock_offset(request)
+    return last_submission, get_last_clean_date_from_schema(request, schema)
+
+
 def _variant_is_current(request, project_id, file_name, variant, schema):
     """A variant generated after its source last changed, whose file is in
     the project's storage."""
     if variant is None or not variant["variant_md5"]:
         return False
-    last_submission = get_last_submission_date_from_schema(request, schema)
-    last_clean = get_last_clean_date_from_schema(request, schema)
+    last_submission, last_clean = _source_last_changes(request, schema)
     if list_is_stale(variant["variant_lastgen"], last_submission, last_clean):
         return False
     stream = get_stream(request, project_id, file_name)
@@ -3275,8 +3301,7 @@ def refresh_published_lists(request, project_id, form, form_files, assistant_uui
             if md5sum is not None:
                 refreshed[a_file["file_name"]] = md5sum
             continue
-        last_submission = get_last_submission_date_from_schema(request, schema)
-        last_clean = get_last_clean_date_from_schema(request, schema)
+        last_submission, last_clean = _source_last_changes(request, schema)
         # The regeneration decision is per stored file, not per registry list.
         # The list's list_lastgen is the edition marker (shared across every
         # form that serves the list); whether *this* form's copy needs

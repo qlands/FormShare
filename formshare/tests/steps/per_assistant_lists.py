@@ -28,7 +28,7 @@ from formshare.processes.db.case_management import list_variant_clause, variant_
 from formshare.processes.list_lock import form_copy_key, list_lock, variant_lock_key
 from formshare.products.block import get_redis_client
 
-from .config_switches import settings_set_to
+from .config_switches import settings_set_to, system_timezone
 from .in_process import build_in_process, form_row
 
 PROJECT = "perassistant"
@@ -207,6 +207,23 @@ def _set_variants(config, project_id, assignments, key=None):
         engine.execute(sql, tuple(params))
     finally:
         engine.dispose()
+
+
+def _two_hours_behind_the_database(config):
+    """A time zone for this process two hours behind the database's clock,
+    as production's FormShare (UTC) ran behind its MySQL (CEST) until
+    2026-10-19: POSIX counts the hours west of Greenwich."""
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        database = engine.execute(
+            "SELECT TIMESTAMPDIFF(MINUTE, UTC_TIMESTAMP(), NOW())"
+        ).scalar()
+    finally:
+        engine.dispose()
+    west = 120 - database
+    return "FST{}{}:{:02d}".format(
+        "-" if west < 0 else "", abs(west) // 60, abs(west) % 60
+    )
 
 
 def _assigned(config, schema):
@@ -847,3 +864,29 @@ def t_e_s_t_per_assistant_lists(test_object):
         status=302,
     )
     assert _assignee(config, schema, edited) == BEN
+
+    # A list's stamp is the database's clock, a submission's date FormShare's
+    # (2026-10-19). With FormShare two hours behind the database, as
+    # production ran (MySQL in CEST, FormShare in UTC), a submission that
+    # arrived after a regeneration was dated before its stamp, and the list
+    # went without it for two hours. Its date is moved onto the database's
+    # clock first now (database_clock_offset), for a form's copy and for a
+    # variant alike.
+    res = testapp.post(
+        edit, {"list_filter_mode": "all", "change_mode": "1"}, status=302
+    )
+    assert "FS_error" not in res.headers
+    with system_timezone(_two_hours_behind_the_database(config)):
+        _set_copy(config, project_id, stale)
+        _received(test_object, ANA)
+        after_the_copy = str(uuid.uuid4())
+        _push(test_object, ANA, 808, rowuuid=after_the_copy)
+        assert after_the_copy in _received(test_object, ANA)[1]
+        res = testapp.post(
+            edit, {"list_filter_mode": "submitted_by", "change_mode": "1"}, status=302
+        )
+        assert "FS_error" not in res.headers
+        _received(test_object, ANA)
+        after_the_variant = str(uuid.uuid4())
+        _push(test_object, ANA, 809, rowuuid=after_the_variant)
+        assert after_the_variant in _received(test_object, ANA)[1]

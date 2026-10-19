@@ -14,6 +14,8 @@ import io
 import json
 import os
 import re
+import threading
+import time
 import uuid
 from hashlib import md5
 from urllib.parse import urlparse
@@ -22,6 +24,11 @@ from lxml import etree
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
+from formshare.processes.db.case_management import list_variant_clause, variant_key
+from formshare.processes.list_lock import form_copy_key, list_lock, variant_lock_key
+from formshare.products.block import get_redis_client
+
+from .config_switches import settings_set_to
 from .in_process import build_in_process, form_row
 
 PROJECT = "perassistant"
@@ -155,6 +162,49 @@ def _logged(config, project_id):
                 (project_id, FORM),
             ).fetchall()
         }
+    finally:
+        engine.dispose()
+
+
+def _copy_state(config, project_id):
+    """The form's copy of the list: its MD5 and when it was generated."""
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        return tuple(
+            engine.execute(
+                "SELECT file_md5, file_lastgen FROM mediafile WHERE project_id = %s "
+                "AND form_id = %s AND file_name = %s",
+                (project_id, FORM, LIST_FILE),
+            ).fetchone()
+        )
+    finally:
+        engine.dispose()
+
+
+def _set_copy(config, project_id, assignments):
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        engine.execute(
+            "UPDATE mediafile SET {} WHERE project_id = %s AND form_id = %s "
+            "AND file_name = %s".format(assignments),
+            (project_id, FORM, LIST_FILE),
+        )
+    finally:
+        engine.dispose()
+
+
+def _set_variants(config, project_id, assignments, key=None):
+    """Changes the list's variants, or the one named key."""
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        sql = "UPDATE listvariant SET {} WHERE project_id = %s AND list_id = %s".format(
+            assignments
+        )
+        params = [project_id, LIST_ID]
+        if key is not None:
+            sql += " AND variant_key = %s"
+            params.append(key)
+        engine.execute(sql, tuple(params))
     finally:
         engine.dispose()
 
@@ -343,6 +393,50 @@ def t_e_s_t_per_assistant_lists(test_object):
     all_hash, received = _received(test_object, ANA)
     assert received == every_case
     assert _received(test_object, BEN) == (all_hash, every_case)
+
+    # One regeneration of a copy at a time (list_lock, 2026-10-19). A pull
+    # that finds the list stale while another request regenerates it waits,
+    # then serves what the other made instead of writing it again. The other
+    # request is a thread here: it holds the lock, stamps the copy and
+    # records a marker for its MD5 while the pull waits.
+    copy_key = form_copy_key(project_id, FORM, LIST_FILE)
+    stale = "file_lastgen = '2000-01-01 00:00:00'"
+    _set_copy(config, project_id, stale)
+    marker = "feedface" * 4
+    holding = threading.Event()
+
+    def another_regeneration():
+        with list_lock(config, copy_key) as held:
+            assert held
+            holding.set()
+            time.sleep(0.5)
+            _set_copy(
+                config,
+                project_id,
+                "file_lastgen = NOW(), file_md5 = '{}'".format(marker),
+            )
+
+    other = threading.Thread(target=another_regeneration)
+    other.start()
+    holding.wait(10)
+    assert _list_entry(test_object, ANA)[0] == "md5:" + marker
+    other.join()
+    regenerated_at = _copy_state(config, project_id)[1]
+    assert _copy_state(config, project_id) == (marker, regenerated_at)
+    # One kept past the wait: the list is served as it is, not regenerated
+    _set_copy(config, project_id, stale)
+    redis_client = get_redis_client(config)
+    redis_client.set("list-lock:" + copy_key, "another request", ex=60)
+    try:
+        with settings_set_to({"lists.lock_wait": "0.3"}):
+            assert _list_entry(test_object, ANA)[0] == "md5:" + marker
+        assert _copy_state(config, project_id)[1].year == 2000
+    finally:
+        redis_client.delete("list-lock:" + copy_key)
+        redis_client.close()
+    # With the lock free the pull regenerates it, by caselistgen, as it was
+    assert _received(test_object, ANA) == (all_hash, every_case)
+    assert _copy_state(config, project_id)[0] == all_hash[len("md5:") :]
     res = testapp.get(edit, status=200)
     assert b'id="list_filter_mode"' in res.body
 
@@ -375,6 +469,47 @@ def t_e_s_t_per_assistant_lists(test_object):
         edit, {"list_filter_mode": "submitted_by", "change_mode": "1"}, status=302
     )
     assert "FS_error" not in res.headers
+    assert _received(test_object, ANA) == (ana_hash, [cases[ANA]])
+
+    # Per-assistant lists race too (list_lock, 2026-10-19). Each assistant's
+    # variant is a file of its own with a lock of its own. While another
+    # request -- Ana's first phone, a thread here -- regenerates hers, Ben's
+    # pull is not kept waiting and brings his cases, and Ana's second phone
+    # waits and serves what the first made.
+    ana_key = variant_key(
+        list_variant_clause(
+            {"list_filter_mode": "submitted_by", "source_table": "maintable"},
+            schema,
+            ANA,
+        )
+    )
+    variant_stale = "variant_lastgen = '2000-01-01 00:00:00'"
+    _set_variants(config, project_id, variant_stale)
+    variant_marker = "decafbad" * 4
+    ana_holding = threading.Event()
+
+    def anas_first_phone():
+        with list_lock(config, variant_lock_key(project_id, LIST_ID, ana_key)) as held:
+            assert held
+            ana_holding.set()
+            time.sleep(3)
+            _set_variants(
+                config,
+                project_id,
+                "variant_lastgen = NOW(), variant_md5 = '{}'".format(variant_marker),
+                ana_key,
+            )
+
+    first_phone = threading.Thread(target=anas_first_phone)
+    first_phone.start()
+    ana_holding.wait(10)
+    assert _received(test_object, BEN) == (ben_hash, [cases[BEN]])
+    # Ben had his cases while Ana's list was still locked
+    assert first_phone.is_alive()
+    assert _list_entry(test_object, ANA)[0] == "md5:" + variant_marker
+    first_phone.join()
+    # Free again, Ana's list regenerates with her cases
+    _set_variants(config, project_id, variant_stale, ana_key)
     assert _received(test_object, ANA) == (ana_hash, [cases[ANA]])
 
     # In mode assigned_to, each receives the cases assigned to them: at first

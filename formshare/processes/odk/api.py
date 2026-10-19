@@ -8,6 +8,7 @@ import mimetypes
 import os
 import re
 import shutil
+from contextlib import contextmanager
 import traceback
 import uuid
 import zipfile
@@ -58,6 +59,9 @@ from formshare.processes.db import (
     manifest_assigns_cases,
     assign_case_to_registrar,
     assignee_before_deletion,
+    list_variant_state,
+    media_file_state,
+    is_form_blocked,
     assistant_filter_sql,
     get_list_variant,
     record_list_variant,
@@ -137,6 +141,11 @@ from formshare.processes.odk.processes import (
     get_form_case_params,
 )
 from formshare.processes.project_logo import logo_manifest_entries
+from formshare.processes.list_lock import (
+    form_copy_key,
+    list_lock,
+    variant_lock_key,
+)
 from formshare.processes.storage import (
     get_stream,
     response_stream,
@@ -3087,6 +3096,34 @@ def caller_clause(request, project_id, list_data, schema, assistant_uuid):
     return list_variant_clause(list_data, schema, login, assistant_filters)
 
 
+@contextmanager
+def _list_generation_folder(request):
+    """A folder of its own under the repository's tmp for one regeneration of
+    a list, deleted after: every regeneration used to leave its copy there."""
+    folder = os.path.join(get_odk_path(request), *["tmp", str(uuid.uuid4())])
+    os.makedirs(folder)
+    try:
+        yield folder
+    finally:
+        shutil.rmtree(folder, ignore_errors=True)
+
+
+def _variant_is_current(request, project_id, file_name, variant, schema):
+    """A variant generated after its source last changed, whose file is in
+    the project's storage."""
+    if variant is None or not variant["variant_md5"]:
+        return False
+    last_submission = get_last_submission_date_from_schema(request, schema)
+    last_clean = get_last_clean_date_from_schema(request, schema)
+    if list_is_stale(variant["variant_lastgen"], last_submission, last_clean):
+        return False
+    stream = get_stream(request, project_id, file_name)
+    if stream is None:
+        return False
+    stream.close()
+    return True
+
+
 def refresh_list_variant(request, project_id, list_data, schema, clause):
     """Makes sure the variant of a list with this clause (caller_clause) is
     current, generating it when it is missing or older than its source's last
@@ -3096,40 +3133,97 @@ def refresh_list_variant(request, project_id, list_data, schema, clause):
 
     Assistants whose clauses are the same share the variant, so one pull
     generates it for all of them, under the same freshness rule as a form's
-    copy of a list in mode "all".
+    copy of a list in mode "all". One request regenerates it at a time
+    (list_lock): one that waited serves what the other made, and one that
+    waited too long serves the variant as it is.
     """
     key = variant_key(clause)
     file_name = variant_file_name(list_data, key)
     variant = get_list_variant(request, project_id, list_data["list_id"], key)
-    if variant is not None and variant["variant_md5"]:
-        last_submission = get_last_submission_date_from_schema(request, schema)
-        last_clean = get_last_clean_date_from_schema(request, schema)
-        if not list_is_stale(variant["variant_lastgen"], last_submission, last_clean):
-            stream = get_stream(request, project_id, file_name)
-            if stream is not None:
-                stream.close()
+    if _variant_is_current(request, project_id, file_name, variant, schema):
+        return variant["variant_md5"], file_name
+    with list_lock(
+        request.registry.settings,
+        variant_lock_key(project_id, list_data["list_id"], key),
+    ) as held:
+        if not held:
+            if variant is not None and variant["variant_md5"]:
                 return variant["variant_md5"], file_name
-    # The database's clock, read before generating, as for a copy
-    started = request.dbsession.execute(text("SELECT NOW()")).scalar()
-    temp_dir = os.path.join(get_odk_path(request), *["tmp", str(uuid.uuid4())])
-    os.makedirs(temp_dir)
-    temp_file = os.path.join(temp_dir, list_data["list_filename"])
-    generated, message = generate_published_list_file(
-        request, list_data, temp_file, clause
-    )
-    if not generated:
-        log.error(
-            "Unable to generate a variant of list {} of project {}: {}".format(
-                list_data["list_id"], project_id, message
+            return None, None
+        # Another request may have made it while this one waited
+        variant = list_variant_state(request, project_id, list_data["list_id"], key)
+        if _variant_is_current(request, project_id, file_name, variant, schema):
+            return variant["variant_md5"], file_name
+        # The database's clock, read before generating, as for a copy
+        started = request.dbsession.execute(text("SELECT NOW()")).scalar()
+        with _list_generation_folder(request) as folder:
+            temp_file = os.path.join(folder, list_data["list_filename"])
+            generated, message = generate_published_list_file(
+                request, list_data, temp_file, clause
             )
+            if not generated:
+                log.error(
+                    "Unable to generate a variant of list {} of project {}: {}".format(
+                        list_data["list_id"], project_id, message
+                    )
+                )
+                return None, None
+            with open(temp_file, "rb") as generated_file:
+                md5sum = md5(generated_file.read()).hexdigest()
+            with open(temp_file, "rb") as generated_file:
+                store_file(request, project_id, file_name, generated_file)
+        record_list_variant(
+            request, project_id, list_data["list_id"], key, md5sum, started
         )
-        return None, None
-    with open(temp_file, "rb") as generated_file:
-        md5sum = md5(generated_file.read()).hexdigest()
-    with open(temp_file, "rb") as generated_file:
-        store_file(request, project_id, file_name, generated_file)
-    record_list_variant(request, project_id, list_data["list_id"], key, md5sum, started)
-    return md5sum, file_name
+        return md5sum, file_name
+
+
+def _regenerate_form_copy(request, project_id, form, a_list, file_name, current_md5):
+    """Regenerates a form's copy of a list served to everyone, holding its
+    lock. Returns the new MD5 when the file changed, or None.
+
+    - **The file goes before its MD5.** It is stored first, replaced whole
+      (PTOFS), so a manifest never names a file that is not there yet. A
+      blocked form's files are left as they are.
+    - **The copy is stamped as generated** even when the content did not
+      change, so the per-file gate closes and the next pull does not
+      regenerate on every request.
+    - **The stamp is the database's clock, read before generating.** The
+      dates it is compared with are the database's (audit_date) and the
+      loader's, and a change that lands while the file is being written must
+      count against the next pull, not be hidden behind a stamp taken after
+      it.
+    """
+    started = request.dbsession.execute(text("SELECT NOW()")).scalar()
+    changed = None
+    with _list_generation_folder(request) as folder:
+        temp_file = os.path.join(folder, file_name)
+        generated, message = generate_published_list_file(request, a_list, temp_file)
+        if not generated:
+            log.error(
+                "Unable to generate list {} of project {}: {}".format(
+                    a_list["list_id"], project_id, message
+                )
+            )
+            return None
+        with open(temp_file, "rb") as generated_file:
+            md5sum = md5(generated_file.read()).hexdigest()
+        if md5sum != current_md5 and not is_form_blocked(request, project_id, form):
+            bucket_id = md5((project_id + form).encode("utf-8")).hexdigest()
+            with open(temp_file, "rb") as generated_file:
+                store_file(request, bucket_id, file_name, generated_file)
+            added, message = add_file_to_form(
+                request, project_id, form, file_name, True, md5sum
+            )
+            if added:
+                changed = md5sum
+            else:
+                log.error(
+                    "The new MD5 of list {} in form {} of project {} could not be "
+                    "recorded: {}".format(file_name, form, project_id, message)
+                )
+    update_media_lastgen(request, project_id, form, file_name, started)
+    return changed
 
 
 def refresh_published_lists(request, project_id, form, form_files, assistant_uuid=None):
@@ -3145,6 +3239,11 @@ def refresh_published_lists(request, project_id, form, form_files, assistant_uui
     is not regenerated in the form's copy: the entry takes the MD5 of the
     variant of the assistant asking, assistant_uuid, which get_media_file
     serves under the same name.
+
+    One request regenerates a copy at a time (list_lock, 2026-10-19): two
+    devices pulling a stale list at once both wrote it, and the later write
+    emptied the file while the other's device downloaded it. One that waited
+    serves what the other made.
 
     A list whose generation fails keeps its previous edition: stale data a
     device can use beats a manifest error it cannot.
@@ -3190,41 +3289,30 @@ def refresh_published_lists(request, project_id, form, form_files, assistant_uui
         # the same list) serve whatever was uploaded.
         if not list_is_stale(a_file.get("file_lastgen"), last_submission, last_clean):
             continue
-        # The stamp is the database's clock, read before generating: the
-        # dates it is compared with are the database's (audit_date) and the
-        # loader's, and a change that lands while the file is being written
-        # must count against the next pull, not be hidden behind a stamp
-        # taken after it.
-        started = request.dbsession.execute(text("SELECT NOW()")).scalar()
-        odk_dir = get_odk_path(request)
-        uid = str(uuid.uuid4())
-        temp_dir = os.path.join(odk_dir, *["tmp", uid])
-        os.makedirs(temp_dir)
-        temp_file = os.path.join(temp_dir, a_file["file_name"])
-        generated, message = generate_published_list_file(request, a_list, temp_file)
-        if not generated:
-            log.error(
-                "Unable to generate list {} of project {}: {}".format(
-                    a_list["list_id"], project_id, message
-                )
+        with list_lock(
+            request.registry.settings,
+            form_copy_key(project_id, form, a_file["file_name"]),
+        ) as held:
+            if not held:
+                continue
+            # Another request may have regenerated it while this one waited
+            current = media_file_state(request, project_id, form, a_file["file_name"])
+            if current is None:
+                continue
+            if not list_is_stale(current["file_lastgen"], last_submission, last_clean):
+                if current["file_md5"] != a_file["file_md5"]:
+                    refreshed[a_file["file_name"]] = current["file_md5"]
+                continue
+            md5sum = _regenerate_form_copy(
+                request,
+                project_id,
+                form,
+                a_list,
+                a_file["file_name"],
+                current["file_md5"],
             )
-            continue
-        with open(temp_file, "rb") as generated_file:
-            md5sum = md5(generated_file.read()).hexdigest()
-        if md5sum != a_file["file_md5"]:
-            added, message = add_file_to_form(
-                request, project_id, form, a_file["file_name"], True, md5sum
-            )
-            if added:
-                bucket_id = project_id + form
-                bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
-                with open(temp_file, "rb") as generated_file:
-                    store_file(request, bucket_id, a_file["file_name"], generated_file)
+            if md5sum is not None:
                 refreshed[a_file["file_name"]] = md5sum
-        # Stamp this form's copy as generated even when the content did not
-        # change, so the per-file gate closes and the next pull does not
-        # regenerate on every request.
-        update_media_lastgen(request, project_id, form, a_file["file_name"], started)
     return refreshed
 
 

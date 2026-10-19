@@ -1,16 +1,18 @@
 """The CSV handshake with RSTools' caselistgen.
 
-The Go generator that will replace write_list_csv at stage 7 must produce the
-same bytes, or the swap would churn every list's hash for nothing. RSTools'
-suite makes tests/data/caselist/expected.csv from fixture.sql and query.sql
-through a copy of write_list_csv and asserts caselistgen matches it
-(docs/formshare_case_management/rstools.md, 6.4). This step is the other half:
-the three files vendored, the fixture loaded into a scratch schema, the query
-run through the real path -- SQLAlchemy rows into write_list_csv -- and the
-file compared byte for byte. A difference is a true fact about what the
-driver returns, and it belongs to whoever changed it.
+caselistgen writes CSV lists since 2026-10-19 (stage 7, write_list_csv_file),
+in place of write_list_csv. It must write the same bytes, or the swap churns
+every list's hash for nothing. RSTools' suite makes
+tests/data/caselist/expected.csv from fixture.sql and query.sql through a copy
+of write_list_csv and asserts caselistgen matches it
+(docs/formshare_case_management/rstools.md, 6.4).
 
-    FS_STEPS="caselist_handshake" ../env_formshare3/bin/pytest ... tools/run_steps.py
+This step is the other half. The three files are vendored and the fixture is
+loaded into a scratch schema. The query runs through FormShare's old path --
+SQLAlchemy rows into write_list_csv -- and through the new one, the installed
+caselistgen, and both files are compared with expected.csv byte for byte. A
+difference is a true fact about what the driver or the tool returns, and it
+belongs to whoever changed it.
 """
 
 import io
@@ -19,7 +21,7 @@ import uuid
 
 from sqlalchemy import create_engine
 
-from formshare.processes.db.case_management import write_list_csv
+from formshare.processes.db.case_management import run_caselistgen, write_list_csv
 
 
 def t_e_s_t_caselist_handshake(test_object):
@@ -57,6 +59,19 @@ def t_e_s_t_caselist_handshake(test_object):
         assert (
             produced == expected
         ), "write_list_csv and caselistgen disagree:\n{!r}\n!=\n{!r}".format(
+            produced, expected
+        )
+        # What a list is written with now
+        out = os.path.join(test_object.working_dir, "caselist_handshake_tool.csv")
+        written, message, _ = run_caselistgen(
+            test_object.server_config, query, out, "csv", schema=schema
+        )
+        assert written, message
+        with open(out, "rb") as a_file:
+            produced = a_file.read()
+        assert (
+            produced == expected
+        ), "the installed caselistgen does not write expected.csv:\n{!r}\n!=\n{!r}".format(
             produced, expected
         )
     finally:

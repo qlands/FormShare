@@ -47,7 +47,7 @@ from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_form,
 )
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import or_
+from sqlalchemy import or_, text
 
 __all__ = [
     "get_form_details",
@@ -119,6 +119,7 @@ __all__ = [
     "get_all_project_forms",
     "get_form_survey_columns",
     "update_media_lastgen",
+    "media_file_state",
     "block_forms_with_schema",
     "copy_assistants",
     "count_form_assistants",
@@ -1581,6 +1582,25 @@ def update_form_directory(request, project, form, directory):  # pragma: no cove
             )
         )
         request.dbsession.rollback()
+
+
+def media_file_state(request, project, form, file_name):
+    """A form file's MD5 and when it was last generated, as the database
+    holds them now, or None. Read on a connection of its own: the request's
+    transaction would show its own snapshot, not what another request
+    committed meanwhile (InnoDB's repeatable read), and a request that waited
+    for a list's lock must see the other's regeneration (list_lock)."""
+    with request.dbsession.get_bind().connect() as connection:
+        row = connection.execute(
+            text(
+                "SELECT file_md5, file_lastgen FROM mediafile WHERE project_id = :p "
+                "AND form_id = :f AND file_name = :n"
+            ),
+            {"p": project, "f": form, "n": file_name},
+        ).fetchone()
+    if row is None:
+        return None
+    return {"file_md5": row[0], "file_lastgen": row[1]}
 
 
 def update_media_lastgen(request, project, form, file_name, last_generated_on):

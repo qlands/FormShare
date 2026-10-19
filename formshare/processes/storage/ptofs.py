@@ -16,8 +16,24 @@ is here, with the changes below.
   - get_url is gone: it called a method pairtree does not have, so it never
     worked;
   - PersistentState logs where it printed;
-  - Python 2 leftovers (__cmp__, simplejson, __future__ imports) are gone.
+  - Python 2 leftovers (__cmp__, simplejson, __future__ imports) are gone;
+  - a file and the record are written whole (2026-10-19, below).
 - BucketExists is ofs's exception (ofs/base.py).
+
+**A file is written whole, or not at all.** ofs had pairtree write into the
+final name, emptying it first, and pairtree swallowed an error half way.
+- **What could happen.** Someone reading the file meanwhile got part of it:
+  a device downloading a list that another device's pull was regenerating.
+  Two writers could mix what they wrote, and a failed upload stayed as a
+  truncated file recorded as good.
+- **What happens now.** The file is written beside its final name, under
+  .fs-part- and a random suffix, and moved there in one step (os.replace).
+  A reader gets the file before or after, and a failure removes the part
+  and is raised. The record (persisted_state.json) is replaced the same way,
+  so a reader never sees it empty.
+- **What stays possible.** Two writers into one bucket at once can still
+  lose each other's line in the record. FormShare looks for files on disk,
+  not in the record.
 
 Nothing about the files changes. pairtree still lays them out
 (storage/pairtree_root/, a folder per bucket), and each bucket's
@@ -26,8 +42,10 @@ reads the same. Plugins get a PTOFS in IFileStorage's hooks, as before,
 with the same methods but get_url.
 """
 
+import hashlib
 import json
 import logging
+import os
 from datetime import datetime
 from os import path
 from uuid import uuid4
@@ -39,6 +57,23 @@ __all__ = ["PTOFS", "PersistentState", "BucketExists"]
 log = logging.getLogger("formshare")
 
 PERSISTENCE_FILENAME = "persisted_state.json"
+# What a file is called while it is written, beside its final name
+PART_PREFIX = ".fs-part-"
+# pairtree's read size
+BUFFER_SIZE = 1024 * 8
+
+
+def _part_beside(final_path):
+    """A name for a file being written, in the same folder, so that moving it
+    into place is one step on the same file system."""
+    return path.join(path.dirname(final_path), PART_PREFIX + uuid4().hex)
+
+
+def _remove_quietly(a_path):
+    try:
+        os.remove(a_path)
+    except OSError:
+        pass
 
 
 class BucketExists(Exception):
@@ -92,8 +127,14 @@ class PersistentState(object):
         if not self.filepath:
             log.error("The record of a bucket's files has no path to be written to")
             return
-        with open(self.filepath, "w") as serialised_file:
-            json.dump(self.state, serialised_file)
+        part = _part_beside(self.filepath)
+        try:
+            with open(part, "x") as serialised_file:
+                json.dump(self.state, serialised_file)
+            os.replace(part, self.filepath)
+        except BaseException:
+            _remove_quietly(part)
+            raise
 
     # Dictionary methods
     def keys(self):
@@ -210,7 +251,7 @@ class PTOFS(object):
             else:
                 json_payload[label] = {"_label": label}
 
-        hash_vals = po.add_bytestream_by_path(label, stream_object)
+        hash_vals = self._write_whole(po, label, stream_object)
         stat_vals = po.stat(label)
 
         # The caller's own parameters for the file
@@ -234,6 +275,45 @@ class PTOFS(object):
             )
         json_payload.sync()
         return json_payload.state[label]
+
+    def _write_whole(self, po, label, stream_object):
+        """Writes the file as pairtree's add_bytestream_by_path did -- a label
+        with a folder in it goes in that folder, a stream is read from its
+        start in pairtree's chunks, the hash is of what was written -- but
+        beside the final name, moved there in one step. Returns pairtree's
+        {"checksum", "type"}, or None without hashing."""
+        folder, file_name = path.split(label)
+        folder = path.join(po.id_to_dirpath(), folder) if folder else po.id_to_dirpath()
+        os.makedirs(folder, exist_ok=True)
+        final_path = path.join(folder, file_name)
+        part = _part_beside(final_path)
+        digest = hashlib.new(self.hashing_type) if self.hashing_type else None
+        try:
+            # "x": the permissions open() always gave, never someone else's
+            # file
+            with open(part, "xb") as a_file:
+                if hasattr(stream_object, "read"):
+                    try:
+                        stream_object.seek(0)
+                    except Exception:
+                        pass
+                    chunk = stream_object.read(BUFFER_SIZE)
+                    while chunk:
+                        a_file.write(chunk)
+                        if digest is not None:
+                            digest.update(chunk)
+                        chunk = stream_object.read(BUFFER_SIZE)
+                else:
+                    a_file.write(stream_object)
+                    if digest is not None:
+                        digest.update(stream_object)
+            os.replace(part, final_path)
+        except BaseException:
+            _remove_quietly(part)
+            raise
+        if digest is None:
+            return None
+        return {"checksum": digest.hexdigest(), "type": self.hashing_type}
 
     def get_stream(self, bucket, label, as_stream=True):
         if self.exists(bucket):

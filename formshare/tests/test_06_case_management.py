@@ -10,6 +10,7 @@ test_02_lookup_files.py asserts the shape of a lookup merge.
 import csv
 import datetime
 import io
+import uuid
 
 import pytest
 
@@ -2244,3 +2245,123 @@ def test_a_case_is_reassigned_by_a_person_and_audited_as_them():
             return super().execute(statement, params)
 
     assert not cm.reassign_case(_Req(_Refusing(None)), "FS_abc", "r1", "ben", "c")
+
+
+# ---------------------------------------------------------------------------
+# A CSV list by caselistgen, one regeneration at a time (2026-10-19)
+# ---------------------------------------------------------------------------
+
+
+def test_a_csv_list_is_written_by_caselistgen(tmp_path):
+    """Stage 7: the list's SELECT, whole, written as CSV by RSTools'
+    caselistgen, which writes what write_list_csv wrote
+    (caselist_handshake.py), many times faster."""
+    report = (
+        "<caselistgen><format>csv</format><rows>2</rows>"
+        "<milliseconds>1</milliseconds></caselistgen>"
+    )
+    settings = _fake_caselistgen(tmp_path, 0, report)
+    out = str(tmp_path / "cases.csv")
+    sql = "SELECT t.rowuuid AS name, t.`n` AS label FROM `FS_s`.`maintable` AS t"
+    assert cm.write_list_csv_file(settings, sql, out) == (True, "")
+    arguments = (tmp_path / "args.txt").read_text().splitlines()
+    assert dict(zip(arguments[::2], arguments[1::2])) == {
+        "-H": "mysqlserver",
+        "-P": "3306",
+        "-u": "fs",
+        "-p": "secret",
+        "-q": sql,
+        "-f": "csv",
+        "-o": out,
+    }
+
+
+def test_a_refused_csv_list_says_why(tmp_path):
+    report = (
+        '<caselistgen><format>csv</format><rows>0</rows><error code="2">'
+        "the database could not be reached</error></caselistgen>"
+    )
+    settings = _fake_caselistgen(tmp_path, 2, report)
+    assert cm.write_list_csv_file(settings, "SELECT 1", str(tmp_path / "a.csv")) == (
+        False,
+        "the database could not be reached: the database could not be reached",
+    )
+
+
+def _lock_client():
+    import redis
+
+    # A database of its own, as the export lock's test uses
+    return redis.StrictRedis(host="localhost", port=6379, db=15)
+
+
+def test_one_regeneration_of_a_list_at_a_time():
+    from formshare.processes.list_lock import list_lock
+
+    client = _lock_client()
+    key = "pytest:" + uuid.uuid4().hex
+    settings = {"lists.lock_wait": "0", "lists.lock_expire": "30"}
+    with list_lock(settings, key, client) as held:
+        assert held
+        assert 0 < client.ttl("list-lock:" + key) <= 30
+        with list_lock(settings, key, client) as other:
+            assert not other
+    assert client.get("list-lock:" + key) is None
+    with list_lock(settings, key, client) as held:
+        assert held
+
+
+def test_a_request_that_waits_gets_the_lock_when_it_is_let_go():
+    import threading
+    import time
+
+    from formshare.processes.list_lock import list_lock
+
+    client = _lock_client()
+    key = "pytest:" + uuid.uuid4().hex
+    taken = threading.Event()
+
+    def regenerate():
+        with list_lock({}, key, _lock_client()):
+            taken.set()
+            time.sleep(0.4)
+
+    other = threading.Thread(target=regenerate)
+    other.start()
+    taken.wait(5)
+    started = time.monotonic()
+    with list_lock({"lists.lock_wait": "5"}, key, client) as held:
+        assert held
+        assert time.monotonic() - started >= 0.2
+    other.join()
+
+
+def test_a_lock_another_request_took_over_is_not_let_go():
+    """A request whose lock expired while it worked must not remove the one
+    another request holds now."""
+    from formshare.processes.list_lock import list_lock
+
+    client = _lock_client()
+    key = "pytest:" + uuid.uuid4().hex
+    with list_lock({}, key, client) as held:
+        assert held
+        client.set("list-lock:" + key, "someone else", ex=30)
+    assert client.get("list-lock:" + key) == b"someone else"
+    client.delete("list-lock:" + key)
+
+
+def test_without_redis_lists_regenerate_unlocked():
+    import redis
+
+    from formshare.processes.list_lock import list_lock
+
+    nowhere = redis.StrictRedis(host="localhost", port=1, socket_connect_timeout=1)
+    with list_lock({}, "pytest:nowhere", nowhere) as held:
+        assert held
+
+
+def test_the_lock_names_each_copy_of_a_list():
+    from formshare.processes.list_lock import form_copy_key, variant_lock_key
+
+    assert form_copy_key("p1", "f1", "cases.csv") == "p1:f1:cases.csv"
+    assert variant_lock_key("p1", "cases", "abc") == "p1:cases:variant:abc"

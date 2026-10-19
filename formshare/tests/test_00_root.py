@@ -70,6 +70,7 @@ from .steps.repository import t_e_s_t_repository
 from .steps.testing_data_handover import t_e_s_t_testing_data_handover
 from .steps.repository_downloads import t_e_s_t_repository_downloads
 from .steps.case_lists import t_e_s_t_case_lists
+from .steps.caselist_handshake import t_e_s_t_caselist_handshake
 from .steps.per_assistant_lists import t_e_s_t_per_assistant_lists
 from .steps.case_journey import t_e_s_t_case_journey
 from .steps.actions_split import t_e_s_t_actions_split
@@ -250,6 +251,8 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_repository_downloads(self.test_object)
             print("Testing published case lists")
             t_e_s_t_case_lists(self.test_object)
+            print("Testing that caselistgen writes a CSV list as FormShare did")
+            t_e_s_t_caselist_handshake(self.test_object)
             print("Testing lists that serve each assistant their cases")
             t_e_s_t_per_assistant_lists(self.test_object)
             print("Testing the case-management journey")

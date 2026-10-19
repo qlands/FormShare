@@ -242,3 +242,76 @@ def test_a_record_behaves_as_a_dictionary(tmp_path):
     other = tmp_path / "other"
     other.mkdir()
     assert ptofs.PersistentState(str(other), create=False).state == {}
+
+
+class _WatchedStream:
+    """A stream that, half way through being read, looks at what the final
+    file holds -- what a device downloading it meanwhile would get -- and can
+    fail there instead."""
+
+    def __init__(self, data, final_path, fail=False):
+        self.data = io.BytesIO(data)
+        self.final_path = final_path
+        self.fail = fail
+        self.seen_mid_write = None
+        self.reads = 0
+
+    def seek(self, position):
+        self.data.seek(position)
+
+    def read(self, size):
+        self.reads += 1
+        if self.reads == 2:
+            with open(self.final_path, "rb") as a_file:
+                self.seen_mid_write = a_file.read()
+            if self.fail:
+                raise OSError("the upload stopped")
+        return self.data.read(size)
+
+
+def _parts(folder):
+    return [name for name in os.listdir(folder) if name.startswith(ptofs.PART_PREFIX)]
+
+
+def test_a_file_is_replaced_whole(tmp_path):
+    """A reader sees the file as it was until the new one is complete, and
+    no part is left behind (2026-10-19: a device downloading a list another
+    pull was regenerating could get part of it)."""
+    store = ptofs.PTOFS(storage_dir=str(tmp_path / "storage"))
+    bucket = "db7eb5813e8a1b322dbf2166521c0468"
+    store.claim_bucket(bucket)
+    store.put_stream(bucket, "list.csv", io.BytesIO(b"old\r\n"))
+    folder = _folder(
+        str(tmp_path), *"db 7e b5 81 3e 8a 1b 32 2d bf 21 66 52 1c 04 68".split()
+    )
+    new = b"x" * (3 * ptofs.BUFFER_SIZE)
+    stream = _WatchedStream(new, os.path.join(folder, "list.csv"))
+    record = store.put_stream(bucket, "list.csv", stream)
+    assert stream.seen_mid_write == b"old\r\n"
+    assert store.get_stream(bucket, "list.csv").read() == new
+    assert record["_content_length"] == len(new)
+    assert _parts(folder) == []
+
+
+def test_a_write_that_fails_leaves_the_file_as_it_was(tmp_path):
+    store = ptofs.PTOFS(storage_dir=str(tmp_path / "storage"))
+    bucket = "db7eb5813e8a1b322dbf2166521c0468"
+    store.claim_bucket(bucket)
+    store.put_stream(bucket, "logo.png", io.BytesIO(b"old"))
+    folder = _folder(
+        str(tmp_path), *"db 7e b5 81 3e 8a 1b 32 2d bf 21 66 52 1c 04 68".split()
+    )
+    stream = _WatchedStream(b"y" * (3 * ptofs.BUFFER_SIZE), "/dev/null", fail=True)
+    with pytest.raises(OSError):
+        store.put_stream(bucket, "logo.png", stream)
+    assert store.get_stream(bucket, "logo.png").read() == b"old"
+    assert _parts(folder) == []
+    assert store.get_metadata(bucket, "logo.png")["_content_length"] == 3
+
+
+def test_a_label_with_a_folder_goes_in_that_folder(tmp_path):
+    """As pairtree's add_bytestream_by_path put it."""
+    store = ptofs.PTOFS(storage_dir=str(tmp_path / "storage"))
+    store.claim_bucket("b1")
+    store.put_stream("b1", "media/photo.jpg", b"jpg")
+    assert store.get_stream("b1", "media/photo.jpg").read() == b"jpg"

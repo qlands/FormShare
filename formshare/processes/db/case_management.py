@@ -73,6 +73,8 @@ __all__ = [
     "build_list_select",
     "list_is_stale",
     "write_list_csv",
+    "write_list_csv_file",
+    "run_caselistgen",
     "add_published_list",
     "update_published_list",
     "delete_published_list",
@@ -159,6 +161,7 @@ __all__ = [
     "variant_file_name",
     "get_list_variant",
     "record_list_variant",
+    "list_variant_state",
     "forget_list_variants",
 ]
 
@@ -316,14 +319,16 @@ def list_is_stale(lastgen, *change_dates):
 
 
 def write_list_csv(headers, rows, file_name):
-    """Writes the generated rows as the CSV a device downloads.
+    """The CSV a device downloads, as FormShare wrote it before caselistgen
+    (write_list_csv_file) took it over on 2026-10-19. It is kept as the
+    reference both sides pin: RSTools' suite checks caselistgen against a
+    copy of it, and caselist_handshake.py checks it and caselistgen against
+    the same expected file.
 
     Every field is enclosed in double quotes (2026-09-13): data can carry
     commas, and always-quoting means no consumer -- device, spreadsheet, the
-    Go generator that will replace this writer -- ever has to guess. An
-    embedded quote is doubled, per RFC 4180. The Go generator must produce
-    this byte for byte (rstools.md section 2.2), or the swap would churn
-    every list's hash for nothing.
+    Go generator -- ever has to guess. An embedded quote is doubled, per RFC
+    4180, and every record ends with CRLF.
     """
     with open(file_name, "w", newline="") as outfile:
         writer = csv.writer(outfile, quoting=csv.QUOTE_ALL)
@@ -369,10 +374,36 @@ def write_list_geojson(settings, sql, kind, file_name):
     One Feature per row: the top-level id is the row's rowuuid, the label is
     served again as title, the location -- ODK's text, ; or | between points
     -- becomes a Point, a LineString or a closed Polygon, longitude first.
-    caselistgen writes the file whole or not at all. Returns (ok, message,
-    skipped): skipped counts the rows it left out, a case with no location or
-    with one that cannot be the geometry asked for, which never fail a list.
+    Returns (ok, message, skipped): skipped counts the rows it left out, a
+    case with no location or with one that cannot be the geometry asked for,
+    which never fail a list.
     """
+    return run_caselistgen(settings, sql, file_name, "geojson", kind)
+
+
+def write_list_csv_file(settings, sql, file_name):
+    """Writes a CSV list with RSTools' caselistgen, from the list's SELECT
+    (build_list_select), since 2026-10-19 (stage 7).
+
+    It writes what write_list_csv wrote, byte for byte, and caselist_handshake.py
+    checks it: the header from the query's aliases, which are
+    build_list_select's headers. The one difference is a TIME, written
+    09:00:00 where Python wrote 9:00:00 (rstools.md 6.4).
+
+    It is many times faster than reading the rows into Python, which is what
+    keeps a list's regeneration lock short (list_lock). Returns (ok,
+    message).
+    """
+    written, message, _ = run_caselistgen(settings, sql, file_name, "csv")
+    return written, message
+
+
+def run_caselistgen(settings, sql, file_name, list_format, kind=None, schema=None):
+    """Runs RSTools' caselistgen: the list's SELECT, whole, into file_name in
+    list_format, csv or geojson; for geojson, kind says what the location
+    holds. A list's SELECT names its schema; schema is for one that does not
+    (caselist_handshake.py). caselistgen writes the file whole or not at all.
+    Returns (ok, message, skipped)."""
     tool = os.path.join(
         settings["odktools.path"], *["utilities", "CaseListGen", "caselistgen"]
     )
@@ -389,14 +420,13 @@ def write_list_geojson(settings, sql, kind, file_name):
         "-q",
         sql,
         "-f",
-        "geojson",
-        "-g",
-        GEOMETRY_ALIAS,
-        "-G",
-        kind,
-        "-o",
-        file_name,
+        list_format,
     ]
+    if list_format == "geojson":
+        args += ["-g", GEOMETRY_ALIAS, "-G", kind]
+    if schema:
+        args += ["-s", schema]
+    args += ["-o", file_name]
     try:
         process = Popen(args, stdout=PIPE, stderr=PIPE)
     except OSError as e:
@@ -758,8 +788,11 @@ def generate_published_list_file(request, list_data, out_path, variant_sql=None)
                 key_column=list_data.get("list_key_column"),
                 variant_sql=variant_sql,
             )
-            rows = request.dbsession.execute(sql).fetchall()
-            write_list_csv(headers, rows, out_path)
+            written, message = write_list_csv_file(
+                request.registry.settings, sql, out_path
+            )
+            if not written:
+                return False, message
         request.dbsession.query(PublishedList).filter(
             PublishedList.project_id == list_data["project_id"]
         ).filter(PublishedList.list_id == list_data["list_id"]).update(stamp)
@@ -1062,6 +1095,23 @@ def get_list_variant(request, project_id, list_id, key):
     if res is None:
         return None
     return map_from_schema(res)
+
+
+def list_variant_state(request, project_id, list_id, key):
+    """A variant's MD5 and when it was last generated, as the database holds
+    them now, or None. Read on a connection of its own, as media_file_state
+    reads a form's file (list_lock)."""
+    with request.dbsession.get_bind().connect() as connection:
+        row = connection.execute(
+            text(
+                "SELECT variant_md5, variant_lastgen FROM listvariant "
+                "WHERE project_id = :p AND list_id = :l AND variant_key = :k"
+            ),
+            {"p": project_id, "l": list_id, "k": key},
+        ).fetchone()
+    if row is None:
+        return None
+    return {"variant_md5": row[0], "variant_lastgen": row[1]}
 
 
 def record_list_variant(request, project_id, list_id, key, md5sum, generated):

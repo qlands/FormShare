@@ -22,6 +22,7 @@ reads MySQL the same way:
 
 import json
 import os
+import re
 import shutil
 import time
 import uuid
@@ -236,16 +237,58 @@ def t_e_s_t_actions_split(test_object):
     assert not [c for c in museum_columns if c.endswith("_rowid") or c == "rowuuid"]
     assert log_lines[7] == "case true maintable", log_lines
 
-    # --- A real run on the form's own row, recorded -----------------------------
-    res = testapp.post(actions, {"set_mode": "1", "action_mode": "expert"}, status=302)
-    assert "FS_error" not in res.headers
-    res = testapp.post(
-        actions,
+    # --- Typed answers read the split form as a submission would ---------------
+    # (2026-10-20) An answer typed for a question of the continuation is the
+    # row's, as in a submission; what is not answered is null; a form without
+    # a case link acts on the typed row itself.
+    typed = (
+        "export default function run(s, api) {\n"
+        '  api.log("late " + s.late_count + " " + typeof s.late_count);\n'
+        '  api.log("crops " + s.selections("late_crops").join(","));\n'
+        '  api.log("q001 " + s.q001 + " q200 " + s.q200 + " route " + s.route);\n'
+        '  s.repeat("plots").forEach(function (p) {\n'
+        '    api.log("plot " + p.plot_name + " " + p.plot_area + " " + p.selections("plot_uses").join(","));\n'
+        "  });\n"
+        '  api.log("case " + (api.case.rowuuid === s.rowuuid) + " " + api.case.table);\n'
+        "}\n"
+    )
+    res = testapp.post_json(
+        actions + "/test",
         {
-            "save_module": "1",
-            "action_module": "export default function run(s, api) {\n"
+            "module": typed,
+            "sample": {
+                "answers": {
+                    "late_count": "4",
+                    "late_crops": ["c3", "c1"],
+                    "q001": "a1_1",
+                    "q200": "a200_1",
+                },
+                "repeats": {
+                    "plots": [
+                        {"plot_name": "North", "plot_area": "1.5", "plot_uses": ["u2"]}
+                    ]
+                },
+            },
+        },
+        status=200,
+    )
+    assert res.json["ok"], res.json
+    assert res.json["log"] == [
+        "late 4 number",
+        "crops c3,c1",
+        "q001 a1_1 q200 a200_1 route null",
+        "plot North 1.5 u2",
+        "case true maintable",
+    ], res.json["log"]
+
+    # --- A real run on the form's own row, recorded -----------------------------
+    res = testapp.post(
+        actions + "/add/code",
+        {
+            "action_code": "export default function run(s, api) {\n"
             "  if (s.late_count > 3 && s.selected('late_crops', 'c3')) { api.case.deactivate(); }\n"
             "}\n",
+            "action_desc": "Deactivates a late submission with c3",
         },
         status=302,
     )
@@ -285,4 +328,10 @@ def t_e_s_t_actions_split(test_object):
         }
     ]
     res = testapp.get(actions, status=200)
-    test_object.root.assertIn(b"its rules act on its own rows", res.body)
+    test_object.root.assertIn(b"its actions act on its own rows", res.body)
+    # The test page of a form acting on its own rows asks for no case: the
+    # typed answers are the case.
+    action_id = re.search(r'data-id="([^"]+)"', res.body.decode("utf-8")).group(1)
+    res = testapp.get(actions + "/{}/test".format(action_id), status=200)
+    test_object.root.assertIn(b"This form has no case link: the case is", res.body)
+    test_object.root.assertNotIn(b'id="act-case"', res.body)

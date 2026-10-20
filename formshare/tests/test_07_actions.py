@@ -22,7 +22,12 @@ from formshare.processes.actions.compiler import (
     OPERATORS,
     compile_module,
     compile_when,
+    describe_action,
     describe_when,
+    explain_failure,
+    locate_line,
+    names_read,
+    rule_module,
 )
 from formshare.processes.actions.host import (
     LIMITS,
@@ -273,52 +278,256 @@ def test_empty_table_is_the_empty_module(catalogue):
     assert compile_module([], catalogue) == EMPTY_MODULE
 
 
-def test_first_match_wins_per_target(catalogue):
+def _host_input(values, properties=None, parent=None):
+    return {
+        "submission": {"rowuuid": "S", "values": values, "repeats": {}},
+        "case": {
+            "table": "teachers",
+            "rowuuid": "T1",
+            "active": True,
+            "values": {"teacher_name": "A"},
+            "properties": dict({"status": None}, **(properties or {})),
+            "parent": parent,
+        },
+        "now": "2026-10-20 10:00:00",
+        "user": "u",
+        "lookups": {},
+    }
+
+
+def _kept(result):
+    """What a host applies: the last write to each name (actions-api.md 5)."""
+    kept = {}
+    for write in result.writes:
+        name = "_active" if write["kind"] == "active" else write["name"]
+        kept[(write["scope"], name)] = write["value"]
+    return kept
+
+
+def test_the_first_action_wins_a_target(catalogue):
+    rows = [
+        row(
+            1,
+            "property",
+            "status",
+            value="interviewed",
+            when=group(rule("v.trained", "equal", "yes")),
+        ),
+        row(
+            2,
+            "property",
+            "trained",
+            value="1",
+            when=group(rule("v.years", "greater", 2)),
+        ),
+        row(3, "property", "status", value="seen"),
+        row(
+            4,
+            "property",
+            "status",
+            value="never",
+            when=group(rule("v.trained", "equal", "no")),
+        ),
+    ]
+    module = compile_module(rows, catalogue)
+    assert module.startswith("export default function run(s, api) {\n")
+    # Each action is a function of its own, and run calls them from the last
+    # to the first, so that the first one's write is the one kept.
+    calls = [line.strip() for line in module.split("\n")[3:7]]
+    assert calls == [
+        "__fs_action_4(s, api);",
+        "__fs_action_3(s, api);",
+        "__fs_action_2(s, api);",
+        "__fs_action_1(s, api);",
+    ]
+    assert (
+        "// Action 1: when trained equals 'yes', set property status of the case "
+        "to 'interviewed'\nfunction __fs_action_1(s, api) {\n"
+        "  if (api.case === null) { return; }\n"
+        '  if (s.trained === "yes") { api.case.set("status", "interviewed"); }\n}'
+        in module
+    )
+    assert "// Action 3: always, set property status of the case to 'seen'" in module
+    assert (
+        '  if (s.years !== null && s.years > 2) { api.case.set("trained", 1); }'
+        in module
+    )
+    # Rule 1 when it holds; else rule 3, an always above rule 4's "never" --
+    # the table's rule as it always was.
+    yes = run_module(module, _host_input({"trained": "yes", "years": 1}))
+    no = run_module(module, _host_input({"trained": "no", "years": 3}))
+    assert yes.ok and no.ok, (yes.error, no.error)
+    assert _kept(yes) == {("case", "status"): "interviewed"}
+    assert _kept(no) == {("case", "status"): "seen", ("case", "trained"): 1}
+
+
+def test_code_composes_with_rules(catalogue):
+    helper = (
+        "function label(x) { return 'from code ' + x; }\n"
+        "export default function run(s, api) {\n"
+        '  api.case.set("status", label(1));\n'
+        "  api.log(label(2));\n"
+        "}\n"
+    )
+    other = (
+        "function label(x) { return 'other ' + x; }\n"
+        "export default function run(s, api) {\n"
+        '  api.case.set("status", label(3));\n'
+        "}\n"
+    )
+    rows = [
+        row(
+            1,
+            "property",
+            "status",
+            value="rule",
+            when=group(rule("v.years", "greater", 2)),
+        ),
+        dict(
+            action_order=2,
+            action_kind="code",
+            action_code=helper,
+            action_desc="a\nhelper",
+        ),
+        dict(action_order=3, action_kind="code", action_code=other),
+    ]
+    module = compile_module(rows, catalogue)
+    # Code keeps its helpers to itself: two of the same name do not collide.
+    assert (
+        "// Action 2, written by hand: a helper\nconst __fs_action_2 = (function () {"
+        in module
+    )
+    assert (
+        "// Action 3, written by hand\nconst __fs_action_3 = (function () {" in module
+    )
+    assert "export default" not in module.split("\n", 1)[1]
+    ruled = run_module(module, _host_input({"years": 3}))
+    coded = run_module(module, _host_input({"years": 1}))
+    assert ruled.ok and coded.ok, (ruled.error, coded.error)
+    assert _kept(ruled) == {("case", "status"): "rule"}
+    assert _kept(coded) == {("case", "status"): "from code 1"}
+    assert coded.log == ["from code 2"]
+    assert describe_action(rows[1], catalogue) == "a helper"
+    assert describe_action(rows[2], catalogue) == ""
+
+
+def test_a_failure_names_its_action_and_line(catalogue):
+    code = (
+        "export default function run(s, api) {\n"
+        "  api.log('before');\n"
+        "  throw new Error('stop here');\n"
+        "}\n"
+    )
+    rows = [
+        row(1, "property", "status", value="x"),
+        dict(action_order=2, action_kind="code", action_code=code),
+    ]
+    module = compile_module(rows, catalogue)
+    result = run_module(module, _host_input({}))
+    assert not result.ok
+    assert result.error.startswith("Error: stop here (line ")
+    assert explain_failure(module, result.error) == (
+        "Error: stop here (action 2, line 3)",
+        2,
+        3,
+    )
+    # An action tested alone keeps the number the list gives it.
+    alone = compile_module([dict(rows[1], action_number=5)], catalogue)
+    failed = run_module(alone, _host_input({}))
+    assert explain_failure(alone, failed.error)[0] == (
+        "Error: stop here (action 5, line 3)"
+    )
+    # A rule has no line of its own; a module that marks no action, its own.
+    assert locate_line(
+        module, module.split("\n").index("function __fs_action_1(s, api) {") + 2
+    ) == (1, None)
+    assert explain_failure(code, "Error: x (line 3)") == ("Error: x (line 3)", None, 3)
+    assert explain_failure(module, "no line here") == ("no line here", None, None)
+
+
+def test_a_comment_like_an_action_inside_code_is_not_one(catalogue):
+    code = (
+        "export default function run(s, api) {\n"
+        "// Action 1: when this, that\n"
+        "  throw new Error('x');\n"
+        "}\n"
+    )
+    module = compile_module(
+        [dict(action_order=1, action_kind="code", action_code=code)], catalogue
+    )
+    line = module.split("\n").index("  throw new Error('x');") + 1
+    assert locate_line(module, line) == (1, 3)
+
+
+def test_what_an_action_says_cannot_become_code(catalogue):
+    # A comment that a line break ended would make the rest of the line code:
+    # JavaScript ends a line at U+2028 and U+2029 too.
+    sneaky = "x\n}; api.case.deactivate(); {\u2028y\u2029z"
     module = compile_module(
         [
-            row(
-                1,
-                "property",
-                "status",
-                value="interviewed",
-                when=group(rule("v.trained", "equal", "yes")),
-            ),
-            row(
-                2,
-                "property",
-                "trained",
-                value="1",
-                when=group(rule("v.years", "greater", 2)),
-            ),
-            row(3, "property", "status", value="seen"),
-            row(
-                4,
-                "property",
-                "status",
-                value="never",
-                when=group(rule("v.trained", "equal", "no")),
+            row(1, "property", "status", value=sneaky),
+            dict(
+                action_order=2,
+                action_kind="code",
+                action_desc="said\ntwice",
+                action_code="export default function run(s, api) {}",
             ),
         ],
         catalogue,
     )
-    assert module.startswith("export default function run(s, api) {\n")
-    assert "  if (api.case === null) { return; }\n" in module
-    # status: rows 1 and 3 form one chain; row 4 is unreachable after an always
-    assert (
-        '  if (s.trained === "yes") { api.case.set("status", "interviewed"); }\n'
-        in module
+    lines = module.split("\n")
+    first = [i for i, line in enumerate(lines) if line.startswith("// Action 1:")][0]
+    assert lines[first + 1] == "function __fs_action_1(s, api) {"
+    assert "// Action 2, written by hand: said twice" in lines
+    assert "\u2028" not in module and "\u2029" not in module
+    result = run_module(module, _host_input({}))
+    assert result.ok, result.error
+    assert _kept(result) == {("case", "status"): sneaky}
+
+
+def test_a_rule_as_a_module_of_its_own(catalogue):
+    a_rule = row(1, "active", "0", when=group(rule("v.still_working", "equal", "no")))
+    module = rule_module(a_rule, catalogue)
+    assert module == (
+        "export default function run(s, api) {\n"
+        "  // when still_working equals 'no', deactivate the case\n"
+        "  if (api.case === null) { return; }\n"
+        '  if (s.still_working === "no") { api.case.deactivate(); }\n'
+        "}\n"
     )
-    assert '  else { api.case.set("status", "seen"); }\n' in module
-    assert '"never"' not in module
-    assert (
-        "// Row 1: when trained equals 'yes', set property status of the case to 'interviewed'"
-        in module
+    result = run_module(module, _host_input({"still_working": "no"}))
+    assert result.ok and result.writes == [
+        {"scope": "case", "kind": "active", "value": 0}
+    ]
+
+
+def test_what_an_action_reads():
+    assert names_read(
+        row(
+            1,
+            "property",
+            "status",
+            value_kind="variable",
+            value="name",
+            when=group(
+                rule("v.q", "equal", "1"),
+                rule("d.v.visit", "greater", 3),
+                rule("c.avg.meals.score", "greater", 3),
+                rule("p.status", "equal", "x"),
+            ),
+        )
+    ) == (["q", "visit", "name"], ["meals"])
+    code = (
+        "export default function run(sub, a) {\n"
+        '  if (sub.age > 3 && sub.selected("crops", "c1")) {\n'
+        '    a.case.set("x", a.avg(sub.repeat("meals"), "score"));\n'
+        "  }\n"
+        "  var other = {}; other.zzz; sub.rowuuid;\n"
+        "}\n"
     )
-    assert "// Row 3: otherwise, set property status of the case to 'seen'" in module
-    # trained: its own chain, typed as a number
-    assert (
-        '  if (s.years !== null && s.years > 2) { api.case.set("trained", 1); }\n'
-        in module
+    assert names_read(dict(action_kind="code", action_code=code)) == (
+        ["age", "crops"],
+        ["meals"],
     )
 
 
@@ -358,14 +567,19 @@ def test_targets_values_and_the_parent(catalogue):
         catalogue,
     )
     assert '  if (s.still_working === "no") { api.case.deactivate(); }\n' in module
-    assert '  else if (s.still_working === "back") { api.case.activate(); }\n' in module
-    assert "// Row 1: when still_working equals 'no', deactivate the case" in module
-    assert "// Row 2: when still_working equals 'back', reactivate the case" in module
+    assert '  if (s.still_working === "back") { api.case.activate(); }\n' in module
+    assert "// Action 1: when still_working equals 'no', deactivate the case" in module
+    assert (
+        "// Action 2: when still_working equals 'back', reactivate the case" in module
+    )
     assert '  api.case.set("seen", api.now);\n' in module
     assert '  api.case.set("teacher_name", s.trained);\n' in module
-    assert "  if (api.case.parent !== null) {\n" in module
     assert (
-        '    if (api.case.parent.property("count") !== null && api.case.parent.property("count") < 7) { api.case.parent.set("count", 7); }'
+        "function __fs_action_5(s, api) {\n"
+        "  if (api.case === null || api.case.parent === null) { return; }\n" in module
+    )
+    assert (
+        '  if (api.case.parent.property("count") !== null && api.case.parent.property("count") < 7) { api.case.parent.set("count", 7); }'
         in module
     )
     assert (
@@ -466,10 +680,11 @@ def test_generated_module_runs_in_the_host(catalogue):
     }
     result = run_module(module, inputs)
     assert result.ok, result.error
+    # From the last action to the first; the parent's has no parent to write.
     assert result.writes == [
-        {"scope": "case", "kind": "active", "value": 0},
-        {"scope": "case", "kind": "set", "name": "status", "value": "interviewed"},
         {"scope": "case", "kind": "set", "name": "index", "value": 3.5},
+        {"scope": "case", "kind": "set", "name": "status", "value": "interviewed"},
+        {"scope": "case", "kind": "active", "value": 0},
     ]
 
 

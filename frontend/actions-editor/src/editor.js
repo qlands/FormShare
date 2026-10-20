@@ -21,7 +21,7 @@ import {lintGutter, lintKeymap} from "@codemirror/lint";
 import {javascript, javascriptLanguage} from "@codemirror/lang-javascript";
 import {makeCatalogue} from "./model.js";
 import {actionsCompletionSource, compareCompletions} from "./completion.js";
-import {actionsLinter} from "./lint.js";
+import {actionsLinter, diagnose} from "./lint.js";
 import {signatureHelp} from "./signature.js";
 import {actionsTheme} from "./theme.js";
 
@@ -115,6 +115,10 @@ export function makeConfig(options = {}) {
     onTest: quietly(options.onTest),
     ariaLabel: typeof options.ariaLabel === "string" ? options.ariaLabel : "",
     placeholder: typeof options.placeholder === "string" ? options.placeholder : "",
+    // Shown, not written: the code of an action on its test page
+    readOnly: !!options.readOnly,
+    // The height the editor keeps when its text is short (380px by default)
+    minHeight: typeof options.minHeight === "string" ? options.minHeight : "",
   };
 }
 
@@ -167,8 +171,11 @@ export function createEditor(textarea, options = {}) {
     actionsLinter(config),
     signatureHelp,
     failedLine,
+    // Before the theme: an earlier extension takes precedence, styles too.
+    config.minHeight ? EditorView.theme({".cm-content, .cm-gutter": {minHeight: config.minHeight}}) : [],
     actionsTheme,
     config.placeholder ? placeholder(config.placeholder) : [],
+    config.readOnly ? EditorState.readOnly.of(true) : [],
     // Tooltips in <body>, so that no container clips them.
     tooltips({parent: document.body}),
     // Tab indents, as in any code editor; Escape and then Tab leaves.
@@ -227,6 +234,10 @@ export function createEditor(textarea, options = {}) {
       });
     },
     clearMark: () => view.dispatch({effects: setFailedLine.of(null)}),
+    // What the checks say of the text now: [{line, severity, message}]
+    problems: () => diagnose(view.state, config).map(d => ({
+      line: view.state.doc.lineAt(d.from).number, severity: d.severity, message: d.message,
+    })),
     focus: () => view.focus(),
     // Measure again once visible.
     refresh: () => view.requestMeasure(),

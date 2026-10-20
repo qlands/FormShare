@@ -96,24 +96,33 @@ from formshare.processes.list_filter import (
     filter_fields,
     querybuilder_filters,
 )
+from formshare.processes.actions.compiler import (
+    CompileError,
+    compile_module,
+    describe_action,
+    names_read,
+    rule_module,
+)
 from formshare.processes.actions.server import (
+    dry_run_sample,
     get_form_runs,
     retry_run,
     run_for_submission,
 )
 from formshare.processes.db.actions import (
     _choices as lookup_choices,
+    add_code_action,
     add_form_action,
     build_catalogue,
+    case_choices,
     catalogue_for_editor,
     catalogue_for_querybuilder,
     delete_form_action,
-    get_action_mode,
     get_action_module,
+    get_form_action,
     get_form_actions,
     move_form_action,
-    set_action_mode,
-    set_expert_module,
+    update_code_action,
     update_form_action,
 )
 
@@ -1258,13 +1267,53 @@ class PropertiesView(ListSection):
         }
 
 
-class ActionsView(ListSection):
-    """Form → Case actions (feature 3, decision 16): the decision table in
-    table mode, the module editor in expert mode, the preview, the test with
-    a submission and the run log. The module the server runs is what this
-    page last saved; actions.json serves the same text."""
+class ActionsSection(ListSection):
+    """What the pages of a form's actions share (feature 3, decision 16):
+    the form or a 404, the actions numbered, and the addresses."""
 
-    def _submissions(self, form_data, limit=50):
+    def form_or_404(self):
+        user_id, project_code, project_id, project_details = self.project_or_404()
+        form_id = self.request.matchdict["formid"]
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+        return user_id, project_code, project_id, project_details, form_id, form_data
+
+    def actions_url(self, user_id, project_code, form_id):
+        return self.request.route_url(
+            "form_case_actions", userid=user_id, projcode=project_code, formid=form_id
+        )
+
+    def test_url(self, user_id, project_code, form_id, action_id):
+        return self.request.route_url(
+            "form_case_action_test",
+            userid=user_id,
+            projcode=project_code,
+            formid=form_id,
+            actionid=action_id,
+        )
+
+    def numbered(self, rows, catalogue):
+        """The actions in their order, each with its number, what it does in
+        words and its code: a rule as a module of its own, code as written.
+        A rule that cannot be spelled any more (what it names is gone) says
+        why instead."""
+        out = []
+        for number, a_row in enumerate(rows, 1):
+            entry = dict(a_row, number=number, broken=None)
+            code = (a_row.get("action_kind") or "rule") == "code"
+            entry["code"] = (a_row.get("action_code") or "") if code else ""
+            try:
+                entry["words"] = describe_action(a_row, catalogue)
+                if not code:
+                    entry["code"] = rule_module(a_row, catalogue)
+            except CompileError as e:
+                entry["words"] = ""
+                entry["broken"] = str(e)
+            out.append(entry)
+        return out
+
+    def submissions(self, form_data, limit=50):
         """The most recent rows of the form, to dry-run against."""
         schema = form_data.get("form_schema")
         if not schema:
@@ -1294,46 +1343,27 @@ class ActionsView(ListSection):
             for r in rows
         ]
 
+
+class ActionsView(ActionsSection):
+    """Form → Form actions: the form's actions in their order, each a rule
+    or code, with what it does, its code, its test, its edit and its
+    removal, and the record of their runs. The module the server runs, and
+    actions.json serves, is the actions composed (compiler.compile_module)."""
+
     def process_view(self):
-        user_id, project_code, project_id, project_details = self.project_or_404()
-        form_id = self.request.matchdict["formid"]
-        form_data = get_form_data(self.request, project_id, form_id)
-        if form_data is None:
-            raise HTTPNotFound
-        here = self.request.route_url(
-            "form_case_actions", userid=user_id, projcode=project_code, formid=form_id
-        )
+        (
+            user_id,
+            project_code,
+            project_id,
+            project_details,
+            form_id,
+            form_data,
+        ) = self.form_or_404()
+        here = self.actions_url(user_id, project_code, form_id)
         if self.request.method == "POST":
             post_data = self.get_post_dict()
             ok, message = True, ""
-            if "add_action" in post_data or "update_action" in post_data:
-                data = {
-                    "target_scope": post_data.get("target_scope", "case"),
-                    "target_kind": post_data.get("target_kind", ""),
-                    "target_name": post_data.get("target_name", ""),
-                    "value_kind": post_data.get("value_kind", "constant"),
-                    "value": post_data.get("value", ""),
-                    "when_rules": post_data.get("when_rules", ""),
-                }
-                if data["value_kind"] == "computed":
-                    data["value"] = json.dumps(
-                        {
-                            "aggregate": post_data.get("computed_aggregate", ""),
-                            "repeat": post_data.get("computed_repeat", ""),
-                            "column": post_data.get("computed_column", ""),
-                        }
-                    )
-                if "update_action" in post_data and post_data.get("action_id"):
-                    ok, message = update_form_action(
-                        self.request, project_id, form_id, post_data["action_id"], data
-                    )
-                else:
-                    ok, message = add_form_action(
-                        self.request, project_id, form_id, data
-                    )
-                    if ok:
-                        message = ""
-            elif "delete_action" in post_data:
+            if "delete_action" in post_data:
                 ok, message = delete_form_action(
                     self.request, project_id, form_id, post_data.get("action_id", "")
                 )
@@ -1344,20 +1374,6 @@ class ActionsView(ListSection):
                     form_id,
                     post_data.get("action_id", ""),
                     -1 if "move_up" in post_data else 1,
-                )
-            elif "set_mode" in post_data:
-                ok, message = set_action_mode(
-                    self.request,
-                    project_id,
-                    form_id,
-                    post_data.get("action_mode", "table"),
-                )
-            elif "save_module" in post_data:
-                ok, message = set_expert_module(
-                    self.request,
-                    project_id,
-                    form_id,
-                    post_data.get("action_module", ""),
                 )
             elif "retry_run" in post_data:
                 outcome = retry_run(
@@ -1374,18 +1390,79 @@ class ActionsView(ListSection):
             return HTTPFound(location=here, headers={"FS_error": "true"})
 
         catalogue = build_catalogue(self.request, project_id, form_id)
+        return {
+            "projectDetails": project_details,
+            "userid": user_id,
+            "projcode": project_code,
+            "formData": form_data,
+            "actions": self.numbered(
+                get_form_actions(self.request, project_id, form_id), catalogue
+            ),
+            "module": get_action_module(self.request, project_id, form_id),
+            "source": catalogue.source,
+            "runs": get_form_runs(self.request, project_id, form_id, limit=50),
+            "failedRuns": len(
+                get_form_runs(self.request, project_id, form_id, status=1)
+            ),
+        }
+
+
+class ActionRuleView(ActionsSection):
+    """Add an action, or edit a rule: When, Target and Value. Saving goes on
+    to the action's test."""
+
+    def process_view(self):
+        (
+            user_id,
+            project_code,
+            project_id,
+            project_details,
+            form_id,
+            form_data,
+        ) = self.form_or_404()
+        action_id = self.request.matchdict.get("actionid")
         rows = get_form_actions(self.request, project_id, form_id)
-        for a_row in rows:
-            try:
-                a_row["when_words"] = describe_when(a_row.get("when_rules"), catalogue)
-            except CompileError:
-                a_row["when_words"] = "?"
-        mode = get_action_mode(self.request, project_id, form_id)
-        module = get_action_module(self.request, project_id, form_id)
-        try:
-            compiled = compile_module(rows, catalogue)
-        except CompileError as e:
-            compiled = "// " + str(e)
+        existing = None
+        number = len(rows) + 1
+        if action_id is not None:
+            for place, a_row in enumerate(rows, 1):
+                if a_row["action_id"] == action_id:
+                    existing, number = a_row, place
+            if existing is None or (existing.get("action_kind") or "rule") != "rule":
+                raise HTTPNotFound
+        if self.request.method == "POST":
+            post_data = self.get_post_dict()
+            data = {
+                "target_scope": post_data.get("target_scope", "case"),
+                "target_kind": post_data.get("target_kind", ""),
+                "target_name": post_data.get("target_name", ""),
+                "value_kind": post_data.get("value_kind", "constant"),
+                "value": post_data.get("value", ""),
+                "when_rules": post_data.get("when_rules", ""),
+            }
+            if data["value_kind"] == "computed":
+                data["value"] = json.dumps(
+                    {
+                        "aggregate": post_data.get("computed_aggregate", ""),
+                        "repeat": post_data.get("computed_repeat", ""),
+                        "column": post_data.get("computed_column", ""),
+                    }
+                )
+            if existing is not None:
+                ok, result = update_form_action(
+                    self.request, project_id, form_id, action_id, data
+                )
+            else:
+                ok, result = add_form_action(self.request, project_id, form_id, data)
+            self.returnRawViewResult = True
+            if ok:
+                return HTTPFound(
+                    location=self.test_url(user_id, project_code, form_id, result)
+                )
+            self.add_error(result)
+            return HTTPFound(location=self.request.url, headers={"FS_error": "true"})
+
+        catalogue = build_catalogue(self.request, project_id, form_id)
         targets = {}
         for (scope, kind, name), a_type in catalogue.targets.items():
             targets.setdefault(scope, {}).setdefault(kind, []).append(
@@ -1396,10 +1473,8 @@ class ActionsView(ListSection):
             "userid": user_id,
             "projcode": project_code,
             "formData": form_data,
-            "rows": rows,
-            "mode": mode,
-            "module": module,
-            "compiled": compiled,
+            "action": existing,
+            "number": number,
             # Printed into the page's script: the names and labels come from
             # the form, and json.dumps would leave a "</script>" in one to
             # close the script. These are escaped for it, and print as they
@@ -1408,41 +1483,172 @@ class ActionsView(ListSection):
             "targets": htmlsafe_json_dumps(targets),
             "variables": htmlsafe_json_dumps(catalogue.variables),
             "repeats": htmlsafe_json_dumps(catalogue.repeats),
-            # What the expert mode's editor completes and checks
-            # (frontend/actions-editor).
-            "editorCatalogue": (
-                htmlsafe_json_dumps(
-                    catalogue_for_editor(self.request, project_id, form_id, catalogue)
-                )
-                if mode == "expert"
-                else "null"
-            ),
-            "hasCase": catalogue.source is not None,
             "source": catalogue.source,
-            "submissions": self._submissions(form_data),
-            "runs": get_form_runs(self.request, project_id, form_id, limit=50),
-            "failedRuns": len(
-                get_form_runs(self.request, project_id, form_id, status=1)
+        }
+
+
+# What a new action in code starts from
+CODE_START = """export default function run(s, api) {
+  // What happens to the case when this form is submitted.
+}
+"""
+
+
+class ActionCodeView(ActionsSection):
+    """Add an action in code, or edit one: the module in the code editor
+    (frontend/actions-editor). Saving goes on to the action's test; a save
+    refused shows the page again with the code as it was written."""
+
+    def process_view(self):
+        (
+            user_id,
+            project_code,
+            project_id,
+            project_details,
+            form_id,
+            form_data,
+        ) = self.form_or_404()
+        action_id = self.request.matchdict.get("actionid")
+        rows = get_form_actions(self.request, project_id, form_id)
+        existing = None
+        number = len(rows) + 1
+        if action_id is not None:
+            for place, a_row in enumerate(rows, 1):
+                if a_row["action_id"] == action_id:
+                    existing, number = a_row, place
+            if existing is None or (existing.get("action_kind") or "rule") != "code":
+                raise HTTPNotFound
+        code = existing["action_code"] if existing is not None else CODE_START
+        description = (existing or {}).get("action_desc") or ""
+        if self.request.method == "POST":
+            post_data = self.get_post_dict()
+            code = post_data.get("action_code", "")
+            description = post_data.get("action_desc", "")
+            if existing is not None:
+                ok, result = update_code_action(
+                    self.request, project_id, form_id, action_id, code, description
+                )
+            else:
+                ok, result = add_code_action(
+                    self.request, project_id, form_id, code, description
+                )
+            if ok:
+                self.returnRawViewResult = True
+                return HTTPFound(
+                    location=self.test_url(user_id, project_code, form_id, result)
+                )
+            self.append_to_errors(result)
+        catalogue = build_catalogue(self.request, project_id, form_id)
+        return {
+            "projectDetails": project_details,
+            "userid": user_id,
+            "projcode": project_code,
+            "formData": form_data,
+            "action": existing,
+            "number": number,
+            "code": code,
+            "description": description,
+            "source": catalogue.source,
+            # What the editor completes and checks
+            "editorCatalogue": htmlsafe_json_dumps(
+                catalogue_for_editor(self.request, project_id, form_id, catalogue)
             ),
         }
 
 
-class ActionsTestView(ListSection):
-    """The dry run (actions-api.md section 11): POST {rowuuid, module?} as
-    JSON, returns {ok, changes, log, error}; nothing is written."""
+class ActionTestPageView(ActionsSection):
+    """Test an action, or all of them together (actionid "all"): over a
+    submission the form received, or over answers typed here, with a case of
+    the case list, before any submission has arrived. The test is a dry run
+    (actions-api.md 11), through ActionsTestView: nothing is written."""
+
+    def process_view(self):
+        (
+            user_id,
+            project_code,
+            project_id,
+            project_details,
+            form_id,
+            form_data,
+        ) = self.form_or_404()
+        action_id = self.request.matchdict["actionid"]
+        catalogue = build_catalogue(self.request, project_id, form_id)
+        actions = self.numbered(
+            get_form_actions(self.request, project_id, form_id), catalogue
+        )
+        if action_id == "all":
+            action = None
+            code = get_action_module(self.request, project_id, form_id)
+            tested = actions
+        else:
+            matching = [a for a in actions if a["action_id"] == action_id]
+            if not matching:
+                raise HTTPNotFound
+            action = matching[0]
+            code = action["code"]
+            tested = [action]
+        read_questions, read_repeats = [], []
+        for an_action in tested:
+            questions, repeats = names_read(an_action)
+            read_questions += [q for q in questions if q not in read_questions]
+            read_repeats += [r for r in repeats if r not in read_repeats]
+        names = catalogue_for_editor(self.request, project_id, form_id, catalogue)
+        source = catalogue.source
+        selector = (source or {}).get("selector_field")
+        return {
+            "projectDetails": project_details,
+            "userid": user_id,
+            "projcode": project_code,
+            "formData": form_data,
+            "action": action,
+            "actionId": action_id,
+            "count": len(actions),
+            "code": code,
+            "source": source,
+            "submissions": self.submissions(form_data),
+            # The questions to type answers for: the case's selector is
+            # answered by the case picked. Printed into the page's script.
+            "questions": htmlsafe_json_dumps(
+                [
+                    q
+                    for q in names["questions"]
+                    if not q.get("system") and q["name"] != selector
+                ]
+            ),
+            "repeats": htmlsafe_json_dumps(
+                [r for r in names["repeats"] if r["parent"] == "maintable"]
+            ),
+            "read": htmlsafe_json_dumps(
+                {"questions": read_questions, "repeats": read_repeats}
+            ),
+            "cases": case_choices(self.request, project_id, form_id),
+            "editorCatalogue": htmlsafe_json_dumps(names),
+        }
+
+
+class ActionsTestView(ActionsSection):
+    """The dry run (actions-api.md section 11), for the test page: POST
+    as JSON {action_id, rowuuid} to run over a submission received, or
+    {action_id, sample} over typed answers (server.sample_input); action_id
+    "all" runs the form's module, else that action alone, numbered as the
+    list numbers it, and "module" runs code not saved yet. Returns {ok,
+    changes, log, error, failed_action, failed_line}; nothing is written."""
 
     def __init__(self, request):
-        ListSection.__init__(self, request)
+        ActionsSection.__init__(self, request)
         # A fetch from the page: the token travels in the X-CSRF-Token
         # header, and the referer is the page rather than this address.
         self.checkCrossPost = False
 
     def process_view(self):
-        user_id, project_code, project_id, project_details = self.project_or_404()
-        form_id = self.request.matchdict["formid"]
-        form_data = get_form_data(self.request, project_id, form_id)
-        if form_data is None:
-            raise HTTPNotFound
+        (
+            user_id,
+            project_code,
+            project_id,
+            project_details,
+            form_id,
+            form_data,
+        ) = self.form_or_404()
         self.returnRawViewResult = True
         if self.request.method != "POST":
             raise HTTPNotFound
@@ -1450,32 +1656,73 @@ class ActionsTestView(ListSection):
             data = json.loads(self.request.body.decode("utf-8") or "{}")
         except ValueError:
             data = self.get_post_dict()
-        rowuuid = str(data.get("rowuuid", "") or "").strip()
-        module = data.get("module")
-        if module is not None and str(module).strip() == "":
-            module = None
-        if rowuuid == "" or not form_data.get("form_schema"):
+
+        def refused(message):
             return {
                 "ok": False,
-                "error": self._("Choose a submission to test with"),
+                "error": message,
                 "changes": [],
                 "log": [],
+                "failed_action": None,
+                "failed_line": None,
             }
-        outcome = run_for_submission(
-            self.request,
-            project_id,
-            form_id,
-            form_data["form_schema"],
-            rowuuid,
-            None,
-            self.user.login,
-            dry_run=True,
-            module=module,
-        )
+
+        schema = form_data.get("form_schema")
+        if not schema:
+            return refused(
+                self._("The form has no repository yet: its actions cannot run")
+            )
+        action_id = str(data.get("action_id") or "all")
+        if action_id == "all":
+            module = None
+        else:
+            rows = get_form_actions(self.request, project_id, form_id)
+            places = {a["action_id"]: place for place, a in enumerate(rows, 1)}
+            if action_id not in places:
+                return refused(self._("No such action"))
+            row = [a for a in rows if a["action_id"] == action_id][0]
+            try:
+                module = compile_module(
+                    [dict(row, action_number=places[action_id])],
+                    build_catalogue(self.request, project_id, form_id),
+                )
+            except CompileError as e:
+                return refused(str(e))
+        # Code not saved yet, run as given
+        if data.get("module") is not None and str(data["module"]).strip() != "":
+            module = str(data["module"])
+        sample = data.get("sample")
+        if isinstance(sample, dict):
+            outcome = dry_run_sample(
+                self.request,
+                project_id,
+                form_id,
+                schema,
+                self.user.login,
+                sample,
+                module=module,
+            )
+        else:
+            rowuuid = str(data.get("rowuuid", "") or "").strip()
+            if rowuuid == "":
+                return refused(self._("Choose a submission to test with"))
+            outcome = run_for_submission(
+                self.request,
+                project_id,
+                form_id,
+                schema,
+                rowuuid,
+                None,
+                self.user.login,
+                dry_run=True,
+                module=module,
+            )
         return {
             "ok": outcome["ok"],
             "skipped": outcome.get("skipped", False),
             "error": outcome["error"],
             "changes": outcome["changes"],
             "log": outcome["log"],
+            "failed_action": outcome.get("failed_action"),
+            "failed_line": outcome.get("failed_line"),
         }

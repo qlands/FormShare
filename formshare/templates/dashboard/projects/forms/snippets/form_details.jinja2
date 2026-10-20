@@ -201,7 +201,7 @@ up; it is offered wherever the project publishes lists. #}
 {% if projectDetails.access_type < 4 and projectDetails.has_lists and request.h.feature_exists("workflows") == True %}
     <div class="row">
         <div class="col-lg-12 text-right" style="margin-bottom: 10px">
-            <a class="btn btn-sm btn-outline btn-info" href="{{ request.route_url('form_case_actions', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-bolt"></i> {{ _('Case actions') }}</a>
+            <a class="btn btn-sm btn-outline btn-info" href="{{ request.route_url('form_case_actions', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-bolt"></i> {{ _('Form actions') }}</a>
         </div>
     </div>
 {% endif %}

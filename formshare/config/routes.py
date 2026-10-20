@@ -90,6 +90,9 @@ from formshare.views.case_management import (
     SampleListView,
     CaseLinksView,
     ActionsView,
+    ActionRuleView,
+    ActionCodeView,
+    ActionTestPageView,
     ActionsTestView,
     WorkflowDiagramView,
     WorkflowModelApiView,
@@ -605,6 +608,53 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/form/{formid}/actions/test",
             ActionsTestView,
             "json",
+        )
+    )
+
+    # A form's actions, each a rule or code (2026-10-20): adding one goes on
+    # to its test, as editing one does
+    routes.append(
+        add_route(
+            "form_case_action_add",
+            "/user/{userid}/project/{projcode}/form/{formid}/actions/add",
+            ActionRuleView,
+            "dashboard/projects/case_management/action_rule.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "form_case_action_add_code",
+            "/user/{userid}/project/{projcode}/form/{formid}/actions/add/code",
+            ActionCodeView,
+            "dashboard/projects/case_management/action_code.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "form_case_action_edit",
+            "/user/{userid}/project/{projcode}/form/{formid}/actions/{actionid}/edit",
+            ActionRuleView,
+            "dashboard/projects/case_management/action_rule.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "form_case_action_code",
+            "/user/{userid}/project/{projcode}/form/{formid}/actions/{actionid}/code",
+            ActionCodeView,
+            "dashboard/projects/case_management/action_code.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "form_case_action_test",
+            "/user/{userid}/project/{projcode}/form/{formid}/actions/{actionid}/test",
+            ActionTestPageView,
+            "dashboard/projects/case_management/action_test.jinja2",
         )
     )
 

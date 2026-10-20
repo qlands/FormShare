@@ -1,16 +1,17 @@
-"""The decision table becomes the module (actions-api.md section 10).
+"""A form's actions become its module (actions-api.md section 10).
 
-Pure: rows and a field catalogue in, JavaScript text out. Nothing here
+Pure: actions and a field catalogue in, JavaScript text out. Nothing here
 reads a database or a request; the catalogue says what every field is (its
 JavaScript spelling and its type) and what every target is (its type), so
-that the compiler can refuse a row it cannot spell rather than emit code
+that the compiler can refuse a rule it cannot spell rather than emit code
 that fails at run time on a device.
 
-The code is written to be read: one block per row with a comment restating
-the row in words, one ``if / else if`` chain per target so that the
-table's rule -- first match wins per target -- holds by construction.
+An action is a rule (When, Target, Value) or code its author wrote. Each
+becomes a function of its own, restated in words above it, and run calls
+them from the last to the first (compile_module): the first action's change
+is the one kept when two change the same thing.
 
-The *when* of a row is jQuery QueryBuilder's rule JSON::
+The *when* of a rule is jQuery QueryBuilder's rule JSON::
 
     {"condition": "AND", "rules": [
         {"id": "v.still_working", "operator": "equal", "value": "no"},
@@ -24,11 +25,18 @@ survey designer expects: an unanswered question matches nothing.
 import json
 import re
 
+from formshare.processes.actions.host import ModuleError, load_module
+
 __all__ = [
     "CompileError",
     "compile_module",
     "compile_when",
     "describe_when",
+    "describe_action",
+    "rule_module",
+    "locate_line",
+    "explain_failure",
+    "names_read",
     "EMPTY_MODULE",
     "AGGREGATES",
     "OPERATORS",
@@ -105,8 +113,14 @@ class CompileError(ValueError):
 
 
 def _js_string(value):
-    """A JavaScript string literal (JSON's is one)."""
-    return json.dumps("" if value is None else str(value), ensure_ascii=False)
+    """A JavaScript string literal (JSON's is one). U+2028 and U+2029 are
+    escaped: JSON lets them through, and an engine before ES2019 reads them
+    as the end of a line inside a string."""
+    return (
+        json.dumps("" if value is None else str(value), ensure_ascii=False)
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
+    )
 
 
 def _literal(value, field_type):
@@ -425,14 +439,6 @@ def _condition(expression):
     return "(" + expression + ")"
 
 
-def _target_key(row):
-    scope = row.get("target_scope") or "case"
-    kind = row.get("target_kind")
-    if kind == "active":
-        return (scope, "active", "")
-    return (scope, kind, row.get("target_name") or "")
-
-
 def _action_js(row, catalogue, hoisted):
     scope = row.get("target_scope") or "case"
     kind = row.get("target_kind")
@@ -467,75 +473,265 @@ def _action_words(row):
 # The module
 # ---------------------------------------------------------------------------
 
+# What a comment may not hold: a line break would end it, and the rest of the
+# line would be code. JavaScript ends a line at U+2028 and U+2029 too.
+_LINE_BREAKS = re.compile("[\r\n\u2028\u2029]+")
+
+
+def _comment(text):
+    return _LINE_BREAKS.sub(" ", str(text or "")).strip()
+
+
+def _function_name(number):
+    return "__fs_action_{}".format(number)
+
+
+def _rule_parts(row, catalogue):
+    """(words, body lines) of a rule: the guard, the computed values it
+    reads, and its write under its condition. Raises CompileError."""
+    rules = row.get("when_rules")
+    if isinstance(rules, str) and rules.strip() == "":
+        rules = None
+    hoisted = {}
+    condition = compile_when(rules, catalogue)
+    statement = _action_js(row, catalogue, hoisted)
+    if condition == "true":
+        words = "always, {}".format(_action_words(row))
+    else:
+        words = "when {}, {}".format(
+            describe_when(rules, catalogue), _action_words(row)
+        )
+    guard = "api.case === null"
+    if (row.get("target_scope") or "case") == "parent":
+        guard += " || api.case.parent === null"
+    body = ["if ({}) {{ return; }}".format(guard)]
+    for name, expression in hoisted.items():
+        body.append("const {} = {};".format(name, expression))
+    if condition == "true":
+        body.append(statement)
+    else:
+        body.append("if {} {{ {} }}".format(_condition(condition), statement))
+    return _comment(words), body
+
+
+def _code_script(row):
+    """A code action's module as a script, as every host loads it: export
+    default taken off, its lines where they were. Raises CompileError."""
+    try:
+        return load_module(row.get("action_code") or "")
+    except ModuleError as e:
+        raise CompileError(str(e))
+
+
+def describe_action(row, catalogue):
+    """What an action does, in words: a rule's own, or what the author of
+    code said of it (empty when they said nothing)."""
+    if (row.get("action_kind") or "rule") == "code":
+        return _comment(row.get("action_desc"))
+    return _rule_parts(row, catalogue)[0]
+
+
+def rule_module(row, catalogue):
+    """A rule as a module of its own: what See code shows, and what can be
+    copied into code to start from."""
+    words, body = _rule_parts(row, catalogue)
+    lines = ["export default function run(s, api) {", "  // " + words]
+    lines += ["  " + line for line in body]
+    return "\n".join(lines) + "\n}\n"
+
 
 def compile_module(rows, catalogue):
-    """The module for the rows of a decision table, in action_order.
+    """The form's module: its actions, rules and code, in action_order.
 
-    Rows are grouped by target, keeping their order inside each group, and
-    each group is one if / else if chain: the first row whose condition
-    holds is the one applied to that target. Every row is restated in words
-    above its code. Raises CompileError for a row that cannot be spelled.
+    Each action is a function of its own: a rule compiled under its words,
+    code wrapped as written, its lines where its author wrote them. run calls
+    them from the last to the first. The writes are applied after run
+    returns, the last write to a name winning (actions-api.md 5), and every
+    action reads the case as it was before the run, so the order changes only
+    whose write is kept: the first action's, as the table's rule has always
+    been (the first rule whose condition holds).
+
+    An action numbers itself by its place among the rows, or by its
+    ``action_number`` when it has one (an action tested alone keeps the
+    number the list gives it). Raises CompileError for a rule that cannot be
+    spelled, or code no host could load.
     """
     rows = sorted(rows, key=lambda r: int(r.get("action_order") or 0))
     if not rows:
         return EMPTY_MODULE
-    groups = []
-    by_key = {}
-    for number, row in enumerate(rows, 1):
-        key = _target_key(row)
-        if key not in by_key:
-            by_key[key] = []
-            groups.append(key)
-        by_key[key].append((number, row))
-
-    hoisted = {}
     blocks = []
-    for key in groups:
-        scope = key[0]
-        lines = []
-        first = True
-        for number, row in by_key[key]:
-            rules = row.get("when_rules")
-            if isinstance(rules, str) and rules.strip() == "":
-                rules = None
-            condition = compile_when(rules, catalogue)
-            words = describe_when(rules, catalogue)
-            action = _action_js(row, catalogue, hoisted)
-            if condition == "true":
-                lines.append(
-                    "  // Row {}: {}, {}".format(
-                        number, "always" if first else "otherwise", _action_words(row)
-                    )
-                )
-                if first:
-                    lines.append("  {}".format(action))
-                else:
-                    lines.append("  else {{ {} }}".format(action))
-                # A row that always matches ends its target's chain.
-                break
-            lines.append(
-                "  // Row {}: when {}, {}".format(number, words, _action_words(row))
-            )
-            lines.append(
-                "  {}if {} {{ {} }}".format(
-                    "" if first else "else ", _condition(condition), action
-                )
-            )
-            first = False
-        block = "\n".join(lines)
-        if scope == "parent":
-            block = (
-                "  if (api.case.parent !== null) {\n"
-                + "\n".join("  " + line for line in lines)
-                + "\n  }"
-            )
-        blocks.append(block)
-
+    numbers = []
+    for place, row in enumerate(rows, 1):
+        number = int(row.get("action_number") or place)
+        numbers.append(number)
+        try:
+            blocks.append(_block(number, row, catalogue))
+        except CompileError as e:
+            # Among several, the owner needs to know which one.
+            if len(rows) > 1:
+                raise CompileError("Action {}: {}".format(number, e))
+            raise
     out = ["export default function run(s, api) {"]
-    out.append("  if (api.case === null) { return; }")
-    for name, expression in hoisted.items():
-        out.append("  const {} = {};".format(name, expression))
-    for block in blocks:
-        out.append(block)
+    if len(rows) > 1:
+        out.append("  // From the last action to the first: when two change the same")
+        out.append("  // thing, the first one's change is the one kept.")
+    for number in reversed(numbers):
+        out.append("  {}(s, api);".format(_function_name(number)))
     out.append("}")
+    for block in blocks:
+        out += ["", block]
     return "\n".join(out) + "\n"
+
+
+def _block(number, row, catalogue):
+    """One action as a function of its own, under its words."""
+    name = _function_name(number)
+    if (row.get("action_kind") or "rule") == "code":
+        said = _comment(row.get("action_desc"))
+        return "\n".join(
+            [
+                "// Action {}, written by hand{}".format(
+                    number, ": " + said if said else ""
+                ),
+                "const {} = (function () {{".format(name),
+                _code_script(row).rstrip("\n"),
+                "return run;",
+                "})();",
+            ]
+        )
+    words, body = _rule_parts(row, catalogue)
+    return "\n".join(
+        ["// Action {}: {}".format(number, words)]
+        + ["function {}(s, api) {{".format(name)]
+        + ["  " + line for line in body]
+        + ["}"]
+    )
+
+
+_RULE_START = re.compile(r"^// Action (\d+): ")
+_CODE_START = re.compile(r"^// Action (\d+), written by hand")
+
+
+def locate_line(module, line):
+    """The action a line of a module belongs to: (number, line in its code)
+    for code, (number, None) for a rule, (None, line) for a module that marks
+    no action (one composed before 2026-10-20, whose line is the code's own).
+
+    An action starts where its comment is followed by its function, so a
+    comment of the same words inside someone's code is not taken for one.
+    """
+    lines = (module or "").split("\n")
+    for index in range(min(line, len(lines)) - 1, -1, -1):
+        following = lines[index + 1] if index + 1 < len(lines) else ""
+        found = _CODE_START.match(lines[index])
+        if found and following.startswith(
+            "const {} = (function () {{".format(_function_name(found.group(1)))
+        ):
+            local = line - (index + 1) - 1
+            return int(found.group(1)), (local if local >= 1 else None)
+        found = _RULE_START.match(lines[index])
+        if found and following.startswith(
+            "function {}(".format(_function_name(found.group(1)))
+        ):
+            return int(found.group(1)), None
+    return None, line
+
+
+_AT_LINE = re.compile(r"\s*\(line (\d+)\)\s*$")
+
+
+def explain_failure(module, message):
+    """A run's failure with its line named in the action's terms:
+    (message, action number, line in its code). A host names a line of the
+    whole module, "(line 57)"; the owner wrote "line 4 of action 3"."""
+    found = _AT_LINE.search(message or "")
+    if not found:
+        return message, None, None
+    number, local = locate_line(module, int(found.group(1)))
+    if number is None:
+        return message, None, local
+    where = (
+        "action {}, line {}".format(number, local)
+        if local
+        else "action {}".format(number)
+    )
+    return message[: found.start()] + " ({})".format(where), number, local
+
+
+# The members of s that are not answers (actions-api.md 4.1)
+_SUBMISSION_MEMBERS = {
+    "rowuuid",
+    "submittedBy",
+    "submittedDate",
+    "repeat",
+    "selected",
+    "selections",
+}
+_RUN_PARAMETERS = re.compile(r"\bfunction\s+run\s*\(\s*([A-Za-z_$][\w$]*)")
+
+
+def names_read(row):
+    """The questions and the repeats an action reads, for the test with
+    answers someone types: (questions, repeats), in the order met.
+
+    A rule names them in its condition and its value. Code is read as text,
+    which is enough to choose which answers to ask for: a name it misses can
+    still be typed, the test page offering every question."""
+    questions = []
+    repeats = []
+
+    def met(collection, name):
+        if name and name not in collection:
+            collection.append(name)
+
+    if (row.get("action_kind") or "rule") == "code":
+        code = row.get("action_code") or ""
+        found = _RUN_PARAMETERS.search(code)
+        submission = re.escape(found.group(1)) if found else "s"
+        for name in re.findall(
+            r"(?<![\w$.])" + submission + r"\.([A-Za-z_$][\w$]*)", code
+        ):
+            if name not in _SUBMISSION_MEMBERS:
+                met(questions, name)
+        for name in re.findall(r"""\.repeat\(\s*["']([^"']+)["']""", code):
+            met(repeats, name)
+        for name in re.findall(r"""\.selections?\(\s*["']([^"']+)["']""", code):
+            met(questions, name)
+        for name in re.findall(r"""\.selected\(\s*["']([^"']+)["']""", code):
+            met(questions, name)
+        return questions, repeats
+
+    def walk(node):
+        if not isinstance(node, dict):
+            return
+        if "rules" in node:
+            for a_rule in node.get("rules") or []:
+                walk(a_rule)
+            return
+        field_id = str(node.get("field") or node.get("id") or "")
+        if field_id.startswith("d."):
+            field_id = field_id[2:]
+        if field_id.startswith("v."):
+            met(questions, field_id[2:])
+        elif field_id.startswith("c."):
+            parts = field_id.split(".")
+            if len(parts) >= 4:
+                met(repeats, parts[2])
+
+    rules = row.get("when_rules")
+    if isinstance(rules, str):
+        try:
+            rules = json.loads(rules) if rules.strip() else None
+        except ValueError:
+            rules = None
+    walk(rules)
+    if row.get("value_kind") == "variable":
+        met(questions, row.get("value"))
+    elif row.get("value_kind") == "computed":
+        spec = row.get("value")
+        try:
+            spec = json.loads(spec) if isinstance(spec, str) else (spec or {})
+        except ValueError:
+            spec = {}
+        met(repeats, spec.get("repeat"))
+    return questions, repeats

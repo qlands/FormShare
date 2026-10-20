@@ -1,0 +1,211 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Form actions") }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','querybuilder' %}
+    <style>
+      #builder { margin-bottom: 8px; }
+      .act-inline > * { margin-right: 6px; margin-bottom: 6px; }
+    </style>
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','querybuilder' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% if action %}{% set crumb_current = _('Edit action') ~ ' ' ~ number %}{% else %}{% set crumb_current = _('Add an action') %}{% endif %}
+    {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_actions.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-lg-12">
+            {% block form_errors %}
+                {{ form.display_errors(errors) }}
+            {% endblock form_errors %}
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h2>{% if action %}{{ _('Edit action') }} {{ number }}{% else %}{{ _('Add an action') }}{% endif %} &mdash; {{ formData.form_name }}</h2>
+                    <p class="text-muted">
+                        {{ _('When the form is submitted and the condition holds, the target takes the value.') }}
+                        {% if source and not source.own %}
+                            {{ _('The case is the row of') }} <b>{{ source.table }}</b> {{ _('that the answer to') }} <code>{{ source.selector_field }}</code> {{ _('names.') }}
+                        {% else %}
+                            {{ _('This form has no case link: the case is each submission itself.') }}
+                        {% endif %}
+                    </p>
+                    <form id="act-form" method="post" action="{{ request.url }}">
+{{ form.secure_form(request) }}
+                        <input type="hidden" name="when_rules" id="act-when-rules" value="">
+                        <label>{{ _('When') }}</label>
+                        <div id="builder"></div>
+                        <p class="text-muted">{{ _('Leave the condition empty for an action that always applies.') }}</p>
+
+                        <label>{{ _('Target') }}</label>
+                        <div class="form-inline act-inline">
+                            <select name="target_scope" id="act-scope" class="form-control">
+                                <option value="case">{{ _('the case') }}</option>
+                                <option value="parent" id="act-scope-parent">{{ _("the case's parent") }}</option>
+                            </select>
+                            <select name="target_kind" id="act-kind" class="form-control">
+                                <option value="property">{{ _('set property') }}</option>
+                                <option value="column">{{ _('set column') }}</option>
+                                <option value="active">{{ _('activate or deactivate') }}</option>
+                            </select>
+                            <select name="target_name" id="act-name" class="form-control" style="min-width: 220px"></select>
+                        </div>
+
+                        <label id="act-value-label">{{ _('Value') }}</label>
+                        <div class="form-inline act-inline" id="act-value-row">
+                            <select name="value_kind" id="act-vkind" class="form-control">
+                                <option value="constant">{{ _('a constant') }}</option>
+                                <option value="variable">{{ _('the answer to a question') }}</option>
+                                <option value="now">{{ _('now') }}</option>
+                                <option value="computed">{{ _('a computed value') }}</option>
+                            </select>
+                            <input type="text" name="value" id="act-constant" class="form-control" placeholder="{{ _('Value (leave empty to clear it)') }}" style="min-width: 220px">
+                            <select id="act-variable" class="form-control" style="min-width: 220px; display: none"></select>
+                            <select name="computed_aggregate" id="act-aggregate" class="form-control" style="display: none">
+                                <option value="avg">{{ _('average') }}</option>
+                                <option value="sum">{{ _('sum') }}</option>
+                                <option value="count">{{ _('count') }}</option>
+                                <option value="min">{{ _('minimum') }}</option>
+                                <option value="max">{{ _('maximum') }}</option>
+                            </select>
+                            <select name="computed_repeat" id="act-repeat" class="form-control" style="display: none"></select>
+                            <select name="computed_column" id="act-column" class="form-control" style="display: none"></select>
+                        </div>
+                        <div class="m-t">
+                            {% if action %}
+                                <button type="submit" name="save_action" value="1" id="act-submit" class="btn btn-primary">{{ _('Save the action') }}</button>
+                            {% else %}
+                                <button type="submit" name="add_action" value="1" id="act-submit" class="btn btn-primary">{{ _('Add the action') }}</button>
+                            {% endif %}
+                            <a class="btn btn-white" href="{{ request.route_url('form_case_actions', userid=userid, projcode=projcode, formid=formData.form_id) }}">{{ _('Cancel') }}</a>
+                            <span class="text-muted" style="margin-left: 8px">{{ _('Saving takes you to its test.') }}</span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+      var actFilters = {{ filters }};
+      var actTargets = {{ targets }};
+      var actVariables = {{ variables }};
+      var actRepeats = {{ repeats }};
+      // The rule being edited, or null
+      var actRule = {% if action %}{{ {'scope': action.target_scope, 'kind': action.target_kind, 'name': action.target_name, 'vkind': action.value_kind, 'value': action.value, 'when': action.when_rules}|tojson }}{% else %}null{% endif %};
+
+      function fillSelect(select, items, selected) {
+        select.empty();
+        items.forEach(function (item) {
+          var opt = $("<option></option>").attr("value", item.value).text(item.label);
+          if (item.value === selected) opt.attr("selected", "selected");
+          select.append(opt);
+        });
+      }
+
+      function refreshTargets(selectedName) {
+        var scope = $("#act-scope").val();
+        var kind = $("#act-kind").val();
+        var names = ((actTargets[scope] || {})[kind]) || [];
+        if (kind === "active") {
+          fillSelect($("#act-name"), [{value: "0", label: {{ _('deactivate the case')|tojson }}}, {value: "1", label: {{ _('reactivate the case')|tojson }}}], selectedName);
+          $("#act-value-row, #act-value-label").hide();
+        } else {
+          fillSelect($("#act-name"), names.map(function (n) { return {value: n.name, label: n.name + " (" + n.type + ")"}; }), selectedName);
+          $("#act-value-row, #act-value-label").show();
+        }
+      }
+
+      function refreshValue() {
+        var kind = $("#act-vkind").val();
+        $("#act-constant").toggle(kind === "constant");
+        $("#act-variable").toggle(kind === "variable");
+        $("#act-aggregate, #act-repeat, #act-column").toggle(kind === "computed");
+        $("#act-constant").attr("name", kind === "constant" ? "value" : "value_unused");
+        $("#act-variable").attr("name", kind === "variable" ? "value" : "value_unused");
+      }
+
+      function refreshColumns(selected) {
+        var repeat = $("#act-repeat").val();
+        var columns = actRepeats[repeat] || {};
+        var items = [];
+        Object.keys(columns).forEach(function (c) { if (columns[c] === "integer" || columns[c] === "double") items.push({value: c, label: c}); });
+        fillSelect($("#act-column"), items, selected);
+      }
+
+      $(document).ready(function () {
+        if (actFilters.length) {
+          $("#builder").queryBuilder({
+            filters: actFilters,
+            allow_empty: true,
+            plugins: ["not-group"],
+            // Its buttons add conditions: "Add rule" beside the page's own
+            // "Add the action" read as the same thing
+            lang: {
+              add_rule: {{ _('Add condition')|tojson }},
+              add_group: {{ _('Add group of conditions')|tojson }}
+            },
+            icons: { add_group: "fas fa-plus-circle", add_rule: "fas fa-plus", remove_group: "fas fa-times", remove_rule: "fas fa-times", error: "fas fa-exclamation-triangle" },
+            operators: ["equal", "not_equal", "less", "less_or_equal", "greater", "greater_or_equal", "between", "not_between",
+                        "in", "not_in", "begins_with", "not_begins_with", "ends_with", "not_ends_with", "contains", "not_contains",
+                        "is_empty", "is_not_empty", "is_null", "is_not_null"]
+          });
+          // An empty canvas means "always"; the library would otherwise
+          // start with one blank rule that fails validation.
+          $("#builder").queryBuilder("setRules", actRule && actRule.when ? JSON.parse(actRule.when) : {condition: "AND", rules: []});
+        } else {
+          $("#builder").replaceWith($("<p class='text-muted'></p>").text({{ _('The form has no questions to decide by yet: its repository is not built.')|tojson }}));
+        }
+        if (!actTargets.parent) { $("#act-scope-parent").remove(); }
+        fillSelect($("#act-variable"), actVariables.map(function (v) { return {value: v.name, label: v.name + " (" + (v.multi ? "multi-select" : v.type) + ")"}; }));
+        fillSelect($("#act-repeat"), Object.keys(actRepeats).map(function (r) { return {value: r, label: r}; }));
+        if (actRule) {
+          $("#act-scope").val(actRule.scope);
+          $("#act-kind").val(actRule.kind);
+        }
+        refreshTargets(actRule ? String(actRule.name) : undefined);
+        if (actRule && actRule.kind !== "active") {
+          $("#act-vkind").val(actRule.vkind);
+        }
+        refreshValue();
+        refreshColumns();
+        if (actRule && actRule.kind !== "active") {
+          var value = actRule.value === null ? "" : String(actRule.value);
+          if (actRule.vkind === "constant") { $("#act-constant").val(value); }
+          if (actRule.vkind === "variable") { $("#act-variable").val(value); }
+          if (actRule.vkind === "computed") {
+            try {
+              var spec = JSON.parse(value);
+              $("#act-aggregate").val(spec.aggregate); $("#act-repeat").val(spec.repeat); refreshColumns(spec.column);
+            } catch (e) {}
+          }
+        }
+        $("#act-scope, #act-kind").on("change", function () { refreshTargets(); });
+        $("#act-vkind").on("change", refreshValue);
+        $("#act-repeat").on("change", function () { refreshColumns(); });
+
+        $("#act-form").on("submit", function () {
+          var rules = null;
+          if (actFilters.length) {
+            rules = $("#builder").queryBuilder("getRules", {allow_invalid: false});
+            if (rules === null && !$("#builder").queryBuilder("validate")) { return false; }
+          }
+          $("#act-when-rules").val(rules && rules.rules && rules.rules.length ? JSON.stringify(rules) : "");
+          $("#busy").show();
+          return true;
+        });
+      });
+    </script>
+{% endblock scripts %}

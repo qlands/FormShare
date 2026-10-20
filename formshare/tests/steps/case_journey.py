@@ -1234,21 +1234,25 @@ def t_e_s_t_case_journey(test_object):
     )
     assert "FS_error" not in res.headers
     actions = "/user/{}/project/{}/form/{}/actions".format(login, project, TOOL2)
+    # The list of the form's actions (2026-10-20), with the two ways to add
+    # one; it needs neither the code editor nor the names of a rule.
     res = testapp.get(actions, status=200)
-    test_object.root.assertIn(b"Table mode", res.body)
-    test_object.root.assertIn(b"No rules yet", res.body)
-    test_object.root.assertIn(b"v.consent_obtained", res.body)
-    test_object.root.assertIn(b"p.risk_factor", res.body)
-    # Table mode loads no code editor and prints no names for one.
+    test_object.root.assertIn(b"Form actions", res.body)
+    test_object.root.assertIn(b"No actions yet", res.body)
+    test_object.root.assertIn(b"/actions/add/code", res.body)
     test_object.root.assertNotIn(b"actions_editor.min.js", res.body)
     test_object.root.assertNotIn(b"var actEditorCatalogue =", res.body)
+    res = testapp.get(actions + "/add", status=200)
+    test_object.root.assertIn(b"v.consent_obtained", res.body)
+    test_object.root.assertIn(b"p.risk_factor", res.body)
     res = testapp.get(
         "/user/{}/project/{}/form/{}".format(login, project, TOOL2), status=200
     )
     test_object.root.assertIn(b"/actions", res.body)
+    test_object.root.assertIn(b"Form actions", res.body)
     # A constant the property's type refuses is refused with its reason.
     res = testapp.post(
-        actions,
+        actions + "/add",
         {
             "add_action": "1",
             "target_scope": "case",
@@ -1278,7 +1282,7 @@ def t_e_s_t_case_journey(test_object):
         }
     )
     res = testapp.post(
-        actions,
+        actions + "/add",
         {
             "add_action": "1",
             "target_scope": "case",
@@ -1291,8 +1295,12 @@ def t_e_s_t_case_journey(test_object):
         status=302,
     )
     assert "FS_error" not in res.headers
+    # Adding an action goes on to its test.
+    found = re.search(r"/actions/([^/]+)/test$", res.headers["Location"])
+    assert found, res.headers["Location"]
+    rule_one = found.group(1)
     res = testapp.post(
-        actions,
+        actions + "/add",
         {
             "add_action": "1",
             "target_scope": "case",
@@ -1318,7 +1326,9 @@ def t_e_s_t_case_journey(test_object):
     assert "FS_error" not in res.headers
     res = testapp.get(actions, status=200)
     test_object.root.assertIn(b"consent_obtained equals &#39;yes&#39;", res.body)
+    # See code: a rule as a module of its own
     test_object.root.assertIn(b"api.case.set(&#34;risk_factor&#34;, 7)", res.body)
+    test_object.root.assertIn(b"export default function run(s, api) {", res.body)
     # The module is what actions.json serves, in the manifest with the rest.
     manifest = _pull_manifest(test_object, login, project, TOOL2)
     assert "actions.json" in _manifest_entries(manifest)
@@ -1338,6 +1348,43 @@ def t_e_s_t_case_journey(test_object):
         )
     )
     assert str(_scalar(config, risk)) == "0"
+    # Before that submission arrives, the rule is tried with answers typed on
+    # its test page and a case of the list: what it would change, and
+    # nothing written.
+    res = testapp.get(actions + "/{}/test".format(rule_one), status=200)
+    test_object.root.assertIn(worker_id.encode("utf-8"), res.body)
+    test_object.root.assertIn(b"consent_obtained", res.body)
+    res = testapp.post_json(
+        actions + "/test",
+        {
+            "action_id": rule_one,
+            "sample": {"answers": {"consent_obtained": "yes"}, "case": worker_id},
+        },
+        status=200,
+    )
+    assert res.json["ok"], res.json
+    assert res.json["changes"] == [
+        {
+            "scope": "source",
+            "table": "roster_properties",
+            "rowuuid": worker_id,
+            "column": "risk_factor",
+            "old": "0",
+            "new": "7",
+        }
+    ], res.json
+    assert str(_scalar(config, risk)) == "0"
+    # Another answer, no case, every action: nothing to change.
+    for sample in (
+        {"answers": {"consent_obtained": "no"}, "case": worker_id},
+        {"answers": {"consent_obtained": "yes"}, "case": ""},
+    ):
+        res = testapp.post_json(
+            actions + "/test", {"action_id": "all", "sample": sample}, status=200
+        )
+        assert res.json["ok"] and res.json["changes"] == [], res.json
+    res = testapp.get(actions + "/all/test", status=200)
+    test_object.root.assertIn(b"__fs_action_2(s, api);", res.body)
     roster_hash = _manifest_hash(manifest, "roster.csv")
     valid = _write_tool2_submission(
         resources, test_object.working_dir, centre_id, worker_id
@@ -1428,29 +1475,32 @@ def t_e_s_t_case_journey(test_object):
     )
     assert not res.json["ok"] and "TypeError" in res.json["error"], res.json
 
-    # Expert mode: a module that fails leaves the submission loaded and is
-    # recorded as failed; mended, a retry applies it. A module no host could
-    # run is refused at save.
-    res = testapp.post(actions, {"set_mode": "1", "action_mode": "expert"}, status=302)
-    assert "FS_error" not in res.headers
+    # An action in code (expert mode): one that fails leaves the submission
+    # loaded and is recorded as failed, and while it fails none of the
+    # form's actions is applied; mended, a retry applies it. Code no host
+    # could run is refused when saved, and the page keeps what was written.
     res = testapp.post(
-        actions,
-        {"save_module": "1", "action_module": "function nope() {}"},
-        status=302,
+        actions + "/add/code",
+        {"action_code": "function nope() {}", "action_desc": "refused"},
+        status=200,
     )
-    assert "FS_error" in res.headers
-    # Lines ended as a browser posts a textarea's, with CR LF: the module is
+    test_object.root.assertIn(b"must export a default function run", res.body)
+    test_object.root.assertIn(b"function nope() {}", res.body)
+    # Lines ended as a browser posts a textarea's, with CR LF: the code is
     # stored as the owner saw it.
     res = testapp.post(
-        actions,
+        actions + "/add/code",
         {
-            "save_module": "1",
-            "action_module": "export default function run(s, api) {\r\n"
+            "action_code": "export default function run(s, api) {\r\n"
             '  api.case.set("risk_factor", api.case.property("nope"));\r\n}',
+            "action_desc": "Reads a property the case has not",
         },
         status=302,
     )
     assert "FS_error" not in res.headers
+    found = re.search(r"/actions/([^/]+)/test$", res.headers["Location"])
+    assert found, res.headers["Location"]
+    code_three = found.group(1)
     served = json.loads(
         _served_file(
             test_object,
@@ -1460,6 +1510,9 @@ def t_e_s_t_case_journey(test_object):
     )
     assert served["mode"] == "expert" and 'property("nope")' in served["module"]
     assert "\r" not in served["module"]
+    assert "// Action 3, written by hand: Reads a property the case has not" in (
+        served["module"]
+    )
     before = _maintable_count(config, schema2)
     valid = _write_tool2_submission(
         resources, test_object.working_dir, centre_id, worker_id
@@ -1481,10 +1534,14 @@ def t_e_s_t_case_journey(test_object):
     a_failure = engine.execute(failed).fetchone()
     engine.dispose()
     assert a_failure is not None and "no property nope" in a_failure[1], a_failure
+    # The failure names the action and its own line, not the module's.
+    assert "(action 3, line 2)" in a_failure[1], a_failure
     res = testapp.get(actions, status=200)
     test_object.root.assertIn(b"no property nope", res.body)
-    # Expert mode's page carries the code editor (frontend/actions-editor)
-    # and the names it completes and checks; QueryBuilder's are not needed.
+    # The code's page carries the code editor (frontend/actions-editor) and
+    # the names it completes and checks.
+    code_page = actions + "/{}/code".format(code_three)
+    res = testapp.get(code_page, status=200)
     test_object.root.assertIn(b"js/plugins/codemirror6/actions_editor.min.js", res.body)
     names = json.loads(
         re.search(rb"var actEditorCatalogue = (.*);\n", res.body).group(1)
@@ -1492,21 +1549,30 @@ def t_e_s_t_case_journey(test_object):
     assert names["known"] is True
     assert "consent_obtained" in [q["name"] for q in names["questions"]]
     assert "risk_factor" in [p["name"] for p in names["case"]["properties"]]
-    test_object.root.assertIn(b"var actFilters = [];", res.body)
     # The editor fills {name} into its messages: the page hands it over as
     # it is (2026-10-19: gettext's %(name)s reached the page unfilled).
     test_object.root.assertIn(b"no question named \\u201c{name}\\u201d", res.body)
     test_object.root.assertNotIn(b"%(name)s", res.body)
+    # A rule cannot be edited as code, nor code as a rule.
+    testapp.get(actions + "/{}/code".format(rule_one), status=404)
+    testapp.get(actions + "/{}/edit".format(code_three), status=404)
     res = testapp.post(
-        actions,
+        code_page,
         {
-            "save_module": "1",
-            "action_module": "export default function run(s, api) {\n"
+            "action_code": "export default function run(s, api) {\n"
             '  api.case.set("risk_factor", 3);\n}',
+            "action_desc": "Three",
         },
         status=302,
     )
     assert "FS_error" not in res.headers
+    # Rule 1 still sets 7 and the higher action wins, so the code goes to the
+    # top before the retry.
+    for _ in range(2):
+        res = testapp.post(
+            actions, {"move_up": "1", "action_id": code_three}, status=302
+        )
+        assert "FS_error" not in res.headers
     res = testapp.post(actions, {"retry_run": "1", "run_id": a_failure[0]}, status=302)
     assert "FS_error" not in res.headers
     assert str(_scalar(config, risk)) == "3"
@@ -1521,8 +1587,10 @@ def t_e_s_t_case_journey(test_object):
         )
         == "0"
     )
-    # Back to the table: the rows as saved are the module again.
-    res = testapp.post(actions, {"set_mode": "1", "action_mode": "table"}, status=302)
+    # Without the code, the rules are the module again.
+    res = testapp.post(
+        actions, {"delete_action": "1", "action_id": code_three}, status=302
+    )
     assert "FS_error" not in res.headers
     served = json.loads(
         _served_file(
@@ -1535,7 +1603,7 @@ def t_e_s_t_case_journey(test_object):
         served["mode"] == "table"
         and 'api.case.set("risk_factor", 7)' in served["module"]
     )
-    # Rows move and go: the second rule first, then deleted.
+    # Actions move and go: the second rule first, then deleted.
     ids = re.findall(
         r'data-id="([^"]+)"', testapp.get(actions, status=200).body.decode("utf-8")
     )
@@ -1834,14 +1902,9 @@ def t_e_s_t_case_journey(test_object):
     )
     actions_v6 = "/user/{}/project/{}/form/{}/actions".format(login, project, tool2_v6)
     res = testapp.post(
-        actions_v6, {"set_mode": "1", "action_mode": "expert"}, status=302
-    )
-    assert "FS_error" not in res.headers
-    res = testapp.post(
-        actions_v6,
+        actions_v6 + "/add/code",
         {
-            "save_module": "1",
-            "action_module": "export default function run(s, api) {\n"
+            "action_code": "export default function run(s, api) {\n"
             '  api.case.set("risk_factor", (api.case.property("risk_factor") || 0) + 1);\n'
             "}\n",
         },
@@ -1910,12 +1973,9 @@ def t_e_s_t_case_journey(test_object):
     ], kept
     res = testapp.get(actions_v6, status=200)
     test_object.root.assertIn(visit_instance.encode("utf-8"), res.body)
-    # The mode buttons carry set_mode in a hidden field. Back to the table
-    # asks first, then submits the form from a script, which sends no
-    # button's name: the switch did nothing (2026-10-19).
-    assert res.body.count(b'<input type="hidden" name="set_mode" value="1">') == 2
-    assert b'<button type="submit" name="set_mode"' not in res.body
-    assert b"data-confirm-table" in res.body
+    # The expert action is listed as such, with its test.
+    test_object.root.assertIn(b'<span class="label label-info">Expert</span>', res.body)
+    test_object.root.assertIn(b"/test", res.body)
 
     # 8.4: deleting the submission takes its run back -- the count it added
     # goes, and the run says so -- and the same submission sent again, as an

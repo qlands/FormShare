@@ -1,7 +1,9 @@
 # The actions editor
 
-The code editor of a form's case actions in expert mode
-(`formshare/templates/dashboard/projects/case_management/actions.jinja2`).
+The code editor of a form's actions written in code ("Add an action (Expert
+mode)", `formshare/templates/dashboard/projects/case_management/action_code.jinja2`),
+and the read-only view of an action's code on its test page
+(`action_test.jinja2`).
 It is CodeMirror 6 with FormShare's actions API
 (`docs/formshare_case_management/actions-api.md`), built the way the Form
 Builder plugin built its XPath editor (`CODEMIRROR_INTEGRATION.md` in that
@@ -68,10 +70,12 @@ var editor = FormShareActionsEditor.create(textarea, {
   catalogue: …,          // catalogue_for_editor, printed by the view
   phrases: {…},          // translations; English by default
   onSave: fn, onTest: fn, onChange: fn,
-  ariaLabel: "…", placeholder: "…"
+  ariaLabel: "…", placeholder: "…",
+  readOnly: true,        // shown, not written (the test page)
+  minHeight: "60px"      // instead of 380px, for short code
 });
 // editor.getValue(), setValue(text), replace(text), markLine(n, message),
-// clearMark(), focus(), refresh(), destroy()
+// clearMark(), problems(), focus(), refresh(), destroy()
 ```
 
 - **The textarea stays.** It is hidden and always holds the text, so the
@@ -115,10 +119,10 @@ npm run build    # the bundle and THIRD_PARTY_LICENSES.txt
   `failure_no_property`, and every module the compiler writes, must come out
   of the checks clean. It also tests `catalogue_for_editor` without a
   database.
-- **The case journey** (`tests/steps/case_journey.py`) checks the page:
-  - the bundle and the names in expert mode, and neither in table mode;
+- **The case journey** (`tests/steps/case_journey.py`) checks the pages:
+  - the bundle and the names on the code page, and neither on the list;
   - the phrases with `{name}`;
-  - a module posted with CR LF stored with LF.
+  - code posted with CR LF stored with LF.
 
 ## Things to know
 
@@ -131,5 +135,8 @@ npm run build    # the bundle and THIRD_PARTY_LICENSES.txt
   `src/lint.js` too.
 - **The language level is not checked.** The interim engine is ES2020, and
   the dry run reports a module that reaches further.
-- **Size.** The bundle is 532 KB minified, 182 KB gzipped. Only the actions
-  page loads it, in expert mode.
+- **Size.** The bundle is 532 KB minified, 182 KB gzipped. Only the code and
+  test pages of an action load it.
+- **A theme added before another overrides it.** CodeMirror gives an earlier
+  extension the higher precedence, styles included: `minHeight` is placed
+  before `actionsTheme`.

@@ -33,6 +33,7 @@ from sqlalchemy import text
 
 from formshare.models import ActionRun, DictField, DictTable, Odkform, map_from_schema
 from formshare.processes.db.encryption import is_encrypted_refusal
+from formshare.processes.actions.compiler import explain_failure
 from formshare.processes.actions.host import (
     BINARY,
     ModuleError,
@@ -524,6 +525,218 @@ def build_input(
     }
 
 
+def sample_input(request, project_id, form_id, schema, module, user, sample):
+    """The input of a dry run over answers someone typed, so that an action
+    can be tried before any submission has arrived: what build_input would
+    build from a submission with those answers.
+
+    ``sample`` is {"answers": {question: value}, "repeats": {repeat: [{column:
+    value}]}, "case": rowuuid}. Every stored column is there, typed as a run
+    types it, and what was not answered is null, as in a real submission. A
+    multi-select's answer is its list of codes. The case is a real row of the
+    case's source, read as a run reads it, and the selector answers it; no
+    rowuuid, no case. A form without a case link acts on its own row, which
+    is then the typed answers with each property at its default.
+    """
+    reader = _Reader(request)
+    answers = sample.get("answers") or {}
+    typed_repeats = sample.get("repeats") or {}
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    extended = continuations_of(request, project_id, form_id)
+    source = case_source_of(request, project_id, form_id)
+    if source is not None and source.get("own") and not source.get("schema"):
+        source = dict(source, schema=schema)
+
+    def answered(table_name, given):
+        types = dict(reader.types(project_id, form_id, schema, table_name))
+        for ext_table, continued in extended.items():
+            if continued == table_name:
+                types.update(reader.types(project_id, form_id, schema, ext_table))
+        values = {}
+        selections = {}
+        for column, js_type in types.items():
+            if column in CONTROL_COLUMNS or column.endswith("_rowid"):
+                continue
+            value = given.get(column)
+            if isinstance(value, list):
+                codes = [str(code) for code in value if str(code).strip() != ""]
+                selections[column] = codes
+                value = " ".join(codes) if codes else None
+            elif value is not None and str(value).strip() == "":
+                value = None
+            values[column] = None if value is None else typed(value, js_type)
+        return values, selections
+
+    def module_parent(a_table):
+        parent = a_table.get("parent_table")
+        while parent in extended:
+            parent = extended[parent]
+        return parent
+
+    repeats = [
+        a_table
+        for a_table in _tables(request, project_id, form_id)
+        if a_table["table_name"] != "maintable"
+        and not a_table.get("table_lkp")
+        and not _MSEL.search(a_table["table_name"])
+        and a_table["table_name"] not in extended
+        and a_table.get("parent_table")
+    ]
+    children = {}
+    for a_table in repeats:
+        children.setdefault(module_parent(a_table), []).append(a_table["table_name"])
+
+    values, selections = answered("maintable", answers)
+    submission = {
+        "rowuuid": "sample",
+        "parent_rowuuid": None,
+        "values": values,
+        "repeats": {},
+        "selections": selections,
+        "submitted_by": user,
+        "submitted_date": now,
+    }
+    # Rows are typed for the repeats of the submission; one inside another
+    # has none.
+    for name in children.get("maintable", []):
+        nodes = []
+        for index, given in enumerate(typed_repeats.get(name) or [], 1):
+            row_values, row_selections = answered(name, given or {})
+            nodes.append(
+                {
+                    "rowuuid": "sample-{}-{}".format(name, index),
+                    "parent_rowuuid": "sample",
+                    "values": row_values,
+                    "repeats": {inner: [] for inner in children.get(name, [])},
+                    "selections": row_selections,
+                }
+            )
+        submission["repeats"][name] = nodes
+
+    case = None
+    if source is not None and source.get("own"):
+        properties = {}
+        for a_property in get_table_properties(
+            request, project_id, form_id, "maintable"
+        ):
+            properties[a_property["property_name"]] = typed(
+                a_property.get("property_default") or None,
+                {
+                    "integer": "integer",
+                    "decimal": "double",
+                    "date": "date",
+                    "datetime": "datetime",
+                }.get(a_property["property_type"], "string"),
+            )
+        case = {
+            "table": "maintable",
+            "rowuuid": "sample",
+            "active": True,
+            "values": dict(values),
+            "properties": properties,
+            "parent": None,
+        }
+    elif source is not None and source.get("schema"):
+        case_rowuuid = str(sample.get("case") or "").strip()
+        if case_rowuuid:
+            if source.get("selector_field"):
+                values[source["selector_field"]] = case_rowuuid
+            case = _case_input(
+                reader, source, {source.get("selector_field") or "": case_rowuuid}
+            )
+    places = [(schema, project_id, form_id)]
+    if source is not None and source.get("schema") and source["schema"] != schema:
+        places.append((source["schema"], source["project"], source["form"]))
+    return {
+        "submission": submission,
+        "case": case,
+        "lookups": _lookup_tables(reader, module, places),
+        "now": now,
+        "user": user,
+        "_source": source,
+    }
+
+
+def _dry_failure(request, module, message, log_lines):
+    try:
+        request.dbsession.rollback()
+    except Exception:  # pragma: no cover
+        pass
+    message, failed_action, failed_line = explain_failure(module, message)
+    return {
+        "ok": False,
+        "skipped": False,
+        "changes": [],
+        "log": log_lines,
+        "error": message,
+        "failed_action": failed_action,
+        "failed_line": failed_line,
+    }
+
+
+def dry_run_sample(request, project_id, form_id, schema, user, sample, module=None):
+    """A dry run over typed answers (sample_input): what the module would
+    change on the case, with its log or its failure. Nothing is written and
+    nothing recorded (actions-api.md 11)."""
+    if module is None:
+        module = get_action_module(request, project_id, form_id)
+    if module is None or module.strip() == "":
+        return {
+            "ok": True,
+            "skipped": True,
+            "changes": [],
+            "log": [],
+            "error": None,
+            "failed_action": None,
+            "failed_line": None,
+        }
+    try:
+        inputs = sample_input(
+            request, project_id, form_id, schema, module, user, sample
+        )
+    except ModuleError as e:
+        return _dry_failure(request, module, str(e), [])
+    except Exception as e:
+        log.error(
+            "The sample input of the actions of form {} could not be built: "
+            "{}".format(form_id, e)
+        )
+        return _dry_failure(
+            request, module, "The input could not be built: {}".format(e), []
+        )
+    source = inputs.pop("_source")
+    try:
+        result = run_module(module, inputs, engine=engine_path(request))
+    except Exception as e:
+        return _dry_failure(request, module, "The engine failed: {}".format(e), [])
+    if not result.ok:
+        return _dry_failure(request, module, result.error, result.log)
+    try:
+        writes = result.writes
+        if not writes and result.changes:
+            writes = writes_from_changes(result.changes, inputs.get("case"))
+        plan = _plan_writes(request, source, inputs.get("case"), writes)
+        changes = _stored_report(plan)
+    except ModuleError as e:
+        return _dry_failure(request, module, str(e), result.log)
+    except Exception as e:
+        return _dry_failure(
+            request,
+            module,
+            "The writes could not be planned: {}".format(e),
+            result.log,
+        )
+    return {
+        "ok": True,
+        "skipped": False,
+        "changes": changes,
+        "log": result.log,
+        "error": None,
+        "failed_action": None,
+        "failed_line": None,
+    }
+
+
 # ---------------------------------------------------------------------------
 # The writes
 # ---------------------------------------------------------------------------
@@ -978,7 +1191,10 @@ def run_for_submission(
             request.dbsession.rollback()
         except Exception:  # pragma: no cover
             pass
-        return _finish(
+        # A host names a line of the whole module; the owner wrote a line of
+        # an action.
+        message, failed_action, failed_line = explain_failure(module, message)
+        outcome = _finish(
             request,
             project_id,
             form_id,
@@ -991,6 +1207,9 @@ def run_for_submission(
             log_lines,
             instance_id,
         )
+        outcome["failed_action"] = failed_action
+        outcome["failed_line"] = failed_line
+        return outcome
 
     try:
         inputs = build_input(

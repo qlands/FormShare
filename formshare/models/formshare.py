@@ -1159,15 +1159,15 @@ class TableProperty(Base):
 
 
 class PropertyAction(Base):
-    """A row of a form's decision table (feature 3, decision 16).
+    """One of a form's actions (feature 3, decision 16): a rule or code.
 
-    "When this form is submitted, set X to Y if Z", one row per line. The
-    rows are compiled, in action_order, into the form's JavaScript module
-    (Odkform.action_module) by processes/actions/compiler.py; the module is
-    what runs, on the server after each load and on the device at
-    finalize. The closed grammar is the schema: there is no expression
-    column here -- an expression lives in expert mode, as code. The
-    condition is jQuery QueryBuilder's rule JSON, NULL for "always".
+    A rule is "when this form is submitted, set X to Y if Z", in a closed
+    grammar: the condition is jQuery QueryBuilder's rule JSON, NULL for
+    "always". Code is a module its author wrote (action_code), which an
+    expert mode once held for the whole form (2026-10-20).
+    processes/actions/compiler.py composes the actions, in action_order,
+    into the form's JavaScript module (Odkform.action_module), which is
+    what runs, on the server after each load and on the device at finalize.
     docs/formshare_case_management/formshare.md section 2.5, actions-api.md.
     """
 
@@ -1184,14 +1184,20 @@ class PropertyAction(Base):
     project_id = Column(Unicode(64), nullable=False)
     form_id = Column(Unicode(120), nullable=False)
     action_order = Column(INTEGER, nullable=False, server_default=text("'0'"))
+    # rule | code
+    action_kind = Column(Unicode(10), nullable=False, server_default=text("'rule'"))
+    # The module of a code action (export default function run(s, api))
+    action_code = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    # What a code action does, in its author's words
+    action_desc = Column(Unicode(255))
     # case | parent: the linked case, or the row it belongs to
     target_scope = Column(Unicode(10), nullable=False, server_default=text("'case'"))
-    # property | column | active
-    target_kind = Column(Unicode(10), nullable=False)
+    # property | column | active; NULL for code
+    target_kind = Column(Unicode(10))
     # the property or column name; "0" / "1" for active
     target_name = Column(Unicode(120))
-    # constant | variable | now | computed
-    value_kind = Column(Unicode(10), nullable=False)
+    # constant | variable | now | computed; NULL for code
+    value_kind = Column(Unicode(10))
     # the constant, the variable, or the computed spec as JSON
     # ({"aggregate", "repeat", "column", "filter"})
     value = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))

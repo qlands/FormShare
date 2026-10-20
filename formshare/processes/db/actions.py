@@ -1,11 +1,13 @@
-"""The actions registry: a form's decision table, its module, and the
-catalogue of what a rule may name (feature 3, decision 16).
+"""The actions registry: a form's actions, rules and code, and the catalogue
+of what a rule may name (feature 3, decision 16).
 
-The rows live in PropertyAction, the module on the form (Odkform.action_mode,
-Odkform.action_module). In table mode the module is recompiled here every
-time a row changes, so what the server runs and what actions.json serves is
-always the table as last saved; in expert mode the module is what the owner
-wrote and the rows are left alone.
+The actions live in PropertyAction, each a rule of the decision table (When,
+Target, Value) or code its author wrote; the form keeps the module they
+compose into (Odkform.action_module), which is what the server runs and
+actions.json serves. Adding or changing an action composes the module again,
+and stores the action and the module in one commit, or nothing at all
+(2026-10-20: before, a form had one mode, the table or a module written by
+hand).
 
 The catalogue is built from the dictionary of the acting form (its
 variables, typed, with the choices of its selects), the registry (the case
@@ -42,6 +44,7 @@ from formshare.processes.actions.compiler import (
     EMPTY_MODULE,
     compile_module,
 )
+from formshare.processes.actions.host import LIMITS, ModuleError, load_module
 from formshare.processes.db.case_management import (
     get_case_link_consumer,
     get_published_list,
@@ -57,11 +60,12 @@ __all__ = [
     "update_form_action",
     "delete_form_action",
     "move_form_action",
+    "add_code_action",
+    "update_code_action",
     "get_action_mode",
-    "set_action_mode",
     "get_action_module",
-    "set_expert_module",
     "recompile_form_module",
+    "case_choices",
     "actions_json",
     "build_catalogue",
     "catalogue_for_editor",
@@ -274,57 +278,170 @@ def _encrypted_refusal(row, catalogue, translate):
     return None
 
 
-def add_form_action(request, project_id, form_id, data):
-    """Adds a row at the end of the table and recompiles. Returns
-    (ok, action_id or message)."""
-    catalogue = build_catalogue(request, project_id, form_id)
-    ok, row, message = _check_row(request, project_id, form_id, data, catalogue)
-    if not ok:
-        return False, message
-    existing = get_form_actions(request, project_id, form_id)
-    order = max([int(a["action_order"] or 0) for a in existing] + [0]) + 1
-    action_id = str(uuid.uuid4())
+def _compose(rows, catalogue, translate):
+    """The form's module from its actions: (True, module), or (False, why
+    not). The 64 KB every host allows a module (actions-api.md 7) is for the
+    form's actions together."""
     try:
-        request.dbsession.add(
-            PropertyAction(
-                action_id=action_id,
-                project_id=project_id,
-                form_id=form_id,
-                action_order=order,
-                action_cdate=datetime.datetime.now(),
-                **row
+        module = compile_module(rows, catalogue)
+    except CompileError as e:
+        return False, str(e)
+    if len(module.encode("utf-8")) > LIMITS["source_bytes"]:
+        return False, translate(
+            "The form's actions together are larger than {} KB"
+        ).format(LIMITS["source_bytes"] // 1024)
+    return True, module
+
+
+def _set_module(form, rows, module):
+    """The composed module on the form. Its mode, which actions.json serves
+    for information, says whether any action is code (actions-api.md 2)."""
+    form.action_module = module
+    form.action_mode = (
+        "expert"
+        if any((a_row.get("action_kind") or "rule") == "code" for a_row in rows)
+        else "table"
+    )
+
+
+def _save_action(request, project_id, form_id, action_id, values, catalogue, kind):
+    """Stores a new action (action_id None) or new values for one, and the
+    form's module composed again, in one commit. Nothing is stored when the
+    module cannot be composed with it. Returns (ok, action_id or message)."""
+    _ = request.translate
+    form = _form(request, project_id, form_id)
+    if form is None:
+        return False, _("No such form")
+    rows = get_form_actions(request, project_id, form_id)
+    order = None
+    if action_id is None:
+        action_id = str(uuid.uuid4())
+        order = max([int(a["action_order"] or 0) for a in rows] + [0]) + 1
+        rows = rows + [dict(values, action_id=action_id, action_order=order)]
+    else:
+        current = [a for a in rows if a["action_id"] == action_id]
+        if not current:
+            return False, _("No such action")
+        if (current[0].get("action_kind") or "rule") != kind:
+            return False, _("This action is of another kind")
+        rows = [dict(a, **values) if a["action_id"] == action_id else a for a in rows]
+    ok, module = _compose(rows, catalogue, _)
+    if not ok:
+        return False, module
+    try:
+        if order is not None:
+            request.dbsession.add(
+                PropertyAction(
+                    action_id=action_id,
+                    project_id=project_id,
+                    form_id=form_id,
+                    action_order=order,
+                    action_cdate=datetime.datetime.now(),
+                    **values
+                )
             )
-        )
+        else:
+            request.dbsession.query(PropertyAction).filter(
+                PropertyAction.project_id == project_id
+            ).filter(PropertyAction.form_id == form_id).filter(
+                PropertyAction.action_id == action_id
+            ).update(
+                values
+            )
+        _set_module(form, rows, module)
         request.dbsession.commit()
     except Exception as e:
         request.dbsession.rollback()
-        log.error("Error {} adding an action to form {}".format(str(e), form_id))
+        log.error("Error {} storing action {} of form {}".format(e, action_id, form_id))
         return False, str(e)
-    ok, message = recompile_form_module(request, project_id, form_id, catalogue)
-    if not ok:
-        return False, message
     return True, action_id
 
 
-def update_form_action(request, project_id, form_id, action_id, data):
+def _rule_values(row):
+    return dict(row, action_kind="rule", action_code=None, action_desc=None)
+
+
+def add_form_action(request, project_id, form_id, data):
+    """Adds a rule at the end of the form's actions. Returns (ok, action_id
+    or message)."""
     catalogue = build_catalogue(request, project_id, form_id)
     ok, row, message = _check_row(request, project_id, form_id, data, catalogue)
     if not ok:
         return False, message
+    return _save_action(
+        request, project_id, form_id, None, _rule_values(row), catalogue, "rule"
+    )
+
+
+def update_form_action(request, project_id, form_id, action_id, data):
+    """New When, Target and Value for a rule. Returns (ok, action_id or
+    message)."""
+    catalogue = build_catalogue(request, project_id, form_id)
+    ok, row, message = _check_row(request, project_id, form_id, data, catalogue)
+    if not ok:
+        return False, message
+    return _save_action(
+        request, project_id, form_id, action_id, _rule_values(row), catalogue, "rule"
+    )
+
+
+# A description is one line of a comment in the module.
+_BREAKS = re.compile(r"\s+")
+
+
+def _check_code(request, code, description):
+    """Normalises the code of an action and refuses one no host could load;
+    returns (ok, values, message).
+
+    A browser posts a textarea's lines ended with CR LF. Stored as they
+    come, the code would not be the text its author saw, and its size, which
+    load_module limits, would count a byte more per line than the editor's
+    check does (frontend/actions-editor)."""
+    _ = request.translate
+    code = re.sub(r"\r\n?", "\n", code or "")
+    if code.strip() == "":
+        return False, None, _("Write the action's code")
     try:
-        request.dbsession.query(PropertyAction).filter(
-            PropertyAction.project_id == project_id
-        ).filter(PropertyAction.form_id == form_id).filter(
-            PropertyAction.action_id == action_id
-        ).update(
-            row
-        )
-        request.dbsession.commit()
-    except Exception as e:
-        request.dbsession.rollback()
-        log.error("Error {} updating action {}".format(str(e), action_id))
-        return False, str(e)
-    return recompile_form_module(request, project_id, form_id, catalogue)
+        load_module(code)
+    except ModuleError as e:
+        return False, None, str(e)
+    description = _BREAKS.sub(" ", description or "").strip()[:255]
+    return (
+        True,
+        {
+            "action_kind": "code",
+            "action_code": code,
+            "action_desc": description or None,
+            "target_scope": "case",
+            "target_kind": None,
+            "target_name": None,
+            "value_kind": None,
+            "value": None,
+            "when_rules": None,
+        },
+        "",
+    )
+
+
+def add_code_action(request, project_id, form_id, code, description=""):
+    """Adds code at the end of the form's actions. Returns (ok, action_id or
+    message)."""
+    ok, values, message = _check_code(request, code, description)
+    if not ok:
+        return False, message
+    catalogue = build_catalogue(request, project_id, form_id)
+    return _save_action(request, project_id, form_id, None, values, catalogue, "code")
+
+
+def update_code_action(request, project_id, form_id, action_id, code, description=""):
+    """New code for a code action. Returns (ok, action_id or message)."""
+    ok, values, message = _check_code(request, code, description)
+    if not ok:
+        return False, message
+    catalogue = build_catalogue(request, project_id, form_id)
+    return _save_action(
+        request, project_id, form_id, action_id, values, catalogue, "code"
+    )
 
 
 def delete_form_action(request, project_id, form_id, action_id):
@@ -408,78 +525,75 @@ def get_action_module(request, project_id, form_id):
     return form.action_module or EMPTY_MODULE
 
 
-def set_action_mode(request, project_id, form_id, mode):
-    """Switches the form between table and expert mode. Going to expert
-    seeds the editor with the compiled module when nothing was written yet;
-    going back to table recompiles from the rows as last saved -- a module
-    never becomes rows (decision 16)."""
-    if mode not in ("table", "expert"):
-        return False, "Unknown mode"
-    form = _form(request, project_id, form_id)
-    if form is None:
-        return False, "No such form"
-    try:
-        form.action_mode = mode
-        request.dbsession.commit()
-    except Exception as e:
-        request.dbsession.rollback()
-        return False, str(e)
-    if mode == "table":
-        return recompile_form_module(request, project_id, form_id)
-    return True, ""
-
-
-def set_expert_module(request, project_id, form_id, module):
-    """Stores a module written by hand; the form is in expert mode from
-    then on. The module is loaded once to refuse one that no host could run
-    (no default function, too large)."""
-    from formshare.processes.actions.host import load_module, ModuleError
-
-    # A browser posts a textarea's lines ended with CR LF. Stored as they
-    # come, the module would not be the text the owner saw, and its size,
-    # which load_module limits, would count a byte more per line than the
-    # editor's check does (frontend/actions-editor).
-    module = re.sub(r"\r\n?", "\n", module or "")
-    if module.strip() != "":
-        try:
-            load_module(module)
-        except ModuleError as e:
-            return False, str(e)
-    form = _form(request, project_id, form_id)
-    if form is None:
-        return False, "No such form"
-    try:
-        form.action_mode = "expert"
-        form.action_module = module
-        request.dbsession.commit()
-    except Exception as e:
-        request.dbsession.rollback()
-        return False, str(e)
-    return True, ""
-
-
 def recompile_form_module(request, project_id, form_id, catalogue=None):
-    """Compiles the rows into the form's module, in table mode. In expert
-    mode the module is the owner's and is left alone."""
+    """Composes the form's actions into its module again: after one is
+    removed or moved, or when what they name may have changed."""
     form = _form(request, project_id, form_id)
     if form is None:
         return False, "No such form"
-    if (form.action_mode or "table") == "expert":
-        return True, ""
     rows = get_form_actions(request, project_id, form_id)
     if catalogue is None:
         catalogue = build_catalogue(request, project_id, form_id)
+    ok, module = _compose(rows, catalogue, request.translate)
+    if not ok:
+        return False, module
     try:
-        module = compile_module(rows, catalogue)
-    except CompileError as e:
-        return False, str(e)
-    try:
-        form.action_module = module
+        _set_module(form, rows, module)
         request.dbsession.commit()
     except Exception as e:
         request.dbsession.rollback()
         return False, str(e)
     return True, ""
+
+
+def case_choices(request, project_id, form_id, limit=1000):
+    """The cases a test with typed answers can act on: [{rowuuid, label,
+    active}] of the case link's source table, by label, at most ``limit``.
+    None for a form without a case link, whose case is each submission
+    itself; [] when the source cannot be read."""
+    link = get_case_link_consumer(request, project_id, form_id)
+    if link is None:
+        return None
+    a_list = get_published_list(request, link["list_project"], link["list_id"])
+    if a_list is None:
+        return []
+    schema = get_list_source_schema(request, a_list)
+    table = a_list.get("source_table") or ""
+    label = a_list.get("label_column") or "rowuuid"
+    if not schema or not _NAME.match(table) or not _NAME.match(label):
+        return []
+    try:
+        has_active = request.dbsession.execute(
+            text(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE "
+                "TABLE_SCHEMA = :s AND TABLE_NAME = :t AND COLUMN_NAME = '_active'"
+            ),
+            {"s": schema, "t": table},
+        ).scalar()
+        rows = request.dbsession.execute(
+            text(
+                "SELECT rowuuid, `{label}`, {active} FROM `{schema}`.`{table}` "
+                "ORDER BY `{label}`, rowuuid LIMIT {limit}".format(
+                    label=label,
+                    active="_active" if has_active else "1",
+                    schema=schema,
+                    table=table,
+                    limit=int(limit),
+                )
+            )
+        ).fetchall()
+    except Exception as e:
+        request.dbsession.rollback()
+        log.warning("The cases of form {} could not be read: {}".format(form_id, e))
+        return []
+    return [
+        {
+            "rowuuid": r[0],
+            "label": "" if r[1] is None else str(r[1]),
+            "active": r[2] is None or int(r[2]) == 1,
+        }
+        for r in rows
+    ]
 
 
 def actions_json(mode, module):

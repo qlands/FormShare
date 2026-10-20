@@ -1,36 +1,25 @@
 {% extends 'dashboard/page.jinja2' %}
 {% import 'dashboard/macros/form.jinja2' as form %}
 
-{% block titlesection %}{{ _("Case actions") }}{% endblock titlesection %}
+{% block titlesection %}{{ _("Form actions") }}{% endblock titlesection %}
 
 {% block css %}
     {{ super() }}
-    {% cssresource request,'formshare','querybuilder' %}
     <style>
-      #act-preview, #act-module { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
-      #act-preview { background: #f8f9fa; border: 1px solid #e5e7eb; padding: 10px; max-height: 420px; overflow: auto; white-space: pre; }
-      #act-module { width: 100%; min-height: 380px; }
-      .act-rows td { vertical-align: top; }
-      .act-rows .act-when { max-width: 480px; }
-      .act-result table { margin-top: 8px; }
-      #builder { margin-bottom: 8px; }
-      .act-mode .btn.active { pointer-events: none; }
-      .act-inline > * { margin-right: 6px; margin-bottom: 6px; }
-      .act-rows tr.act-editing > td { background-color: #fcf8e3; }
-      .act-keys { margin: 6px 0 0 0; font-size: 12px; }
-      details.act-code > summary { cursor: pointer; }
-      details.act-code > summary h3 { display: inline; }
+      .act-rows td { vertical-align: middle; }
+      .act-rows .act-what { max-width: 640px; }
+      .act-rows .act-row-buttons { white-space: nowrap; text-align: right; }
+      .act-row-buttons > *, .act-top > * { margin-right: 4px; margin-bottom: 4px; }
+      .act-code-view { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; background: #f8f9fa; border: 1px solid #e5e7eb; padding: 10px; max-height: 60vh; overflow: auto; white-space: pre; margin: 0; }
     </style>
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
-    {% jsresource request,'formshare','querybuilder' %}
-    {% if mode == 'expert' %}{% jsresource request,'formshare','actions_editor' %}{% endif %}
+    {% jsresource request,'formshare','clipboard' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
-    {% set crumb_current = _('Case actions') %}
     {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_actions.jinja2' %}
 {% endblock breadcrumbs %}
 
@@ -42,184 +31,73 @@
             {% endblock form_errors %}
             <div class="ibox">
                 <div class="ibox-content">
-                    <h2>{{ _('Case actions') }} &mdash; {{ formData.form_name }}</h2>
+                    <h2>{{ _('Form actions') }} &mdash; {{ formData.form_name }}</h2>
                     <p>
-                        {{ _('What happens to the case each time this form is submitted: a property set, a column changed, the case deactivated or reactivated. The rules run on the server after every submission is stored, and on FormShare Collect at finalize for a case registered on the same device.') }}
+                        {{ _('What happens to the case each time this form is submitted: a property set, a column changed, the case deactivated or reactivated. The actions run on the server after every submission is stored, and on FormShare Collect at finalize for a case registered on the same device.') }}
                         {% if source and not source.own %}
                             {{ _('This form follows up') }} <b>{{ source.table }}</b> {{ _('of') }} <b>{{ source.form }}</b> ({{ _('through') }} <code>{{ source.selector_field }}</code>){% if source.parent_table %}, {{ _('whose parent is') }} <b>{{ source.parent_table }}</b>{% endif %}.
                         {% else %}
-                            <span class="text-warning">{{ _('This form has no case link, so its rules act on its own rows: the case is each submission itself. To act on a case of another form, set the case link in "Links to lists" first.') }}</span>
+                            <span class="text-warning">{{ _('This form has no case link, so its actions act on its own rows: the case is each submission itself. To act on a case of another form, set the case link in "Links to lists" first.') }}</span>
                         {% endif %}
                     </p>
-
-                    <div class="act-mode m-b">
-                        <form method="post" action="{{ request.url }}" style="display: inline">
-{{ form.secure_form(request) }}
-                            <input type="hidden" name="set_mode" value="1">
-                            <input type="hidden" name="action_mode" value="table">
-                            <button type="submit" class="btn btn-sm {% if mode == 'table' %}btn-primary active{% else %}btn-white{% endif %}" {% if mode == 'expert' %}data-confirm-table{% endif %}>{{ _('Table mode') }}</button>
-                        </form>
-                        <form method="post" action="{{ request.url }}" style="display: inline">
-{{ form.secure_form(request) }}
-                            <input type="hidden" name="set_mode" value="1">
-                            <input type="hidden" name="action_mode" value="expert">
-                            <button type="submit" class="btn btn-sm {% if mode == 'expert' %}btn-primary active{% else %}btn-white{% endif %}">{{ _('Expert mode') }}</button>
-                        </form>
-                        <span class="text-muted" style="margin-left: 10px">
-                            {% if mode == 'table' %}{{ _('FormShare writes the code from the rows below.') }}{% else %}{{ _('You write the code; the table is not consulted.') }}{% endif %}
-                        </span>
+                    <div class="act-top">
+                        <a class="btn btn-primary" href="{{ request.route_url('form_case_action_add', userid=userid, projcode=projcode, formid=formData.form_id) }}"><i class="fas fa-plus"></i> {{ _('Add an action') }}</a>
+                        <a class="btn btn-white" href="{{ request.route_url('form_case_action_add_code', userid=userid, projcode=projcode, formid=formData.form_id) }}"><i class="fas fa-code"></i> {{ _('Add an action (Expert mode)') }}</a>
+                        {% if actions %}
+                            <a class="btn btn-white" href="{{ request.route_url('form_case_action_test', userid=userid, projcode=projcode, formid=formData.form_id, actionid='all') }}"><i class="fas fa-vial"></i> {{ _('Test all actions') }}</a>
+                            <button type="button" class="btn btn-white act-see-code" data-title="{{ _('The module that runs') }}" data-code="act-module-code"><i class="fas fa-file-code"></i> {{ _('See the module that runs') }}</button>
+                        {% endif %}
                     </div>
-
-                    {% if mode == 'table' %}
-                    <h3>{{ _('Rules') }}</h3>
-                    {% if rows|length > 0 %}
+                    <hr class="hr-line-dashed">
+                    {% if actions %}
                         <table class="table table-striped act-rows">
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>{{ _('When') }}</th>
-                                    <th>{{ _('Target') }}</th>
-                                    <th>{{ _('Value') }}</th>
-                                    <th>{{ _('Actions') }}</th>
+                                    <th>{{ _('What it does') }}</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                            {% for a_row in rows %}
+                            {% for an_action in actions %}
                                 <tr>
-                                    <td>{{ loop.index }}</td>
-                                    <td class="act-when">{{ a_row.when_words }}</td>
-                                    <td>
-                                        {% if a_row.target_scope == 'parent' %}{{ _("the case's parent") }}{% else %}{{ _('the case') }}{% endif %}:
-                                        {% if a_row.target_kind == 'active' %}
-                                            {% if a_row.target_name == '1' %}{{ _('reactivate') }}{% else %}{{ _('deactivate') }}{% endif %}
+                                    <td>{{ an_action.number }}</td>
+                                    <td class="act-what">
+                                        {% if an_action.action_kind == 'code' %}
+                                            <span class="label label-info">{{ _('Expert') }}</span>
+                                            {{ an_action.words if an_action.words else _('Code written by hand') }}
+                                        {% elif an_action.broken %}
+                                            <span class="text-danger">{{ an_action.broken }}</span>
                                         {% else %}
-                                            {{ a_row.target_kind }} <code>{{ a_row.target_name }}</code>
+                                            {{ an_action.words }}
                                         {% endif %}
                                     </td>
-                                    <td>
-                                        {% if a_row.target_kind == 'active' %}&mdash;
-                                        {% elif a_row.value_kind == 'constant' %}<code>{{ a_row.value if a_row.value is not none else 'NULL' }}</code>
-                                        {% elif a_row.value_kind == 'variable' %}{{ _('the answer to') }} <code>{{ a_row.value }}</code>
-                                        {% elif a_row.value_kind == 'now' %}{{ _('now') }}
-                                        {% else %}{{ _('computed') }}: <code>{{ a_row.value }}</code>{% endif %}
-                                    </td>
-                                    <td>
-                                        <button type="button" class="btn btn-xs btn-white act-edit"
-                                                data-id="{{ a_row.action_id }}" data-scope="{{ a_row.target_scope }}" data-kind="{{ a_row.target_kind }}"
-                                                data-name="{{ a_row.target_name }}" data-vkind="{{ a_row.value_kind }}"
-                                                data-value="{{ a_row.value if a_row.value is not none else '' }}"
-                                                data-when="{{ a_row.when_rules if a_row.when_rules else '' }}">{{ _('Edit') }}</button>
+                                    <td class="act-row-buttons">
+                                        <button type="button" class="btn btn-xs btn-white act-see-code" data-title="{{ _('Action') }} {{ an_action.number }}" data-code="act-code-{{ an_action.number }}"><i class="fas fa-file-code"></i> {{ _('See code') }}</button>
+                                        <a class="btn btn-xs btn-white" href="{{ request.route_url('form_case_action_test', userid=userid, projcode=projcode, formid=formData.form_id, actionid=an_action.action_id) }}"><i class="fas fa-vial"></i> {{ _('Test') }}</a>
+                                        {% if an_action.action_kind == 'code' %}
+                                            <a class="btn btn-xs btn-white" href="{{ request.route_url('form_case_action_code', userid=userid, projcode=projcode, formid=formData.form_id, actionid=an_action.action_id) }}"><i class="fas fa-pencil-alt"></i> {{ _('Edit') }}</a>
+                                        {% else %}
+                                            <a class="btn btn-xs btn-white" href="{{ request.route_url('form_case_action_edit', userid=userid, projcode=projcode, formid=formData.form_id, actionid=an_action.action_id) }}"><i class="fas fa-pencil-alt"></i> {{ _('Edit') }}</a>
+                                        {% endif %}
                                         <form method="post" action="{{ request.url }}" style="display: inline">
 {{ form.secure_form(request) }}
-                                            <input type="hidden" name="action_id" value="{{ a_row.action_id }}">
-                                            <button type="submit" name="move_up" value="1" class="btn btn-xs btn-white" title="{{ _('Move up') }}"><i class="fas fa-arrow-up"></i></button>
-                                            <button type="submit" name="move_down" value="1" class="btn btn-xs btn-white" title="{{ _('Move down') }}"><i class="fas fa-arrow-down"></i></button>
-                                            <button type="submit" name="delete_action" value="1" class="btn btn-xs btn-danger">{{ _('Delete') }}</button>
+                                            <input type="hidden" name="action_id" value="{{ an_action.action_id }}">
+                                            <button type="submit" name="move_up" value="1" class="btn btn-xs btn-white" title="{{ _('Move up') }}" {% if loop.first %}disabled{% endif %}><i class="fas fa-arrow-up"></i></button>
+                                            <button type="submit" name="move_down" value="1" class="btn btn-xs btn-white" title="{{ _('Move down') }}" {% if loop.last %}disabled{% endif %}><i class="fas fa-arrow-down"></i></button>
                                         </form>
+                                        <button type="button" class="btn btn-xs btn-danger act-remove" data-id="{{ an_action.action_id }}" data-number="{{ an_action.number }}"><i class="fas fa-trash"></i> {{ _('Remove') }}</button>
+                                        <textarea id="act-code-{{ an_action.number }}" class="d-none" readonly>{{ an_action.code }}</textarea>
                                     </td>
                                 </tr>
                             {% endfor %}
                             </tbody>
                         </table>
-                        <p class="text-muted">{{ _('Rules run from top to bottom. When several rules change the same thing, the first one whose condition is true is applied and the others are skipped.') }}</p>
+                        <p class="text-muted">{{ _('When two actions change the same thing, the one higher in the list wins. If one action fails on a submission, none of them is applied, and the run below says which one failed and where.') }}</p>
                     {% else %}
-                        <p>{{ _('No rules yet.') }}</p>
+                        <p>{{ _('No actions yet.') }}</p>
                     {% endif %}
-
-                    <hr class="hr-line-dashed">
-                    <h3 id="act-form-title">{{ _('Add a rule') }}</h3>
-                    <form id="act-form" method="post" action="{{ request.url }}">
-{{ form.secure_form(request) }}
-                        <input type="hidden" name="action_id" id="act-action-id" value="">
-                        <input type="hidden" name="when_rules" id="act-when-rules" value="">
-                        <label>{{ _('When') }}</label>
-                        <div id="builder"></div>
-                        <p class="text-muted">{{ _('Leave the condition empty for a rule that always applies.') }}</p>
-
-                        <label>{{ _('Target') }}</label>
-                        <div class="form-inline act-inline">
-                            <select name="target_scope" id="act-scope" class="form-control">
-                                <option value="case">{{ _('the case') }}</option>
-                                <option value="parent" id="act-scope-parent">{{ _("the case's parent") }}</option>
-                            </select>
-                            <select name="target_kind" id="act-kind" class="form-control">
-                                <option value="property">{{ _('set property') }}</option>
-                                <option value="column">{{ _('set column') }}</option>
-                                <option value="active">{{ _('activate or deactivate') }}</option>
-                            </select>
-                            <select name="target_name" id="act-name" class="form-control" style="min-width: 220px"></select>
-                        </div>
-
-                        <label id="act-value-label">{{ _('Value') }}</label>
-                        <div class="form-inline act-inline" id="act-value-row">
-                            <select name="value_kind" id="act-vkind" class="form-control">
-                                <option value="constant">{{ _('a constant') }}</option>
-                                <option value="variable">{{ _('the answer to a question') }}</option>
-                                <option value="now">{{ _('now') }}</option>
-                                <option value="computed">{{ _('a computed value') }}</option>
-                            </select>
-                            <input type="text" name="value" id="act-constant" class="form-control" placeholder="{{ _('Value (leave empty to clear it)') }}" style="min-width: 220px">
-                            <select id="act-variable" class="form-control" style="min-width: 220px; display: none"></select>
-                            <select name="computed_aggregate" id="act-aggregate" class="form-control" style="display: none">
-                                <option value="avg">{{ _('average') }}</option>
-                                <option value="sum">{{ _('sum') }}</option>
-                                <option value="count">{{ _('count') }}</option>
-                                <option value="min">{{ _('minimum') }}</option>
-                                <option value="max">{{ _('maximum') }}</option>
-                            </select>
-                            <select name="computed_repeat" id="act-repeat" class="form-control" style="display: none"></select>
-                            <select name="computed_column" id="act-column" class="form-control" style="display: none"></select>
-                        </div>
-                        <div class="m-t">
-                            <button type="submit" name="add_action" value="1" id="act-submit" class="btn btn-primary">{{ _('Add the rule') }}</button>
-                            <button type="button" id="act-cancel" class="btn btn-white" style="display: none">{{ _('Cancel') }}</button>
-                        </div>
-                    </form>
-
-                    <hr class="hr-line-dashed">
-                    <details class="act-code" id="act-code">
-                        <summary><h3>{{ _('The code FormShare wrote') }}</h3></summary>
-                        <p class="text-muted">{{ _('This is what runs, on the server and on the devices. Read-only in table mode; switch to expert mode to start from it.') }}</p>
-                        <div id="act-preview">{{ compiled if compiled else _('// no rules') }}</div>
-                    </details>
-                    {% else %}
-                    <h3>{{ _('The module') }}</h3>
-                    <p class="text-muted">{{ _('One default function run(s, api). What it can read and write is in the case management guide; nothing it does is applied until it returns, and nothing at all if it fails.') }}</p>
-                    <form method="post" action="{{ request.url }}">
-{{ form.secure_form(request) }}
-                        <label for="act-module" class="sr-only">{{ _('The module') }}</label>
-                        <textarea name="action_module" id="act-module" class="form-control">{{ module }}</textarea>
-                        {# Shown once the code editor has taken the textarea's place #}
-                        <p class="text-muted act-keys" id="act-keys" style="display: none">
-                            {{ _('Ctrl+Space shows what fits where the cursor is, and the editor marks what the server would refuse.') }}
-                            {{ _('Ctrl+S saves.') }}
-                            {% if submissions|length > 0 %}{{ _('Ctrl+Enter tests with the chosen submission.') }}{% endif %}
-                            {{ _('Tab indents; press Esc and then Tab to leave the editor.') }}
-                        </p>
-                        <div class="m-t">
-                            <button type="submit" name="save_module" value="1" id="act-save" class="btn btn-primary">{{ _('Save the module') }}</button>
-                            <button type="button" id="act-copy" class="btn btn-white">{{ _('Copy the code FormShare would write from the table') }}</button>
-                        </div>
-                    </form>
-                    <textarea id="act-compiled" style="display: none">{{ compiled }}</textarea>
-                    {% endif %}
-
-                    <hr class="hr-line-dashed">
-                    <h3>{{ _('Test with a submission') }}</h3>
-                    {% if submissions|length > 0 %}
-                        <p class="text-muted">{{ _('Runs the current code over one of the submissions this form received, and shows what it would change. Nothing is written.') }}{% if mode == 'expert' %} {{ _('The code in the editor is what runs, saved or not.') }}{% endif %}</p>
-                        <div class="form-inline act-inline">
-                            <select id="act-test-submission" class="form-control" style="min-width: 360px">
-                                {% for a_sub in submissions %}
-                                    <option value="{{ a_sub.rowuuid }}">{{ a_sub.label }} &mdash; {{ a_sub.by }} &mdash; {{ a_sub.date }}</option>
-                                {% endfor %}
-                            </select>
-                            <button type="button" id="act-test" class="btn btn-white">{{ _('Test') }}</button>
-                        </div>
-                        <div id="act-result" class="act-result m-t"></div>
-                    {% else %}
-                        <p class="text-muted">{{ _('This form has no submission yet; collect one first to test with it.') }}</p>
-                    {% endif %}
+                    <textarea id="act-module-code" class="d-none" readonly>{{ module }}</textarea>
 
                     <hr class="hr-line-dashed">
                     <h3>{{ _('Runs') }} {% if failedRuns > 0 %}<span class="label label-danger">{{ failedRuns }} {{ _('failed') }}</span>{% endif %}</h3>
@@ -269,276 +147,65 @@
             </div>
         </div>
     </div>
+
+    <div class="modal inmodal" id="act-code-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content animated fadeIn">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                    <h4 class="modal-title" id="act-code-title"></h4>
+                </div>
+                <div class="modal-body">
+                    <pre class="act-code-view" id="act-code-text"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-white" id="act-code-copy" data-clipboard-target="#act-code-text"><i class="fas fa-copy"></i> <span>{{ _('Copy') }}</span></button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">{{ _('Close') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <form id="act-remove-form" method="post" action="{{ request.url }}" style="display: none">
+{{ form.secure_form(request) }}
+        <input type="hidden" name="action_id" id="act-remove-id" value="">
+        <input type="hidden" name="delete_action" value="1">
+    </form>
 {% endblock maincontent %}
 
 {% block scripts %}
     {{ super() }}
     <script>
-      var actFilters = {% if mode == 'table' %}{{ filters }}{% else %}[]{% endif %};
-      var actTargets = {{ targets }};
-      var actVariables = {{ variables }};
-      var actRepeats = {{ repeats }};
-      var actTestUrl = "{{ request.route_url('form_case_actions_test', userid=userid, projcode=projcode, formid=formData.form_id) }}";
-      // The code editor of expert mode (frontend/actions-editor), when it
-      // could be made; otherwise the module stays a plain textarea.
-      var actEditor = null;
-{% if mode == 'expert' %}
-      var actEditorCatalogue = {{ editorCatalogue }};
-      var actEditorPhrases = {
-        syntax: {{ _("This part can't be read: check the brackets, quotes and operators around it.")|tojson }},
-        noRun: {{ _('The module must export a default function run(s, api).')|tojson }},
-        tooLarge: {{ _('The module is larger than {kb} KB.')|tojson }},
-        noImports: {{ _('A module has no imports: what it reads comes in s and api.')|tojson }},
-        onlyRun: {{ _('A module exports one thing: its default function run.')|tojson }},
-        dynamicImport: {{ _('import() loads nothing: no host has a module loader.')|tojson }},
-        await: {{ _('A module runs at once: nothing after an await runs.')|tojson }},
-        newDate: {{ _('new Date() without arguments is not available: use api.now.')|tojson }},
-        dateCall: {{ _('Date() is not available: use api.now.')|tojson }},
-        dateNow: {{ _('Date.now is not available: use api.now.')|tojson }},
-        mathRandom: {{ _('Math.random is not available: a run must give the same answer on every host.')|tojson }},
-        codeFromText: {{ _('{name} is not available to a module.')|tojson }},
-        locale: {{ _("{name} is not available: formatting is the module's own or api's.")|tojson }},
-        timers: {{ _('{name} is not available: a module runs at once, with no timers.')|tojson }},
-        absent: {{ _('{name} is not available to a module.')|tojson }},
-        unknownQuestion: {{ _('This form has no question named “{name}”.')|tojson }},
-        encryptedRead: {{ _('“{name}” is encrypted: the module reads its envelope, never the answer.')|tojson }},
-        unknownApiMember: {{ _('api has no member “{name}”.')|tojson }},
-        unknownCaseMember: {{ _('The case has no member “{name}”: read a property with property("…") and a column with value("…").')|tojson }},
-        unknownParentMember: {{ _('The case\'s parent has no member “{name}”: read a property with property("…") and a column with value("…").')|tojson }},
-        assignCase: {{ _('Assigning to the case changes nothing: use set(), activate() or deactivate().')|tojson }},
-        noCase: {{ _('This form has no case: api.case is null.')|tojson }},
-        noParent: {{ _('The case has no parent: api.case.parent is null.')|tojson }},
-        unknownRepeat: {{ _('This form has no repeat named “{name}”.')|tojson }},
-        nestedRepeat: {{ _('“{name}” is a repeat inside “{parent}”: read it from one of that repeat\'s rows, as row.repeat("…").')|tojson }},
-        unknownMulti: {{ _('This form has no multi-select named “{name}”.')|tojson }},
-        notMulti: {{ _('“{name}” is not a multi-select, so this finds no code.')|tojson }},
-        unknownChoice: {{ _('“{name}” has no choice “{code}”.')|tojson }},
-        lookupApiName: {{ _("Name run's second parameter api: the server finds the lists to load by api.lookup(…).")|tojson }},
-        lookupNotText: {{ _('Name the list as text, as in api.lookup("list", code): the server loads only the lists named that way.')|tojson }},
-        unknownList: {{ _('This form has no lookup list named “{name}”.')|tojson }},
-        unknownRepeatColumn: {{ _('The repeat “{repeat}” has no column “{name}”.')|tojson }},
-        unknownTarget: {{ _('The case has no property or column named “{name}”.')|tojson }},
-        unknownParentTarget: {{ _("The case's parent has no property or column named “{name}”.")|tojson }},
-        encryptedWrite: {{ _('“{name}” is encrypted: an action can only copy an envelope into it, not write an answer in clear.')|tojson }},
-        unknownProperty: {{ _('The case has no property “{name}”.')|tojson }},
-        unknownParentProperty: {{ _("The case's parent has no property “{name}”.")|tojson }},
-        unknownColumn: {{ _('The case has no column “{name}”.')|tojson }},
-        unknownParentColumn: {{ _("The case's parent has no column “{name}”.")|tojson }},
-        didYouMean: {{ _('Did you mean “{name}”?')|tojson }},
-        sectionQuestions: {{ _('Questions')|tojson }},
-        sectionSubmission: {{ _('The submission')|tojson }},
-        sectionColumns: {{ _('Columns')|tojson }},
-        sectionRow: {{ _('The row')|tojson }},
-        sectionProperties: {{ _('Properties')|tojson }},
-        sectionCaseColumns: {{ _('Columns')|tojson }},
-        typeText: {{ _('text')|tojson }},
-        typeInteger: {{ _('integer')|tojson }},
-        typeDecimal: {{ _('decimal')|tojson }},
-        typeDate: {{ _('date')|tojson }},
-        typeDatetime: {{ _('date and time')|tojson }},
-        typeSelect: {{ _('select one')|tojson }},
-        typeMulti: {{ _('multi-select')|tojson }},
-        typeRepeat: {{ _('repeat')|tojson }},
-        typeList: {{ _('lookup list')|tojson }},
-        runSnippet: {{ _("the module's function")|tojson }}
-      };
-{% endif %}
-
-      function confirmTable(form) {
+      $(document).on("click", ".act-see-code", function () {
+        $("#act-code-title").text($(this).attr("data-title"));
+        $("#act-code-text").text(document.getElementById($(this).attr("data-code")).value);
+        $("#act-code-copy span").text({{ _('Copy')|tojson }});
+        $("#act-code-modal").modal("show");
+      });
+      $(document).ready(function () {
+        // In a dialog the copy must happen inside it, where the focus is.
+        var copier = new ClipboardJS("#act-code-copy", { container: document.getElementById("act-code-modal") });
+        copier.on("success", function (event) {
+          $("#act-code-copy span").text({{ _('Copied')|tojson }});
+          event.clearSelection();
+        });
+      });
+      $(document).on("click", ".act-remove", function () {
+        var actionId = $(this).attr("data-id");
         swal({
-          title: "{{ _('Back to the table?') }}",
-          text: "{{ _('The code you wrote will be replaced by the code FormShare writes from the rows. This cannot be undone.') }}",
+          title: {{ _('Remove this action?')|tojson }} ,
+          text: {{ _('Action')|tojson }} + " " + $(this).attr("data-number") + ": " + {{ _('it stops running on the submissions that arrive from now on. What it already changed stays.')|tojson }},
           type: "warning",
           showCancelButton: true,
           confirmButtonColor: "#DD6B55",
-          confirmButtonText: "{{ _('Yes, back to the table') }}",
-          cancelButtonText: "{{ _('Cancel') }}",
+          confirmButtonText: {{ _('Yes, remove it')|tojson }},
+          cancelButtonText: {{ _('Cancel')|tojson }},
           closeOnConfirm: true
-        }, function (isConfirm) { if (isConfirm) { $("#busy").show(); form.submit(); } });
-        return false;
-      }
-
-      // Back to the table replaces the module with the code FormShare
-      // writes from the rows. It asks first only when the editor holds other
-      // code, written by hand, saved or not.
-      $(document).on("click", "[data-confirm-table]", function (event) {
-        event.preventDefault();
-        var written = ($("#act-module").val() || "").trim();
-        var compiled = ($("#act-compiled").val() || "").trim();
-        if (written === compiled) {
-          $("#busy").show();
-          this.form.submit();
-          return;
-        }
-        confirmTable(this.form);
-      });
-
-      function fillSelect(select, items, selected) {
-        select.empty();
-        items.forEach(function (item) {
-          var opt = $("<option></option>").attr("value", item.value).text(item.label);
-          if (item.value === selected) opt.attr("selected", "selected");
-          select.append(opt);
-        });
-      }
-
-      function refreshTargets(selectedName) {
-        var scope = $("#act-scope").val();
-        var kind = $("#act-kind").val();
-        var names = ((actTargets[scope] || {})[kind]) || [];
-        if (kind === "active") {
-          fillSelect($("#act-name"), [{value: "0", label: "{{ _('deactivate the case') }}"}, {value: "1", label: "{{ _('reactivate the case') }}"}], selectedName);
-          $("#act-value-row, #act-value-label").hide();
-        } else {
-          fillSelect($("#act-name"), names.map(function (n) { return {value: n.name, label: n.name + " (" + n.type + ")"}; }), selectedName);
-          $("#act-value-row, #act-value-label").show();
-        }
-      }
-
-      function refreshValue() {
-        var kind = $("#act-vkind").val();
-        $("#act-constant").toggle(kind === "constant");
-        $("#act-variable").toggle(kind === "variable");
-        $("#act-aggregate, #act-repeat, #act-column").toggle(kind === "computed");
-        $("#act-constant").attr("name", kind === "constant" ? "value" : "value_unused");
-        $("#act-variable").attr("name", kind === "variable" ? "value" : "value_unused");
-      }
-
-      function refreshColumns(selected) {
-        var repeat = $("#act-repeat").val();
-        var columns = actRepeats[repeat] || {};
-        var items = [];
-        Object.keys(columns).forEach(function (c) { if (columns[c] === "integer" || columns[c] === "double") items.push({value: c, label: c}); });
-        fillSelect($("#act-column"), items, selected);
-      }
-
-      $(document).ready(function () {
-        var moduleArea = document.getElementById("act-module");
-        if (moduleArea && window.FormShareActionsEditor) {
-          try {
-            actEditor = window.FormShareActionsEditor.create(moduleArea, {
-              catalogue: actEditorCatalogue,
-              phrases: actEditorPhrases,
-              ariaLabel: {{ _('The module')|tojson }},
-              onSave: function () { $("#act-save").click(); },
-              onTest: $("#act-test").length ? function () { $("#act-test").click(); } : null
-            });
-            if (/Mac|iPhone|iPad/.test(navigator.platform || "")) {
-              $("#act-keys").text($("#act-keys").text().replace(/Ctrl\+/g, "\u2318"));
-            }
-            $("#act-keys").show();
-          } catch (e) {
-            if (window.console) { console.warn("The code editor could not be made; the module stays a textarea:", e); }
+        }, function (isConfirm) {
+          if (isConfirm) {
+            $("#act-remove-id").val(actionId);
+            $("#busy").show();
+            document.getElementById("act-remove-form").submit();
           }
-        }
-        if ($("#builder").length && actFilters.length) {
-          $("#builder").queryBuilder({
-            filters: actFilters,
-            allow_empty: true,
-            plugins: ["not-group"],
-            // Its buttons add conditions: "Add rule" beside the page's own
-            // "Add the rule" read as the same thing
-            lang: {
-              add_rule: {{ _('Add condition')|tojson }},
-              add_group: {{ _('Add group of conditions')|tojson }}
-            },
-            icons: { add_group: "fas fa-plus-circle", add_rule: "fas fa-plus", remove_group: "fas fa-times", remove_rule: "fas fa-times", error: "fas fa-exclamation-triangle" },
-            operators: ["equal", "not_equal", "less", "less_or_equal", "greater", "greater_or_equal", "between", "not_between",
-                        "in", "not_in", "begins_with", "not_begins_with", "ends_with", "not_ends_with", "contains", "not_contains",
-                        "is_empty", "is_not_empty", "is_null", "is_not_null"]
-          });
-          // An empty canvas means "always"; the library would otherwise
-          // start with one blank rule that fails validation.
-          $("#builder").queryBuilder("setRules", {condition: "AND", rules: []});
-        }
-        if (!actTargets.parent) { $("#act-scope-parent").remove(); }
-        fillSelect($("#act-variable"), actVariables.map(function (v) { return {value: v.name, label: v.name + " (" + (v.multi ? "multi-select" : v.type) + ")"}; }));
-        fillSelect($("#act-repeat"), Object.keys(actRepeats).map(function (r) { return {value: r, label: r}; }));
-        refreshTargets();
-        refreshValue();
-        refreshColumns();
-        $("#act-scope, #act-kind").on("change", function () { refreshTargets(); });
-        $("#act-vkind").on("change", refreshValue);
-        $("#act-repeat").on("change", function () { refreshColumns(); });
-
-        $("#act-form").on("submit", function () {
-          var rules = null;
-          if ($("#builder").length && actFilters.length) {
-            rules = $("#builder").queryBuilder("getRules", {allow_invalid: false});
-            if (rules === null && !$("#builder").queryBuilder("validate")) { return false; }
-          }
-          $("#act-when-rules").val(rules && rules.rules && rules.rules.length ? JSON.stringify(rules) : "");
-          return true;
-        });
-
-        $(".act-edit").on("click", function () {
-          // attr(), not data(): jQuery would parse the JSON attributes into
-          // objects, and the value may be a number-looking string.
-          var el = $(this);
-          var b = { id: el.attr("data-id"), scope: el.attr("data-scope"), kind: el.attr("data-kind"), name: el.attr("data-name"),
-                    vkind: el.attr("data-vkind"), value: el.attr("data-value"), when: el.attr("data-when") };
-          $("#act-action-id").val(b.id);
-          $("#act-scope").val(b.scope);
-          $("#act-kind").val(b.kind);
-          refreshTargets(String(b.name));
-          if (b.kind !== "active") {
-            $("#act-vkind").val(b.vkind);
-            refreshValue();
-            if (b.vkind === "constant") { $("#act-constant").val(b.value); }
-            if (b.vkind === "variable") { $("#act-variable").val(b.value); }
-            if (b.vkind === "computed") {
-              try {
-                var spec = JSON.parse(b.value);
-                $("#act-aggregate").val(spec.aggregate); $("#act-repeat").val(spec.repeat); refreshColumns(spec.column);
-              } catch (e) {}
-            }
-          }
-          if ($("#builder").length && actFilters.length) {
-            $("#builder").queryBuilder("setRules", b.when ? JSON.parse(b.when) : {condition: "AND", rules: []});
-          }
-          $(".act-rows tr").removeClass("act-editing");
-          var row = el.closest("tr").addClass("act-editing");
-          $("#act-form-title").text({{ _('Edit rule')|tojson }} + " " + row.children("td").first().text().trim());
-          $("#act-submit").attr("name", "update_action").text({{ _('Save the rule')|tojson }});
-          $("#act-cancel").show();
-          $("html, body").animate({ scrollTop: $("#act-form-title").offset().top - 20 }, 200);
-        });
-        $("#act-cancel").on("click", function () { window.location.reload(); });
-
-        // One edit in the editor, which Ctrl+Z takes back.
-        $("#act-copy").on("click", function () {
-          var compiled = $("#act-compiled").val();
-          if (actEditor) { actEditor.replace(compiled); actEditor.focus(); } else { $("#act-module").val(compiled); }
-        });
-
-        $("#act-test").on("click", function () {
-          var payload = { rowuuid: $("#act-test-submission").val() };
-          if ($("#act-module").length) { payload.module = $("#act-module").val(); }
-          $("#act-result").html("<i class='fa fa-spinner fa-spin'></i>");
-          if (actEditor) { actEditor.clearMark(); }
-          fetch(actTestUrl, { method: "POST", headers: {"Content-Type": "application/json", "X-CSRF-Token": "{{ request.session.get_csrf_token() }}"}, body: JSON.stringify(payload), credentials: "same-origin" })
-            .then(function (r) { return r.json(); })
-            .then(function (r) {
-              var html = "";
-              if (r.error) {
-                html += "<div class='alert alert-danger'>" + $("<div>").text(r.error).html() + "</div>";
-                // Every host names the module's own line: mark it.
-                var failedAt = /\(line (\d+)\)\s*$/.exec(r.error);
-                if (failedAt && actEditor) { actEditor.markLine(parseInt(failedAt[1], 10), r.error); }
-              }
-              else if (r.skipped) { html += "<div class='alert alert-info'>{{ _('This form has no actions.') }}</div>"; }
-              else if (!r.changes.length) { html += "<div class='alert alert-info'>{{ _('The run would change nothing.') }}</div>"; }
-              else {
-                html += "<table class='table table-bordered'><thead><tr><th>{{ _('Table') }}</th><th>{{ _('Row') }}</th><th>{{ _('Column') }}</th><th>{{ _('Old') }}</th><th>{{ _('New') }}</th></tr></thead><tbody>";
-                r.changes.forEach(function (c) {
-                  html += "<tr><td>" + c.table + "</td><td><code>" + c.rowuuid + "</code></td><td>" + c.column + "</td><td>" + (c.old === null ? "NULL" : $("<div>").text(c.old).html()) + "</td><td>" + (c.new === null ? "NULL" : $("<div>").text(c.new).html()) + "</td></tr>";
-                });
-                html += "</tbody></table>";
-              }
-              if (r.log && r.log.length) { html += "<pre>" + $("<div>").text(r.log.join("\n")).html() + "</pre>"; }
-              $("#act-result").html(html);
-            })
-            .catch(function (e) { $("#act-result").html("<div class='alert alert-danger'>" + e + "</div>"); });
         });
       });
     </script>

@@ -1,0 +1,335 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Form actions") }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    <style>
+      #act-code { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; width: 100%; min-height: 160px; }
+      .act-source label { font-weight: normal; margin-right: 18px; }
+      .act-answers .form-group { margin-bottom: 10px; }
+      .act-answers .act-label { font-weight: 600; }
+      .act-answers .act-name { color: #888; font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; margin-left: 6px; }
+      .act-choices label { font-weight: normal; margin-right: 14px; }
+      .act-repeat { margin-top: 12px; }
+      .act-repeat table input, .act-repeat table select { min-width: 120px; }
+      .act-result table { margin-top: 8px; }
+    </style>
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','actions_editor' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% if action %}{% set crumb_current = _('Test action') ~ ' ' ~ action.number %}{% else %}{% set crumb_current = _('Test all actions') %}{% endif %}
+    {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_actions.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-lg-12">
+            {% block form_errors %}
+                {{ form.display_errors(errors) }}
+            {% endblock form_errors %}
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h2>{% if action %}{{ _('Test action') }} {{ action.number }}{% else %}{{ _('Test all actions') }}{% endif %} &mdash; {{ formData.form_name }}</h2>
+                    {% if action %}
+                        <p>
+                            {% if action.action_kind == 'code' %}<span class="label label-info">{{ _('Expert') }}</span> {{ action.words if action.words else _('Code written by hand') }}
+                            {% elif action.broken %}<span class="text-danger">{{ action.broken }}</span>
+                            {% else %}{{ action.words }}{% endif %}
+                        </p>
+                    {% else %}
+                        <p>{{ _('Every action together, as they run on each submission: when two change the same thing, the one higher in the list wins.') }}</p>
+                    {% endif %}
+                    <details open>
+                        <summary>{{ _('The code') }}</summary>
+                        <textarea id="act-code" class="form-control" readonly>{{ code }}</textarea>
+                    </details>
+
+                    <hr class="hr-line-dashed">
+                    <h3>{{ _('Test it') }}</h3>
+                    <p class="text-muted">{{ _('The test runs the code and shows what it would change. Nothing is written.') }}</p>
+                    <div class="act-source m-b">
+                        <label><input type="radio" name="act-source" value="sample" checked> {{ _('With answers I type') }}</label>
+                        <label {% if not submissions %}class="text-muted"{% endif %}><input type="radio" name="act-source" value="received" {% if not submissions %}disabled{% endif %}> {{ _('With a submission received') }}{% if not submissions %} ({{ _('none yet') }}){% endif %}</label>
+                    </div>
+
+                    <div id="act-sample">
+                        {% if cases is none %}
+                            <p class="text-muted">{{ _('This form has no case link: the case is the submission itself, so the answers below are its row, and its properties start at their defaults.') }}</p>
+                        {% else %}
+                            <div class="form-group">
+                                <label for="act-case" class="act-label">{{ _('The case') }}</label>
+                                {% if cases|length > 20 %}
+                                    <input type="text" id="act-case-filter" class="form-control m-b-xs" placeholder="{{ _('Type to narrow the list') }}">
+                                {% endif %}
+                                <select id="act-case" class="form-control">
+                                    {% for a_case in cases %}
+                                        <option value="{{ a_case.rowuuid }}">{{ a_case.label if a_case.label else a_case.rowuuid }}{% if not a_case.active %} ({{ _('inactive') }}){% endif %}</option>
+                                    {% endfor %}
+                                    <option value="">{{ _('No case: the selector left unanswered') }}</option>
+                                </select>
+                                {% if cases|length == 0 %}
+                                    <p class="text-warning">{{ _('The case list has no case yet, so the test can only show what happens without one.') }}</p>
+                                {% elif source and source.selector_field %}
+                                    <p class="text-muted">{{ _('The case picked here is the answer to') }} <code>{{ source.selector_field }}</code>.</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        <div class="act-answers" id="act-answers"></div>
+                        <a href="#" id="act-every" class="btn btn-xs btn-white">{{ _('Show every question') }}</a>
+                        <div id="act-repeats"></div>
+                    </div>
+
+                    <div id="act-received" style="display: none">
+                        <select id="act-submission" class="form-control" style="max-width: 640px">
+                            {% for a_sub in submissions %}
+                                <option value="{{ a_sub.rowuuid }}">{{ a_sub.label }} &mdash; {{ a_sub.by }} &mdash; {{ a_sub.date }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="m-t">
+                        <button type="button" id="act-run" class="btn btn-primary"><i class="fas fa-vial"></i> {{ _('Run the test') }}</button>
+                    </div>
+                    <div id="act-result" class="act-result m-t"></div>
+
+                    <hr class="hr-line-dashed">
+                    {% if action %}
+                        {% if action.action_kind == 'code' %}
+                            <a class="btn btn-white" href="{{ request.route_url('form_case_action_code', userid=userid, projcode=projcode, formid=formData.form_id, actionid=action.action_id) }}"><i class="fas fa-pencil-alt"></i> {{ _('Edit this action') }}</a>
+                        {% else %}
+                            <a class="btn btn-white" href="{{ request.route_url('form_case_action_edit', userid=userid, projcode=projcode, formid=formData.form_id, actionid=action.action_id) }}"><i class="fas fa-pencil-alt"></i> {{ _('Edit this action') }}</a>
+                        {% endif %}
+                    {% endif %}
+                    <a class="btn btn-white" href="{{ request.route_url('form_case_actions', userid=userid, projcode=projcode, formid=formData.form_id) }}">{{ _('Back to the actions') }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+      var actQuestions = {{ questions }};
+      var actRepeats = {{ repeats }};
+      var actRead = {{ read }};
+      var actActionId = {{ actionId|tojson }};
+      var actAll = actActionId === "all";
+      var actTestUrl = {{ request.route_url('form_case_actions_test', userid=userid, projcode=projcode, formid=formData.form_id)|tojson }};
+      var actToken = {{ request.session.get_csrf_token()|tojson }};
+      var actEditorCatalogue = {{ editorCatalogue }};
+{% include 'dashboard/projects/case_management/snippets/actions_editor_phrases.jinja2' %}
+      var actEditor = null;
+
+      function inputFor(item, prefix) {
+        // The answer to one question, or one column of a repeat's row, as
+        // its type asks for it. Every name and label is text, never HTML.
+        var field;
+        if (item.multi && item.choices && item.choices.length) {
+          field = $("<div class='act-choices'></div>").attr("data-multi", "1");
+          item.choices.forEach(function (c) {
+            var box = $("<input type='checkbox'>").attr("value", c.code);
+            field.append($("<label></label>").append(box).append(document.createTextNode(" " + (c.label || c.code))));
+          });
+        } else if (item.choices && item.choices.length) {
+          field = $("<select class='form-control'></select>").append($("<option value=''></option>"));
+          item.choices.forEach(function (c) {
+            field.append($("<option></option>").attr("value", c.code).text(c.label && c.label !== c.code ? c.code + " — " + c.label : c.code));
+          });
+        } else if (item.type === "integer" || item.type === "double") {
+          field = $("<input type='number' step='any' class='form-control'>");
+        } else if (item.type === "date") {
+          field = $("<input type='date' class='form-control'>");
+        } else if (item.type === "datetime") {
+          field = $("<input type='datetime-local' step='1' class='form-control'>");
+        } else {
+          field = $("<input type='text' class='form-control'>");
+        }
+        return field.attr("data-answer", item.name).attr("id", prefix + item.name);
+      }
+
+      function valueOf(field) {
+        if (field.attr("data-multi")) {
+          return field.find("input:checked").map(function () { return this.value; }).get();
+        }
+        var value = field.val();
+        if (value === null || value === undefined || String(value).trim() === "") { return null; }
+        if (field.attr("type") === "datetime-local") {
+          // 2026-10-20T10:30 or 2026-10-20T10:30:15, as a run spells it
+          value = String(value).replace("T", " ");
+          if (value.length === 16) { value += ":00"; }
+        }
+        return value;
+      }
+
+      function questionRow(q, read) {
+        var group = $("<div class='form-group'></div>").toggleClass("act-unread", !read);
+        if (!read) { group.hide(); }
+        var label = $("<label class='act-label'></label>").attr("for", "act-q-" + q.name).text(q.label || q.name);
+        if (q.label && q.label !== q.name) { label.append($("<span class='act-name'></span>").text(q.name)); }
+        return group.append(label).append(inputFor(q, "act-q-"));
+      }
+
+      function repeatBlock(r) {
+        var block = $("<div class='act-repeat'></div>").attr("data-repeat", r.name);
+        block.append($("<label class='act-label'></label>").text({{ _('Rows of the repeat')|tojson }} + " " + r.name));
+        var table = $("<table class='table table-bordered table-condensed'></table>");
+        var head = $("<tr></tr>");
+        r.columns.forEach(function (c) { if (!c.encrypted && !c.system) { head.append($("<th></th>").text(c.name)); } });
+        head.append($("<th></th>"));
+        table.append($("<thead></thead>").append(head)).append($("<tbody></tbody>"));
+        var add = $("<button type='button' class='btn btn-xs btn-white act-add-row'></button>").text({{ _('Add a row')|tojson }});
+        return block.append(table).append(add);
+      }
+
+      function addRow(block) {
+        var r = actRepeats.filter(function (x) { return x.name === block.attr("data-repeat"); })[0];
+        var row = $("<tr></tr>");
+        r.columns.forEach(function (c) {
+          if (!c.encrypted && !c.system) { row.append($("<td></td>").append(inputFor(c, "act-r-"))); }
+        });
+        row.append($("<td></td>").append($("<button type='button' class='btn btn-xs btn-white act-remove-row'>&times;</button>")));
+        block.find("tbody").append(row);
+      }
+
+      function sample() {
+        var answers = {};
+        $("#act-answers [data-answer]").each(function () {
+          var value = valueOf($(this));
+          if (value !== null && !(Array.isArray(value) && value.length === 0)) { answers[$(this).attr("data-answer")] = value; }
+        });
+        var repeats = {};
+        $("#act-repeats [data-repeat]").each(function () {
+          var rows = [];
+          $(this).find("tbody tr").each(function () {
+            var values = {};
+            $(this).find("[data-answer]").each(function () {
+              var value = valueOf($(this));
+              if (value !== null) { values[$(this).attr("data-answer")] = value; }
+            });
+            rows.push(values);
+          });
+          repeats[$(this).attr("data-repeat")] = rows;
+        });
+        var out = { answers: answers, repeats: repeats };
+        if ($("#act-case").length) { out.case = $("#act-case").val(); }
+        return out;
+      }
+
+      function escapeText(value) {
+        return $("<div>").text(value === null ? "NULL" : value).html();
+      }
+
+      // The line a failure names, in the code shown: an action's own, or,
+      // for every action together, where that action starts in the module.
+      function failedLine(r) {
+        if (!r.failed_line) { return null; }
+        if (!actAll) { return r.failed_line; }
+        var lines = $("#act-code").val().split("\n");
+        var start = "// Action " + r.failed_action + ", written by hand";
+        var wrapper = "const __fs_action_" + r.failed_action + " = (function () {";
+        for (var i = 0; i < lines.length - 1; i++) {
+          if (lines[i].indexOf(start) === 0 && lines[i + 1].indexOf(wrapper) === 0) { return i + 2 + r.failed_line; }
+        }
+        return null;
+      }
+
+      function showResult(r) {
+        var html = "";
+        if (r.error) {
+          html += "<div class='alert alert-danger'>" + escapeText(r.error) + "</div>";
+          var line = failedLine(r);
+          if (line && actEditor) { actEditor.markLine(line, r.error); }
+        } else if (r.skipped) {
+          html += "<div class='alert alert-info'>" + escapeText({{ _('This form has no actions.')|tojson }}) + "</div>";
+        } else if (!r.changes.length) {
+          html += "<div class='alert alert-info'>" + escapeText({{ _('The run would change nothing.')|tojson }}) + "</div>";
+        } else {
+          html += "<table class='table table-bordered'><thead><tr><th>" + escapeText({{ _('Table')|tojson }}) + "</th><th>" + escapeText({{ _('Row')|tojson }}) +
+                  "</th><th>" + escapeText({{ _('Column')|tojson }}) + "</th><th>" + escapeText({{ _('Old')|tojson }}) + "</th><th>" + escapeText({{ _('New')|tojson }}) + "</th></tr></thead><tbody>";
+          r.changes.forEach(function (c) {
+            html += "<tr><td>" + escapeText(c.table) + "</td><td><code>" + escapeText(c.rowuuid) + "</code></td><td>" + escapeText(c.column) + "</td><td>" + escapeText(c.old) + "</td><td>" + escapeText(c.new) + "</td></tr>";
+          });
+          html += "</tbody></table>";
+        }
+        if (r.log && r.log.length) { html += "<pre>" + escapeText(r.log.join("\n")) + "</pre>"; }
+        $("#act-result").html(html);
+      }
+
+      $(document).ready(function () {
+        var area = document.getElementById("act-code");
+        if (area && window.FormShareActionsEditor) {
+          try {
+            actEditor = window.FormShareActionsEditor.create(area, {
+              catalogue: actEditorCatalogue, phrases: actEditorPhrases, readOnly: true, minHeight: "60px", ariaLabel: {{ _('The code')|tojson }}
+            });
+          } catch (e) {
+            if (window.console) { console.warn("The code editor could not be made:", e); }
+          }
+        }
+
+        // The questions the code reads first; the others on request.
+        var read = {};
+        actRead.questions.forEach(function (name) { read[name] = true; });
+        actQuestions.forEach(function (q) {
+          if (!q.encrypted) { $("#act-answers").append(questionRow(q, !!read[q.name])); }
+        });
+        if (!actRead.questions.length) {
+          $("#act-answers").append($("<p class='text-muted act-read-none'></p>").text({{ _('The code reads no answer of the submission.')|tojson }}));
+        }
+        if (!$("#act-answers .act-unread").length) { $("#act-every").hide(); }
+        actRepeats.forEach(function (r) {
+          if (actRead.repeats.indexOf(r.name) >= 0) {
+            var block = repeatBlock(r);
+            $("#act-repeats").append(block);
+            addRow(block);
+          }
+        });
+
+        $("#act-every").on("click", function (event) {
+          event.preventDefault();
+          $("#act-answers .act-unread").show();
+          $(".act-read-none").hide();
+          actRepeats.forEach(function (r) {
+            if (!$("#act-repeats [data-repeat='" + r.name + "']").length) { $("#act-repeats").append(repeatBlock(r)); }
+          });
+          $(this).hide();
+        });
+        $(document).on("click", ".act-add-row", function () { addRow($(this).closest("[data-repeat]")); });
+        $(document).on("click", ".act-remove-row", function () { $(this).closest("tr").remove(); });
+        $("#act-case-filter").on("input", function () {
+          var words = $(this).val().toLowerCase();
+          $("#act-case option").each(function () {
+            $(this).toggle(this.value === "" || $(this).text().toLowerCase().indexOf(words) >= 0);
+          });
+        });
+        $("input[name='act-source']").on("change", function () {
+          var received = $("input[name='act-source']:checked").val() === "received";
+          $("#act-received").toggle(received);
+          $("#act-sample").toggle(!received);
+        });
+
+        $("#act-run").on("click", function () {
+          var payload = { action_id: actActionId };
+          if ($("input[name='act-source']:checked").val() === "received") {
+            payload.rowuuid = $("#act-submission").val();
+          } else {
+            payload.sample = sample();
+          }
+          if (actEditor) { actEditor.clearMark(); }
+          $("#act-result").html("<i class='fa fa-spinner fa-spin'></i>");
+          fetch(actTestUrl, { method: "POST", headers: {"Content-Type": "application/json", "X-CSRF-Token": actToken}, body: JSON.stringify(payload), credentials: "same-origin" })
+            .then(function (r) { return r.json(); })
+            .then(showResult)
+            .catch(function (e) { $("#act-result").html("<div class='alert alert-danger'>" + escapeText(String(e)) + "</div>"); });
+        });
+      });
+    </script>
+{% endblock scripts %}

@@ -1,0 +1,119 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Form actions") }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    <style>
+      #act-code { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; width: 100%; min-height: 380px; }
+      .act-keys { margin: 6px 0 0 0; font-size: 12px; }
+    </style>
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','actions_editor' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% if action %}{% set crumb_current = _('Edit action') ~ ' ' ~ number %}{% else %}{% set crumb_current = _('Add an action (Expert mode)') %}{% endif %}
+    {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_actions.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-lg-12">
+            {% block form_errors %}
+                {{ form.display_errors(errors) }}
+            {% endblock form_errors %}
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h2>{% if action %}{{ _('Edit action') }} {{ number }}{% else %}{{ _('Add an action (Expert mode)') }}{% endif %} &mdash; {{ formData.form_name }}</h2>
+                    <p class="text-muted">{{ _('One default function run(s, api). What it can read and write is in the case management guide; nothing it does is applied until it returns, and nothing at all if it fails.') }}</p>
+                    <form id="act-code-form" method="post" action="{{ request.url }}">
+{{ form.secure_form(request) }}
+                        <div class="form-group">
+                            <label for="act-desc">{{ _('What it does') }}</label>
+                            <input type="text" name="action_desc" id="act-desc" class="form-control" maxlength="255" value="{{ description }}" placeholder="{{ _('In a few words, for the list of actions') }}">
+                        </div>
+                        <label for="act-code">{{ _('The code') }}</label>
+                        <textarea name="action_code" id="act-code" class="form-control">{{ code }}</textarea>
+                        {# Shown once the code editor has taken the textarea's place #}
+                        <p class="text-muted act-keys" id="act-keys" style="display: none">
+                            {{ _('Ctrl+Space shows what fits where the cursor is, and the editor marks what the server would refuse.') }}
+                            {{ _('Ctrl+S saves.') }}
+                            {{ _('Tab indents; press Esc and then Tab to leave the editor.') }}
+                        </p>
+                        <div class="m-t">
+                            <button type="submit" name="save_action" value="1" id="act-save" class="btn btn-primary">{% if action %}{{ _('Save the action') }}{% else %}{{ _('Add the action') }}{% endif %}</button>
+                            <a class="btn btn-white" href="{{ request.route_url('form_case_actions', userid=userid, projcode=projcode, formid=formData.form_id) }}">{{ _('Cancel') }}</a>
+                            <span class="text-muted" style="margin-left: 8px">{{ _('Saving takes you to its test.') }}</span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+      var actEditorCatalogue = {{ editorCatalogue }};
+{% include 'dashboard/projects/case_management/snippets/actions_editor_phrases.jinja2' %}
+      // The code editor (frontend/actions-editor), when it could be made;
+      // otherwise the code stays a plain textarea.
+      var actEditor = null;
+
+      $(document).ready(function () {
+        var area = document.getElementById("act-code");
+        if (area && window.FormShareActionsEditor) {
+          try {
+            actEditor = window.FormShareActionsEditor.create(area, {
+              catalogue: actEditorCatalogue,
+              phrases: actEditorPhrases,
+              ariaLabel: {{ _('The code')|tojson }},
+              onSave: function () { $("#act-save").click(); }
+            });
+            if (/Mac|iPhone|iPad/.test(navigator.platform || "")) {
+              $("#act-keys").text($("#act-keys").text().replace(/Ctrl\+/g, "⌘"));
+            }
+            $("#act-keys").show();
+          } catch (e) {
+            if (window.console) { console.warn("The code editor could not be made; the code stays a textarea:", e); }
+          }
+        }
+        // Code the editor marks as wrong would be refused, or fail on every
+        // submission, and while an action fails none of the form's actions
+        // is applied: it asks first.
+        $("#act-code-form").on("submit", function (event) {
+          var form = this;
+          var errors = actEditor && form.getAttribute("data-confirmed") !== "yes"
+            ? actEditor.problems().filter(function (p) { return p.severity === "error"; })
+            : [];
+          if (!errors.length) {
+            $("#busy").show();
+            return true;
+          }
+          event.preventDefault();
+          swal({
+            title: {{ _('Save it with errors?')|tojson }},
+            text: {{ _('The editor marks errors in this code. The server would refuse it, or it would fail on every submission, and while one action fails none of the form\'s actions is applied.')|tojson }} + " (" + {{ _('line')|tojson }} + " " + errors[0].line + ": " + errors[0].message + ")",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: {{ _('Save it anyway')|tojson }},
+            cancelButtonText: {{ _('Keep editing')|tojson }},
+            closeOnConfirm: true
+          }, function (isConfirm) {
+            if (isConfirm) {
+              form.setAttribute("data-confirmed", "yes");
+              $("#busy").show();
+              form.submit();
+            }
+          });
+        });
+      });
+    </script>
+{% endblock scripts %}

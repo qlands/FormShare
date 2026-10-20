@@ -30,6 +30,7 @@ from formshare.processes.actions.compiler import (
     CompileError,
     OPERATORS,
     compile_module,
+    rule_module,
 )
 from formshare.processes.db import actions as actions_db
 
@@ -38,9 +39,8 @@ PACKAGE = os.path.dirname(HERE)
 BUNDLE = os.path.join(
     PACKAGE, "jsandcss", "js", "plugins", "codemirror6", "actions_editor.min.js"
 )
-TEMPLATE = os.path.join(
-    PACKAGE, "templates", "dashboard", "projects", "case_management", "actions.jinja2"
-)
+PAGES = os.path.join(PACKAGE, "templates", "dashboard", "projects", "case_management")
+PHRASES = os.path.join(PAGES, "snippets", "actions_editor_phrases.jinja2")
 GOLDEN = os.path.join(HERE, "resources", "actions", "golden")
 NODE = shutil.which("node")
 
@@ -107,7 +107,7 @@ def check_all(items):
 # ---------------------------------------------------------------------------
 
 
-def test_the_page_loads_the_shipped_bundle():
+def test_the_pages_load_the_shipped_bundle():
     with open(os.path.join(PACKAGE, "config", "mainresources.py")) as a_file:
         resources = a_file.read()
     assert '"js/plugins/codemirror6/actions_editor.min.js"' in resources
@@ -115,12 +115,15 @@ def test_the_page_loads_the_shipped_bundle():
     assert os.path.exists(
         os.path.join(os.path.dirname(BUNDLE), "THIRD_PARTY_LICENSES.txt")
     )
-    with open(TEMPLATE) as a_file:
-        template = a_file.read()
-    assert (
-        "{% if mode == 'expert' %}{% jsresource request,'formshare','actions_editor' %}"
-        "{% endif %}" in template
-    )
+    # Where code is written and where it is tested; the list does without.
+    loads = "{% jsresource request,'formshare','actions_editor' %}"
+    for page, expected in (
+        ("action_code.jinja2", True),
+        ("action_test.jinja2", True),
+        ("actions.jinja2", False),
+    ):
+        with open(os.path.join(PAGES, page)) as a_file:
+            assert (loads in a_file.read()) is expected, page
 
 
 def _template_phrases():
@@ -131,7 +134,7 @@ def _template_phrases():
     nothing in (the dispatcher puts it in the context), and Jinja's own
     newstyle gettext would %-format the text, which leaves {name} alone.
     """
-    with open(TEMPLATE) as a_file:
+    with open(PHRASES) as a_file:
         template = a_file.read()
     block = template.split("var actEditorPhrases = {", 1)[1].split("};", 1)[0]
     phrases = {}
@@ -353,7 +356,7 @@ def test_every_module_the_compiler_writes_is_clean():
         row(len(rows) + 6, "active", "1", scope="parent"),
     ]
     module = compile_module(rows, catalogue)
-    assert module.count("// Row") == len(rows) > 60
+    assert module.count("// Action ") == len(rows) > 60
     editor_catalogue = {
         "known": True,
         "questions": [
@@ -384,7 +387,21 @@ def test_every_module_the_compiler_writes_is_clean():
         },
         "lookups": [],
     }
-    assert check_all([(module, editor_catalogue)]) == [[]]
+    # The module that runs, and each rule as See code shows it: there, run's
+    # own s and api read every name, so the checks are certain of each. All
+    # the rules together pass the 64 KB a host takes, which the checks say,
+    # rightly: a form's module is checked with sixty of them.
+    assert "The module is larger than 64 KB." in [
+        d[3] for d in check_all([(module, editor_catalogue)])[0]
+    ]
+    within = compile_module(rows[:60], catalogue)
+    standalone = [rule_module(a_row, catalogue) for a_row in rows]
+    found = check_all(
+        [(within, editor_catalogue)] + [(m, editor_catalogue) for m in standalone]
+    )
+    assert found == [[]] * (1 + len(standalone)), [
+        (m, f) for m, f in zip([within] + standalone, found) if f
+    ][:3]
 
 
 # ---------------------------------------------------------------------------

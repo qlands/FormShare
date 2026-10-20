@@ -45,7 +45,10 @@
             {% block form_errors %}
                 {{ form.display_errors(errors) }}
             {% endblock form_errors %}
-            {% include 'dashboard/projects/snippets/project_form.jinja2' %}
+            {# A page that extends this one may show a form that extends this one's #}
+            {% block project_form_include %}
+                {% include 'dashboard/projects/snippets/project_form.jinja2' %}
+            {% endblock project_form_include %}
         </div>
     </div>
 {% endblock maincontent %}

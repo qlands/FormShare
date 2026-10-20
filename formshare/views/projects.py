@@ -232,17 +232,38 @@ class ProjectDetailsView(ProjectsView):
 
 
 class AddProjectView(ProjectsView):
+    """Creates a project: its details, logo and QR, through the IProject
+    hooks. A plugin that creates projects of its own kind -- the workspace
+    plugin's, owned by a workspace -- subclasses this view and overrides the
+    methods before process_view, so that what a project gets here (a logo,
+    say) reaches its projects too."""
+
     def __init__(self, request):
         ProjectsView.__init__(self, request)
         self.privateOnly = True
 
-    def process_view(self):
+    def check_access(self):
+        """Raises HTTPNotFound unless the user may create a project here."""
         user_id = self.request.matchdict["userid"]
         if user_id != self.user.login:
             raise HTTPNotFound()
-
         if "can_projects" not in self.user.roles:
             raise HTTPNotFound()
+
+    def project_owner(self):
+        """The account the new project belongs to, which its URLs name."""
+        return self.user.login
+
+    def project_created(self, project_id, project_details):
+        """Called once the project, its logo and its QR exist."""
+
+    def extra_context(self):
+        """What the page needs beside the project's details."""
+        return {}
+
+    def process_view(self):
+        self.check_access()
+        owner = self.project_owner()
 
         if self.request.method == "POST":
             project_details = self.get_post_dict()
@@ -279,7 +300,7 @@ class AddProjectView(ProjectsView):
                         "next"
                     ) or self.request.route_url(
                         "project_details",
-                        userid=self.user.login,
+                        userid=owner,
                         projcode=project_details["project_code"],
                     )
 
@@ -291,7 +312,7 @@ class AddProjectView(ProjectsView):
                                 continue_creation,
                                 message,
                             ) = plugin.before_creating_project(
-                                self.request, self.user.login, project_details
+                                self.request, owner, project_details
                             )
                     if continue_creation:
                         if project_details["project_hexcolor"] == "":
@@ -300,20 +321,20 @@ class AddProjectView(ProjectsView):
                             ).hex
 
                         added, message = add_project(
-                            self.request, self.user.login, project_details
+                            self.request, owner, project_details
                         )
                         if added:
                             if logo is not None:
                                 save_project_logo(self.request, message, logo)
                             for plugin in p.PluginImplementations(p.IProject):
                                 plugin.after_creating_project(
-                                    self.request, self.user.login, project_details
+                                    self.request, owner, project_details
                                 )
 
                             # Generate the QR image
                             url = self.request.route_url(
                                 "project_details",
-                                userid=self.user.login,
+                                userid=owner,
                                 projcode=project_details["project_code"],
                             )
                             odk_settings = {
@@ -351,6 +372,7 @@ class AddProjectView(ProjectsView):
                                     + ".png",
                                 },
                             )
+                            self.project_created(message, project_details)
                             self.request.session.flash(
                                 self._("The project has been created")
                             )
@@ -375,33 +397,54 @@ class AddProjectView(ProjectsView):
                 "project_entities": 0,
                 "project_formlist_auth": 1,
             }
-        return {
+        context = {
             "projectDetails": project_details,
             "timezones": get_timezones(self.request),
         }
+        context.update(self.extra_context())
+        return context
 
 
 class EditProjectView(ProjectsView):
+    """Edits a project: its details and logo, through the IProject hooks. A
+    plugin that keeps projects of its own kind subclasses this view and
+    overrides the methods before process_view (see AddProjectView)."""
+
     def __init__(self, request):
         ProjectsView.__init__(self, request)
         self.privateOnly = True
 
-    def process_view(self):
+    def project_or_404(self):
+        """(owner, project id) of the project to edit, or HTTPNotFound for a
+        user who may not edit it."""
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-
-        if project_id is not None:
-            if (
-                get_project_access_type(
-                    self.request, project_id, user_id, self.user.login
-                )
-                >= 4
-            ):
-                raise HTTPNotFound
-            project_details = get_project_details(self.request, project_id)
-        else:
+        if project_id is None:
             raise HTTPNotFound
+        if (
+            get_project_access_type(self.request, project_id, user_id, self.user.login)
+            >= 4
+        ):
+            raise HTTPNotFound
+        return user_id, project_id
+
+    def check_post(self, owner, project_id):
+        """Called on a POST before anything changes, to refuse one the page did
+        not send (HTTPNotFound)."""
+
+    def next_page(self, owner, project_code):
+        """Where a saved edit goes."""
+        return self.request.params.get("next") or self.request.url
+
+    def extra_context(self, owner, project_id):
+        """What the page needs beside the project's details."""
+        return {}
+
+    def process_view(self):
+        owner, project_id = self.project_or_404()
+        project_code = self.request.matchdict["projcode"]
+        project_details = get_project_details(self.request, project_id)
 
         total_forms = get_forms_number(self.request, project_id)
         project_details["total_forms"] = total_forms
@@ -409,6 +452,7 @@ class EditProjectView(ProjectsView):
 
         if self.request.method == "POST":
             project_details = self.get_post_dict()
+            self.check_post(owner, project_id)
             logo, logo_error = posted_logo(self.request, project_details)
             remove_logo = project_details.pop("remove_logo", None) is not None
             # A page shown again shows the logo the project still has.
@@ -444,7 +488,7 @@ class EditProjectView(ProjectsView):
                 project_details["project_abstract"] = None
 
             if project_details["project_name"] != "":
-                next_page = self.request.params.get("next") or self.request.url
+                next_page = self.next_page(owner, project_code)
 
                 continue_modify = logo_error is None
                 message = logo_error or ""
@@ -471,7 +515,7 @@ class EditProjectView(ProjectsView):
                 for plugin in p.PluginImplementations(p.IProject):
                     if continue_modify:
                         continue_modify, message = plugin.before_editing_project(
-                            self.request, user_id, project_id, project_details
+                            self.request, owner, project_id, project_details
                         )
                 if continue_modify:
                     modified, message = modify_project(
@@ -484,7 +528,7 @@ class EditProjectView(ProjectsView):
                             remove_project_logo(self.request, project_id)
                         for plugin in p.PluginImplementations(p.IProject):
                             plugin.after_editing_project(
-                                self.request, user_id, project_id, project_details
+                                self.request, owner, project_id, project_details
                             )
                         self.request.session.flash(
                             self._("The project has been modified")
@@ -498,12 +542,14 @@ class EditProjectView(ProjectsView):
             else:
                 self.append_to_errors(self._("The name cannot be empty"))
 
-        return {
+        context = {
             "projectDetails": project_details,
             "timezones": get_timezones(self.request),
             # Said by the switch, before the owner tries it
             "listsPerAssistant": lists_served_per_assistant(self.request, project_id),
         }
+        context.update(self.extra_context(owner, project_id))
+        return context
 
 
 class EditProjectQRView(ProjectsView):
@@ -629,37 +675,52 @@ class ActivateProjectView(ProjectsView):
 
 
 class DeleteProjectView(ProjectsView):
+    """Deletes a project and its files, through the IProject hooks. A plugin
+    that keeps projects of its own kind subclasses this view and overrides the
+    methods before process_view (see AddProjectView)."""
+
     def __init__(self, request):
         ProjectsView.__init__(self, request)
         self.checkCrossPost = False
         self.privateOnly = True
 
-    def process_view(self):
+    def project_or_404(self):
+        """(owner, project id) of the project to delete, or HTTPNotFound for
+        anyone but its owner."""
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-
-        if project_id is not None:
-            if (
-                get_project_access_type(
-                    self.request, project_id, user_id, self.user.login
-                )
-                != 1
-            ):
-                raise HTTPNotFound
-        else:
+        if project_id is None:
             raise HTTPNotFound
+        if (
+            get_project_access_type(self.request, project_id, user_id, self.user.login)
+            != 1
+        ):
+            raise HTTPNotFound
+        return user_id, project_id
+
+    def check_post(self, owner, project_id):
+        """Called on a POST before anything is deleted, to refuse one the page
+        did not send (HTTPNotFound)."""
+
+    def next_page(self, owner):
+        """Where the deletion goes, done or refused."""
+        return self.request.params.get("next") or self.request.route_url(
+            "projects", userid=self.user.login
+        )
+
+    def process_view(self):
+        owner, project_id = self.project_or_404()
 
         if self.request.method == "POST":
-            next_page = self.request.params.get("next") or self.request.route_url(
-                "projects", userid=self.user.login
-            )
+            self.check_post(owner, project_id)
+            next_page = self.next_page(owner)
             continue_delete = True
             message = ""
             for plugin in p.PluginImplementations(p.IProject):
                 if continue_delete:
                     continue_delete, message = plugin.before_deleting_project(
-                        self.request, user_id, project_id
+                        self.request, owner, project_id
                     )
             if continue_delete:
                 self.returnRawViewResult = True
@@ -672,7 +733,7 @@ class DeleteProjectView(ProjectsView):
 
                     for plugin in p.PluginImplementations(p.IProject):
                         plugin.after_deleting_project(
-                            self.request, user_id, project_id, []
+                            self.request, owner, project_id, []
                         )
                     self.request.session.flash(
                         self._("The project was deleted successfully")

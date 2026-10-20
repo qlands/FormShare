@@ -63,12 +63,13 @@
             {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
                 $("#project_timezone").select2();
             {% endif %}
-            {% if request.h.feature_exists("workflows") == False %}
-                {% if projectDetails.total_forms == 0 %}
-                    var elem = document.querySelector('.js-switch');
-                    var switchery = new Switchery(elem, { color: '#1AB394' });
-                {% endif %}
-            {% endif %}
+            // The edit form shows the case switch to no project any more
+            // (2026-09-14): without one, Switchery would throw and stop what
+            // follows.
+            var elem = document.querySelector('.js-switch');
+            if (elem) {
+                var switchery = new Switchery(elem, { color: '#1AB394' });
+            }
 
             var elem2 = document.querySelector('.js-switch2');
             var switchery2 = new Switchery(elem2, { color: '#1AB394' });
@@ -79,9 +80,12 @@
 
             // emojione is bundled (mainresources.py); the picker draws each
             // emoji as an image, since the sprite is a stylesheet from a CDN
-            // that the Content-Security-Policy refuses.
+            // that the Content-Security-Policy refuses. Its autocomplete would
+            // fetch jquery-textcomplete from cdn.rawgit.com, a script from
+            // another origin (and a CDN gone since 2019): it is off.
             $("#emojiarea").emojioneArea({
                 sprite: false,
+                autocomplete: false,
                 pickerPosition: "bottom",
                 filtersPosition: "bottom",
                 tonesStyle: "checkbox"

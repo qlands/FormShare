@@ -73,9 +73,12 @@
 
             // emojione is bundled (mainresources.py); the picker draws each
             // emoji as an image, since the sprite is a stylesheet from a CDN
-            // that the Content-Security-Policy refuses.
+            // that the Content-Security-Policy refuses. Its autocomplete would
+            // fetch jquery-textcomplete from cdn.rawgit.com, a script from
+            // another origin (and a CDN gone since 2019): it is off.
             $("#emojiarea").emojioneArea({
                 sprite: false,
+                autocomplete: false,
                 pickerPosition: "top",
                 filtersPosition: "bottom",
                 tonesStyle: "checkbox"

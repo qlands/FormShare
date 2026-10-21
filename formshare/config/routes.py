@@ -215,6 +215,7 @@ from formshare.views.repository_submissions import (
     DeleteAllSubmissions,
     GetFormAudit,
     ReviewAudit,
+    DownloadDBXML,
 )
 from formshare.views.search import APIUserSearchSelect2, APIPartnerSearchSelect2
 from formshare.views.testing import (
@@ -1315,6 +1316,15 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/form/{formid}/audit",
             ReviewAudit,
             "dashboard/projects/forms/submissions/view_audit.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "downloadDBXML",
+            "/user/{userid}/project/{projcode}/form/{formid}/dbxml",
+            DownloadDBXML,
+            None,
         )
     )
 

@@ -448,6 +448,13 @@ def t_e_s_t_unauthorized_access(test_object):
         status=404,
     )
 
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/dbxml".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=404,
+    )
+
     # Download data in JSON format of a project that does not have access goes to 404
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/generate/json".format(

@@ -363,6 +363,14 @@ def t_e_s_t_repository_downloads(test_object):
     )
     assert "FS_error" not in res.headers
 
+    # Download data in XML of a form with repository
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/dbxml".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=200,
+    )
+
     res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}/generate/public_zip_csv".format(
             test_object.randonLogin, test_object.project, test_object.formID

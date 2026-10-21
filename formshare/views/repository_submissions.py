@@ -8,6 +8,7 @@ from formshare.processes.db import (
     get_assistant_by_api_key,
     get_project_access_type,
     get_project_details,
+    get_form_xml_create_file,
 )
 from formshare.processes.db.encryption import encrypted_columns
 from formshare.processes.elasticsearch.record_index import (
@@ -24,6 +25,7 @@ from formshare.processes.submission.api import (
 )
 from formshare.views.classes import PrivateView, UpdateAPIView
 from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound
+from formshare.middleware.response import FileResponse
 
 
 class ManageSubmissions(PrivateView):
@@ -78,6 +80,46 @@ class ManageSubmissions(PrivateView):
                 "fields": fields,
                 "assistants": assistants,
             }
+        else:
+            raise HTTPNotFound
+
+
+class DownloadDBXML(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+
+        if project_id is not None:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                > 4
+            ):
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        form_data = get_form_details(self.request, user_id, project_id, form_id)
+        if form_data is not None:
+            if form_data["form_schema"] is None:
+                raise HTTPNotFound
+            create_file = get_form_xml_create_file(self.request, project_id, form_id)
+            self.returnRawViewResult = True
+            response = FileResponse(
+                create_file,
+                request=self.request,
+                content_type="application/xml",
+                cache_max_age=0,
+            )
+            response.content_disposition = 'attachment; filename="' + form_id + '.xml"'
+            return response
         else:
             raise HTTPNotFound
 

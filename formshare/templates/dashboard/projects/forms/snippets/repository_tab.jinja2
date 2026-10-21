@@ -28,6 +28,7 @@
                                 {% endif %}
                             {% endif %}
                             <li><a title="{{ numsensitive }} {{ request.h.pluralize(_('field'),numsensitive,request.locale_name) }} {{ _('marked as sensitive among ') }}{{ numtables }} {{ request.h.pluralize(_('table'),numtables,request.locale_name) }}" href="{{ request.route_url('editDictTables', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-book"></i><span style="color: red"> {{ _('Dictionary') }}</span></a></li>
+                            <li><a href="{{ request.route_url('downloadDBXML', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="far fa-file-code"></i> {{ _('Get repository definition') }}</a></li>
                             {% if formDetails.indb > 0 %}
                                 {% if projectDetails.access_type < 3 %}
                                     <li><a href="{{ request.route_url('manageSubmissions', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-tasks"></i> {{ _('Manage submissions') }}</a></li>

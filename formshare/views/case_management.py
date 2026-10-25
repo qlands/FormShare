@@ -21,7 +21,7 @@ from jinja2.utils import htmlsafe_json_dumps
 from sqlalchemy import text
 
 from formshare.middleware.httpexceptions import HTTPFound, HTTPNotFound
-from formshare.middleware.response import FileResponse
+from formshare.middleware.response import FileResponse, Response
 from formshare.processes.db.case_management import (
     add_published_list,
     build_list_select,
@@ -1399,6 +1399,16 @@ class ActionsView(ActionsSection):
                 )
                 ok, message = outcome.get("ok", False), outcome.get("error") or ""
             self.returnRawViewResult = True
+            # The arrows post through htmx, and the page fetches the list
+            # again on formshare:actions-updated (actions.jinja2)
+            if self.request.headers.get("HX-Request") == "true":
+                if ok:
+                    self.trigger_client_event("formshare:actions-updated")
+                else:
+                    self.trigger_client_event(
+                        "formshare:notify", {"type": "error", "message": message}
+                    )
+                return Response(status=204)
             if ok:
                 return HTTPFound(location=here)
             self.add_error(message)

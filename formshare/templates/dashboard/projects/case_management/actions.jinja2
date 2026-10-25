@@ -17,6 +17,7 @@
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','clipboard' %}
+    {% jsresource request,'formshare','htmx' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -45,6 +46,12 @@
                         <a class="btn btn-white" href="{{ request.route_url('form_case_action_add_code', userid=userid, projcode=projcode, formid=formData.form_id) }}"><i class="fas fa-code"></i> {{ _('Add an action (Expert mode)') }}</a>
                     </div>
                     <hr class="hr-line-dashed">
+                    {# What the arrows change in place: the page fetches it again (?partial=actions_list) #}
+                    <div id="act-list">
+                    {% partial_start 'actions_list' %}
+                    {# The list's own address for the arrows, not request.url: in the fragment,
+                       that is ?partial=actions_list, and the cross-post check refuses a post there #}
+                    {% set list_url = request.route_url('form_case_actions', userid=userid, projcode=projcode, formid=formData.form_id) %}
                     {% if actions %}
                         <table class="table table-striped act-rows">
                             <thead>
@@ -76,7 +83,7 @@
                                         {% else %}
                                             <a class="btn btn-xs btn-white" href="{{ request.route_url('form_case_action_edit', userid=userid, projcode=projcode, formid=formData.form_id, actionid=an_action.action_id) }}"><i class="fas fa-pencil-alt"></i> {{ _('Edit') }}</a>
                                         {% endif %}
-                                        <form method="post" action="{{ request.url }}" style="display: inline">
+                                        <form method="post" action="{{ list_url }}" hx-post="{{ list_url }}" hx-swap="none" style="display: inline">
 {{ form.secure_form(request) }}
                                             <input type="hidden" name="action_id" value="{{ an_action.action_id }}">
                                             <button type="submit" name="move_up" value="1" class="btn btn-xs btn-white" title="{{ _('Move up') }}" {% if loop.first %}disabled{% endif %}><i class="fas fa-arrow-up"></i></button>
@@ -93,6 +100,8 @@
                     {% else %}
                         <p>{{ _('No actions yet.') }}</p>
                     {% endif %}
+                    {% partial_end 'actions_list' %}
+                    </div>
 
                     <hr class="hr-line-dashed">
                     <h3>{{ _('Runs') }} {% if failedRuns > 0 %}<span class="label label-danger">{{ failedRuns }} {{ _('failed') }}</span>{% endif %}</h3>
@@ -170,6 +179,18 @@
 {% block scripts %}
     {{ super() }}
     <script>
+      // htmx evaluates strings only for hx-on, hx-vars and js: values, none
+      // of which FormShare uses, and the Content-Security-Policy refuses eval
+      // (formshare/config/csp.py).
+      htmx.config.allowEval = false;
+      // An arrow moves its action without leaving the page: the server says
+      // so (HX-Trigger), and the list is fetched again in place.
+      document.addEventListener("formshare:actions-updated", function () {
+        htmx.ajax("GET", window.location.pathname + "?partial=actions_list", {target: "#act-list", swap: "innerHTML"});
+      });
+      document.addEventListener("formshare:notify", function (e) {
+        swal({title: e.detail.type, text: e.detail.message, type: e.detail.type});
+      });
       $(document).on("click", ".act-see-code", function () {
         $("#act-code-title").text($(this).attr("data-title"));
         $("#act-code-text").text(document.getElementById($(this).attr("data-code")).value);

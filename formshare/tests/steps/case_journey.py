@@ -1651,17 +1651,31 @@ def t_e_s_t_case_journey(test_object):
         served["mode"] == "table"
         and 'api.case.set("risk_factor", 7)' in served["module"]
     )
-    # Actions move and go: the second rule first, then deleted.
+    # Actions move and go: the second rule first, then deleted. An arrow
+    # posts through htmx: the server says the list changed, and the page
+    # fetches the list alone, in place.
     ids = re.findall(
         r'data-id="([^"]+)"', testapp.get(actions, status=200).body.decode("utf-8")
     )
     assert len(ids) == 2
-    res = testapp.post(actions, {"move_up": "1", "action_id": ids[1]}, status=302)
-    assert "FS_error" not in res.headers
-    body = testapp.get(actions, status=200).body.decode("utf-8")
+    htmx = {"HX-Request": "true"}
+    res = testapp.post(
+        actions, {"move_up": "1", "action_id": ids[1]}, headers=htmx, status=204
+    )
+    assert "formshare:actions-updated" in res.headers["HX-Trigger"]
+    body = testapp.get(actions + "?partial=actions_list", status=200).body
+    body = body.decode("utf-8")
+    assert "<html" not in body and 'id="act-list"' not in body
     assert body.index("Deactivates a worker whose role") < body.index(
         "Raises the risk when consent"
     )
+    # The arrows post to the list, not to the fragment's own address.
+    assert "?partial=" not in body
+    # One that cannot move says why.
+    res = testapp.post(
+        actions, {"move_up": "1", "action_id": "nope"}, headers=htmx, status=204
+    )
+    assert json.loads(res.headers["HX-Trigger"])["formshare:notify"]["type"] == "error"
     res = testapp.post(actions, {"delete_action": "1", "action_id": ids[1]}, status=302)
     assert "FS_error" not in res.headers
     served = json.loads(

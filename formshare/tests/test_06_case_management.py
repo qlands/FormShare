@@ -457,6 +457,53 @@ def test_the_source_form_is_seen_as_having_consumers(db_request):
     assert cm.source_form_has_consumers(db_request, "p", "tool2") is False
 
 
+def _new_list(list_id, file_name):
+    return {
+        "list_id": list_id,
+        "list_filename": file_name,
+        "list_format": "csv",
+        "source_project": "p",
+        "source_form": "tool1",
+        "source_table": "maintable",
+        "label_column": "school",
+    }
+
+
+def test_a_list_code_or_file_name_in_use_is_refused_in_words(db_request):
+    # The table's primary key and its unique file name refused them in
+    # MySQL's own words, which the page showed as they came (2026-10-25).
+    assert cm.add_published_list(
+        db_request, "p", _new_list("roster", "roster2.csv")
+    ) == (False, 'The list code "roster" already exists')
+    assert cm.add_published_list(
+        db_request, "p", _new_list("roster2", "roster.csv")
+    ) == (False, 'The file name "roster.csv" is already used by another list')
+    assert cm.add_published_list(
+        db_request, "p", _new_list("roster2", "roster2.csv")
+    ) == (True, "")
+    # Another project's lists are its own
+    assert cm.add_published_list(
+        db_request, "q", _new_list("roster", "roster.csv")
+    ) == (True, "")
+
+
+def test_a_list_added_meanwhile_is_refused_in_words(db_request, monkeypatch):
+    # Another request adds the same list between the check and the insert:
+    # the database refuses it, and the page still gets the reason in words.
+    real = cm.get_published_list
+    calls = []
+
+    def not_there_yet(request, project_id, list_id):
+        calls.append(list_id)
+        return None if len(calls) == 1 else real(request, project_id, list_id)
+
+    monkeypatch.setattr(cm, "get_published_list", not_there_yet)
+    assert cm.add_published_list(
+        db_request, "p", _new_list("roster", "roster2.csv")
+    ) == (False, 'The list code "roster" already exists')
+    assert calls == ["roster", "roster"]
+
+
 # ---------------------------------------------------------------------------
 # Active / inactive rows (2026-09-13): a list serves one or the other
 # ---------------------------------------------------------------------------

@@ -491,6 +491,20 @@ def geojson_list_select(
 # ---------------------------------------------------------------------------
 
 
+def _list_taken(request, project_id, list_data):
+    """Why a new list cannot be added: another list of the project has its
+    code (the table's primary key) or its file name (unique in a project);
+    None when neither is taken."""
+    _ = request.translate
+    list_id = list_data.get("list_id")
+    if get_published_list(request, project_id, list_id) is not None:
+        return _('The list code "{}" already exists').format(list_id)
+    file_name = list_data.get("list_filename")
+    if get_published_list_by_filename(request, project_id, file_name) is not None:
+        return _('The file name "{}" is already used by another list').format(file_name)
+    return None
+
+
 def add_published_list(request, project_id, list_data):
     """Adds a list to the registry. list_data mirrors PublishedList columns."""
     _ = request.translate
@@ -499,6 +513,9 @@ def add_published_list(request, project_id, list_data):
             "The file name must be lower case, start with a letter, and end "
             "in .csv or .geojson"
         )
+    taken = _list_taken(request, project_id, list_data)
+    if taken is not None:
+        return False, taken
     mapped_data = dict(list_data)
     mapped_data["project_id"] = project_id
     mapped_data["list_createdate"] = datetime.datetime.now()
@@ -514,7 +531,9 @@ def add_published_list(request, project_id, list_data):
                 str(e), list_data.get("list_id"), project_id
             )
         )
-        return False, str(e)
+        # Another request may have added a list of that code or file name
+        # since the check above
+        return False, _list_taken(request, project_id, list_data) or str(e)
 
 
 def update_published_list(request, project_id, list_id, list_data):

@@ -300,9 +300,17 @@ def create_resources(apppath, config):
     )
     r.add_css_resource(
         "formshare",
-        "querybuilder",
+        "querybuilder_default",
         "js/plugins/querybuilder/css/query-builder.default.min.css",
         None,
+    )
+    # FormShare's look for it, after the library's (the file says why): a
+    # page that needs "querybuilder" gets both, in that order
+    r.add_css_resource(
+        "formshare",
+        "querybuilder",
+        "js/plugins/querybuilder/css/query-builder.formshare.css",
+        "querybuilder_default",
     )
     r.add_js_resource("formshare", "jsplumb", "js/plugins/jsplumb/jsplumb.min.js", None)
 

@@ -105,6 +105,12 @@
       var actRepeats = {{ repeats }};
       // The rule being edited, or null
       var actRule = {% if action %}{{ {'scope': action.target_scope, 'kind': action.target_kind, 'name': action.target_name, 'vkind': action.value_kind, 'value': action.value, 'when': action.when_rules}|tojson }}{% else %}null{% endif %};
+      // Its condition, QueryBuilder's JSON, or null
+      var actWhen = actRule && actRule.when ? JSON.parse(actRule.when) : null;
+
+      function usesNot(group) {
+        return !!group && (group.not === true || (group.rules || []).some(usesNot));
+      }
 
       function fillSelect(select, items, selected) {
         select.empty();
@@ -150,7 +156,10 @@
           $("#builder").queryBuilder({
             filters: actFilters,
             allow_empty: true,
-            plugins: ["not-group"],
+            // No NOT for now (owner, 2026-10-24). A condition saved with one
+            // keeps it: the builder would drop a NOT it has no plugin for,
+            // and saving would then turn the condition around
+            plugins: usesNot(actWhen) ? ["not-group"] : [],
             // Its buttons add conditions: "Add rule" beside the page's own
             // "Add the action" read as the same thing
             lang: {
@@ -164,7 +173,7 @@
           });
           // An empty canvas means "always"; the library would otherwise
           // start with one blank rule that fails validation.
-          $("#builder").queryBuilder("setRules", actRule && actRule.when ? JSON.parse(actRule.when) : {condition: "AND", rules: []});
+          $("#builder").queryBuilder("setRules", actWhen || {condition: "AND", rules: []});
         } else {
           $("#builder").replaceWith($("<p class='text-muted'></p>").text({{ _('The form has no questions to decide by yet: its repository is not built.')|tojson }}));
         }

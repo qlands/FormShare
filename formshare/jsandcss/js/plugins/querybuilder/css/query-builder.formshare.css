@@ -1,0 +1,108 @@
+/*
+ * jQuery QueryBuilder on FormShare's pages (2026-10-24).
+ *
+ * QueryBuilder 3.0.0 writes Bootstrap 5's classes, and FormShare runs
+ * Bootstrap 4.1 under its own theme. Bootstrap 4 has no float-end and no
+ * form-select, so the buttons of a group and of a rule fell to the left of
+ * the conditions and the selects lost their style; and the theme paints
+ * btn-primary and btn-success both blue, so AND could not be told from OR,
+ * nor from the buttons that add. This puts back the library's own layout
+ * (buttons on the right, green to add, red to delete) and shows the chosen
+ * condition blue and the other grey. It loads after the library's
+ * query-builder.default.min.css, which draws the groups and the tree lines.
+ */
+
+/* Bootstrap 5's float-end, which Bootstrap 4 calls float-right */
+.query-builder .float-end {
+  float: right !important;
+}
+
+/* The controls of a rule look like FormShare's form-control, and are as wide
+   as what they hold so that a rule reads on one line. form-select is
+   Bootstrap 5's select; a value's input is a form-control, which Bootstrap 4
+   makes a block as wide as its container. */
+.query-builder .form-select,
+.query-builder .rule-value-container .form-control {
+  display: inline-block;
+  width: auto;
+  max-width: 100%;
+  height: 2.05rem;
+  padding: 4px 10px;
+  font-size: 0.9rem;
+  color: inherit;
+  background-color: #ffffff;
+  border: 1px solid #e5e6e7;
+  border-radius: 1px;
+  vertical-align: middle;
+  transition: border-color 0.15s ease-in-out;
+}
+.query-builder .form-select:focus,
+.query-builder .rule-value-container .form-control:focus {
+  border-color: #026aa8;
+  outline: 0;
+}
+.query-builder .rule-value-container textarea.form-control {
+  height: auto;
+}
+.query-builder .rule-value-container .form-control + .form-control {
+  margin-left: 4px;
+}
+
+/* Green to add a condition or a group */
+.query-builder .btn-success {
+  color: #ffffff;
+  background-color: #28a745;
+  border-color: #28a745;
+}
+.query-builder .btn-success:hover,
+.query-builder .btn-success:focus,
+.query-builder .btn-success:not(:disabled):not(.disabled):active {
+  color: #ffffff;
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+
+/* AND and OR: the chosen one blue, the other grey. The theme's own rules
+   for a pressed btn-primary are as specific as these, hence btn-primary
+   repeated here. With fewer than two conditions the library disables both,
+   as the choice changes nothing yet, and Bootstrap fades them.
+
+   NOT, where a page offers it, is a switch of the same kind: grey off, blue
+   on. The library marks it with Bootstrap's icons, which FormShare does not
+   load, so nothing used to show that it was on. It stands apart from AND
+   and OR, as a choice of its own. */
+.query-builder .rules-group-header .group-conditions .btn.btn-primary,
+.query-builder .rules-group-header .group-conditions .btn[data-not="group"] {
+  color: #676a6c;
+  background-color: #e7eaec;
+  border-color: #e7eaec;
+  box-shadow: none;
+}
+.query-builder .rules-group-header .group-conditions .btn.btn-primary:not(.disabled):hover,
+.query-builder .rules-group-header .group-conditions .btn[data-not="group"]:hover {
+  color: #3e4144;
+  background-color: #d7dbde;
+  border-color: #d7dbde;
+}
+.query-builder .rules-group-header .group-conditions .btn.btn-primary.active,
+.query-builder .rules-group-header .group-conditions .btn.btn-primary.active:hover,
+.query-builder .rules-group-header .group-conditions .btn[data-not="group"].active,
+.query-builder .rules-group-header .group-conditions .btn[data-not="group"].active:hover {
+  color: #ffffff;
+  background-color: #026aa8;
+  border-color: #026aa8;
+}
+/* Bootstrap 4 puts a margin under every label, which left AND and OR
+   shorter than the NOT button beside them */
+.query-builder .rules-group-header .group-conditions label.btn {
+  margin-bottom: 0;
+}
+.query-builder .rules-group-header .group-conditions .btn[data-not="group"] {
+  margin-right: 6px;
+  border-radius: 3px;
+}
+.query-builder .rules-group-header .group-conditions .btn[data-not="group"] + .btn {
+  margin-left: 0;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+}

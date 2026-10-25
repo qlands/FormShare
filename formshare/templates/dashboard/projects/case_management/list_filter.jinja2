@@ -71,7 +71,7 @@
                             </select>
                         </div>
                         <button type="submit" name="save_filter" value="1" class="btn btn-primary" id="filter-save">{{ _('Save the filter') }}</button>
-                        <a class="btn btn-white" href="{{ request.route_url('project_case_list_edit', userid=userid, projcode=projcode, listid=listData.list_id) }}">{{ _('Back to the list') }}</a>
+                        <a class="btn btn-white" href="{{ request.route_url('project_case_list_edit', userid=userid, projcode=projcode, listid=listData.list_id, _query={'tab': 'access'}) }}">{{ _('Back to the list') }}</a>
                     </form>
                 </div>
             </div>

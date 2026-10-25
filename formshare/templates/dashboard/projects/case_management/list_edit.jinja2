@@ -29,226 +29,244 @@
             <div class="ibox">
                 <div class="ibox-content">
                     <h2><code>{{ listData.list_filename }}</code></h2>
-                    <p>
-                        {{ _('Served from') }} <b>{{ listData.source_form }}</b> / <b>{{ listData.source_table }}</b>.
-                        {{ _('Every list carries name (the row identity) and label. The columns below are served in addition, in this order.') }}
-                    </p>
-                    <div class="hr-line-dashed"></div>
-                    {% if listData.list_format == 'geojson' %}
-                    <h3>{{ _('Location') }}</h3>
-                    <p>{{ _('A GeoJSON list serves each case as a feature drawn from this column: a point, a line or a shape that a follow-up form selects on a map. Its id is the case\'s identity and its title the label.') }}</p>
-                    {% if listData.list_skipped %}
-                        <p id="list-skipped" class="text-warning">{{ _('Cases the last generation left out, having no location they can be drawn from:') }} {{ listData.list_skipped }}</p>
-                    {% endif %}
-                    <form method="post" class="form-inline">
-                        {{ form.secure_form(request) }}
-                        <select name="geometry_column" id="geometry_column" class="form-control" style="min-width: 250px">
-                            {% for a_column, a_kind in geometryColumns.items() %}
-                                <option value="{{ a_column }}" {% if a_column == listData.geometry_column %}selected{% endif %}>{{ a_column }} ({{ a_kind }})</option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit" name="change_geometry" value="1" class="btn btn-white">{{ _('Change the location') }}</button>
-                    </form>
-                    {% else %}
-                    <h3>{{ _('Key') }}</h3>
-                    <form method="post" class="form-inline">
-                        {{ form.secure_form(request) }}
-                        <select name="list_key_column" id="list_key_column" class="form-control" style="min-width: 250px">
-                            <option value="" {% if not listData.list_key_column %}selected{% endif %}>{{ _('Each row (keyed by its rowuuid)') }}</option>
-                            {% for a_column in tableColumns %}
-                                <option value="{{ a_column.field_name }}" {% if a_column.field_name == listData.list_key_column %}selected{% endif %}>{{ a_column.field_name }}</option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit" name="change_key" value="1" class="btn btn-white">{{ _('Change the key') }}</button>
-                        <span class="form-text m-b-none">{{ _('A column key serves each distinct value once; such a list cannot be a case link.') }}</span>
-                    </form>
-                    {% endif %}
-                    <div class="hr-line-dashed"></div>
-                    <h3>{{ _('Rows to serve') }}</h3>
-                    {% if listFollowed %}
-                        <p id="list-rows"><b>{% if listData.list_active == 0 %}{{ _('Inactive cases') }}{% else %}{{ _('Active cases') }}{% endif %}</b></p>
-                        <p class="text-muted">{{ _('This cannot change while a form with a repository uses this list.') }}</p>
-                    {% else %}
-                    <form method="post" class="form-inline">
-                        {{ form.secure_form(request) }}
-                        <select name="list_active" class="form-control" style="min-width: 200px">
-                            <option value="1" {% if listData.list_active == 1 %}selected{% endif %}>{{ _('Active cases') }}</option>
-                            <option value="0" {% if listData.list_active == 0 %}selected{% endif %}>{{ _('Inactive cases') }}</option>
-                        </select>
-                        <button type="submit" name="change_active" value="1" class="btn btn-white">{{ _('Change') }}</button>
-                    </form>
-                    {% endif %}
-                    <div class="hr-line-dashed"></div>
-                    <h3>{{ _('Filter') }}</h3>
-                    <p class="text-muted">{{ _('Serve only the rows that match. The same for every assistant, on the server and on the devices, which apply it to the rows they have not sent yet. Texts are compared exactly as written, capitals and spaces included.') }}</p>
-                    {% if filterWords %}
-                        <p id="filter-words">{{ _('Serves the rows where') }} <b>{{ filterWords }}</b>.</p>
-                    {% else %}
-                        <p id="filter-words">{{ _('No filter: every row is served.') }}</p>
-                    {% endif %}
-                    <form method="post" id="filter-form">
-                        {{ form.secure_form(request) }}
-                        <div id="filter-builder"></div>
-                        <input type="hidden" name="filter_rules" id="filter-rules" value="">
-                        <button type="submit" name="change_filter" value="1" class="btn btn-primary">{{ _('Save the filter') }}</button>
-                        {% if filterWords %}
-                            <button type="submit" name="clear_filter" value="1" class="btn btn-white" id="filter-clear">{{ _('Remove the filter') }}</button>
-                        {% endif %}
-                    </form>
-                    <div class="hr-line-dashed"></div>
-                    <h3>{{ _('Who receives which cases') }}</h3>
-                    {% if crowdsourcing and (listData.list_filter_mode or 'all') == 'all' %}
-                        <p class="text-muted" id="list-mode-crowdsourcing">{{ _('Serving each assistant their own cases is not available in a crowdsourcing project, whose devices name no assistant: every device receives every case of the list.') }}</p>
-                    {% elif crowdsourcing %}
-                        <p class="text-warning" id="list-mode-crowdsourcing">{{ _('This is a crowdsourcing project, whose devices name no assistant, and this list serves each assistant their own cases: no device receives any. Serve every case to every device, or turn the project back to assistants.') }}</p>
-                        <form method="post" class="form-inline">
-                            {{ form.secure_form(request) }}
-                            <input type="hidden" name="list_filter_mode" value="all">
-                            <button type="submit" name="change_mode" value="1" class="btn btn-white" id="list-mode-to-all">{{ _('Serve every case to every device') }}</button>
-                        </form>
-                    {% else %}
-                        <p class="text-muted">{{ _('Chosen by who downloads the list. A device also keeps the cases it has registered and not sent yet.') }}</p>
-                        <form method="post" class="form-inline">
-                            {{ form.secure_form(request) }}
-                            <select name="list_filter_mode" id="list_filter_mode" class="form-control" style="min-width: 300px">
-                                <option value="all" {% if (listData.list_filter_mode or 'all') == 'all' %}selected{% endif %}>{{ _('Every assistant receives every case') }}</option>
-                                <option value="submitted_by" {% if listData.list_filter_mode == 'submitted_by' %}selected{% endif %}>{{ _('Each assistant receives the cases they registered') }}</option>
-                                <option value="assigned_to" {% if listData.list_filter_mode == 'assigned_to' %}selected{% endif %}>{{ _('Each assistant receives the cases assigned to them') }}</option>
-                                <option value="filters" {% if listData.list_filter_mode == 'filters' %}selected{% endif %}>{{ _('Each assistant receives the cases of the filters given to them') }}</option>
-                            </select>
-                            <button type="submit" name="change_mode" value="1" class="btn btn-white">{{ _('Change') }}</button>
-                        </form>
-                        {% if listData.list_filter_mode == 'filters' %}
-                            <div id="list-filters" class="m-t-md">
-                                <p class="text-muted">{{ _('An assistant receives the cases of the filters given to them, or to a group they belong to. An assistant with no filter receives none.') }}</p>
-                                {% if listFilters %}
-                                    <table class="table table-sm" id="list-filters-table">
-                                        <thead>
-                                        <tr>
-                                            <th>{{ _('Filter') }}</th>
-                                            <th>{{ _('Serves the cases where') }}</th>
-                                            <th>{{ _('Given to') }}</th>
-                                            <th>{{ _('Cases now') }}</th>
-                                            <th></th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        {% for a_filter in listFilters %}
-                                            <tr>
-                                                <td>{{ a_filter.filter_name }}</td>
-                                                <td>{% if a_filter.words %}{{ a_filter.words }}{% else %}<i>{{ _('every case') }}</i>{% endif %}</td>
-                                                <td>{% if a_filter.given %}{{ a_filter.given|join(', ') }}{% else %}<span class="text-warning">{{ _('nobody yet') }}</span>{% endif %}</td>
-                                                <td>{% if a_filter.cases is not none %}{{ a_filter.cases }}{% endif %}</td>
-                                                <td class="text-nowrap">
-                                                    <a class="btn btn-xs btn-white" href="{{ request.route_url('project_case_list_filter_edit', userid=userid, projcode=projcode, listid=listData.list_id, filterid=a_filter.filter_id) }}">{{ _('Edit') }}</a>
-                                                    <form method="post" style="display: inline" action="{{ request.route_url('project_case_list_filter_delete', userid=userid, projcode=projcode, listid=listData.list_id, filterid=a_filter.filter_id) }}">
-                                                        {{ form.secure_form(request) }}
-                                                        <button type="submit" class="btn btn-xs btn-danger">{{ _('Delete') }}</button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                {% else %}
-                                    <p class="text-warning" id="list-filters-none">{{ _('The list has no filter yet, so no assistant receives any case.') }}</p>
-                                {% endif %}
-                                <a class="btn btn-primary btn-sm" id="list-filter-add" href="{{ request.route_url('project_case_list_filter_add', userid=userid, projcode=projcode, listid=listData.list_id) }}">{{ _('Add a filter') }}</a>
-                            </div>
-                        {% endif %}
-                        {% if listCoverage %}
-                            <div id="list-coverage" class="m-t-md">
-                                <h4>{{ _('Who receives nothing') }}</h4>
-                                {% if listCoverage.receivers == 0 %}
-                                    <p class="text-warning" id="coverage-receivers">{{ _('No active assistant can download a form that carries this list yet.') }}</p>
-                                {% endif %}
-                                {% if listCoverage.mode == 'filters' and listCoverage.receivers %}
-                                    {% if listCoverage.without_filters %}
-                                        <p class="text-warning" id="coverage-assistants">{{ _('These assistants can download the list and have no filter, so they receive no case:') }} {{ listCoverage.without_filters|join(', ') }}</p>
-                                    {% else %}
-                                        <p id="coverage-assistants">{{ _('Every assistant who can download the list has a filter.') }}</p>
+                    <p>{{ _('Served from') }} <b>{{ listData.source_form }}</b> / <b>{{ listData.source_table }}</b>.</p>
+                    <div class="tabs-container" id="list-tabs">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li><a class="nav-link{% if listTab == 'definition' %} active{% endif %}" data-toggle="tab" data-tab="definition" href="#list-tab-definition">{{ _('Definition') }}</a></li>
+                            <li><a class="nav-link{% if listTab == 'columns' %} active{% endif %}" data-toggle="tab" data-tab="columns" href="#list-tab-columns">{{ _('Served columns') }}</a></li>
+                            <li><a class="nav-link{% if listTab == 'filters' %} active{% endif %}" data-toggle="tab" data-tab="filters" href="#list-tab-filters">{{ _('Filters') }}</a></li>
+                            <li><a class="nav-link{% if listTab == 'access' %} active{% endif %}" data-toggle="tab" data-tab="access" href="#list-tab-access">{{ _('Case accessibility') }}</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div role="tabpanel" id="list-tab-definition" class="tab-pane{% if listTab == 'definition' %} active{% endif %}">
+                                <div class="panel-body">
+                                    {% if listData.list_format == 'geojson' %}
+                                    <h3>{{ _('Location') }}</h3>
+                                    <p>{{ _('A GeoJSON list serves each case as a feature drawn from this column: a point, a line or a shape that a follow-up form selects on a map. Its id is the case\'s identity and its title the label.') }}</p>
+                                    {% if listData.list_skipped %}
+                                        <p id="list-skipped" class="text-warning">{{ _('Cases the last generation left out, having no location they can be drawn from:') }} {{ listData.list_skipped }}</p>
                                     {% endif %}
-                                {% endif %}
-                                {% if listCoverage.unreceived %}
-                                    <p class="text-warning" id="coverage-cases">
-                                        {{ _('Cases no assistant receives:') }} <b>{{ listCoverage.unreceived }}</b>.
-                                        {% if listCoverage.mode == 'filters' %}{{ _('No filter matches them.') }}{% elif listCoverage.mode == 'submitted_by' %}{{ _('Whoever registered them cannot download the list.') }}{% else %}{{ _('They are assigned to nobody, or to someone who cannot download the list.') }}{% endif %}
-                                        {% if listCoverage.unreceived > listCoverage.examples|length %}{{ _('The first ones:') }}{% endif %}
-                                    </p>
-                                    <table class="table table-sm" id="coverage-examples">
-                                        <thead><tr><th>{{ _('Label') }}</th><th>{{ _('Name (the row identity)') }}</th></tr></thead>
-                                        <tbody>
-                                        {% for a_name, a_label in listCoverage.examples %}
-                                            <tr><td>{{ a_label }}</td><td><code>{{ a_name }}</code></td></tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                {% elif listCoverage.unreceived == 0 %}
-                                    <p id="coverage-cases">{{ _('Every case of the list reaches an assistant.') }}</p>
-                                {% endif %}
+                                    <form method="post" class="form-inline">
+                                        {{ form.secure_form(request) }}
+                                        <select name="geometry_column" id="geometry_column" class="form-control" style="min-width: 250px">
+                                            {% for a_column, a_kind in geometryColumns.items() %}
+                                                <option value="{{ a_column }}" {% if a_column == listData.geometry_column %}selected{% endif %}>{{ a_column }} ({{ a_kind }})</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" name="change_geometry" value="1" class="btn btn-white">{{ _('Change the location') }}</button>
+                                    </form>
+                                    {% else %}
+                                    <h3>{{ _('Key') }}</h3>
+                                    <form method="post" class="form-inline">
+                                        {{ form.secure_form(request) }}
+                                        <select name="list_key_column" id="list_key_column" class="form-control" style="min-width: 250px">
+                                            <option value="" {% if not listData.list_key_column %}selected{% endif %}>{{ _('Each row (keyed by its rowuuid)') }}</option>
+                                            {% for a_column in tableColumns %}
+                                                <option value="{{ a_column.field_name }}" {% if a_column.field_name == listData.list_key_column %}selected{% endif %}>{{ a_column.field_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" name="change_key" value="1" class="btn btn-white">{{ _('Change the key') }}</button>
+                                        <span class="form-text m-b-none">{{ _('A column key serves each distinct value once; such a list cannot be a case link.') }}</span>
+                                    </form>
+                                    {% endif %}
+                                    <div class="hr-line-dashed"></div>
+                                    <h3>{{ _('Rows to serve') }}</h3>
+                                    {% if listFollowed %}
+                                        <p id="list-rows"><b>{% if listData.list_active == 0 %}{{ _('Inactive cases') }}{% else %}{{ _('Active cases') }}{% endif %}</b></p>
+                                        <p class="text-muted">{{ _('This cannot change while a form with a repository uses this list.') }}</p>
+                                    {% else %}
+                                    <form method="post" class="form-inline">
+                                        {{ form.secure_form(request) }}
+                                        <select name="list_active" class="form-control" style="min-width: 200px">
+                                            <option value="1" {% if listData.list_active == 1 %}selected{% endif %}>{{ _('Active cases') }}</option>
+                                            <option value="0" {% if listData.list_active == 0 %}selected{% endif %}>{{ _('Inactive cases') }}</option>
+                                        </select>
+                                        <button type="submit" name="change_active" value="1" class="btn btn-white">{{ _('Change') }}</button>
+                                    </form>
+                                    {% endif %}
+                                    <div class="hr-line-dashed"></div>
+                                    <h3>{{ _('Label') }}</h3>
+                                    <form method="post" class="form-inline">
+                                        {{ form.secure_form(request) }}
+                                        <select name="label_column" id="label_column" class="form-control" style="min-width: 250px">
+                                            {% for a_column in tableColumns %}
+                                                <option value="{{ a_column.field_name }}" {% if a_column.field_name == listData.label_column %}selected{% endif %}>{{ a_column.field_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" name="change_label" value="1" class="btn btn-white">{{ _('Change the label column') }}</button>
+                                    </form>
+                                </div>
                             </div>
-                        {% endif %}
-                    {% endif %}
-                    <div class="hr-line-dashed"></div>
-                    <h3>{{ _('Label') }}</h3>
-                    <form method="post" class="form-inline">
-                        {{ form.secure_form(request) }}
-                        <select name="label_column" id="label_column" class="form-control" style="min-width: 250px">
-                            {% for a_column in tableColumns %}
-                                <option value="{{ a_column.field_name }}" {% if a_column.field_name == listData.label_column %}selected{% endif %}>{{ a_column.field_name }}</option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit" name="change_label" value="1" class="btn btn-white">{{ _('Change the label column') }}</button>
-                    </form>
-                    <div class="hr-line-dashed"></div>
-                    <h3>{{ _('Served columns') }}</h3>
-                    {% if listColumns %}
-                        <table class="table table-striped">
-                            <thead>
-                            <tr>
-                                <th>{{ _('Column') }}</th>
-                                <th>{{ _('Served as') }}</th>
-                                <th>{{ _('Actions') }}</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for a_column in listColumns %}
-                                <tr>
-                                    <td>{{ a_column.column_name }}{% if a_column.column_source == 'property' %} <span class="label label-info">{{ _('property') }}</span>{% endif %}</td>
-                                    <td>{{ a_column.column_as or a_column.column_name }}</td>
-                                    <td>
-                                        <form method="post" style="display: inline">
+                            <div role="tabpanel" id="list-tab-columns" class="tab-pane{% if listTab == 'columns' %} active{% endif %}">
+                                <div class="panel-body">
+                                    <p>{{ _('Every list carries name (the row identity) and label. The columns below are served in addition, in this order.') }}</p>
+                                    {% if listColumns %}
+                                        <table class="table table-striped">
+                                            <thead>
+                                            <tr>
+                                                <th>{{ _('Column') }}</th>
+                                                <th>{{ _('Served as') }}</th>
+                                                <th>{{ _('Actions') }}</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for a_column in listColumns %}
+                                                <tr>
+                                                    <td>{{ a_column.column_name }}{% if a_column.column_source == 'property' %} <span class="label label-info">{{ _('property') }}</span>{% endif %}</td>
+                                                    <td>{{ a_column.column_as or a_column.column_name }}</td>
+                                                    <td>
+                                                        <form method="post" style="display: inline">
+                                                            {{ form.secure_form(request) }}
+                                                            <input type="hidden" name="column_name" value="{{ a_column.column_name }}">
+                                                            <button type="submit" name="remove_column" value="1" class="btn btn-xs btn-danger">{{ _('Remove') }}</button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    {% else %}
+                                        <p>{{ _('Only name and label are served.') }}</p>
+                                    {% endif %}
+                                    <form method="post" class="form-inline">
+                                        {{ form.secure_form(request) }}
+                                        <select name="column_name" id="column_name" class="form-control" style="min-width: 250px">
+                                            <optgroup label="{{ _('Columns') }}">
+                                                {% for a_column in tableColumns %}
+                                                    <option value="{{ a_column.field_name }}">{{ a_column.field_name }}</option>
+                                                {% endfor %}
+                                            </optgroup>
+                                            {% if tableProperties %}
+                                                <optgroup label="{{ _('Properties') }}">
+                                                    {% for a_property in tableProperties %}
+                                                        <option value="property:{{ a_property.property_name }}">{{ a_property.property_name }}</option>
+                                                    {% endfor %}
+                                                </optgroup>
+                                            {% endif %}
+                                        </select>
+                                        <input type="text" name="column_as" class="form-control" placeholder="{{ _('Served as (optional)') }}">
+                                        <button type="submit" name="add_column" value="1" class="btn btn-primary">{{ _('Add the column') }}</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div role="tabpanel" id="list-tab-filters" class="tab-pane{% if listTab == 'filters' %} active{% endif %}">
+                                <div class="panel-body">
+                                    <p class="text-muted">{{ _('This filter applies to the whole set, both on the server and on the device. Use the tab “Case accessibility” if you want to allocate cases to assistants in different ways.') }}<br>{{ _('Texts are compared exactly as written, capitals and spaces included.') }}</p>
+                                    {% if filterWords %}
+                                        <p id="filter-words">{{ _('Serves the rows where') }} <b>{{ filterWords }}</b>.</p>
+                                    {% else %}
+                                        <p id="filter-words">{{ _('No filter: every row is served.') }}</p>
+                                    {% endif %}
+                                    <form method="post" id="filter-form">
+                                        {{ form.secure_form(request) }}
+                                        <div id="filter-builder"></div>
+                                        <input type="hidden" name="filter_rules" id="filter-rules" value="">
+                                        <button type="submit" name="change_filter" value="1" class="btn btn-primary">{{ _('Save the filter') }}</button>
+                                        {% if filterWords %}
+                                            <button type="submit" name="clear_filter" value="1" class="btn btn-white" id="filter-clear">{{ _('Remove the filter') }}</button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </div>
+                            <div role="tabpanel" id="list-tab-access" class="tab-pane{% if listTab == 'access' %} active{% endif %}">
+                                <div class="panel-body">
+                                    <h3>{{ _('Who receives which cases') }}</h3>
+                                    {% if crowdsourcing and (listData.list_filter_mode or 'all') == 'all' %}
+                                        <p class="text-muted" id="list-mode-crowdsourcing">{{ _('Serving each assistant their own cases is not available in a crowdsourcing project, whose devices name no assistant: every device receives every case of the list.') }}</p>
+                                    {% elif crowdsourcing %}
+                                        <p class="text-warning" id="list-mode-crowdsourcing">{{ _('This is a crowdsourcing project, whose devices name no assistant, and this list serves each assistant their own cases: no device receives any. Serve every case to every device, or turn the project back to assistants.') }}</p>
+                                        <form method="post" class="form-inline">
                                             {{ form.secure_form(request) }}
-                                            <input type="hidden" name="column_name" value="{{ a_column.column_name }}">
-                                            <button type="submit" name="remove_column" value="1" class="btn btn-xs btn-danger">{{ _('Remove') }}</button>
+                                            <input type="hidden" name="list_filter_mode" value="all">
+                                            <button type="submit" name="change_mode" value="1" class="btn btn-white" id="list-mode-to-all">{{ _('Serve every case to every device') }}</button>
                                         </form>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <p>{{ _('Only name and label are served.') }}</p>
-                    {% endif %}
-                    <form method="post" class="form-inline">
-                        {{ form.secure_form(request) }}
-                        <select name="column_name" id="column_name" class="form-control" style="min-width: 250px">
-                            <optgroup label="{{ _('Columns') }}">
-                                {% for a_column in tableColumns %}
-                                    <option value="{{ a_column.field_name }}">{{ a_column.field_name }}</option>
-                                {% endfor %}
-                            </optgroup>
-                            {% if tableProperties %}
-                                <optgroup label="{{ _('Properties') }}">
-                                    {% for a_property in tableProperties %}
-                                        <option value="property:{{ a_property.property_name }}">{{ a_property.property_name }}</option>
-                                    {% endfor %}
-                                </optgroup>
-                            {% endif %}
-                        </select>
-                        <input type="text" name="column_as" class="form-control" placeholder="{{ _('Served as (optional)') }}">
-                        <button type="submit" name="add_column" value="1" class="btn btn-primary">{{ _('Add the column') }}</button>
-                    </form>
+                                    {% else %}
+                                        <p class="text-muted">{{ _('Chosen by who downloads the list. A device also keeps the cases it has registered and not sent yet.') }}</p>
+                                        <form method="post" class="form-inline">
+                                            {{ form.secure_form(request) }}
+                                            <select name="list_filter_mode" id="list_filter_mode" class="form-control" style="min-width: 300px">
+                                                <option value="all" {% if (listData.list_filter_mode or 'all') == 'all' %}selected{% endif %}>{{ _('Every assistant receives every case') }}</option>
+                                                <option value="submitted_by" {% if listData.list_filter_mode == 'submitted_by' %}selected{% endif %}>{{ _('Each assistant receives the cases they registered') }}</option>
+                                                <option value="assigned_to" {% if listData.list_filter_mode == 'assigned_to' %}selected{% endif %}>{{ _('Each assistant receives the cases assigned to them') }}</option>
+                                                <option value="filters" {% if listData.list_filter_mode == 'filters' %}selected{% endif %}>{{ _('Each assistant receives the cases of the filters given to them') }}</option>
+                                            </select>
+                                            <button type="submit" name="change_mode" value="1" class="btn btn-white">{{ _('Change') }}</button>
+                                        </form>
+                                        {% if listData.list_filter_mode == 'filters' %}
+                                            <div id="list-filters" class="m-t-md">
+                                                <p class="text-muted">{{ _('An assistant receives the cases of the filters given to them, or to a group they belong to. An assistant with no filter receives none.') }}</p>
+                                                {% if listFilters %}
+                                                    <table class="table table-sm" id="list-filters-table">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>{{ _('Filter') }}</th>
+                                                            <th>{{ _('Serves the cases where') }}</th>
+                                                            <th>{{ _('Given to') }}</th>
+                                                            <th>{{ _('Cases now') }}</th>
+                                                            <th></th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        {% for a_filter in listFilters %}
+                                                            <tr>
+                                                                <td>{{ a_filter.filter_name }}</td>
+                                                                <td>{% if a_filter.words %}{{ a_filter.words }}{% else %}<i>{{ _('every case') }}</i>{% endif %}</td>
+                                                                <td>{% if a_filter.given %}{{ a_filter.given|join(', ') }}{% else %}<span class="text-warning">{{ _('nobody yet') }}</span>{% endif %}</td>
+                                                                <td>{% if a_filter.cases is not none %}{{ a_filter.cases }}{% endif %}</td>
+                                                                <td class="text-nowrap">
+                                                                    <a class="btn btn-xs btn-white" href="{{ request.route_url('project_case_list_filter_edit', userid=userid, projcode=projcode, listid=listData.list_id, filterid=a_filter.filter_id) }}">{{ _('Edit') }}</a>
+                                                                    <form method="post" style="display: inline" action="{{ request.route_url('project_case_list_filter_delete', userid=userid, projcode=projcode, listid=listData.list_id, filterid=a_filter.filter_id) }}">
+                                                                        {{ form.secure_form(request) }}
+                                                                        <button type="submit" class="btn btn-xs btn-danger">{{ _('Delete') }}</button>
+                                                                    </form>
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                {% else %}
+                                                    <p class="text-warning" id="list-filters-none">{{ _('The list has no filter yet, so no assistant receives any case.') }}</p>
+                                                {% endif %}
+                                                <a class="btn btn-primary btn-sm" id="list-filter-add" href="{{ request.route_url('project_case_list_filter_add', userid=userid, projcode=projcode, listid=listData.list_id) }}">{{ _('Add a filter') }}</a>
+                                            </div>
+                                        {% endif %}
+                                        {% if listCoverage %}
+                                            <div id="list-coverage" class="m-t-md">
+                                                <h4>{{ _('Who receives nothing') }}</h4>
+                                                {% if listCoverage.receivers == 0 %}
+                                                    <p class="text-warning" id="coverage-receivers">{{ _('No active assistant can download a form that carries this list yet.') }}</p>
+                                                {% endif %}
+                                                {% if listCoverage.mode == 'filters' and listCoverage.receivers %}
+                                                    {% if listCoverage.without_filters %}
+                                                        <p class="text-warning" id="coverage-assistants">{{ _('These assistants can download the list and have no filter, so they receive no case:') }} {{ listCoverage.without_filters|join(', ') }}</p>
+                                                    {% else %}
+                                                        <p id="coverage-assistants">{{ _('Every assistant who can download the list has a filter.') }}</p>
+                                                    {% endif %}
+                                                {% endif %}
+                                                {% if listCoverage.unreceived %}
+                                                    <p class="text-warning" id="coverage-cases">
+                                                        {{ _('Cases no assistant receives:') }} <b>{{ listCoverage.unreceived }}</b>.
+                                                        {% if listCoverage.mode == 'filters' %}{{ _('No filter matches them.') }}{% elif listCoverage.mode == 'submitted_by' %}{{ _('Whoever registered them cannot download the list.') }}{% else %}{{ _('They are assigned to nobody, or to someone who cannot download the list.') }}{% endif %}
+                                                        {% if listCoverage.unreceived > listCoverage.examples|length %}{{ _('The first ones:') }}{% endif %}
+                                                    </p>
+                                                    <table class="table table-sm" id="coverage-examples">
+                                                        <thead><tr><th>{{ _('Label') }}</th><th>{{ _('Name (the row identity)') }}</th></tr></thead>
+                                                        <tbody>
+                                                        {% for a_name, a_label in listCoverage.examples %}
+                                                            <tr><td>{{ a_label }}</td><td><code>{{ a_name }}</code></td></tr>
+                                                        {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                {% elif listCoverage.unreceived == 0 %}
+                                                    <p id="coverage-cases">{{ _('Every case of the list reaches an assistant.') }}</p>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="hr-line-dashed"></div>
                     <a class="btn btn-white" href="{{ request.route_url('project_case_lists', userid=userid, projcode=projcode) }}">{{ _('Back to the lists') }}</a>
                 </div>
@@ -263,9 +281,21 @@
         var filterFields = {{ filterFields|tojson }};
         var filterRules = {{ filterRules|tojson }};
         $(document).ready(function() {
-            $("#label_column").select2();
-            $("#column_name").select2();
-            $("#list_key_column").select2();
+            // A select2 made inside a hidden tab is only as wide as its
+            // text, so a tab's selects are made when it is first shown
+            function tabSelects(pane) {
+                $(pane).find("#label_column, #column_name, #list_key_column").not(".select2-hidden-accessible").select2();
+            }
+            tabSelects("#list-tabs .tab-pane.active");
+            $('#list-tabs a[data-toggle="tab"]').on("shown.bs.tab", function (e) {
+                tabSelects($(e.target).attr("href"));
+                // The address names the open tab. The page's forms post to
+                // it and come back to it, so a change opens the tab it was
+                // made in
+                var url = new URL(window.location.href);
+                url.searchParams.set("tab", $(e.target).data("tab"));
+                history.replaceState(null, "", url.toString());
+            });
             if (filterFields.length) {
                 $("#filter-builder").queryBuilder({
                     filters: filterFields,

@@ -282,6 +282,7 @@ class AddPublishedListView(ListSection):
                             userid=user_id,
                             projcode=project_code,
                             listid=list_id,
+                            _query={"tab": "columns"},
                         )
                     )
                 self.append_to_errors(message)
@@ -292,6 +293,13 @@ class AddPublishedListView(ListSection):
             "forms": forms,
             "listData": list_data,
         }
+
+
+# The tabs of a list's page (owner, 2026-10-25). ?tab= names the open one:
+# the page keeps it in its address as the tabs change, and its forms post
+# to that address and are sent back to it, so a change opens the tab it was
+# made in. The pages that send back here name theirs.
+LIST_TABS = ("definition", "columns", "filters", "access")
 
 
 class EditPublishedListView(ListSection):
@@ -591,11 +599,13 @@ class EditPublishedListView(ListSection):
                         invalidate_list_copies(self.request, project_id, list_id)
                         self.returnRawViewResult = True
                         return HTTPFound(self.request.url)
+        list_tab = self.request.GET.get("tab")
         return {
             "projectDetails": project_details,
             "userid": user_id,
             "projcode": project_code,
             "listData": list_data,
+            "listTab": list_tab if list_tab in LIST_TABS else LIST_TABS[0],
             "listColumns": get_list_columns(self.request, project_id, list_id),
             "tableColumns": table_columns,
             "tableProperties": table_properties,
@@ -853,6 +863,7 @@ class ListFilterView(EditPublishedListView):
                             userid=user_id,
                             projcode=project_code,
                             listid=list_id,
+                            _query={"tab": "access"},
                         )
                     )
         try:
@@ -932,6 +943,7 @@ class DeleteListFilterView(ListSection):
             userid=user_id,
             projcode=project_code,
             listid=list_id,
+            _query={"tab": "access"},
         )
         if deleted:
             forget_list_variants(self.request, project_id, list_id)

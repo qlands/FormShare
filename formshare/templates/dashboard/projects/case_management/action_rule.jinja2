@@ -42,6 +42,10 @@
                     <form id="act-form" method="post" action="{{ request.url }}">
 {{ form.secure_form(request) }}
                         <input type="hidden" name="when_rules" id="act-when-rules" value="">
+                        <div class="form-group">
+                            <label for="act-desc">{{ _('Describe the action') }}</label>
+                            <input type="text" name="action_desc" id="act-desc" class="form-control" maxlength="255" value="{{ (action.action_desc or '') if action else '' }}" placeholder="{{ _('In a few words, describe what the action does.') }}" required pattern=".*\S.*" data-invalid-message="{{ _('Describe the action in a few words') }}">
+                        </div>
                         <label>{{ _('When') }}</label>
                         <div id="builder"></div>
                         <p class="text-muted">{{ _('Leave the condition empty for an action that always applies.') }}</p>

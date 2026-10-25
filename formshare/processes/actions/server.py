@@ -525,18 +525,53 @@ def build_input(
     }
 
 
+def _new_properties(request, project_id, form_id, table_name):
+    """{property: its default, typed}: what the property row of a new row
+    holds, the AFTER INSERT trigger giving it its columns' defaults."""
+    properties = {}
+    for a_property in get_table_properties(request, project_id, form_id, table_name):
+        properties[a_property["property_name"]] = typed(
+            a_property.get("property_default") or None,
+            {
+                "integer": "integer",
+                "decimal": "double",
+                "date": "date",
+                "datetime": "datetime",
+            }.get(a_property["property_type"], "string"),
+        )
+    return properties
+
+
+def _stand_in_case(reader, source, table_name, rowuuid, active):
+    """A row of the case's source as a new one stands, for a test with typed
+    answers: every column null and every property at its default."""
+    types = reader.types(
+        source["project"], source["form"], source["schema"], table_name
+    )
+    return {
+        "table": table_name,
+        "rowuuid": rowuuid,
+        "active": active,
+        "values": _row_values(dict.fromkeys(types), types),
+        "properties": _new_properties(
+            reader.request, source["project"], source["form"], table_name
+        ),
+        "parent": None,
+    }
+
+
 def sample_input(request, project_id, form_id, schema, module, user, sample):
     """The input of a dry run over answers someone typed, so that an action
     can be tried before any submission has arrived: what build_input would
     build from a submission with those answers.
 
     ``sample`` is {"answers": {question: value}, "repeats": {repeat: [{column:
-    value}]}, "case": rowuuid}. Every stored column is there, typed as a run
-    types it, and what was not answered is null, as in a real submission. A
-    multi-select's answer is its list of codes. The case is a real row of the
-    case's source, read as a run reads it, and the selector answers it; no
-    rowuuid, no case. A form without a case link acts on its own row, which
-    is then the typed answers with each property at its default.
+    value}]}}. Every stored column is there, typed as a run types it, and
+    what was not answered is null, as in a real submission. A multi-select's
+    answer is its list of codes. The case is a stand-in (_stand_in_case),
+    served by the list, its parent one too, and the selector answers it. A
+    form without a case link acts on its own row, which is then the typed
+    answers with each property at its default.
     """
     reader = _Reader(request)
     answers = sample.get("answers") or {}
@@ -615,35 +650,29 @@ def sample_input(request, project_id, form_id, schema, module, user, sample):
 
     case = None
     if source is not None and source.get("own"):
-        properties = {}
-        for a_property in get_table_properties(
-            request, project_id, form_id, "maintable"
-        ):
-            properties[a_property["property_name"]] = typed(
-                a_property.get("property_default") or None,
-                {
-                    "integer": "integer",
-                    "decimal": "double",
-                    "date": "date",
-                    "datetime": "datetime",
-                }.get(a_property["property_type"], "string"),
-            )
         case = {
             "table": "maintable",
             "rowuuid": "sample",
             "active": True,
             "values": dict(values),
-            "properties": properties,
+            "properties": _new_properties(request, project_id, form_id, "maintable"),
             "parent": None,
         }
     elif source is not None and source.get("schema"):
-        case_rowuuid = str(sample.get("case") or "").strip()
-        if case_rowuuid:
-            if source.get("selector_field"):
-                values[source["selector_field"]] = case_rowuuid
-            case = _case_input(
-                reader, source, {source.get("selector_field") or "": case_rowuuid}
+        # A real submission always names a case its list serves: the
+        # follow-up's membership trigger refuses any other, and none
+        # (apply_link_attributes), so no action runs without one. The test
+        # asks for no case and acts on a stand-in, served by the list.
+        active = True
+        if reader.has_column(source["schema"], source["table"], "_active"):
+            active = int(source.get("list_active", 1)) == 1
+        case = _stand_in_case(reader, source, source["table"], "sample-case", active)
+        if source.get("parent_table"):
+            case["parent"] = _stand_in_case(
+                reader, source, source["parent_table"], "sample-parent", True
             )
+        if source.get("selector_field"):
+            values[source["selector_field"]] = case["rowuuid"]
     places = [(schema, project_id, form_id)]
     if source is not None and source.get("schema") and source["schema"] != schema:
         places.append((source["schema"], source["project"], source["form"]))

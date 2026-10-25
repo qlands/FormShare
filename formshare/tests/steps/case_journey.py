@@ -1255,6 +1255,7 @@ def t_e_s_t_case_journey(test_object):
         actions + "/add",
         {
             "add_action": "1",
+            "action_desc": "Sets a risk the property cannot hold",
             "target_scope": "case",
             "target_kind": "property",
             "target_name": "risk_factor",
@@ -1285,6 +1286,7 @@ def t_e_s_t_case_journey(test_object):
         actions + "/add",
         {
             "add_action": "1",
+            "action_desc": "Raises the risk when consent was obtained",
             "target_scope": "case",
             "target_kind": "property",
             "target_name": "risk_factor",
@@ -1299,33 +1301,53 @@ def t_e_s_t_case_journey(test_object):
     found = re.search(r"/actions/([^/]+)/test$", res.headers["Location"])
     assert found, res.headers["Location"]
     rule_one = found.group(1)
-    res = testapp.post(
-        actions + "/add",
-        {
-            "add_action": "1",
-            "target_scope": "case",
-            "target_kind": "active",
-            "target_name": "0",
-            "value_kind": "constant",
-            "value": "",
-            "when_rules": json.dumps(
-                {
-                    "condition": "AND",
-                    "rules": [
-                        {
-                            "id": "v.main_role",
-                            "operator": "equal",
-                            "value": "nobody",
-                        }
-                    ],
-                }
-            ),
-        },
-        status=302,
-    )
+    # The second rule says what it does, in its author's words.
+    rule_two = {
+        "add_action": "1",
+        "action_desc": "Deactivates a worker\r\nwhose role nobody has",
+        "target_scope": "case",
+        "target_kind": "active",
+        "target_name": "0",
+        "value_kind": "constant",
+        "value": "",
+        "when_rules": json.dumps(
+            {
+                "condition": "AND",
+                "rules": [
+                    {
+                        "id": "v.main_role",
+                        "operator": "equal",
+                        "value": "nobody",
+                    }
+                ],
+            }
+        ),
+    }
+    # Saying what it does is required.
+    for nothing in ("", "   "):
+        res = testapp.post(
+            actions + "/add", dict(rule_two, action_desc=nothing), status=302
+        )
+        assert "FS_error" in res.headers
+    res = testapp.post(actions + "/add", rule_two, status=302)
     assert "FS_error" not in res.headers
+    rule_two_id = re.search(r"/actions/([^/]+)/test$", res.headers["Location"]).group(1)
     res = testapp.get(actions, status=200)
-    test_object.root.assertIn(b"consent_obtained equals &#39;yes&#39;", res.body)
+    # What each one does is what its author said, on one line.
+    said = [
+        " ".join(cell.decode("utf-8").split())
+        for cell in re.findall(rb'<td class="act-what">(.*?)</td>', res.body, re.S)
+    ]
+    assert said == [
+        "Raises the risk when consent was obtained",
+        "Deactivates a worker whose role nobody has",
+    ], said
+    res = testapp.get(actions + "/{}/edit".format(rule_two_id), status=200)
+    test_object.root.assertIn(
+        b'value="Deactivates a worker whose role nobody has"', res.body
+    )
+    test_object.root.assertIn(b"Describe the action", res.body)
+    res = testapp.get(actions, status=200)
     # See code: a rule as a module of its own
     test_object.root.assertIn(b"api.case.set(&#34;risk_factor&#34;, 7)", res.body)
     test_object.root.assertIn(b"export default function run(s, api) {", res.body)
@@ -1335,6 +1357,8 @@ def t_e_s_t_case_journey(test_object):
     served = json.loads(_served_file(test_object, manifest, "actions.json"))
     assert served["version"] == 1 and served["mode"] == "table"
     assert 'api.case.set("risk_factor", 7)' in served["module"]
+    assert "// Action 1: Raises the risk when consent was obtained" in served["module"]
+    assert "// Action 2: Deactivates a worker whose role nobody has" in served["module"]
     assert 'if (s.consent_obtained === "yes")' in served["module"]
     assert (
         'if (s.main_role === "nobody") { api.case.deactivate(); }' in served["module"]
@@ -1349,17 +1373,15 @@ def t_e_s_t_case_journey(test_object):
     )
     assert str(_scalar(config, risk)) == "0"
     # Before that submission arrives, the rule is tried with answers typed on
-    # its test page and a case of the list: what it would change, and
-    # nothing written.
+    # its test page: what it would change, and nothing written. A real
+    # submission always names a case its list serves, so the page asks for
+    # none, and the run acts on a stand-in: risk_factor at its default.
     res = testapp.get(actions + "/{}/test".format(rule_one), status=200)
-    test_object.root.assertIn(worker_id.encode("utf-8"), res.body)
     test_object.root.assertIn(b"consent_obtained", res.body)
+    test_object.root.assertNotIn(b'id="act-case"', res.body)
     res = testapp.post_json(
         actions + "/test",
-        {
-            "action_id": rule_one,
-            "sample": {"answers": {"consent_obtained": "yes"}, "case": worker_id},
-        },
+        {"action_id": rule_one, "sample": {"answers": {"consent_obtained": "yes"}}},
         status=200,
     )
     assert res.json["ok"], res.json
@@ -1367,24 +1389,43 @@ def t_e_s_t_case_journey(test_object):
         {
             "scope": "source",
             "table": "roster_properties",
-            "rowuuid": worker_id,
+            "rowuuid": "sample-case",
             "column": "risk_factor",
             "old": "0",
             "new": "7",
         }
     ], res.json
     assert str(_scalar(config, risk)) == "0"
-    # Another answer, no case, every action: nothing to change.
-    for sample in (
-        {"answers": {"consent_obtained": "no"}, "case": worker_id},
-        {"answers": {"consent_obtained": "yes"}, "case": ""},
-    ):
-        res = testapp.post_json(
-            actions + "/test", {"action_id": "all", "sample": sample}, status=200
-        )
-        assert res.json["ok"] and res.json["changes"] == [], res.json
-    res = testapp.get(actions + "/all/test", status=200)
-    test_object.root.assertIn(b"__fs_action_2(s, api);", res.body)
+    # Every action: another answer changes nothing, and the role nobody has
+    # deactivates the stand-in, which the list serves active.
+    res = testapp.post_json(
+        actions + "/test",
+        {"action_id": "all", "sample": {"answers": {"consent_obtained": "no"}}},
+        status=200,
+    )
+    assert res.json["ok"] and res.json["changes"] == [], res.json
+    res = testapp.post_json(
+        actions + "/test",
+        {"action_id": "all", "sample": {"answers": {"main_role": "nobody"}}},
+        status=200,
+    )
+    assert res.json["ok"], res.json
+    assert res.json["changes"] == [
+        {
+            "scope": "source",
+            "table": "roster",
+            "rowuuid": "sample-case",
+            "column": "_active",
+            "old": "1",
+            "new": "0",
+        }
+    ], res.json
+    # The list has no test of every action together, and no view of the
+    # module (owner, 2026-10-25): the dry run above still composes them.
+    testapp.get(actions + "/all/test", status=404)
+    res = testapp.get(actions, status=200)
+    test_object.root.assertNotIn(b"Test all actions", res.body)
+    test_object.root.assertNotIn(b"act-module-code", res.body)
     roster_hash = _manifest_hash(manifest, "roster.csv")
     valid = _write_tool2_submission(
         resources, test_object.working_dir, centre_id, worker_id
@@ -1486,6 +1527,13 @@ def t_e_s_t_case_journey(test_object):
     )
     test_object.root.assertIn(b"must export a default function run", res.body)
     test_object.root.assertIn(b"function nope() {}", res.body)
+    res = testapp.post(
+        actions + "/add/code",
+        {"action_code": "export default function run(s, api) {}", "action_desc": " "},
+        status=200,
+    )
+    test_object.root.assertIn(b"Describe the action in a few words", res.body)
+    test_object.root.assertIn(b"export default function run(s, api) {}", res.body)
     # Lines ended as a browser posts a textarea's, with CR LF: the code is
     # stored as the owner saw it.
     res = testapp.post(
@@ -1611,7 +1659,9 @@ def t_e_s_t_case_journey(test_object):
     res = testapp.post(actions, {"move_up": "1", "action_id": ids[1]}, status=302)
     assert "FS_error" not in res.headers
     body = testapp.get(actions, status=200).body.decode("utf-8")
-    assert body.index("main_role equals") < body.index("consent_obtained equals")
+    assert body.index("Deactivates a worker whose role") < body.index(
+        "Raises the risk when consent"
+    )
     res = testapp.post(actions, {"delete_action": "1", "action_id": ids[1]}, status=302)
     assert "FS_error" not in res.headers
     served = json.loads(
@@ -1932,6 +1982,7 @@ def t_e_s_t_case_journey(test_object):
             "action_code": "export default function run(s, api) {\n"
             '  api.case.set("risk_factor", (api.case.property("risk_factor") || 0) + 1);\n'
             "}\n",
+            "action_desc": "Counts each follow-up",
         },
         status=302,
     )

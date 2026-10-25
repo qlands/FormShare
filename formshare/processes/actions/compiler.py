@@ -488,14 +488,20 @@ def _function_name(number):
 
 def _rule_parts(row, catalogue):
     """(words, body lines) of a rule: the guard, the computed values it
-    reads, and its write under its condition. Raises CompileError."""
+    reads, and its write under its condition. Raises CompileError.
+
+    The words are what its author said of it (owner, 2026-10-25). A rule
+    saved before a description was asked for reads in its own words."""
     rules = row.get("when_rules")
     if isinstance(rules, str) and rules.strip() == "":
         rules = None
     hoisted = {}
     condition = compile_when(rules, catalogue)
     statement = _action_js(row, catalogue, hoisted)
-    if condition == "true":
+    said = _comment(row.get("action_desc"))
+    if said:
+        words = said
+    elif condition == "true":
         words = "always, {}".format(_action_words(row))
     else:
         words = "when {}, {}".format(
@@ -524,8 +530,8 @@ def _code_script(row):
 
 
 def describe_action(row, catalogue):
-    """What an action does, in words: a rule's own, or what the author of
-    code said of it (empty when they said nothing)."""
+    """What an action does, in words: what its author said of it, as the
+    module's comment above it says (empty for code saved without)."""
     if (row.get("action_kind") or "rule") == "code":
         return _comment(row.get("action_desc"))
     return _rule_parts(row, catalogue)[0]
@@ -670,13 +676,16 @@ _SUBMISSION_MEMBERS = {
 _RUN_PARAMETERS = re.compile(r"\bfunction\s+run\s*\(\s*([A-Za-z_$][\w$]*)")
 
 
-def names_read(row):
+def names_read(row, own=False):
     """The questions and the repeats an action reads, for the test with
     answers someone types: (questions, repeats), in the order met.
 
     A rule names them in its condition and its value. Code is read as text,
-    which is enough to choose which answers to ask for: a name it misses can
-    still be typed, the test page offering every question."""
+    s.name and s["name"] (a name that is not an identifier): the test page
+    asks for nothing else, and a name read some other way is unanswered.
+
+    ``own`` is a form without a case link, whose case is the submission's
+    own row: a column of the case is then an answer typed for the test."""
     questions = []
     repeats = []
 
@@ -688,9 +697,13 @@ def names_read(row):
         code = row.get("action_code") or ""
         found = _RUN_PARAMETERS.search(code)
         submission = re.escape(found.group(1)) if found else "s"
-        for name in re.findall(
-            r"(?<![\w$.])" + submission + r"\.([A-Za-z_$][\w$]*)", code
+        for dotted, bracketed in re.findall(
+            r"(?<![\w$.])"
+            + submission
+            + r"""(?:\.([A-Za-z_$][\w$]*)|\[\s*["']([^"']+)["']\s*\])""",
+            code,
         ):
+            name = dotted or bracketed
             if name not in _SUBMISSION_MEMBERS:
                 met(questions, name)
         for name in re.findall(r"""\.repeat\(\s*["']([^"']+)["']""", code):
@@ -699,6 +712,9 @@ def names_read(row):
             met(questions, name)
         for name in re.findall(r"""\.selected\(\s*["']([^"']+)["']""", code):
             met(questions, name)
+        if own:
+            for name in re.findall(r"""\.case\.value\(\s*["']([^"']+)["']""", code):
+                met(questions, name)
         return questions, repeats
 
     def walk(node):
@@ -711,7 +727,7 @@ def names_read(row):
         field_id = str(node.get("field") or node.get("id") or "")
         if field_id.startswith("d."):
             field_id = field_id[2:]
-        if field_id.startswith("v."):
+        if field_id.startswith("v.") or (own and field_id.startswith("k.")):
             met(questions, field_id[2:])
         elif field_id.startswith("c."):
             parts = field_id.split(".")

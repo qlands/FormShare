@@ -114,11 +114,9 @@ from formshare.processes.db.actions import (
     add_code_action,
     add_form_action,
     build_catalogue,
-    case_choices,
     catalogue_for_editor,
     catalogue_for_querybuilder,
     delete_form_action,
-    get_action_module,
     get_form_action,
     get_form_actions,
     move_form_action,
@@ -1415,7 +1413,6 @@ class ActionsView(ActionsSection):
             "actions": self.numbered(
                 get_form_actions(self.request, project_id, form_id), catalogue
             ),
-            "module": get_action_module(self.request, project_id, form_id),
             "source": catalogue.source,
             "runs": get_form_runs(self.request, project_id, form_id, limit=50),
             "failedRuns": len(
@@ -1425,8 +1422,8 @@ class ActionsView(ActionsSection):
 
 
 class ActionRuleView(ActionsSection):
-    """Add an action, or edit a rule: When, Target and Value. Saving goes on
-    to the action's test."""
+    """Add an action, or edit a rule: its description, When, Target and
+    Value. Saving goes on to the action's test."""
 
     def process_view(self):
         (
@@ -1450,6 +1447,7 @@ class ActionRuleView(ActionsSection):
         if self.request.method == "POST":
             post_data = self.get_post_dict()
             data = {
+                "action_desc": post_data.get("action_desc", ""),
                 "target_scope": post_data.get("target_scope", "case"),
                 "target_kind": post_data.get("target_kind", ""),
                 "target_name": post_data.get("target_name", ""),
@@ -1574,10 +1572,10 @@ class ActionCodeView(ActionsSection):
 
 
 class ActionTestPageView(ActionsSection):
-    """Test an action, or all of them together (actionid "all"): over a
-    submission the form received, or over answers typed here, with a case of
-    the case list, before any submission has arrived. The test is a dry run
-    (actions-api.md 11), through ActionsTestView: nothing is written."""
+    """Test an action: over a submission the form received, or over answers
+    typed here, before any submission has arrived, the case then being a
+    stand-in (server.sample_input). The test is a dry run (actions-api.md
+    11), through ActionsTestView: nothing is written."""
 
     def process_view(self):
         (
@@ -1593,24 +1591,14 @@ class ActionTestPageView(ActionsSection):
         actions = self.numbered(
             get_form_actions(self.request, project_id, form_id), catalogue
         )
-        if action_id == "all":
-            action = None
-            code = get_action_module(self.request, project_id, form_id)
-            tested = actions
-        else:
-            matching = [a for a in actions if a["action_id"] == action_id]
-            if not matching:
-                raise HTTPNotFound
-            action = matching[0]
-            code = action["code"]
-            tested = [action]
-        read_questions, read_repeats = [], []
-        for an_action in tested:
-            questions, repeats = names_read(an_action)
-            read_questions += [q for q in questions if q not in read_questions]
-            read_repeats += [r for r in repeats if r not in read_repeats]
-        names = catalogue_for_editor(self.request, project_id, form_id, catalogue)
+        matching = [a for a in actions if a["action_id"] == action_id]
+        if not matching:
+            raise HTTPNotFound
+        action = matching[0]
         source = catalogue.source
+        own = bool(source and source.get("own"))
+        read_questions, read_repeats = names_read(action, own)
+        names = catalogue_for_editor(self.request, project_id, form_id, catalogue)
         selector = (source or {}).get("selector_field")
         return {
             "projectDetails": project_details,
@@ -1619,26 +1607,30 @@ class ActionTestPageView(ActionsSection):
             "formData": form_data,
             "action": action,
             "actionId": action_id,
-            "count": len(actions),
-            "code": code,
+            "code": action["code"],
             "source": source,
             "submissions": self.submissions(form_data),
-            # The questions to type answers for: the case's selector is
-            # answered by the case picked. Printed into the page's script.
+            # The questions and the repeats the code reads, the only ones the
+            # page asks for: anything else is unanswered. The case's selector
+            # is answered by the stand-in case (server.sample_input). Printed
+            # into the page's script.
             "questions": htmlsafe_json_dumps(
                 [
                     q
                     for q in names["questions"]
-                    if not q.get("system") and q["name"] != selector
+                    if q["name"] in read_questions
+                    and not q.get("system")
+                    and not q.get("encrypted")
+                    and q["name"] != selector
                 ]
             ),
             "repeats": htmlsafe_json_dumps(
-                [r for r in names["repeats"] if r["parent"] == "maintable"]
+                [
+                    r
+                    for r in names["repeats"]
+                    if r["parent"] == "maintable" and r["name"] in read_repeats
+                ]
             ),
-            "read": htmlsafe_json_dumps(
-                {"questions": read_questions, "repeats": read_repeats}
-            ),
-            "cases": case_choices(self.request, project_id, form_id),
             "editorCatalogue": htmlsafe_json_dumps(names),
         }
 
@@ -1647,8 +1639,9 @@ class ActionsTestView(ActionsSection):
     """The dry run (actions-api.md section 11), for the test page: POST
     as JSON {action_id, rowuuid} to run over a submission received, or
     {action_id, sample} over typed answers (server.sample_input); action_id
-    "all" runs the form's module, else that action alone, numbered as the
-    list numbers it, and "module" runs code not saved yet. Returns {ok,
+    runs that action alone, numbered as the list numbers it. "all" runs the
+    form's module and "module" code not saved yet: no page asks for either
+    since 2026-10-25, and the suite tests the module with them. Returns {ok,
     changes, log, error, failed_action, failed_line}; nothing is written."""
 
     def __init__(self, request):

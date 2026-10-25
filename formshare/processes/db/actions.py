@@ -65,7 +65,6 @@ __all__ = [
     "get_action_mode",
     "get_action_module",
     "recompile_form_module",
-    "case_choices",
     "actions_json",
     "build_catalogue",
     "catalogue_for_editor",
@@ -166,6 +165,17 @@ def get_form_action(request, project_id, form_id, action_id):
     return map_from_schema(res) if res is not None else None
 
 
+# A description is one line: in the list of actions, and in the comment above
+# the action in the module.
+_BREAKS = re.compile(r"\s+")
+
+
+def _description(text):
+    """What the author says an action does (action_desc): one line of at
+    most 255 characters, or None."""
+    return _BREAKS.sub(" ", text or "").strip()[:255] or None
+
+
 def _check_row(request, project_id, form_id, data, catalogue):
     """Validates one row against the catalogue and normalises it; returns
     (ok, row, message). The compiler is the judge: a row it cannot compile
@@ -178,7 +188,10 @@ def _check_row(request, project_id, form_id, data, catalogue):
         "value_kind": (data.get("value_kind") or "constant").strip(),
         "value": data.get("value"),
         "when_rules": data.get("when_rules"),
+        "action_desc": _description(data.get("action_desc")),
     }
+    if row["action_desc"] is None:
+        return False, None, _("Describe the action in a few words")
     if row["target_scope"] not in ("case", "parent"):
         return False, None, _("The target must be the case or its parent")
     if row["target_kind"] not in ("property", "column", "active"):
@@ -358,7 +371,7 @@ def _save_action(request, project_id, form_id, action_id, values, catalogue, kin
 
 
 def _rule_values(row):
-    return dict(row, action_kind="rule", action_code=None, action_desc=None)
+    return dict(row, action_kind="rule", action_code=None)
 
 
 def add_form_action(request, project_id, form_id, data):
@@ -385,19 +398,18 @@ def update_form_action(request, project_id, form_id, action_id, data):
     )
 
 
-# A description is one line of a comment in the module.
-_BREAKS = re.compile(r"\s+")
-
-
 def _check_code(request, code, description):
-    """Normalises the code of an action and refuses one no host could load;
-    returns (ok, values, message).
+    """Normalises the code of an action and refuses one no host could load,
+    or one without a description; returns (ok, values, message).
 
     A browser posts a textarea's lines ended with CR LF. Stored as they
     come, the code would not be the text its author saw, and its size, which
     load_module limits, would count a byte more per line than the editor's
     check does (frontend/actions-editor)."""
     _ = request.translate
+    description = _description(description)
+    if description is None:
+        return False, None, _("Describe the action in a few words")
     code = re.sub(r"\r\n?", "\n", code or "")
     if code.strip() == "":
         return False, None, _("Write the action's code")
@@ -405,13 +417,12 @@ def _check_code(request, code, description):
         load_module(code)
     except ModuleError as e:
         return False, None, str(e)
-    description = _BREAKS.sub(" ", description or "").strip()[:255]
     return (
         True,
         {
             "action_kind": "code",
             "action_code": code,
-            "action_desc": description or None,
+            "action_desc": description,
             "target_scope": "case",
             "target_kind": None,
             "target_name": None,
@@ -544,56 +555,6 @@ def recompile_form_module(request, project_id, form_id, catalogue=None):
         request.dbsession.rollback()
         return False, str(e)
     return True, ""
-
-
-def case_choices(request, project_id, form_id, limit=1000):
-    """The cases a test with typed answers can act on: [{rowuuid, label,
-    active}] of the case link's source table, by label, at most ``limit``.
-    None for a form without a case link, whose case is each submission
-    itself; [] when the source cannot be read."""
-    link = get_case_link_consumer(request, project_id, form_id)
-    if link is None:
-        return None
-    a_list = get_published_list(request, link["list_project"], link["list_id"])
-    if a_list is None:
-        return []
-    schema = get_list_source_schema(request, a_list)
-    table = a_list.get("source_table") or ""
-    label = a_list.get("label_column") or "rowuuid"
-    if not schema or not _NAME.match(table) or not _NAME.match(label):
-        return []
-    try:
-        has_active = request.dbsession.execute(
-            text(
-                "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE "
-                "TABLE_SCHEMA = :s AND TABLE_NAME = :t AND COLUMN_NAME = '_active'"
-            ),
-            {"s": schema, "t": table},
-        ).scalar()
-        rows = request.dbsession.execute(
-            text(
-                "SELECT rowuuid, `{label}`, {active} FROM `{schema}`.`{table}` "
-                "ORDER BY `{label}`, rowuuid LIMIT {limit}".format(
-                    label=label,
-                    active="_active" if has_active else "1",
-                    schema=schema,
-                    table=table,
-                    limit=int(limit),
-                )
-            )
-        ).fetchall()
-    except Exception as e:
-        request.dbsession.rollback()
-        log.warning("The cases of form {} could not be read: {}".format(form_id, e))
-        return []
-    return [
-        {
-            "rowuuid": r[0],
-            "label": "" if r[1] is None else str(r[1]),
-            "active": r[2] is None or int(r[2]) == 1,
-        }
-        for r in rows
-    ]
 
 
 def actions_json(mode, module):
@@ -742,6 +703,9 @@ def case_source_of(request, project_id, form_id):
         "schema": schema,
         "table": a_list["source_table"],
         "parent_table": parent_table,
+        # The _active of the cases it serves, as get_consumer_sources hands
+        # it to the follow-up's membership trigger
+        "list_active": int(a_list.get("list_active", 1) or 0),
         "own": False,
     }
 

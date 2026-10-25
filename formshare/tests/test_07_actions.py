@@ -465,7 +465,7 @@ def test_what_an_action_says_cannot_become_code(catalogue):
     sneaky = "x\n}; api.case.deactivate(); {\u2028y\u2029z"
     module = compile_module(
         [
-            row(1, "property", "status", value=sneaky),
+            dict(row(1, "property", "status", value=sneaky), action_desc=sneaky),
             dict(
                 action_order=2,
                 action_kind="code",
@@ -477,6 +477,7 @@ def test_what_an_action_says_cannot_become_code(catalogue):
     )
     lines = module.split("\n")
     first = [i for i, line in enumerate(lines) if line.startswith("// Action 1:")][0]
+    assert lines[first] == "// Action 1: x }; api.case.deactivate(); { y z"
     assert lines[first + 1] == "function __fs_action_1(s, api) {"
     assert "// Action 2, written by hand: said twice" in lines
     assert "\u2028" not in module and "\u2029" not in module
@@ -501,6 +502,61 @@ def test_a_rule_as_a_module_of_its_own(catalogue):
     ]
 
 
+def test_what_an_action_does_is_what_its_author_said(catalogue):
+    a_rule = row(1, "active", "0", when=group(rule("v.still_working", "equal", "no")))
+    said = dict(a_rule, action_desc="Deactivates a teacher\nwho left")
+    assert describe_action(said, catalogue) == "Deactivates a teacher who left"
+    # The module says it above the action, and so does See code
+    lines = compile_module([said], catalogue).split("\n")
+    first = lines.index("// Action 1: Deactivates a teacher who left")
+    assert lines[first + 1] == "function __fs_action_1(s, api) {"
+    assert rule_module(said, catalogue).split("\n")[1] == (
+        "  // Deactivates a teacher who left"
+    )
+    # A rule saved before a description was asked for reads in its own words
+    assert describe_action(a_rule, catalogue) == (
+        "when still_working equals 'no', deactivate the case"
+    )
+
+
+class _Translating:
+    @staticmethod
+    def translate(text):
+        return text
+
+
+def test_an_action_must_say_what_it_does(catalogue):
+    from formshare.processes.db.actions import _check_code, _check_row, _rule_values
+
+    data = {
+        "action_desc": "  Deactivates a teacher\r\n who left  ",
+        "target_kind": "active",
+        "target_name": "0",
+        "when_rules": json.dumps(group(rule("v.still_working", "equal", "no"))),
+    }
+    ok, a_row, message = _check_row(_Translating(), "P", "visit", data, catalogue)
+    assert ok, message
+    # One line, of at most 255 characters
+    assert _rule_values(a_row)["action_desc"] == "Deactivates a teacher who left"
+    ok, a_row, message = _check_row(
+        _Translating(), "P", "visit", dict(data, action_desc="x" * 300), catalogue
+    )
+    assert ok and a_row["action_desc"] == "x" * 255, message
+    code = "export default function run(s, api) {}"
+    ok, values, message = _check_code(_Translating(), code, " Counts\na visit ")
+    assert ok and values["action_desc"] == "Counts a visit", message
+    # Neither a rule nor code is kept without one
+    for given in ("   ", "", None):
+        assert _check_row(
+            _Translating(), "P", "visit", dict(data, action_desc=given), catalogue
+        ) == (False, None, "Describe the action in a few words")
+        assert _check_code(_Translating(), code, given) == (
+            False,
+            None,
+            "Describe the action in a few words",
+        )
+
+
 def test_what_an_action_reads():
     assert names_read(
         row(
@@ -523,11 +579,28 @@ def test_what_an_action_reads():
         '    a.case.set("x", a.avg(sub.repeat("meals"), "score"));\n'
         "  }\n"
         "  var other = {}; other.zzz; sub.rowuuid;\n"
+        "  if (sub[\"odd-name\"] === 'x' || sub[ 'rowuuid' ]) { other['q']; }\n"
         "}\n"
     )
+    # A name that is not an identifier is read through brackets
     assert names_read(dict(action_kind="code", action_code=code)) == (
-        ["age", "crops"],
+        ["age", "odd-name", "crops"],
         ["meals"],
+    )
+    # A form without a case link is its own case: a column of the case is
+    # then one of the answers typed for the test, and asked for first
+    by_column = row(1, "active", "0", when=group(rule("k.district", "equal", "N")))
+    assert names_read(by_column) == ([], [])
+    assert names_read(by_column, own=True) == (["district"], [])
+    code = (
+        "export default function run(s, api) {\n"
+        '  if (api.case.value("district") === "N") { api.case.deactivate(); }\n'
+        "}\n"
+    )
+    assert names_read(dict(action_kind="code", action_code=code)) == ([], [])
+    assert names_read(dict(action_kind="code", action_code=code), own=True) == (
+        ["district"],
+        [],
     )
 
 
@@ -1463,3 +1536,201 @@ def test_the_take_back_writes_the_exact_old_value(monkeypatch, restore, expected
     assert sql == "UPDATE `FS_x`.`roster` SET `amount` = :v WHERE rowuuid = :r"
     assert params == {"v": expected, "r": "r1"}
     assert a_run.run_status == 2
+
+
+# ---------------------------------------------------------------------------
+# A test with typed answers acts on a stand-in for the case
+# ---------------------------------------------------------------------------
+
+
+class _StandInReader:
+    """The stored columns of each table, typed, as _Reader reads them from
+    MySQL and the dictionary: a follow-up (FS_visit) whose case is a teacher,
+    a repeat of a school's registration (FS_school)."""
+
+    columns = {
+        ("FS_visit", "maintable"): {
+            "rowuuid": "string",
+            "_submitted_by": "string",
+            "teacher_id": "string",
+            "still_working": "string",
+        },
+        ("FS_school", "teachers"): {
+            "rowuuid": "string",
+            "parent_rowuuid": "string",
+            "_active": "integer",
+            "teacher_name": "string",
+            "years": "integer",
+        },
+        ("FS_school", "maintable"): {
+            "rowuuid": "string",
+            "_active": "integer",
+            "school_name": "string",
+        },
+    }
+
+    def __init__(self, request):
+        self.request = request
+
+    def types(self, project_id, form_id, schema, table):
+        return dict(self.columns[(schema, table)])
+
+    def has_column(self, schema, table, column):
+        return column in self.columns[(schema, table)]
+
+
+@pytest.fixture
+def teacher_visit(monkeypatch):
+    """sample_input's reads, for a follow-up of the list of teachers: its
+    list_active is set by each test."""
+    from formshare.processes.actions import server
+
+    source = {
+        "list_id": "teachers",
+        "selector_field": "teacher_id",
+        "project": "P",
+        "form": "school_registration",
+        "schema": "FS_school",
+        "table": "teachers",
+        "parent_table": "maintable",
+        "list_active": 1,
+        "own": False,
+    }
+    monkeypatch.setattr(server, "_Reader", _StandInReader)
+    monkeypatch.setattr(server, "case_source_of", lambda request, p, f: source)
+    monkeypatch.setattr(server, "continuations_of", lambda request, p, f: {})
+    monkeypatch.setattr(
+        server, "_tables", lambda request, p, f: [{"table_name": "maintable"}]
+    )
+    monkeypatch.setattr(
+        server,
+        "get_table_properties",
+        lambda request, p, f, table: (
+            [
+                {
+                    "property_name": "visits",
+                    "property_type": "integer",
+                    "property_default": "0",
+                }
+            ]
+            if table == "teachers"
+            else []
+        ),
+    )
+    monkeypatch.setattr(server, "engine_path", lambda request: None)
+    return source
+
+
+def test_a_test_with_answers_acts_on_a_stand_in_case(teacher_visit):
+    """A real submission always names a case its list serves, the
+    follow-up's membership trigger refusing any other and none: the test
+    asks for no case, and acts on one as a new one stands."""
+    from formshare.processes.actions import server
+
+    inputs = server.sample_input(
+        _ServerRequest(None),
+        "P",
+        "teacher_visit",
+        "FS_visit",
+        "",
+        "ana",
+        {"answers": {"still_working": "no"}, "repeats": {}},
+    )
+    assert inputs["case"] == {
+        "table": "teachers",
+        "rowuuid": "sample-case",
+        "active": True,
+        "values": {"teacher_name": None, "years": None},
+        "properties": {"visits": 0},
+        "parent": {
+            "table": "maintable",
+            "rowuuid": "sample-parent",
+            "active": True,
+            "values": {"school_name": None},
+            "properties": {},
+            "parent": None,
+        },
+    }
+    # The selector answers it, as in a real submission
+    assert inputs["submission"]["values"] == {
+        "teacher_id": "sample-case",
+        "still_working": "no",
+    }
+
+
+@pytest.mark.parametrize(
+    "list_active, still_working, changes",
+    [
+        (
+            1,
+            "no",
+            [
+                {
+                    "scope": "source",
+                    "table": "teachers",
+                    "rowuuid": "sample-case",
+                    "column": "_active",
+                    "old": "1",
+                    "new": "0",
+                }
+            ],
+        ),
+        # The answers decide
+        (1, "yes", []),
+        (1, None, []),
+        # A list of inactive cases serves a case already inactive
+        (0, "no", []),
+    ],
+)
+def test_a_rule_tested_with_answers_changes_the_stand_in(
+    teacher_visit, catalogue, list_active, still_working, changes
+):
+    from formshare.processes.actions import server
+
+    teacher_visit["list_active"] = list_active
+    module = compile_module(
+        [row(1, "active", "0", when=group(rule("v.still_working", "equal", "no")))],
+        catalogue,
+    )
+    assert "if (api.case === null) { return; }" in module
+    answers = {} if still_working is None else {"still_working": still_working}
+    outcome = server.dry_run_sample(
+        _ServerRequest(None),
+        "P",
+        "teacher_visit",
+        "FS_visit",
+        "ana",
+        {"answers": answers},
+        module=module,
+    )
+    assert outcome["ok"], outcome
+    assert outcome["changes"] == changes
+
+
+def test_a_property_starts_at_its_default_in_the_stand_in(teacher_visit):
+    from formshare.processes.actions import server
+
+    outcome = server.dry_run_sample(
+        _ServerRequest(None),
+        "P",
+        "teacher_visit",
+        "FS_visit",
+        "ana",
+        {"answers": {}},
+        module=(
+            "export default function run(s, api) {\n"
+            '  api.case.set("visits", api.case.property("visits") + 1);\n'
+            "}\n"
+        ),
+    )
+    assert outcome["ok"], outcome
+    assert outcome["changes"] == [
+        {
+            "scope": "source",
+            "table": "teachers_properties",
+            "rowuuid": "sample-case",
+            "column": "visits",
+            "old": "0",
+            "new": "1",
+        }
+    ]

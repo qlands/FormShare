@@ -43,10 +43,6 @@
                     <div class="act-top">
                         <a class="btn btn-primary" href="{{ request.route_url('form_case_action_add', userid=userid, projcode=projcode, formid=formData.form_id) }}"><i class="fas fa-plus"></i> {{ _('Add an action') }}</a>
                         <a class="btn btn-white" href="{{ request.route_url('form_case_action_add_code', userid=userid, projcode=projcode, formid=formData.form_id) }}"><i class="fas fa-code"></i> {{ _('Add an action (Expert mode)') }}</a>
-                        {% if actions %}
-                            <a class="btn btn-white" href="{{ request.route_url('form_case_action_test', userid=userid, projcode=projcode, formid=formData.form_id, actionid='all') }}"><i class="fas fa-vial"></i> {{ _('Test all actions') }}</a>
-                            <button type="button" class="btn btn-white act-see-code" data-title="{{ _('The module that runs') }}" data-code="act-module-code"><i class="fas fa-file-code"></i> {{ _('See the module that runs') }}</button>
-                        {% endif %}
                     </div>
                     <hr class="hr-line-dashed">
                     {% if actions %}
@@ -97,7 +93,6 @@
                     {% else %}
                         <p>{{ _('No actions yet.') }}</p>
                     {% endif %}
-                    <textarea id="act-module-code" class="d-none" readonly>{{ module }}</textarea>
 
                     <hr class="hr-line-dashed">
                     <h3>{{ _('Runs') }} {% if failedRuns > 0 %}<span class="label label-danger">{{ failedRuns }} {{ _('failed') }}</span>{% endif %}</h3>

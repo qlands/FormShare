@@ -24,7 +24,7 @@
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
-    {% if action %}{% set crumb_current = _('Test action') ~ ' ' ~ action.number %}{% else %}{% set crumb_current = _('Test all actions') %}{% endif %}
+    {% set crumb_current = _('Test action') ~ ' ' ~ action.number %}
     {% include 'dashboard/projects/case_management/snippets/brdcrbs_case_actions.jinja2' %}
 {% endblock breadcrumbs %}
 
@@ -36,16 +36,12 @@
             {% endblock form_errors %}
             <div class="ibox">
                 <div class="ibox-content">
-                    <h2>{% if action %}{{ _('Test action') }} {{ action.number }}{% else %}{{ _('Test all actions') }}{% endif %} &mdash; {{ formData.form_name }}</h2>
-                    {% if action %}
-                        <p>
-                            {% if action.action_kind == 'code' %}<span class="label label-info">{{ _('Expert') }}</span> {{ action.words if action.words else _('Code written by hand') }}
-                            {% elif action.broken %}<span class="text-danger">{{ action.broken }}</span>
-                            {% else %}{{ action.words }}{% endif %}
-                        </p>
-                    {% else %}
-                        <p>{{ _('Every action together, as they run on each submission: when two change the same thing, the one higher in the list wins.') }}</p>
-                    {% endif %}
+                    <h2>{{ _('Test action') }} {{ action.number }} &mdash; {{ formData.form_name }}</h2>
+                    <p>
+                        {% if action.action_kind == 'code' %}<span class="label label-info">{{ _('Expert') }}</span> {{ action.words if action.words else _('Code written by hand') }}
+                        {% elif action.broken %}<span class="text-danger">{{ action.broken }}</span>
+                        {% else %}{{ action.words }}{% endif %}
+                    </p>
                     <details open>
                         <summary>{{ _('The code') }}</summary>
                         <textarea id="act-code" class="form-control" readonly>{{ code }}</textarea>
@@ -60,29 +56,10 @@
                     </div>
 
                     <div id="act-sample">
-                        {% if cases is none %}
+                        {% if source and source.own %}
                             <p class="text-muted">{{ _('This form has no case link: the case is the submission itself, so the answers below are its row, and its properties start at their defaults.') }}</p>
-                        {% else %}
-                            <div class="form-group">
-                                <label for="act-case" class="act-label">{{ _('The case') }}</label>
-                                {% if cases|length > 20 %}
-                                    <input type="text" id="act-case-filter" class="form-control m-b-xs" placeholder="{{ _('Type to narrow the list') }}">
-                                {% endif %}
-                                <select id="act-case" class="form-control">
-                                    {% for a_case in cases %}
-                                        <option value="{{ a_case.rowuuid }}">{{ a_case.label if a_case.label else a_case.rowuuid }}{% if not a_case.active %} ({{ _('inactive') }}){% endif %}</option>
-                                    {% endfor %}
-                                    <option value="">{{ _('No case: the selector left unanswered') }}</option>
-                                </select>
-                                {% if cases|length == 0 %}
-                                    <p class="text-warning">{{ _('The case list has no case yet, so the test can only show what happens without one.') }}</p>
-                                {% elif source and source.selector_field %}
-                                    <p class="text-muted">{{ _('The case picked here is the answer to') }} <code>{{ source.selector_field }}</code>.</p>
-                                {% endif %}
-                            </div>
                         {% endif %}
                         <div class="act-answers" id="act-answers"></div>
-                        <a href="#" id="act-every" class="btn btn-xs btn-white">{{ _('Show every question') }}</a>
                         <div id="act-repeats"></div>
                     </div>
 
@@ -100,12 +77,10 @@
                     <div id="act-result" class="act-result m-t"></div>
 
                     <hr class="hr-line-dashed">
-                    {% if action %}
-                        {% if action.action_kind == 'code' %}
-                            <a class="btn btn-white" href="{{ request.route_url('form_case_action_code', userid=userid, projcode=projcode, formid=formData.form_id, actionid=action.action_id) }}"><i class="fas fa-pencil-alt"></i> {{ _('Edit this action') }}</a>
-                        {% else %}
-                            <a class="btn btn-white" href="{{ request.route_url('form_case_action_edit', userid=userid, projcode=projcode, formid=formData.form_id, actionid=action.action_id) }}"><i class="fas fa-pencil-alt"></i> {{ _('Edit this action') }}</a>
-                        {% endif %}
+                    {% if action.action_kind == 'code' %}
+                        <a class="btn btn-white" href="{{ request.route_url('form_case_action_code', userid=userid, projcode=projcode, formid=formData.form_id, actionid=action.action_id) }}"><i class="fas fa-pencil-alt"></i> {{ _('Edit this action') }}</a>
+                    {% else %}
+                        <a class="btn btn-white" href="{{ request.route_url('form_case_action_edit', userid=userid, projcode=projcode, formid=formData.form_id, actionid=action.action_id) }}"><i class="fas fa-pencil-alt"></i> {{ _('Edit this action') }}</a>
                     {% endif %}
                     <a class="btn btn-white" href="{{ request.route_url('form_case_actions', userid=userid, projcode=projcode, formid=formData.form_id) }}">{{ _('Back to the actions') }}</a>
                 </div>
@@ -119,9 +94,7 @@
     <script>
       var actQuestions = {{ questions }};
       var actRepeats = {{ repeats }};
-      var actRead = {{ read }};
       var actActionId = {{ actionId|tojson }};
-      var actAll = actActionId === "all";
       var actTestUrl = {{ request.route_url('form_case_actions_test', userid=userid, projcode=projcode, formid=formData.form_id)|tojson }};
       var actToken = {{ request.session.get_csrf_token()|tojson }};
       var actEditorCatalogue = {{ editorCatalogue }};
@@ -169,9 +142,8 @@
         return value;
       }
 
-      function questionRow(q, read) {
-        var group = $("<div class='form-group'></div>").toggleClass("act-unread", !read);
-        if (!read) { group.hide(); }
+      function questionRow(q) {
+        var group = $("<div class='form-group'></div>");
         var label = $("<label class='act-label'></label>").attr("for", "act-q-" + q.name).text(q.label || q.name);
         if (q.label && q.label !== q.name) { label.append($("<span class='act-name'></span>").text(q.name)); }
         return group.append(label).append(inputFor(q, "act-q-"));
@@ -218,35 +190,19 @@
           });
           repeats[$(this).attr("data-repeat")] = rows;
         });
-        var out = { answers: answers, repeats: repeats };
-        if ($("#act-case").length) { out.case = $("#act-case").val(); }
-        return out;
+        return { answers: answers, repeats: repeats };
       }
 
       function escapeText(value) {
         return $("<div>").text(value === null ? "NULL" : value).html();
       }
 
-      // The line a failure names, in the code shown: an action's own, or,
-      // for every action together, where that action starts in the module.
-      function failedLine(r) {
-        if (!r.failed_line) { return null; }
-        if (!actAll) { return r.failed_line; }
-        var lines = $("#act-code").val().split("\n");
-        var start = "// Action " + r.failed_action + ", written by hand";
-        var wrapper = "const __fs_action_" + r.failed_action + " = (function () {";
-        for (var i = 0; i < lines.length - 1; i++) {
-          if (lines[i].indexOf(start) === 0 && lines[i + 1].indexOf(wrapper) === 0) { return i + 2 + r.failed_line; }
-        }
-        return null;
-      }
-
       function showResult(r) {
         var html = "";
         if (r.error) {
           html += "<div class='alert alert-danger'>" + escapeText(r.error) + "</div>";
-          var line = failedLine(r);
-          if (line && actEditor) { actEditor.markLine(line, r.error); }
+          // The line a failure names, in the action's own code
+          if (r.failed_line && actEditor) { actEditor.markLine(r.failed_line, r.error); }
         } else if (r.skipped) {
           html += "<div class='alert alert-info'>" + escapeText({{ _('This form has no actions.')|tojson }}) + "</div>";
         } else if (!r.changes.length) {
@@ -275,41 +231,19 @@
           }
         }
 
-        // The questions the code reads first; the others on request.
-        var read = {};
-        actRead.questions.forEach(function (name) { read[name] = true; });
-        actQuestions.forEach(function (q) {
-          if (!q.encrypted) { $("#act-answers").append(questionRow(q, !!read[q.name])); }
-        });
-        if (!actRead.questions.length) {
-          $("#act-answers").append($("<p class='text-muted act-read-none'></p>").text({{ _('The code reads no answer of the submission.')|tojson }}));
-        }
-        if (!$("#act-answers .act-unread").length) { $("#act-every").hide(); }
+        // Only what the code reads is asked for
+        actQuestions.forEach(function (q) { $("#act-answers").append(questionRow(q)); });
         actRepeats.forEach(function (r) {
-          if (actRead.repeats.indexOf(r.name) >= 0) {
-            var block = repeatBlock(r);
-            $("#act-repeats").append(block);
-            addRow(block);
-          }
+          var block = repeatBlock(r);
+          $("#act-repeats").append(block);
+          addRow(block);
         });
+        if (!actQuestions.length && !actRepeats.length) {
+          $("#act-answers").append($("<p class='text-muted'></p>").text({{ _('The code reads no answer of the submission.')|tojson }}));
+        }
 
-        $("#act-every").on("click", function (event) {
-          event.preventDefault();
-          $("#act-answers .act-unread").show();
-          $(".act-read-none").hide();
-          actRepeats.forEach(function (r) {
-            if (!$("#act-repeats [data-repeat='" + r.name + "']").length) { $("#act-repeats").append(repeatBlock(r)); }
-          });
-          $(this).hide();
-        });
         $(document).on("click", ".act-add-row", function () { addRow($(this).closest("[data-repeat]")); });
         $(document).on("click", ".act-remove-row", function () { $(this).closest("tr").remove(); });
-        $("#act-case-filter").on("input", function () {
-          var words = $(this).val().toLowerCase();
-          $("#act-case option").each(function () {
-            $(this).toggle(this.value === "" || $(this).text().toLowerCase().indexOf(words) >= 0);
-          });
-        });
         $("input[name='act-source']").on("change", function () {
           var received = $("input[name='act-source']:checked").val() === "received";
           $("#act-received").toggle(received);

@@ -34,8 +34,8 @@
                     <form id="act-code-form" method="post" action="{{ request.url }}">
 {{ form.secure_form(request) }}
                         <div class="form-group">
-                            <label for="act-desc">{{ _('What it does') }}</label>
-                            <input type="text" name="action_desc" id="act-desc" class="form-control" maxlength="255" value="{{ description }}" placeholder="{{ _('In a few words, for the list of actions') }}">
+                            <label for="act-desc">{{ _('Describe the action') }}</label>
+                            <input type="text" name="action_desc" id="act-desc" class="form-control" maxlength="255" value="{{ description }}" placeholder="{{ _('In a few words, describe what the action does.') }}" required pattern=".*\S.*" data-invalid-message="{{ _('Describe the action in a few words') }}">
                         </div>
                         <label for="act-code">{{ _('The code') }}</label>
                         <textarea name="action_code" id="act-code" class="form-control">{{ code }}</textarea>

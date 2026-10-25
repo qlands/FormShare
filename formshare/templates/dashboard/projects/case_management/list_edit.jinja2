@@ -65,6 +65,10 @@
                     {% endif %}
                     <div class="hr-line-dashed"></div>
                     <h3>{{ _('Rows to serve') }}</h3>
+                    {% if listFollowed %}
+                        <p id="list-rows"><b>{% if listData.list_active == 0 %}{{ _('Inactive cases') }}{% else %}{{ _('Active cases') }}{% endif %}</b></p>
+                        <p class="text-muted">{{ _('This cannot change while a form with a repository uses this list.') }}</p>
+                    {% else %}
                     <form method="post" class="form-inline">
                         {{ form.secure_form(request) }}
                         <select name="list_active" class="form-control" style="min-width: 200px">
@@ -73,6 +77,7 @@
                         </select>
                         <button type="submit" name="change_active" value="1" class="btn btn-white">{{ _('Change') }}</button>
                     </form>
+                    {% endif %}
                     <div class="hr-line-dashed"></div>
                     <h3>{{ _('Filter') }}</h3>
                     <p class="text-muted">{{ _('Serve only the rows that match. The same for every assistant, on the server and on the devices, which apply it to the rows they have not sent yet. Texts are compared exactly as written, capitals and spaces included.') }}</p>

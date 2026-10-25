@@ -323,6 +323,10 @@ class EditPublishedListView(ListSection):
             list_data["source_table"],
         )
         crowdsourcing = project_has_crowdsourcing(self.request, project_id)
+        # A form with a repository uses the list: the schema was built over
+        # its key and its rows, so neither can change, and the list cannot be
+        # deleted (DeletePublishedListView)
+        followed = list_has_active_consumers(self.request, project_id, list_id)
         # Every definition change below marks the served copies stale
         # (invalidate_list_copies): the devices get the new shape on their
         # next pull, not when the source next receives data.
@@ -411,7 +415,7 @@ class EditPublishedListView(ListSection):
                             self._, key_column, self._("the key of a list")
                         )
                     )
-                elif list_has_active_consumers(self.request, project_id, list_id):
+                elif followed:
                     self.append_to_errors(
                         self._(
                             "The key cannot change while a form with a repository "
@@ -433,18 +437,30 @@ class EditPublishedListView(ListSection):
                         return HTTPFound(self.request.url)
             if "change_active" in post_data.keys():
                 list_active = 0 if post_data.get("list_active") == "0" else 1
-                updated, message = update_published_list(
-                    self.request,
-                    project_id,
-                    list_id,
-                    {"list_active": list_active},
-                )
-                if not updated:
-                    self.append_to_errors(message)
+                # A follow-up's membership trigger accepts only cases with the
+                # _active the list served when its repository was built
+                # (apply_link_attributes). Serving the other rows would offer
+                # its devices cases it refuses.
+                if followed:
+                    self.append_to_errors(
+                        self._(
+                            "The rows to serve cannot change while a form with a "
+                            "repository uses this list"
+                        )
+                    )
                 else:
-                    invalidate_list_copies(self.request, project_id, list_id)
-                    self.returnRawViewResult = True
-                    return HTTPFound(self.request.url)
+                    updated, message = update_published_list(
+                        self.request,
+                        project_id,
+                        list_id,
+                        {"list_active": list_active},
+                    )
+                    if not updated:
+                        self.append_to_errors(message)
+                    else:
+                        invalidate_list_copies(self.request, project_id, list_id)
+                        self.returnRawViewResult = True
+                        return HTTPFound(self.request.url)
             if "change_mode" in post_data.keys():
                 # Who receives which cases (formshare.md 3.8). The variants of
                 # the old mode are deleted, so none of them is served again.
@@ -591,6 +607,7 @@ class EditPublishedListView(ListSection):
             "filterRules": self.stored_rules(list_data),
             "filterWords": describe_filter(list_data.get("filter_rules"), fields),
             "geometryColumns": geometry_columns(table_columns),
+            "listFollowed": followed,
             "crowdsourcing": crowdsourcing,
             "listFilters": self.list_filters(user_id, project_id, list_data, fields),
             "listCoverage": (

@@ -1711,6 +1711,31 @@ def t_e_s_t_case_journey(test_object):
         "/user/{}/project/{}/caselists".format(login, project), status=200
     )
     test_object.root.assertIn(b"roster.csv", res.body)
+    # Nor can its key or the rows it serves change: Tool 2's foreign key was
+    # built over the rowuuid, and its membership trigger accepts only active
+    # workers. The page shows the rows without a form, and each post is
+    # refused with the reason.
+    roster_edit = "/user/{}/project/{}/caselists/{}/edit".format(
+        login, project, "roster"
+    )
+    res = testapp.get(roster_edit, status=200)
+    test_object.root.assertIn(b'id="list-rows"', res.body)
+    test_object.root.assertNotIn(b'name="change_active"', res.body)
+    res = testapp.post(
+        roster_edit, {"change_active": "1", "list_active": "0"}, status=200
+    )
+    test_object.root.assertIn(b"The rows to serve cannot change", res.body)
+    res = testapp.post(
+        roster_edit, {"change_key": "1", "list_key_column": worker_label}, status=200
+    )
+    test_object.root.assertIn(b"The key cannot change", res.body)
+    roster_row = (
+        "FROM publishedlist WHERE project_id = '{}' AND list_id = 'roster'".format(
+            test_object.projectID
+        )
+    )
+    assert _scalar(config, "SELECT list_active " + roster_row) == 1
+    assert _scalar(config, "SELECT list_key_column " + roster_row) is None
 
     # The delete guard: Tool 1 feeds lists Tool 2 links to, so it cannot be
     # deleted -- the database would refuse it, and so does the app, first.

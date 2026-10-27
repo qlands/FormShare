@@ -1007,6 +1007,10 @@ def field_is_editable(field_name):
         "_cellypos",
         "link_rowuuid",
         "_device_uuid",
+        # The Data Quality Score is computed from a record's open flags
+        # (docs/formshare_data_quality): a score typed in would hide what
+        # lowered it, and the next computation would overwrite it anyway
+        "_dqscore",
     ]
     if field_name in read_only_fields:
         return "false"

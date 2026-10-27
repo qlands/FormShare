@@ -353,6 +353,16 @@ def test_a_lookup_s_labels_cannot_close_the_grid_s_script(monkeypatch):
     assert executed[0].startswith("SELECT `crops_cod`,`crops_des` FROM FS_x.")
 
 
+def test_the_data_quality_score_cannot_be_typed_in():
+    """The score comes from the open flags of a record: the cleaning grid
+    offers it read-only, and update_data and /api_update, which ask the same
+    function, refuse to write it."""
+    from formshare.processes.submission.api import field_is_editable
+
+    assert field_is_editable("_dqscore") == "false"
+    assert field_is_editable("income_30d") == "true"
+
+
 def test_a_violation_is_logged_once_whatever_its_format():
     from formshare.views import csp_report
 

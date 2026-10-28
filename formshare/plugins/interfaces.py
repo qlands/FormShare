@@ -16,6 +16,7 @@ __all__ = [
     "IImportExternalData",
     "IRepository",
     "IRepositoryProcess",
+    "IFormDeletionProcess",
     "IProject",
     "IProjectEncryption",
     "IForm",
@@ -539,7 +540,9 @@ class IForm(Interface):  # pragma: no cover
 
     def before_deleting_form(self, request, form_type, user_id, project_id, form_id):
         """
-        Called by FormShare so plugins can perform actions before FormShare deletes a form from the database
+        Called by FormShare so plugins can perform actions before FormShare deletes a form from the database.
+        Since 2026-10-28 it runs in the request that asks for the deletion, before the form is marked as
+        being deleted and the Celery task that deletes it is queued; returning False refuses the deletion
         :param request: ``pyramid.request`` object
         :param form_type: Type of form: ODK, CSPRO, etc
         :param user_id: User ID
@@ -552,7 +555,10 @@ class IForm(Interface):  # pragma: no cover
         self, request, form_type, user_id, project_id, form_id, form_data
     ):
         """
-        Called by FormShare so plugins can perform actions after FormShare deletes a form from the database
+        No longer called (2026-10-28). A form is deleted in the background, by a
+        Celery task that drops its repository after keeping a dump of it: what
+        a plugin does after a deletion goes in IFormDeletionProcess, which that
+        task calls.
         :param request: ``pyramid.request`` object
         :param form_type: Type of form: ODK, CSPRO, etc
         :param user_id: User ID
@@ -1140,6 +1146,36 @@ class IRepositoryProcess(Interface):  # pragma: no cover
         """
         raise NotImplementedError(
             "before_creating_repository must be implemented in subclasses"
+        )
+
+
+class IFormDeletionProcess(Interface):  # pragma: no cover
+    """
+    IMPORTANT: This is a FormShare Celery plugin.
+    This interface allow to hook up plugins to the Celery task that deletes a
+    form (2026-10-28). The request only marks the form as being deleted and
+    queues the task; IForm.before_deleting_form still runs there, and may
+    refuse. The task keeps a dump of the repository, drops it, renames the
+    form's directory and deletes the form and its versions, and then calls
+    this.
+    """
+
+    def after_deleting_form(self, settings, user, project, form, form_data, log):
+        """
+        Called after Celery deletes a form and its versions: their rows, their
+        index documents and their repository, of which a dump is kept in the
+        form's renamed directory
+        :param settings: Settings from FormShare
+        :param user: ID of the user who deleted the form
+        :param project: Project ID
+        :param form: Form ID of the form that was deleted
+        :param form_data: Its row as it was, form_schema included (None for a
+                          form in testing)
+        :param log: Celery logger
+        :return: None
+        """
+        raise NotImplementedError(
+            "after_deleting_form must be implemented in subclasses"
         )
 
 

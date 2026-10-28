@@ -5,6 +5,7 @@ from formshare.processes.db.case_management import *
 from formshare.processes.db.collaborator import *
 from formshare.processes.db.dictionary import *
 from formshare.processes.db.form import *
+from formshare.processes.db.form_deletion import *
 from formshare.processes.db.json import *
 from formshare.processes.db.partner import *
 from formshare.processes.db.products import *

@@ -41,7 +41,9 @@
                             {% endif %}
                         {% endif %}
                     {% endif %}
-                    {% if form.form_blocked != 0 %}
+                    {% if form.form_deleting == 1 %}
+                        <span class="label label-danger form-deleting" title="{{ _('FormShare is deleting this form. It leaves the project when it is done.') }}">{{ _('Being deleted') }}</span>
+                    {% elif form.form_blocked != 0 %}
                         <span class="label label-danger" title="{{ _('This form is merging with another form or it had a problem while merging and cannot receive submissions. Contact the technical support.') }}">{{ _('Blocked') }}</span>
                     {% endif %}
                     {% if (form.form_geopoint != None or form.form_geoshape != None) %}
@@ -74,6 +76,9 @@
                 {% endblock form_item_content %}
                 {% if form.submissions > 0  %}{{ form.submissions }} {% if form.form_target > 0 %}of {{ form.form_target }} {% endif %} {{ _('submissions') }} {% if form.form_schema != None %}: <strong><a target="_blank" href="{{ request.route_url('clean', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}" class="text-success">{{ form.indb }} {{ _('in database') }}.</a> {% if form.inlogs > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}" class="text-warning">{{ form.inlogs }} {{ _('log entries') }}.</a>{% endif %} {% if form.inerror > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}" class="text-danger">{{ form.inerror }} {{ _('with errors') }}</a>{% endif %}</strong>{% endif %} {% endif %}
                 <div class="actions">
+                    {% if form.form_deleting == 1 %}
+                        <span class="text-muted">{{ _('This form is being deleted.') }}</span>
+                    {% else %}
                     {% block form_item_actions %}
                         <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_xlsx',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}"><i class="fab fa-wpforms"></i> {{ _('Download ODK form') }}</a>
                         {% if form.form_schema != None %}
@@ -91,12 +96,13 @@
                             {% endif %}
                             {% if projectData.access_type <= 2 or form.pubby.user_id == activeUser.id %}
                                 {% if form.has_sub_version == None %}
-                                    <a {% if form.parent_form != None and form.form_schema != None %}data-has-parent="true"{% else %}data-has-parent="false"{% endif %} urn="{{ request.route_url('delete_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
+                                    <a data-form-id="{{ form.form_id }}" {% if form.parent_form != None and form.form_schema != None %}data-has-parent="true"{% else %}data-has-parent="false"{% endif %} urn="{{ request.route_url('delete_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
                                 {% endif %}
                             {% endif %}
                             <a href="{{ request.route_url('form_details',userid=projectData.owner,projcode=projectData.project_code,formid=form.form_id) }}" class="btn btn-xs btn-white"><i class="fas fa-gift"></i> {% if form.form_schema == None %}{{ _('Update form and more...') }}{% else %}{{ _('Data downloads and more...') }}{% endif %}</a>
                         {% endblock form_item_maintance %}
                     {% endblock %}
+                    {% endif %}
                 </div>
             </div>
         </div>

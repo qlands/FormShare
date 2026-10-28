@@ -68,6 +68,7 @@ from .steps.profile import t_e_s_t_profile
 from .steps.projects import t_e_s_t_projects, t_e_s_t_delete_projects
 from .steps.repository import t_e_s_t_repository
 from .steps.testing_data_handover import t_e_s_t_testing_data_handover
+from .steps.form_deletion_task import t_e_s_t_form_deletion_task
 from .steps.repository_downloads import t_e_s_t_repository_downloads
 from .steps.case_lists import t_e_s_t_case_lists
 from .steps.caselist_handshake import t_e_s_t_caselist_handshake
@@ -247,6 +248,8 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_repository(self.test_object)
             print("Testing the testing data at the hand-over")
             t_e_s_t_testing_data_handover(self.test_object)
+            print("Testing the deletion of forms in the background")
+            t_e_s_t_form_deletion_task(self.test_object)
             print("Testing repository downloads")
             t_e_s_t_repository_downloads(self.test_object)
             print("Testing published case lists")

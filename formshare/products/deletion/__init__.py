@@ -1,0 +1,1 @@
+from formshare.products.deletion.deletion import queue_form_deletion

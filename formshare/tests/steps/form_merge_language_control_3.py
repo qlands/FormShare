@@ -1,5 +1,6 @@
 import os
 import time
+from .form_deletion import delete_form
 
 
 def t_e_s_t_form_merge_language_control_3(test_object):
@@ -236,21 +237,9 @@ def t_e_s_t_form_merge_language_control_3(test_object):
     test_object.root.assertTrue(b" Merge repository " in res.body)
 
     # Delete the form asistencia_tecnica
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin,
-            test_object.project,
-            "asistencia_tecnica_2_complete_language",
-        ),
-        status=302,
+    res = delete_form(
+        test_object, test_object.project, "asistencia_tecnica_2_complete_language"
     )
-    assert "FS_error" not in res.headers
 
     # Delete the form asistencia_tecnica
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin, test_object.project, "asistencia_tecnica"
-        ),
-        status=302,
-    )
-    assert "FS_error" not in res.headers
+    res = delete_form(test_object, test_object.project, "asistencia_tecnica")

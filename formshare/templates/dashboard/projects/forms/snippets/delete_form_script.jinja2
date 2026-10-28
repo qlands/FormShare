@@ -1,0 +1,49 @@
+{# Deleting a form (2026-10-28): its ID must be typed, which shows the person
+   is paying attention, and the deletion cannot be stopped once it starts.
+   A delete button carries the class remove_form, its address in urn, the
+   form's ID in data-form-id, and data-has-parent="true" on a newer version,
+   whose deletion deletes every version. Included inside a page's script. #}
+$(document).on('click', '.remove_form', function () {
+    var action_url = $(this).attr('urn');
+    var form_id = $(this).attr('data-form-id');
+    var text = {{ _('All the data of this form will be deleted.')|tojson }};
+    if ($(this).attr('data-has-parent') === 'true') {
+        text = {{ _('This form is a newer version of another: deleting it deletes every version, with all their data.')|tojson }};
+    }
+    text += ' ' + {{ _('Once it starts, the deletion cannot be stopped. To confirm, type the ID of the form:')|tojson }} + ' ' + form_id;
+    swal({
+            title: {{ _('Delete this form?')|tojson }},
+            text: text,
+            type: 'input',
+            showCancelButton: true,
+            closeOnConfirm: false,
+            closeOnCancel: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: {{ _('Delete this form')|tojson }},
+            cancelButtonText: {{ _('Cancel')|tojson }},
+            inputPlaceholder: form_id
+        },
+        function (typed) {
+            if (typed === false) {
+                return false;
+            }
+            if ($.trim(typed) !== form_id) {
+                swal.showInputError({{ _('Type the ID of the form exactly')|tojson }});
+                return false;
+            }
+            var form = document.createElement('form');
+            form.setAttribute('method', 'post');
+            form.setAttribute('action', action_url);
+            form.style.display = 'none';
+            [['csrf_token', {{ request.session.get_csrf_token()|tojson }}], ['confirm_form_id', $.trim(typed)]].forEach(function (pair) {
+                var input = document.createElement('input');
+                input.setAttribute('type', 'hidden');
+                input.setAttribute('name', pair[0]);
+                input.setAttribute('value', pair[1]);
+                form.appendChild(input);
+            });
+            document.body.appendChild(form);
+            $('#busy').show();
+            form.submit();
+        });
+});

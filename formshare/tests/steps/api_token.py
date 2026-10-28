@@ -9,6 +9,7 @@ import json
 import os
 import secrets
 import uuid
+from .form_deletion import confirmed, wait_until_deleted
 
 
 def t_e_s_t_api_token_user(test_object):
@@ -149,11 +150,13 @@ def t_e_s_t_api_token_user(test_object):
     # Clean up through the API
     res = testapp.post(
         "/user/{}/project/{}/form/{}/delete".format(login, project_code, "Justtest_3"),
-        {},
+        confirmed("Justtest_3"),
         headers=bearer,
         status=200,
     )
     assert res.json["error"] is False
+    # The worker deletes it; the project goes once it has
+    wait_until_deleted(test_object.server_config, login, project_code, "Justtest_3")
     res = testapp.post(
         "/user/{}/project/{}/delete".format(login, project_code),
         {},

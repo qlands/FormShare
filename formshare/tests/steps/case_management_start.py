@@ -1,5 +1,6 @@
 import os
 import uuid
+from .form_deletion import delete_form
 
 
 def t_e_s_t_case_management_start(test_object):
@@ -252,10 +253,4 @@ def t_e_s_t_case_management_start(test_object):
     test_object.root.assertIn(b"Case creator", res.body)
 
     # Delete the case form
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin, "case001", "case_start_20210311"
-        ),
-        status=302,
-    )
-    assert "FS_error" not in res.headers
+    res = delete_form(test_object, "case001", "case_start_20210311")

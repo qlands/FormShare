@@ -477,6 +477,12 @@ class Odkform(Base):
     form_schema = Column(Unicode(64))
     form_accsub = Column(INTEGER)
     form_blocked = Column(INTEGER, server_default=text("'0'"))
+    # A form being deleted (2026-10-28): 1 from the request to the end of the
+    # Celery task that deletes it (processes/db/form_deletion.py), with who
+    # asked and, when the task stopped, why
+    form_deleting = Column(INTEGER, server_default=text("'0'"))
+    form_deletedby = Column(Unicode(120))
+    form_deleteerror = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_testing = Column(INTEGER, server_default=text("'0'"))
     form_incversion = Column(INTEGER, server_default=text("'0'"))
     parent_project = Column(Unicode(64))

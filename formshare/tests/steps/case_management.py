@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
 from .sql import get_form_details
+from .form_deletion import refused_deletion
 
 
 def t_e_s_t_case_management(test_object):
@@ -2111,3 +2112,11 @@ def t_e_s_t_case_management(test_object):
     )
     test_object.root.assertIn(b"[Clean data]", res.body)
     test_object.root.assertIn(b"[Manage errors]", res.body)
+
+    # The case creator cannot be deleted while forms follow up its cases: their
+    # repositories refer to its own (2026-10-28). Its newest version is the one
+    # to delete, and the older one says so.
+    page = refused_deletion(test_object, "case001", "case_start_20210331")
+    test_object.root.assertIn(b"These forms use the cases this form creates", page.body)
+    page = refused_deletion(test_object, "case001", "case_start_20210311")
+    test_object.root.assertIn(b"has a newer version", page.body)

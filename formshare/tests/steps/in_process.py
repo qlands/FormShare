@@ -49,6 +49,19 @@ def add_task(config, project_id, form_id, product_id, user):
     return task_id
 
 
+def finish_task(config, task_id, number=0):
+    """Records a task finished, as the worker's CeleryTask does when it ends:
+    a form with a task that has not finished cannot be deleted."""
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        engine.execute(
+            "INSERT INTO finishedtask (task_id, task_enumber) VALUES (%s, %s)",
+            (task_id, number),
+        )
+    finally:
+        engine.dispose()
+
+
 def build_in_process(
     test_object,
     project_id,
@@ -108,24 +121,32 @@ def build_in_process(
     assert p.returncode == 0, stdout + stderr
 
     here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[0]
-    internal_create_mysql_repository(
-        config,
-        test_object.randonLogin,
-        project_id,
-        project_code,
-        form_id,
-        os.path.join(config["repository.path"], "odk"),
-        row["form_directory"],
-        "FS_" + str(uuid.uuid4()).replace("-", "_"),
-        primary_key,
-        os.path.join(here, "mysql.cnf"),
-        output["create.sql"],
-        output["insert.sql"],
-        output["create.xml"],
-        output["insert.xml"],
-        "",
-        "en",
-        True,
-        [],
-        add_task(config, project_id, form_id, "repository", test_object.randonLogin),
+    task_id = add_task(
+        config, project_id, form_id, "repository", test_object.randonLogin
     )
+    try:
+        internal_create_mysql_repository(
+            config,
+            test_object.randonLogin,
+            project_id,
+            project_code,
+            form_id,
+            os.path.join(config["repository.path"], "odk"),
+            row["form_directory"],
+            "FS_" + str(uuid.uuid4()).replace("-", "_"),
+            primary_key,
+            os.path.join(here, "mysql.cnf"),
+            output["create.sql"],
+            output["insert.sql"],
+            output["create.xml"],
+            output["insert.xml"],
+            "",
+            "en",
+            True,
+            [],
+            task_id,
+        )
+    except Exception:
+        finish_task(config, task_id, 1)
+        raise
+    finish_task(config, task_id, 0)

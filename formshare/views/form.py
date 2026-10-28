@@ -15,11 +15,15 @@ import formshare.plugins as plugins
 import pandas as pd
 import time
 from formshare.processes.db import (
+    deletion_refusal,
+    form_being_deleted,
+    forms_of_deletion,
+    mark_for_deletion,
+    record_deletion_error,
     get_project_id_from_name,
     get_form_details,
     get_form_data,
     update_form,
-    delete_form,
     add_file_to_form,
     get_form_files,
     get_project_published_lists,
@@ -55,7 +59,6 @@ from formshare.processes.db import (
     remove_case_lookup_field,
     update_case_lookup_field_alias,
     get_field_details,
-    delete_case_lookup_table,
     invalid_aliases,
     alias_exists,
     field_exists,
@@ -78,10 +81,7 @@ from formshare.processes.db import (
     update_lookup_from_csv,
     get_case_creator_forms,
 )
-from formshare.processes.elasticsearch.record_index import delete_form_records
 from formshare.processes.db.case_management import (
-    source_form_has_consumers,
-    lists_fed_by_form,
     inherit_consumers,
 )
 from formshare.processes.elasticsearch.repository_index import (
@@ -125,7 +125,6 @@ from formshare.processes.odk.processes import get_form_primary_key, get_form_cas
 from formshare.processes.storage import (
     store_file,
     delete_stream,
-    delete_bucket,
     get_temporary_file,
 )
 from formshare.processes.submission.api import (
@@ -141,6 +140,7 @@ from formshare.processes.submission.api import (
     get_tables_from_original_form,
 )
 from formshare.products import get_form_products
+from formshare.products.deletion import queue_form_deletion
 from formshare.products import stop_task
 from formshare.products.export.kml import generate_kml_file
 from formshare.products.export.media import generate_media_zip_file
@@ -1343,6 +1343,16 @@ class AddNewForm(PrivateView):
             form_casedatetime = None
             if for_merging:
                 form_id = self.request.matchdict["formid"]
+                if form_being_deleted(self.request.dbsession, project_id, form_id):
+                    next_page = self.request.params.get(
+                        "next"
+                    ) or self.request.route_url(
+                        "project_details",
+                        userid=project_details["owner"],
+                        projcode=project_code,
+                    )
+                    self.add_error(self._("This form is being deleted"))
+                    return HTTPFound(next_page, headers={"FS_error": "true"})
                 primary_key = get_form_primary_key(self.request, project_id, form_id)
                 if project_details["project_case"] == 1:
                     (
@@ -1687,6 +1697,17 @@ class UploadNewVersion(PrivateView):
             form_data = self.get_post_dict()
             form_data.pop("xlsx")
 
+            if form_being_deleted(self.request.dbsession, project_id, form_id):
+                self.add_error(self._("This form is being deleted"))
+                return HTTPFound(
+                    self.request.route_url(
+                        "project_details",
+                        userid=project_details["owner"],
+                        projcode=project_code,
+                    ),
+                    headers={"FS_error": "true"},
+                )
+
             if "form_pkey" not in form_data.keys():
                 next_page = self.request.route_url(
                     "form_details",
@@ -1945,10 +1966,19 @@ class EditForm(PrivateView):
 
 
 class DeleteForm(PrivateView):
+    """Deletes a form and its versions. Its ID must be typed, and the deletion
+    runs in the background, in a task users cannot cancel: this marks the
+    forms inactive, blocked and being deleted, and queues it
+    (processes/db/form_deletion.py, products/deletion)."""
+
     def __init__(self, request):
         PrivateView.__init__(self, request)
         self.privateOnly = True
         self.checkCrossPost = False
+
+    def refuse(self, next_page, message):
+        self.add_error(message)
+        return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
     def process_view(self):
         user_id = self.request.matchdict["userid"]
@@ -1966,137 +1996,61 @@ class DeleteForm(PrivateView):
         form_data = get_form_data(self.request, project_id, form_id)
         if form_data is None:
             raise HTTPNotFound
-        if (
+        if not (
             get_project_access_type(self.request, project_id, user_id, self.user.login)
             <= 2
             or form_data["form_pubby"] == self.user.id
         ):
-            if self.request.method == "POST":
-                next_page = self.request.params.get("next") or self.request.route_url(
-                    "project_details", userid=user_id, projcode=project_code
-                )
-
-                # A form whose data feeds a published list that another form
-                # links to cannot be deleted: dropping its schema would strand
-                # the follow-up's foreign key. The database refuses it anyway
-                # (ON DELETE RESTRICT); this says so before trying.
-                if source_form_has_consumers(self.request, project_id, form_id):
-                    self.add_error(
-                        self._(
-                            "This form feeds a published list that another form "
-                            "links to. Remove that link or delete the other form "
-                            "first."
-                        )
-                    )
-                    self.returnRawViewResult = True
-                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
-                # A form that feeds a published list nobody consumes yet is
-                # refused too: the registry keeps a foreign key on the source
-                # (no cascade), so the lists go first. Without this the
-                # database refused it as a 500 (2026-09-17, formshare.app).
-                fed = lists_fed_by_form(self.request, project_id, form_id)
-                if fed:
-                    self.add_error(
-                        self._(
-                            "This form feeds the published lists {}. Delete "
-                            "the lists first."
-                        ).format(", ".join(a_list["list_id"] for a_list in fed))
-                    )
-                    self.returnRawViewResult = True
-                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
-
-                continue_delete = True
-                message = ""
-                for a_plugin in plugins.PluginImplementations(plugins.IForm):
-                    if continue_delete:
-                        continue_delete, message = a_plugin.before_deleting_form(
-                            self.request, "ODK", user_id, project_id, form_id
-                        )
-                if continue_delete:
-                    deleted, forms_deleted, message = delete_form(
-                        self.request, project_id, form_id
-                    )
-                    if deleted:
-                        for a_plugin in plugins.PluginImplementations(plugins.IForm):
-                            a_plugin.after_deleting_form(
-                                self.request,
-                                "ODK",
-                                user_id,
-                                project_id,
-                                form_id,
-                                form_data,
-                            )
-                        if (
-                            form_data["form_case"] == 1
-                            and form_data["form_casetype"] == 1
-                        ):
-                            if form_data["form_schema"] is not None:
-                                delete_case_lookup_table(self.request, project_id)
-                        for a_deleted_form in forms_deleted:
-                            delete_dataset_from_index(
-                                self.request.registry.settings,
-                                project_id,
-                                a_deleted_form["form_id"],
-                            )
-                            delete_form_records(
-                                self.request.registry.settings,
-                                project_id,
-                                a_deleted_form["form_id"],
-                            )
-                            try:
-                                form_directory = a_deleted_form["form_directory"]
-                                paths = ["forms", form_directory]
-                                odk_dir = get_odk_path(self.request)
-                                form_directory = os.path.join(odk_dir, *paths)
-                                string_date = datetime.datetime.now().strftime(
-                                    "%Y_%m_%d:%H_%M_%S"
-                                )
-                                deleted_string = "_deleted_by_{}_on_{}".format(
-                                    self.userID, string_date
-                                )
-                                if os.path.exists(form_directory):
-                                    shutil.move(
-                                        form_directory, form_directory + deleted_string
-                                    )
-                                log.info(
-                                    "FormDelete: Form {} in project {} of user {} was deleted by {} on {}".format(
-                                        form_id,
-                                        project_id,
-                                        user_id,
-                                        self.userID,
-                                        string_date,
-                                    )
-                                )
-                            except Exception as e:
-                                log.error(
-                                    "Error {} while removing form {} in project {}. Cannot delete directory {}".format(
-                                        str(e),
-                                        a_deleted_form["form_id"],
-                                        project_id,
-                                        a_deleted_form["form_directory"],
-                                    )
-                                )
-                            bucket_id = project_id + a_deleted_form["form_id"]
-                            bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
-                            delete_bucket(self.request, bucket_id)
-
-                        self.request.session.flash(
-                            self._("The form was deleted successfully")
-                        )
-                        self.returnRawViewResult = True
-                        return HTTPFound(next_page)
-                    else:
-                        self.returnRawViewResult = True
-                        self.add_error(message)
-                        return HTTPFound(next_page, headers={"FS_error": "true"})
-                else:
-                    self.returnRawViewResult = True
-                    self.add_error(message)
-                    return HTTPFound(next_page, headers={"FS_error": "true"})
-            else:
-                raise HTTPNotFound
-        else:
             raise HTTPNotFound
+        if self.request.method != "POST":
+            raise HTTPNotFound
+        next_page = self.request.params.get("next") or self.request.route_url(
+            "project_details", userid=user_id, projcode=project_code
+        )
+        self.returnRawViewResult = True
+        # Typing the form's ID shows the person is paying attention
+        typed = self.get_post_dict().get("confirm_form_id") or ""
+        if typed.strip() != form_id:
+            return self.refuse(
+                next_page,
+                self._("Type the ID of the form, {}, to delete it").format(form_id),
+            )
+        forms = forms_of_deletion(self.request.dbsession, project_id, form_id)
+        if not forms:  # pragma: no cover  # Deleted since get_form_data read it
+            raise HTTPNotFound
+        keys = [(a_row.project_id, a_row.form_id) for a_row in forms]
+        refusal = deletion_refusal(self.request, project_id, form_id, forms)
+        if refusal is not None:
+            return self.refuse(next_page, refusal)
+        for a_plugin in plugins.PluginImplementations(plugins.IForm):
+            continue_delete, message = a_plugin.before_deleting_form(
+                self.request, "ODK", user_id, project_id, form_id
+            )
+            if not continue_delete:
+                return self.refuse(next_page, message)
+        # Who asked: the person signed in, not the project's owner
+        marked = mark_for_deletion(self.request, project_id, forms, self.user.id)
+        if not marked:  # pragma: no cover  # Blocked or marked since it was read
+            return self.refuse(
+                next_page,
+                self._("This form is blocked and cannot be changed at the moment."),
+            )
+        try:
+            queue_form_deletion(self.request, project_id, form_id)
+        except Exception as e:
+            # The forms stay marked: the technical team resumes the deletion
+            # on the server (resume_form_deletion)
+            reason = "The deletion could not be queued: {}".format(str(e))
+            log.error("Form {} of project {}. {}".format(form_id, project_id, reason))
+            record_deletion_error(self.request.dbsession, keys, reason)
+            send_error_to_technical_team(
+                self.request,
+                "Form {} of project {}. {}".format(form_id, project_id, reason),
+            )
+        self.request.session.flash(
+            self._("The form is being deleted. It leaves the project when it is done.")
+        )
+        return HTTPFound(next_page)
 
 
 class ActivateForm(PrivateView):

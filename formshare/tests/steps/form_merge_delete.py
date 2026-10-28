@@ -1,4 +1,5 @@
 import os
+from .form_deletion import delete_form
 
 
 def t_e_s_t_form_merge_delete(test_object):
@@ -70,13 +71,7 @@ def t_e_s_t_form_merge_delete(test_object):
     assert "FS_error" in res.headers
 
     # Delete this version and the assistant, then start over without them
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin, test_object.project, "tormenta20201117"
-        ),
-        status=302,
-    )
-    assert "FS_error" not in res.headers
+    res = delete_form(test_object, test_object.project, "tormenta20201117")
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/assistant/{}/remove".format(
             test_object.randonLogin,
@@ -142,10 +137,4 @@ def t_e_s_t_form_merge_delete(test_object):
     )
     test_object.root.assertFalse(b"Merge check pending" in res.body)
 
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin, test_object.project, "tormenta20201117"
-        ),
-        status=302,
-    )
-    assert "FS_error" not in res.headers
+    res = delete_form(test_object, test_object.project, "tormenta20201117")

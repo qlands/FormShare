@@ -1,5 +1,6 @@
 import os
 import time
+from .form_deletion import delete_form
 
 
 def t_e_s_t_form_merge(test_object):
@@ -418,10 +419,4 @@ def t_e_s_t_form_merge(test_object):
     test_object.root.assertTrue(b"Without submissions" in res.body)
 
     # Delete the form
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin, test_object.project, "tormenta20201130"
-        ),
-        status=302,
-    )
-    assert "FS_error" not in res.headers
+    res = delete_form(test_object, test_object.project, "tormenta20201130")

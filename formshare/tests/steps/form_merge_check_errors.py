@@ -6,6 +6,7 @@ from .unwritable_output import (
     make_writable,
     tool_reports_unwritable_files,
 )
+from .form_deletion import delete_form
 
 
 def _unwritable_merge_files(test_object):
@@ -96,8 +97,7 @@ def _unwritable_merge_files(test_object):
         is None
     )
 
-    res = testapp.post(form_url + "/delete", status=302)
-    assert "FS_error" not in res.headers
+    delete_form(test_object, project, "tormenta20201117")
 
 
 def t_e_s_t_form_merge_check_errors(test_object):
@@ -167,13 +167,7 @@ def t_e_s_t_form_merge_check_errors(test_object):
     )
     test_object.root.assertTrue(b"Unable to merge" in res.body)
 
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin, test_object.project, "tormenta20201117"
-        ),
-        status=302,
-    )
-    assert "FS_error" not in res.headers
+    res = delete_form(test_object, test_object.project, "tormenta20201117")
 
     #  Checks for field not the same
     paths = ["resources", "forms", "merge", "B", "B_FNS.xls"]
@@ -233,13 +227,7 @@ def t_e_s_t_form_merge_check_errors(test_object):
         status=404,
     )
 
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin, test_object.project, "tormenta20201117"
-        ),
-        status=302,
-    )
-    assert "FS_error" not in res.headers
+    res = delete_form(test_object, test_object.project, "tormenta20201117")
 
     #  Checks for relation not the same
     paths = ["resources", "forms", "merge", "B", "B_RNS.xls"]
@@ -289,13 +277,7 @@ def t_e_s_t_form_merge_check_errors(test_object):
     )
     test_object.root.assertTrue(b"Unable to merge" in res.body)
 
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin, test_object.project, "tormenta20201117"
-        ),
-        status=302,
-    )
-    assert "FS_error" not in res.headers
+    res = delete_form(test_object, test_object.project, "tormenta20201117")
 
     # 38: a file of the new version could not be written (rstools.md 17.2)
     if tool_reports_unwritable_files(

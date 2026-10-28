@@ -4,6 +4,7 @@ import time
 
 from .config_switches import settings_set_to
 from .sql import get_form_details
+from .form_deletion import delete_form
 
 
 def t_e_s_t_odk(test_object):
@@ -83,15 +84,7 @@ def t_e_s_t_odk(test_object):
     )
     test_object.root.assertIn(b"This form cannot create a repository", res.body)
 
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin,
-            test_object.project,
-            test_object.formID,
-        ),
-        status=302,
-    )
-    assert "FS_error" not in res.headers
+    res = delete_form(test_object, test_object.project, test_object.formID)
 
     # Upload a complex form succeeds
     paths = ["resources", "forms", "complex_form", "B.xlsx"]

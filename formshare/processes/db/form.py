@@ -65,7 +65,6 @@ __all__ = [
     "update_form",
     "get_form_data",
     "get_form_schema",
-    "delete_form",
     "add_file_to_form",
     "get_form_files",
     "remove_file_from_form",
@@ -1533,41 +1532,6 @@ def update_form_color_by_database(request, database, hex_color):
         request.dbsession.rollback()
 
 
-def delete_form_by_database(request, database):
-    result = []
-    log.warning("BEGIN BIG DATABASE DELETE")
-    log.warning("Database: {}".format(database))
-    res = request.dbsession.query(Odkform).filter(Odkform.form_schema == database).all()
-    for a_form in res:
-        log.warning(
-            "Form ID: {} in project: {} will be deleted".format(
-                a_form.form_id, a_form.project_id
-            )
-        )
-        result.append(
-            {
-                "project_id": a_form.project_id,
-                "form_id": a_form.form_id,
-                "form_directory": a_form.form_directory,
-            }
-        )
-    log.warning("END BIG DATABASE DELETE")
-    try:
-        request.dbsession.query(Odkform).filter(Odkform.form_schema == database).update(
-            {"parent_project": None, "parent_form": None}
-        )
-        request.dbsession.query(Odkform).filter(
-            Odkform.form_schema == database
-        ).delete()
-        request.dbsession.commit()
-    except Exception as e:
-        log.error(
-            "Unable to delete forms with schema {}. Error {}".format(database, str(e))
-        )
-        request.dbsession.rollback()
-    return result
-
-
 def update_form_directory(request, project, form, directory):  # pragma: no cover
     # This function has no coverage because it should not happen. Cannot be covered by unitTest
     try:
@@ -1660,52 +1624,6 @@ def update_form(request, project, form, form_data):
             )
             request.dbsession.rollback()
             return False, str(e)
-    else:
-        return False, _("This form is blocked and cannot be changed at the moment.")
-
-
-def delete_form(request, project, form):
-    _ = request.translate
-
-    blocked = (
-        request.dbsession.query(Odkform.form_blocked)
-        .filter(Odkform.project_id == project)
-        .filter(Odkform.form_id == form)
-        .one()
-    )
-    if blocked[0] == 0:
-        this_form_schema = get_form_schema(request, project, form)
-        if this_form_schema is not None and form_has_parent(request, project, form):
-            deleted = delete_form_by_database(request, this_form_schema)
-            return True, deleted, ""
-        form_directory = get_form_directory(request, project, form)
-        # The delete itself is inside the try: a foreign key that refuses it
-        # (a published list still fed by the form) is an answer for the page,
-        # not a server error.
-        try:
-            request.dbsession.query(Odkform).filter(
-                Odkform.project_id == project
-            ).filter(Odkform.form_id == form).delete()
-            request.dbsession.commit()
-            return (
-                True,
-                [
-                    {
-                        "project_id": project,
-                        "form_id": form,
-                        "form_directory": form_directory,
-                    }
-                ],
-                "",
-            )
-        except Exception as e:
-            log.error(
-                "Error {} while deleting form {} in project {}".format(
-                    str(e), project, form
-                )
-            )
-            request.dbsession.rollback()
-            return False, [], str(e)
     else:
         return False, _("This form is blocked and cannot be changed at the moment.")
 

@@ -24,6 +24,7 @@ from .unwritable_output import (
     make_writable,
     tool_reports_unwritable_files,
 )
+from .form_deletion import delete_form
 
 
 def _form_with_a_bad_option_value(working_dir):
@@ -122,8 +123,7 @@ def _unwritable_repository_file(test_object):
     )
     assert details["form_schema"] is None and details["form_reptask"] is None
 
-    res = testapp.post(form_url + "/delete", status=302)
-    assert "FS_error" not in res.headers
+    delete_form(test_object, project, "unwritable_repository")
 
 
 def t_e_s_t_exit_codes(test_object):
@@ -192,8 +192,7 @@ def t_e_s_t_exit_codes(test_object):
     assert b"This form cannot create a repository" in res.body
     assert b"invalid characters in column headers" in res.body
 
-    res = testapp.post(form_url + "/delete", status=302)
-    assert "FS_error" not in res.headers
+    delete_form(test_object, project, "bad_csv_form")
 
     # 38: a file of the repository could not be written (rstools.md 17.2)
     if tool_reports_unwritable_files(

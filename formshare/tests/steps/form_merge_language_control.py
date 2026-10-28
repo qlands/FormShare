@@ -1,5 +1,6 @@
 import os
 import time
+from .form_deletion import delete_form
 
 
 def t_e_s_t_form_merge_language_control(test_object):
@@ -282,15 +283,9 @@ def t_e_s_t_form_merge_language_control(test_object):
     )
     test_object.root.assertTrue(b"Fix language" in res.body)
 
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin,
-            test_object.project,
-            "asistencia_tecnica_2_complete_language",
-        ),
-        status=302,
+    res = delete_form(
+        test_object, test_object.project, "asistencia_tecnica_2_complete_language"
     )
-    assert "FS_error" not in res.headers
 
     # ---------------------
 
@@ -447,19 +442,7 @@ def t_e_s_t_form_merge_language_control(test_object):
     )
 
     # Delete the form asistencia_tecnica
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin, test_object.project, "asistencia_tecnica"
-        ),
-        status=302,
-    )
-    assert "FS_error" not in res.headers
+    res = delete_form(test_object, test_object.project, "asistencia_tecnica")
 
     # Delete the form asistencia_tecnica
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(
-            test_object.randonLogin, test_object.project, "asistencia_tecnica_no_lng"
-        ),
-        status=302,
-    )
-    assert "FS_error" not in res.headers
+    res = delete_form(test_object, test_object.project, "asistencia_tecnica_no_lng")

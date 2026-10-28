@@ -35,6 +35,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
 from .sql import get_form_details
+from .form_deletion import refused_deletion
 
 TOOL1 = "ecce_tool1"
 TOOL2 = "ecce_tool2"
@@ -669,11 +670,8 @@ def t_e_s_t_case_journey(test_object):
     # A form that feeds published lists nobody consumes yet cannot be deleted
     # either: the lists go first. The registry's foreign key on the source
     # would refuse it anyway; the page says so instead of failing.
-    res = testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(login, project, TOOL1),
-        status=302,
-    )
-    assert "FS_error" in res.headers
+    page = refused_deletion(test_object, project, TOOL1)
+    assert b"Delete the lists first" in page.body
     assert _has_table(test_object.server_config, schema1, "maintable")
 
     # --- The device mirror: the build files travel in the manifest ---------
@@ -1803,11 +1801,8 @@ def t_e_s_t_case_journey(test_object):
 
     # The delete guard: Tool 1 feeds lists Tool 2 links to, so it cannot be
     # deleted -- the database would refuse it, and so does the app, first.
-    res = testapp.post(
-        "/user/{}/project/{}/form/{}/delete".format(login, project, TOOL1),
-        status=302,
-    )
-    assert "FS_error" in res.headers
+    page = refused_deletion(test_object, project, TOOL1)
+    assert b"These forms use the cases this form creates" in page.body
     # Tool 1 is still there.
     assert _has_table(test_object.server_config, schema1, "maintable")
 

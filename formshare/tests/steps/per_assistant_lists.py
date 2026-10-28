@@ -416,6 +416,14 @@ def t_e_s_t_per_assistant_lists(test_object):
     # then serves what the other made instead of writing it again. The other
     # request is a thread here: it holds the lock, stamps the copy and
     # records a marker for its MD5 while the pull waits.
+    #
+    # It stamps two seconds on. A stamp in the second of the last submission
+    # counts as older than it (list_is_stale): MySQL rounds _submitted_date
+    # to the second and NOW() truncates, so a submission at 12:00:04.6 is
+    # 12:00:05, and so is a stamp at 12:00:05.4. The pull then rightly
+    # regenerates the copy, and the marker is gone. With half a second, the
+    # step failed whenever it got here within a second of Ben's push
+    # (2026-10-28).
     copy_key = form_copy_key(project_id, FORM, LIST_FILE)
     stale = "file_lastgen = '2000-01-01 00:00:00'"
     _set_copy(config, project_id, stale)
@@ -426,7 +434,7 @@ def t_e_s_t_per_assistant_lists(test_object):
         with list_lock(config, copy_key) as held:
             assert held
             holding.set()
-            time.sleep(0.5)
+            time.sleep(2)
             _set_copy(
                 config,
                 project_id,

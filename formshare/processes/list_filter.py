@@ -491,7 +491,13 @@ def querybuilder_filters(fields, choices=None):
             "operators": OPERATORS[kind],
         }
         if kind == NUMBER:
-            item["type"] = "integer" if field.get("integer") else "double"
+            if field.get("integer"):
+                item["type"] = "integer"
+            else:
+                # A number input steps by 1 unless told otherwise, and the
+                # browser refuses to submit a form that holds 0.75 in it
+                item["type"] = "double"
+                item["validation"] = {"step": "any"}
         elif kind == DATE:
             item["type"] = "date"
             item["placeholder"] = "YYYY-MM-DD"

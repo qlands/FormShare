@@ -1206,6 +1206,10 @@ def catalogue_for_querybuilder(catalogue):
             item["multiple"] = True
         if entry.get("operators"):
             item["operators"] = entry["operators"]
+        if entry["type"] == "double":
+            # A number input steps by 1 unless told otherwise, and the
+            # browser refuses to submit a form that holds 0.75 in it
+            item["validation"] = {"step": "any"}
         if entry["type"] in ("date", "datetime"):
             item["placeholder"] = (
                 "YYYY-MM-DD" if entry["type"] == "date" else "YYYY-MM-DD HH:MM:SS"

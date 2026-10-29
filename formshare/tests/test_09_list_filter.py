@@ -113,6 +113,10 @@ def test_querybuilder_gets_types_operators_and_choices(fields):
     }
     assert filters["t.age"]["type"] == "integer"
     assert filters["p.index"]["type"] == "double"
+    # A decimal can be typed: the browser's number input steps by 1 unless
+    # told otherwise, and would refuse to submit 0.75
+    assert filters["p.index"]["validation"] == {"step": "any"}
+    assert "validation" not in filters["t.age"]
     assert filters["t.joined"]["type"] == "date"
     assert filters["p.status"]["optgroup"] == "Properties"
     assert "less" not in filters["t.name"]["operators"]

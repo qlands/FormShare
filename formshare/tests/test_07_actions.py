@@ -1734,3 +1734,27 @@ def test_a_property_starts_at_its_default_in_the_stand_in(teacher_visit):
             "new": "1",
         }
     ]
+
+
+def test_a_decimal_can_be_typed_in_the_rule_builder():
+    """A number input steps by 1 unless told otherwise, and the browser
+    refuses to submit the action's page while one holds 0.75."""
+    from types import SimpleNamespace
+
+    from formshare.processes.db.actions import catalogue_for_querybuilder
+
+    filters = {
+        a_filter["id"]: a_filter
+        for a_filter in catalogue_for_querybuilder(
+            SimpleNamespace(
+                ui=[
+                    {"id": "s.weight", "label": "weight", "type": "double"},
+                    {"id": "s.age", "label": "age", "type": "integer"},
+                    {"id": "s.seen", "label": "seen", "type": "date"},
+                ]
+            )
+        )
+    }
+    assert filters["s.weight"]["validation"] == {"step": "any"}
+    assert "validation" not in filters["s.age"]
+    assert "validation" not in filters["s.seen"]

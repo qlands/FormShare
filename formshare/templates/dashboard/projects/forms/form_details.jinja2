@@ -104,36 +104,30 @@
     {% if formDetails.form_type == 1 %}
         {{ form.display_errors(errors,True) }}
         {{ form.display_warning_messages(warning_messages,True) }}
-        {% if formDetails.form_deleting == 1 %}
-            <div class="alert alert-danger" id="form-deleting">{{ _('FormShare is deleting this form. It takes no submissions and cannot be changed, and it leaves the project when it is done.') }}</div>
-        {% endif %}
         <div class="row">
             <div class="col-lg-3">
                 <div class="wrapper wrapper-content project-manager">
                     {% block form_tabs %}
                         {% include 'dashboard/projects/forms/snippets/info_tab.jinja2' %}
-                        {# A form being deleted offers nothing to do (2026-10-28) #}
-                        {% if formDetails.form_deleting != 1 %}
-                            {% include 'dashboard/projects/forms/snippets/links_tab.jinja2' %}
-                            {% if formDetails.form_schema != None %}
-                                {% block form_tabs_with_repository %}
-                                    {% if projectDetails.access_type <= 4 %}
-                                        {% include 'dashboard/projects/forms/snippets/repository_tab.jinja2' %}
-                                    {% endif %}
-                                {% endblock form_tabs_with_repository %}
-                            {% endif %}
-                            <div id="formdetails_files_container">
-                                {% include 'dashboard/projects/forms/snippets/files_tab.jinja2' %}
-                            </div>
-                            <div id="formdetails_assistants_container">
-                                {% include 'dashboard/projects/forms/snippets/assistants_tab.jinja2' %}
-                            </div>
-                            <div id="formdetails_groups_container">
-                                {% include 'dashboard/projects/forms/snippets/groups_tab.jinja2' %}
-                            </div>
-                            {% if request.registry.settings['allow.partner.access'] == "True" %}
-                                {% include 'dashboard/projects/forms/snippets/partners_tab.jinja2' %}
-                            {% endif %}
+                        {% include 'dashboard/projects/forms/snippets/links_tab.jinja2' %}
+                        {% if formDetails.form_schema != None %}
+                            {% block form_tabs_with_repository %}
+                                {% if projectDetails.access_type <= 4 %}
+                                    {% include 'dashboard/projects/forms/snippets/repository_tab.jinja2' %}
+                                {% endif %}
+                            {% endblock form_tabs_with_repository %}
+                        {% endif %}
+                        <div id="formdetails_files_container">
+                            {% include 'dashboard/projects/forms/snippets/files_tab.jinja2' %}
+                        </div>
+                        <div id="formdetails_assistants_container">
+                            {% include 'dashboard/projects/forms/snippets/assistants_tab.jinja2' %}
+                        </div>
+                        <div id="formdetails_groups_container">
+                            {% include 'dashboard/projects/forms/snippets/groups_tab.jinja2' %}
+                        </div>
+                        {% if request.registry.settings['allow.partner.access'] == "True" %}
+                            {% include 'dashboard/projects/forms/snippets/partners_tab.jinja2' %}
                         {% endif %}
                     {% endblock form_tabs %}
                     {% block form_tabs_extra %}
@@ -157,7 +151,6 @@
                                 {% if assistants|length > 0 %}
                                     {% include 'dashboard/projects/forms/snippets/form_details.jinja2' %}
                                 {% endif %}
-                                {% if formDetails.form_deleting != 1 %}
                                 <div class="row m-t-sm">
                                     <div class="col-lg-12">
                                         {% if assistants|length > 0 %}
@@ -183,7 +176,6 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                {% endif %}
                             </div>
                         </div>
                     {% endblock form_details_box %}
@@ -607,7 +599,7 @@
                     }
 
 
-                    {% if (formDetails.form_geopoint != None or formDetails.form_geoshape != None) and formDetails.submissions > 0 and withgps > 0 and formDetails.form_deleting != 1 %}
+                    {% if (formDetails.form_geopoint != None or formDetails.form_geoshape != None) and formDetails.submissions > 0 and withgps > 0 %}
                         {% if active_tab == 'map' or active_tab == None %}
                             load_map();
                         {% else %}

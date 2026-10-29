@@ -374,6 +374,20 @@ class ImportLists(unittest.TestCase):
             'The form "draft" has no repository yet',
         )
 
+    def test_no_list_draws_from_a_form_being_deleted(self):
+        # master only (2026-10-28): its repository is being dropped. A form
+        # of stable has no such key, and reads as before
+        self.project.forms["leaving"] = {
+            "form_id": "leaving",
+            "form_schema": "FS_leaving",
+            "form_deleting": 1,
+        }
+        self.project.tables["leaving"] = ["maintable"]
+        self.assertRefused(
+            _document([_farmers(form_id="leaving", columns=[])]),
+            'The form "leaving" is being deleted',
+        )
+
     def test_the_table_must_be_a_data_table_of_the_form(self):
         self.assertRefused(
             _document([_farmers(table="lkpcounty", columns=[])]),

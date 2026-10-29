@@ -177,8 +177,13 @@ class AddPublishedListView(ListSection):
     def process_view(self):
         user_id, project_code, project_id, project_details = self.project_or_404()
         forms = get_project_forms(self.request, user_id, project_id)
-        # Only a form with a repository has tables to publish from.
-        forms = [a_form for a_form in forms if a_form.get("form_schema")]
+        # Only a form with a repository has tables to publish from, and not
+        # one being deleted: its repository is being dropped
+        forms = [
+            a_form
+            for a_form in forms
+            if a_form.get("form_schema") and a_form.get("form_deleting") != 1
+        ]
         list_data = {}
         if self.request.method == "POST":
             list_data = self.get_post_dict()

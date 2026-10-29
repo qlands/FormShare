@@ -35,7 +35,7 @@ from formshare.processes.db import (
     update_dictionary_field_desc,
     update_dictionary_field_sensitive,
     get_form_survey_columns,
-    get_assistant_uuid,
+    forms_not_being_deleted,
     get_lookup_desc_field,
 )
 from formshare.processes.elasticsearch.record_index import (
@@ -234,7 +234,12 @@ def get_gps_points_from_project(request, project_id, query_from=None, query_size
     )
     data = []
     colors = get_project_form_colors(request, project_id)
+    # A form being deleted draws no point, nor does a form that is gone. One
+    # query for the page: a page holds up to 10,000 submissions
+    forms = forms_not_being_deleted(request.dbsession, project_id)
     for dataset in datasets:
+        if dataset["_xform_id_string"] not in forms:
+            continue
         if dataset["_xform_id_string"] not in colors.keys():
             color = ColorHash(dataset["_xform_id_string"]).hex
         else:

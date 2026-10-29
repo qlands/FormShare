@@ -1,5 +1,6 @@
 from formshare.config.auth import get_user_data
 from formshare.processes.db import (
+    form_being_deleted,
     get_form_data,
     get_project_id_from_name,
     get_project_owner,
@@ -576,6 +577,18 @@ class API1UpdateRepository(UpdateAPIView):
                     "the form associated with the indicated Row ID"
                 ),
             )
+        # The address names no form here, the row does. A form being
+        # deleted is gone for every client (owner, 2026-10-28)
+        if form_being_deleted(self.request.dbsession, project_id, form_id):
+            self.error = True
+            self.error_code = 404
+            return {
+                "error": self._(
+                    "The unique Row ID (rowuuid) belongs to a form that is being "
+                    "deleted"
+                ),
+                "error_type": "form_not_found",
+            }
         if "rowuuid" in self.json.keys():
             # The API leaves encrypted fields alone: only the Encryption
             # plugin's cleaning grid changes them, sealed in a browser. The

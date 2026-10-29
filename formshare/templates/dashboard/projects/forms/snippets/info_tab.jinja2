@@ -4,7 +4,7 @@
             <h5 style="color: {{ formDetails.form_hexcolor }}">{{ formDetails.form_name }}</h5>
             <div class="ibox-tools">
                 {% block info_tab_tools %}
-                    {% if projectDetails.access_type < 4 and formDetails.form_deleting != 1 %}
+                    {% if projectDetails.access_type < 4 %}
                         <a href="{{ request.route_url('form_edit',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="margin-right: 10px">
                             <i class="fa fa-pencil text-warning" title="{{ _('Edit metadata') }}"></i>
                         </a>
@@ -60,9 +60,7 @@
                             {% if (formDetails.form_geopoint != None or formDetails.form_geoshape != None) %}
                                 <li><a style="border-radius: 25px">{{ _('Geo-referenced') }}</a></li>
                             {% endif %}
-                            {% if formDetails.form_deleting == 1 %}
-                                <li><a title="{{ _('FormShare is deleting this form. It leaves the project when it is done.') }}" style="color: red; border-radius: 25px">{{ _('Being deleted') }}</a></li>
-                            {% elif formDetails.form_blocked != 0 %}
+                            {% if formDetails.form_blocked != 0 %}
                                 <li><a title="{{ _('This form is merging with another form or it had a problem while merging and cannot receive submissions. Contact the technical support.') }}" style="color: red; border-radius: 25px">{{ _('Blocked') }}</a></li>
                             {% endif %}
                             {% if formDetails.form_casetype == 1 %}
@@ -95,8 +93,7 @@
                 <div class="col-md-12">
                     <ul class="tag-list" style="padding: 0">
                         {% block info_tab_content_actions %}
-                            {# A form being deleted offers nothing to do (2026-10-28) #}
-                            {% if projectDetails.access_type < 4 and formDetails.form_deleting != 1 %}
+                            {% if projectDetails.access_type < 4 %}
                                 {% if formDetails.form_schema == None %}
                                     {% if formDetails.parent_form == None and (formassistants|length > 0 or formgroups|length > 0)%}
                                         {% if formDetails.form_repositorypossible == 1 %}

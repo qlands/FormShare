@@ -15,8 +15,8 @@ import formshare.plugins as plugins
 import pandas as pd
 import time
 from formshare.processes.db import (
+    case_creator_being_deleted,
     deletion_refusal,
-    form_being_deleted,
     forms_of_deletion,
     mark_for_deletion,
     record_deletion_error,
@@ -1343,16 +1343,6 @@ class AddNewForm(PrivateView):
             form_casedatetime = None
             if for_merging:
                 form_id = self.request.matchdict["formid"]
-                if form_being_deleted(self.request.dbsession, project_id, form_id):
-                    next_page = self.request.params.get(
-                        "next"
-                    ) or self.request.route_url(
-                        "project_details",
-                        userid=project_details["owner"],
-                        projcode=project_code,
-                    )
-                    self.add_error(self._("This form is being deleted"))
-                    return HTTPFound(next_page, headers={"FS_error": "true"})
                 primary_key = get_form_primary_key(self.request, project_id, form_id)
                 if project_details["project_case"] == 1:
                     (
@@ -1433,6 +1423,26 @@ class AddNewForm(PrivateView):
                             return HTTPFound(next_page, headers={"FS_error": "true"})
 
                     else:
+                        # A follow-up reads its cases from the creator's
+                        # repository, which a deletion is dropping: the form
+                        # would serve cases that are going away
+                        if case_creator_being_deleted(
+                            self.request.dbsession, project_id
+                        ):
+                            next_page = self.request.params.get(
+                                "next"
+                            ) or self.request.route_url(
+                                "project_details",
+                                userid=project_details["owner"],
+                                projcode=project_code,
+                            )
+                            self.add_error(
+                                self._(
+                                    "The form that creates the cases of this project "
+                                    "is being deleted. Add case forms when it is gone."
+                                )
+                            )
+                            return HTTPFound(next_page, headers={"FS_error": "true"})
                         form_casetype = int(form_data.get("form_casetype", "0"))
                         if form_casetype == 0:
                             next_page = self.request.params.get(
@@ -1696,17 +1706,6 @@ class UploadNewVersion(PrivateView):
             odk_path = get_odk_path(self.request)
             form_data = self.get_post_dict()
             form_data.pop("xlsx")
-
-            if form_being_deleted(self.request.dbsession, project_id, form_id):
-                self.add_error(self._("This form is being deleted"))
-                return HTTPFound(
-                    self.request.route_url(
-                        "project_details",
-                        userid=project_details["owner"],
-                        projcode=project_code,
-                    ),
-                    headers={"FS_error": "true"},
-                )
 
             if "form_pkey" not in form_data.keys():
                 next_page = self.request.route_url(

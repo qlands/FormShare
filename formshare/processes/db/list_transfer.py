@@ -286,6 +286,17 @@ def _source(request, project_id, form_id, table, sources, _):
                     "importing its lists"
                 ).format(form_id),
             )
+        elif form_data.get("form_deleting") == 1:
+            # master only: stable has no deletion in the background, and its
+            # forms carry no such key
+            sources[key] = (
+                None,
+                None,
+                _(
+                    'The form "{}" is being deleted: a list cannot draw its cases '
+                    "from it"
+                ).format(form_id),
+            )
         elif table not in [
             a_table["table_name"]
             for a_table in get_form_data_tables(request, project_id, form_id)

@@ -328,3 +328,46 @@ def test_the_core_map_places_every_point_of_a_submission():
     ]
     assert map_points({"_geopoint": HOME}) == [("40.3127", "-76.0459")]
     assert map_points({}) == []
+
+
+def test_the_project_map_draws_no_point_of_a_form_being_deleted(monkeypatch):
+    """A form being deleted is gone for every page (owner, 2026-10-28), and
+    the project's map has no form in its address for the guard to read. It
+    asks which forms are left once for the page, not once a submission: a
+    page holds up to 10,000 of them."""
+    from types import SimpleNamespace
+
+    from formshare.processes.submission import api
+
+    datasets = [
+        {"_xform_id_string": "kept", "_geopoint": HOME},
+        {"_xform_id_string": "being_deleted", "_geopoint": "40.315 -76.042 0 0"},
+        {"_xform_id_string": "gone", "_geopoint": "40.316 -76.041 0 0"},
+        {"_xform_id_string": "kept", "_geopoint": "40.317 -76.040 0 0"},
+    ]
+    asked = []
+
+    def forms_left(session, project):
+        asked.append(project)
+        return {"kept"}
+
+    monkeypatch.setattr(
+        api, "get_datasets_from_project", lambda *args: (len(datasets), datasets)
+    )
+    monkeypatch.setattr(
+        api,
+        "get_project_form_colors",
+        lambda request, project: {"kept": "#1ab394", "being_deleted": "#ed5565"},
+    )
+    monkeypatch.setattr(api, "forms_not_being_deleted", forms_left)
+    request = SimpleNamespace(registry=SimpleNamespace(settings={}), dbsession=None)
+    created, result = api.get_gps_points_from_project(request, "the project")
+    assert created
+    assert [
+        (a_point["key"], a_point["lati"], a_point["long"])
+        for a_point in result["points"]
+    ] == [("kept", "40.3127", "-76.0459"), ("kept", "40.317", "-76.040")]
+    assert {a_point["options"]["borderColor"] for a_point in result["points"]} == {
+        "#1ab394"
+    }
+    assert asked == ["the project"]

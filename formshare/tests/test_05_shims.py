@@ -363,6 +363,50 @@ def test_the_data_quality_score_cannot_be_typed_in():
     assert field_is_editable("income_30d") == "true"
 
 
+def test_every_address_that_names_a_form_refuses_one_being_deleted():
+    """A form being deleted answers 404 to every page and client whose
+    address names it (2026-10-28). The view classes refuse it before
+    process_view, so every route that names a form must be served by one of
+    them, through its own __call__. The suite asks each address while a form
+    is marked (form_deletion_task.py); this holds a new route to it here."""
+    import ast
+    import inspect
+
+    from formshare.config import routes
+    from formshare.views import classes
+
+    guarded = (
+        classes.PrivateView,
+        classes.AssistantView,
+        classes.PartnerView,
+        classes.ODKView,
+        classes.PublicView,
+    )
+    for a_class in guarded:
+        assert "refuse_form_being_deleted(" in inspect.getsource(a_class.__call__)
+    named = []
+    for node in ast.walk(ast.parse(inspect.getsource(routes))):
+        if (
+            isinstance(node, ast.Call)
+            and getattr(node.func, "id", None) == "add_route"
+            and len(node.args) >= 3
+            and isinstance(node.args[1], ast.Constant)
+        ):
+            path = node.args[1].value
+            if any("{" + a_key + "}" in path for a_key in classes.FORM_KEYS):
+                named.append((path, getattr(routes, node.args[2].id)))
+    assert len(named) > 80
+    for path, view in named:
+        assert issubclass(view, guarded), path
+        # Whoever answers the call is one of them, or hands it to one
+        answers = next(
+            a_class for a_class in view.__mro__ if "__call__" in vars(a_class)
+        )
+        assert answers in guarded or "PrivateView.__call__(self)" in inspect.getsource(
+            answers.__call__
+        ), path
+
+
 def test_a_violation_is_logged_once_whatever_its_format():
     from formshare.views import csp_report
 

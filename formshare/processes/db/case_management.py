@@ -64,6 +64,7 @@ from formshare.models import (
 from formshare.processes.logging.loggerclass import SecretLogger
 from formshare.processes.storage import delete_stream
 from formshare.processes.db.assistant import get_assistant_login
+from formshare.processes.db.form_deletion import form_being_deleted
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -516,6 +517,16 @@ def add_published_list(request, project_id, list_data):
     taken = _list_taken(request, project_id, list_data)
     if taken is not None:
         return False, taken
+    # A deletion that has begun drops the form's repository, and refused to
+    # begin while a list drew from it: no list may start drawing from it now
+    if form_being_deleted(
+        request.dbsession,
+        list_data.get("source_project", project_id),
+        list_data.get("source_form"),
+    ):
+        return False, _(
+            'The form "{}" is being deleted: a list cannot draw its cases from it'
+        ).format(list_data.get("source_form"))
     mapped_data = dict(list_data)
     mapped_data["project_id"] = project_id
     mapped_data["list_createdate"] = datetime.datetime.now()

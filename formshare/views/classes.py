@@ -29,6 +29,7 @@ from formshare.config.auth import (
     get_global_assistant_data,
 )
 from formshare.processes.db import (
+    any_form_being_deleted,
     get_project_id_from_name,
     user_exists,
     get_user_details,
@@ -88,6 +89,32 @@ def partial_callback(request, response):
                 "Partial '%s' requested but markers not found in response.",
                 partial_name,
             )
+
+
+# What a route's address calls the forms it names
+FORM_KEYS = ("formid", "oldformid", "fromformid", "toformid")
+
+
+def refuse_form_being_deleted(request, project_id=None):
+    """Answers 404 when the address names a form that is being deleted
+    (owner, 2026-10-28). The deletion dumps and drops its repository in the
+    background, and one that stopped can leave the form's row with the
+    repository already gone. Until the form is gone, no page, client, device
+    or plugin reads it, changes it or serves it: every view class runs this
+    before its process_view."""
+    matchdict = request.matchdict or {}
+    forms = [matchdict[a_key] for a_key in FORM_KEYS if matchdict.get(a_key)]
+    if not forms:
+        return
+    if project_id is None:
+        # An address without them names no project, and is found in none
+        project_id = get_project_id_from_name(
+            request, matchdict.get("userid"), matchdict.get("projcode")
+        )
+    if project_id is not None and any_form_being_deleted(
+        request.dbsession, project_id, forms
+    ):
+        raise HTTPNotFound()
 
 
 class ODKView(object):
@@ -234,6 +261,10 @@ class ODKView(object):
         user_id = self.request.matchdict["userid"]
         self.user_id = user_id
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        # A device gets nothing of a form being deleted, the cases its lists
+        # serve included, whatever it authenticates with: a crowdsourcing
+        # project and an API token never ask whether the form is active
+        refuse_form_being_deleted(self.request, project_id)
         testing_calls = self.request.encget("FS_for_testing", default="false")
         if "Authorization" in self.request.headers or testing_calls == "true":
             if testing_calls == "false":  # pragma: no cover
@@ -436,6 +467,7 @@ class PublicView(object):
     def __call__(self):
         self.resultDict["errors"] = self.errors
         self.resultDict["warning_messages"] = self.warning_messages
+        refuse_form_being_deleted(self.request)
 
         if self.request.matched_route is not None:
             for plugin in p.PluginImplementations(p.IPublicView):
@@ -835,6 +867,9 @@ class PrivateView(object):
         self.classResult["errors"] = self.errors
         self.classResult["warning_messages"] = self.warning_messages
         self.classResult["showWelcome"] = self.showWelcome
+
+        # After the login, so that the address alone says nothing to anyone
+        refuse_form_being_deleted(self.request)
 
         continue_processing = True
         plugin_view_result = None
@@ -1338,6 +1373,8 @@ class AssistantView(object):
         )
         self.assistant_timezone = self.resultDict["assistant_timezone"]
 
+        refuse_form_being_deleted(self.request, self.projectID)
+
         if self.request.matched_route is not None:
             for plugin in p.PluginImplementations(p.IAssistantView):
                 plugin.before_processing_assistant_view(
@@ -1564,6 +1601,8 @@ class PartnerView(object):
             self.request, self.partnerEmail
         )
         self.partner_timezone = get_partner_timezone(self.request, self.partnerEmail)
+
+        refuse_form_being_deleted(self.request)
 
         if self.request.matched_route is not None:
             for plugin in p.PluginImplementations(p.IPartnerView):

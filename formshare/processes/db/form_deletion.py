@@ -56,6 +56,9 @@ __all__ = [
     "record_deletion_error",
     "forms_being_deleted",
     "form_being_deleted",
+    "any_form_being_deleted",
+    "case_creator_being_deleted",
+    "forms_not_being_deleted",
 ]
 
 
@@ -195,7 +198,10 @@ def deletion_refusal(request, project, form, forms):
     form_row = forms[0]
     keys = {(a_row.project_id, a_row.form_id) for a_row in forms}
     ids = [a_row.form_id for a_row in forms if a_row.project_id == project]
-    if any((a_row.form_deleting or 0) != 0 for a_row in forms):
+    # The page of a form being deleted answers 404 before this runs
+    # (refuse_form_being_deleted), so only a request that read the form
+    # just before another marked it gets here
+    if any((a_row.form_deleting or 0) != 0 for a_row in forms):  # pragma: no cover
         return _("This form is being deleted")
     newer = (
         session.query(Odkform)
@@ -299,6 +305,49 @@ def form_being_deleted(session, project, form):
         .scalar()
     )
     return (deleting or 0) == 1
+
+
+def any_form_being_deleted(session, project, forms):
+    """Whether one of these forms of the project is being deleted. A form
+    being deleted is gone for every page and every client that names it:
+    its repository is being dumped and dropped, and a deletion that stopped
+    can leave its row with the repository already gone (owner, 2026-10-28)."""
+    return (
+        session.query(Odkform.form_id)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_id.in_(forms))
+        .filter(Odkform.form_deleting == 1)
+        .first()
+        is not None
+    )
+
+
+def case_creator_being_deleted(session, project):
+    """Whether the form that creates a classic case project's cases (2021)
+    is being deleted. Its follow-ups read their cases from its repository,
+    so none may be added until it is gone."""
+    return (
+        session.query(Odkform.form_id)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_casetype == 1)
+        .filter(Odkform.form_deleting == 1)
+        .first()
+        is not None
+    )
+
+
+def forms_not_being_deleted(session, project):
+    """The IDs of the project's forms that are not being deleted. A page over
+    every form of a project, like its map, has no form in its address for
+    the guard in views/classes.py to read: it leaves out the forms not here,
+    asking once rather than once for each submission."""
+    return {
+        a_row.form_id
+        for a_row in session.query(Odkform.form_id)
+        .filter(Odkform.project_id == project)
+        .filter(func.coalesce(Odkform.form_deleting, 0) == 0)
+        .all()
+    }
 
 
 def forms_being_deleted(session):

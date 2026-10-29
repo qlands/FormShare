@@ -13,10 +13,16 @@ In a project of its own:
   time the form stays marked with the reason, and its repository whole. The
   first attempt has already revoked what an account held on the repository,
   but not a grant on a pattern that covers other schemas too.
+- While it is marked, every address that names it answers 404, to the
+  owner, its assistant, its partner and devices; the project's map draws
+  none of its points; no list can start drawing from it; and the update API
+  writes none of its rows.
 - resume_form_deletion finishes it, with a version that shares the
   repository: the dump of each attempt in the renamed directory, the
   repository dropped, both forms gone, and the Celery plugins told of each,
   one that fails included.
+- In a classic case project (2021), no follow-up can be added while the
+  form that creates the cases is being deleted.
 
 Every deletion made to stop here runs with the suite's settings, which send
 no email: resume_form_deletion reads development.ini, so it only runs those
@@ -32,6 +38,7 @@ import glob
 import gzip
 import io
 import os
+import re
 import shutil
 import tempfile
 import time
@@ -134,6 +141,117 @@ def _dumps(directory, schema):
     return sorted(glob.glob(os.path.join(directory, schema + "_*.sql.gz*")))
 
 
+def _addresses_of(login, form_id):
+    """Every address that names a form, FormShare's and the loaded plugins',
+    filled in for this one: [(view class, path)]. What else an address
+    names is made up: the form being deleted answers before it is read."""
+    from formshare.config.routes import route_list
+    from formshare.views.classes import FORM_KEYS
+
+    found = []
+    for a_route in route_list:
+        names = re.findall(r"{(\w+)}", a_route["path"])
+        if not any(a_name in FORM_KEYS for a_name in names):
+            continue
+        path = a_route["path"]
+        for a_name in names:
+            if a_name == "userid":
+                value = login
+            elif a_name == "projcode":
+                value = PROJECT
+            elif a_name in FORM_KEYS:
+                value = form_id
+            else:
+                value = "x"
+            path = path.replace("{" + a_name + "}", value)
+        found.append((a_route["view"], path))
+    return found
+
+
+def _gone_for_everyone(test_object, login, assistant, partner_email):
+    """Asks every address of the form being deleted, as the owner, as its
+    assistant and its partner signed in, and as a device with credentials
+    and without: each answers 404, and each because the form is being
+    deleted, not because of what else the address names. Returns how many
+    were asked."""
+    from formshare.middleware.httpexceptions import HTTPNotFound
+    from formshare.views import classes
+
+    testapp = test_object.testapp
+    kinds = (
+        classes.PrivateView,
+        classes.AssistantView,
+        classes.PartnerView,
+        classes.ODKView,
+        classes.PublicView,
+    )
+    paths = {a_kind: [] for a_kind in kinds}
+    for view, path in _addresses_of(login, PARENT):
+        served = [a_kind for a_kind in kinds if issubclass(view, a_kind)]
+        assert served, "{} is served by {}, which does not refuse it".format(path, view)
+        paths[served[0]].append(path)
+
+    refused = []
+    guard = classes.refuse_form_being_deleted
+
+    def counted(request, project_id=None):
+        try:
+            guard(request, project_id)
+        except HTTPNotFound:
+            refused.append(request.url)
+            raise
+
+    classes.refuse_form_being_deleted = counted
+    asked = 0
+    try:
+        for path in paths[classes.PrivateView] + paths[classes.PublicView]:
+            testapp.get(path, status=404)
+            asked += 1
+        # A device is refused before it is asked who it is, so in a project
+        # of crowdsourcing too, where nobody is asked
+        device = dict(FS_for_testing="true", FS_user_for_testing=assistant)
+        for path in paths[classes.ODKView]:
+            testapp.get(path, status=404)
+            testapp.get(path, status=404, extra_environ=device)
+            asked += 2
+        res = testapp.post(
+            "/user/{}/project/{}/assistantaccess/login".format(login, PROJECT),
+            {"login": assistant, "passwd": "123"},
+            status=302,
+        )
+        assert "FS_error" not in res.headers
+        for path in paths[classes.AssistantView]:
+            testapp.get(path, status=404)
+            asked += 1
+        testapp.post(
+            "/user/{}/project/{}/assistantaccess/logout".format(login, PROJECT),
+            status=302,
+        )
+        res = testapp.post(
+            "/partneraccess/login",
+            {"login": partner_email, "passwd": "123"},
+            status=302,
+        )
+        assert "FS_error" not in res.headers
+        for path in paths[classes.PartnerView]:
+            testapp.get(path, status=404)
+            asked += 1
+        # Nor is it among the partner's forms
+        res = testapp.get("/partneraccess/dashboard", status=200)
+        assert PARENT.encode() not in res.body
+        testapp.post("/partneraccess/logout", {}, status=302)
+    finally:
+        classes.refuse_form_being_deleted = guard
+        res = testapp.post(
+            "/login", {"user": "", "email": login, "passwd": "123"}, status=302
+        )
+        assert "FS_error" not in res.headers
+    # Every kind of view was asked, and every answer was the deletion's
+    assert all(paths[a_kind] for a_kind in kinds)
+    assert len(refused) == asked
+    return asked
+
+
 def t_e_s_t_form_deletion_task(test_object):
     testapp = test_object.testapp
     config = test_object.server_config
@@ -224,6 +342,55 @@ def t_e_s_t_form_deletion_task(test_object):
     assert schema is not None and _repository_exists(config, schema)
     repository_dir = os.path.join(odk_dir, parent["form_directory"], "repository")
 
+    # An assistant who cleans it and a partner who reads it: what they reach
+    # of it while it is being deleted is asked below
+    assistant = "fsdel_" + uuid.uuid4().hex[:8]
+    assistant_uuid = str(uuid.uuid4())
+    res = testapp.post(
+        "/user/{}/project/{}/assistants/add".format(login, PROJECT),
+        {
+            "coll_uuid": assistant_uuid,
+            "coll_id": assistant,
+            "coll_name": assistant,
+            "coll_password": "123",
+            "coll_password2": "123",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        "/user/{}/project/{}/form/{}/assistants/add".format(login, PROJECT, PARENT),
+        {
+            "coll_id": "{}|{}|{}".format(project_id, assistant, assistant_uuid),
+            "coll_can_submit": "1",
+            "coll_can_clean": "1",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    partner_id = str(uuid.uuid4())
+    partner_email = "fsdel{}@qlands.com".format(partner_id[-12:])
+    res = testapp.post(
+        "/user/{}/manage_partners/add".format(login),
+        {
+            "partner_id": partner_id,
+            "partner_email": partner_email,
+            "partner_name": "Deleting forms",
+            "partner_organization": "QLands",
+            "partner_telephone": "22390771",
+            "partner_password": "123",
+            "partner_password2": "123",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    res = testapp.post(
+        "/user/{}/project/{}/form/{}/partners/add".format(login, PROJECT, PARENT),
+        {"partner_id": partner_id},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
     # A newer version waiting to be merged: the newest is the one to delete
     res = testapp.post(
         "/user/{}/project/{}/form/{}/merge".format(login, PROJECT, PARENT),
@@ -306,6 +473,31 @@ def t_e_s_t_form_deletion_task(test_object):
     # The repository stays, as the leftover of a form deleted before
     # 2026-10-28 would: nothing names it
 
+    # A submission of it, which the project's map draws until the form is
+    # marked. The map names no form in its address for the guard to read, so
+    # it leaves the form out itself (get_gps_points_from_project)
+    from formshare.processes.elasticsearch import repository_index as dataset_index
+
+    located = str(uuid.uuid4())
+    dataset_index.add_dataset(
+        config,
+        project_id,
+        PARENT,
+        located,
+        {
+            "_xform_id_string": PARENT,
+            "_submitted_date": "2026-10-29T08:00:00.000001",
+            "_submitted_by": assistant,
+            "_geopoint": "9.9281 -84.0907 1150 5",
+        },
+    )
+    connection = dataset_index.create_connection(config)
+    connection.indices.refresh(index=dataset_index.get_index_name(config))
+    connection.close()
+    gps_points = "/user/{}/project/{}/download/gpspoints".format(login, PROJECT)
+    points = testapp.get(gps_points, status=200).json["points"]
+    assert [a_point["key"] for a_point in points] == [PARENT]
+
     # --- The task, here, stopping --------------------------------------------
     # The request marks the form as being deleted before it queues the task;
     # here it is marked as the request does, and the task runs in this process
@@ -370,20 +562,29 @@ def t_e_s_t_form_deletion_task(test_object):
     assert state[0] == 1 and "mysqldump" in state[1]
     assert _repository_exists(config, schema)
     assert not _dumps(repository_dir, schema)
-    # The page says so, and offers nothing to do with the form
-    res = testapp.get(
-        "/user/{}/project/{}/form/{}".format(login, PROJECT, PARENT), status=200
-    )
-    assert b"form-deleting" in res.body
-    assert b"update_form_btn" not in res.body
-    assert b"formdetails_files_container" not in res.body
+    # Nothing of it answers any more, to anyone (owner, 2026-10-28): every
+    # address that names it is 404 -- its page, its repository's pages, its
+    # downloads, the assistant's and the partner's pages, and what devices
+    # download, the cases its lists serve included
+    assert _gone_for_everyone(test_object, login, assistant, partner_email) > 80
+    # The project's page says so, and leads to none of it
     res = testapp.get("/user/{}/project/{}".format(login, PROJECT), status=200)
     assert b"Being deleted" in res.body
-    # Nor can it be deleted again
-    page = _refused(test_object, login, PARENT, confirmed(PARENT))
-    assert b"This form is being deleted" in page.body
-    # Nor replaced, nor given a new version: a version made now would go with
-    # it, by the cascade of its row, and leave its files behind
+    assert '/form/{}"'.format(PARENT).encode() not in res.body
+    # and its map draws none of its points, which the index still holds
+    total, datasets = dataset_index.get_datasets_from_project(config, project_id)
+    assert PARENT in [a_dataset["_xform_id_string"] for a_dataset in datasets]
+    points = testapp.get(gps_points, status=200).json["points"]
+    assert PARENT not in [a_point["key"] for a_point in points]
+    dataset_index.delete_from_dataset_index(config, project_id, PARENT, located)
+    # Nor can it be deleted again, nor replaced, nor given a new version: a
+    # version made now would go with it, by the cascade of its row, and
+    # leave its files behind
+    testapp.post(
+        "/user/{}/project/{}/form/{}/delete".format(login, PROJECT, PARENT),
+        confirmed(PARENT),
+        status=404,
+    )
     for route, data, workbook in (
         (
             "merge",
@@ -396,14 +597,12 @@ def t_e_s_t_form_deletion_task(test_object):
             os.path.join(merge, "A", "A.xls"),
         ),
     ):
-        res = testapp.post(
+        testapp.post(
             "/user/{}/project/{}/form/{}/{}".format(login, PROJECT, PARENT, route),
             data,
-            status=302,
+            status=404,
             upload_files=[("xlsx", workbook)],
         )
-        assert "FS_error" in res.headers
-        assert b"This form is being deleted" in res.follow().body
     versions = _execute(
         config,
         "SELECT COUNT(*) FROM odkform WHERE parent_project = %s AND parent_form = %s",
@@ -411,6 +610,61 @@ def t_e_s_t_form_deletion_task(test_object):
         PARENT,
     )
     assert versions[0][0] == 0
+
+    # No list can start drawing its cases from it: the wizard does not offer
+    # it, and refuses it when asked. The import refuses it too
+    # (test_10_list_transfer)
+    lists = "/user/{}/project/{}/caselists/add".format(login, PROJECT)
+    res = testapp.get(lists, status=200)
+    assert 'value="{}"'.format(PARENT).encode() not in res.body
+    res = testapp.post(
+        lists,
+        {
+            "list_id": "deleted_cases",
+            "list_filename": "deleted_cases.csv",
+            "source_form": PARENT,
+            "source_table": "maintable",
+            "label_column": "numero_de_cedula",
+        },
+        status=200,
+    )
+    assert b"is being deleted: a list cannot draw its cases from it" in res.body
+    assert not _execute(
+        config,
+        "SELECT list_id FROM publishedlist WHERE project_id = %s",
+        project_id,
+    )
+
+    # The update API reads the form from the row, not from its address: a
+    # row of a form being deleted is not written
+    from formshare.processes.elasticsearch.record_index import (
+        add_record,
+        create_connection,
+        delete_from_record_index,
+        get_index_name,
+    )
+
+    row = str(uuid.uuid4())
+    add_record(config, project_id, PARENT, "none", schema, "maintable", row)
+    connection = create_connection(config)
+    connection.indices.refresh(index=get_index_name(config))
+    connection.close()
+    api_key = str(uuid.uuid4())
+    _execute(
+        config,
+        "UPDATE collaborator SET coll_apikey = %s WHERE project_id = %s "
+        "AND coll_id = %s",
+        api_key,
+        project_id,
+        assistant,
+    )
+    res = testapp.post_json(
+        "/api_update",
+        {"apikey": api_key, "rowuuid": row, "numero_de_cedula": "1"},
+        status=404,
+    )
+    assert res.json["error_type"] == "form_not_found"
+    delete_from_record_index(config, row)
 
     # The technical team lists it
     with contextlib.redirect_stdout(io.StringIO()) as listed:
@@ -522,3 +776,74 @@ def t_e_s_t_form_deletion_task(test_object):
     with contextlib.redirect_stdout(io.StringIO()) as listed:
         assert resume_main([ini_file]) == 0
     assert project_id not in listed.getvalue()
+    res = testapp.post(
+        "/user/{}/manage_partner/{}/delete".format(login, partner_id), status=302
+    )
+    assert "FS_error" not in res.headers
+
+    # --- A classic case project (2021) ---------------------------------------
+    # While the form that creates its cases is being deleted, no follow-up
+    # can be added: it would read its cases from a repository being dropped
+    case_project_id = str(uuid.uuid4())
+    case_project = "form_deletion_cases"
+    creator = "case_start_20210311"
+    res = testapp.post(
+        "/user/{}/projects/add".format(login),
+        {
+            "project_id": case_project_id,
+            "project_code": case_project,
+            "project_name": "Deleting the form that creates the cases",
+            "project_abstract": "",
+            "project_case": "",
+            "project_icon": "",
+            "project_hexcolor": "",
+            "project_formlist_auth": 1,
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+    case_forms = os.path.join(test_object.path, "resources", "forms", "case")
+    res = testapp.post(
+        "/user/{}/project/{}/forms/add".format(login, case_project),
+        {
+            "form_pkey": "hid",
+            "form_caselabel": "fname",
+            "form_casedatetime": "coll_date",
+        },
+        status=302,
+        upload_files=[("xlsx", os.path.join(case_forms, "case_start.xlsx"))],
+    )
+    assert "FS_error" not in res.headers
+    _execute(
+        config,
+        "UPDATE odkform SET form_accsub = 0, form_blocked = 1, form_deleting = 1 "
+        "WHERE project_id = %s AND form_id = %s",
+        case_project_id,
+        creator,
+    )
+    res = testapp.post(
+        "/user/{}/project/{}/forms/add".format(login, case_project),
+        {"form_pkey": "survey_id", "form_caseselector": "hid", "form_casetype": "2"},
+        status=302,
+        upload_files=[("xlsx", os.path.join(case_forms, "case_follow_up.xlsx"))],
+    )
+    assert "FS_error" in res.headers
+    assert (
+        b"The form that creates the cases of this project is being deleted"
+        in res.follow().body
+    )
+    assert _execute(
+        config, "SELECT form_id FROM odkform WHERE project_id = %s", case_project_id
+    ) == [(creator,)]
+    # It is gone, and the project with it
+    _execute(
+        config,
+        "UPDATE odkform SET form_accsub = 1, form_blocked = 0, form_deleting = 0 "
+        "WHERE project_id = %s",
+        case_project_id,
+    )
+    delete_form(test_object, case_project, creator)
+    res = testapp.post(
+        "/user/{}/project/{}/delete".format(login, case_project), status=302
+    )
+    assert "FS_error" not in res.headers

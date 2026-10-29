@@ -6,10 +6,11 @@ A form is deleted in two parts.
   typed, refuses what cannot be deleted (deletion_refusal), lets the IForm
   plugins refuse, marks the form and its versions inactive, blocked and
   being deleted in one commit (mark_for_deletion), and queues the task.
-- **The task** (products/deletion) keeps a gzipped dump of the repository in
-  the form's directory, drops the repository, renames the directories as
-  deleting a form always did, deletes the forms from the index and from the
-  database, and calls IFormDeletionProcess. Users cannot cancel it. A task
+- **The task** (products/deletion) revokes what is granted on the
+  repository, keeps a gzipped dump of it in the form's directory, drops it,
+  renames the directories as deleting a form always did, deletes the forms
+  from the index and from the database, and calls IFormDeletionProcess once
+  for each form deleted. Users cannot cancel it. A task
   that stops leaves the forms as they were marked, with the reason in
   form_deleteerror, and the technical team resumes it on the server
   (resume_form_deletion).

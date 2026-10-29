@@ -5,22 +5,29 @@ marked the form and its versions inactive, blocked and being deleted
 Its steps, each skipped when it is done already, so that a deletion that
 stopped can be resumed (resume_form_deletion):
 
-1. a gzipped dump of the repository, mysqldump's, in the form's repository
+1. what is still granted on the repository, revoked. MySQL keeps a
+   database's privileges when it drops it, and the dump makes the schema
+   again under its name, so restoring it would give the accounts of the
+   analytics plugin their access back (checked on 8.4, 2026-10-28). A grant
+   that cannot be revoked is reported to the technical team, and the
+   deletion goes on: the schema is dropped either way;
+2. a gzipped dump of the repository, mysqldump's, in the form's repository
    directory, checked whole before anything is dropped;
-2. the repository dropped. MySQL drops a database whole or not at all, so a
+3. the repository dropped. MySQL drops a database whole or not at all, so a
    resume finds the repository whole or gone: whole, it is dumped again, and
    the dump of each attempt stays;
-3. each version's directory renamed, as deleting a form always did;
-4. the forms' documents deleted from the index, and their buckets;
-5. the forms deleted from FormShare's database, with what cascades from
+4. each version's directory renamed, as deleting a form always did;
+5. the forms' documents deleted from the index, and their buckets;
+6. the forms deleted from FormShare's database, with what cascades from
    their rows;
-6. IFormDeletionProcess.after_deleting_form, for the Celery plugins.
+7. IFormDeletionProcess.after_deleting_form, for the Celery plugins, once for
+   each form deleted.
 
-A step that fails stops the task. The forms stay inactive, blocked and being
-deleted, the reason goes in form_deleteerror, and the technical team is
-emailed: only they resume it (owner, 2026-10-28). A repository a deleted
-form's leftover still refers to is one such stop. Users cannot cancel it:
-the task is no AbortableTask, and no page offers to stop it.
+Any other step that fails stops the task. The forms stay inactive, blocked
+and being deleted, the reason goes in form_deleteerror, and the technical
+team is emailed: only they resume it (owner, 2026-10-28). A repository a
+deleted form's leftover still refers to is one such stop. Users cannot
+cancel it: the task is no AbortableTask, and no page offers to stop it.
 """
 
 import datetime
@@ -149,6 +156,39 @@ def dump_repository(settings, schema, directory, stamp):
     return target
 
 
+def revoke_repository_grants(session, schema):
+    """Revokes what each account holds on the repository itself, and returns
+    the accounts, as user@host. A grant on a pattern that matches other
+    schemas too is left alone. mysql.db keeps the name as it was granted,
+    with its underscores escaped or not."""
+    if not SCHEMA_NAME.match(schema):
+        raise FormDeletionError("Not a repository name: {}".format(schema))
+    rows = session.execute(
+        sqlalchemy_text(
+            "SELECT User, Host, Db, Grant_priv FROM mysql.db "
+            "WHERE Db = :schema OR Db = :escaped"
+        ),
+        {"schema": schema, "escaped": schema.replace("_", "\\_")},
+    ).fetchall()
+    revoked = []
+    for user, host, name, grant_option in rows:
+        on = "`{}`.*".format(name.replace("`", "``"))
+        account = {"user": user, "host": host}
+        # MySQL revokes ALL PRIVILEGES and GRANT OPTION in one statement only
+        # on every database at once
+        session.execute(
+            sqlalchemy_text("REVOKE ALL PRIVILEGES ON " + on + " FROM :user@:host"),
+            account,
+        )
+        if grant_option == "Y":
+            session.execute(
+                sqlalchemy_text("REVOKE GRANT OPTION ON " + on + " FROM :user@:host"),
+                account,
+            )
+        revoked.append("{}@{}".format(user, host))
+    return revoked
+
+
 def drop_repository(session, schema):
     if not SCHEMA_NAME.match(schema):
         raise FormDeletionError("Not a repository name: {}".format(schema))
@@ -197,7 +237,8 @@ def internal_delete_form(settings, project_id, form_id, locale="en"):
             # recorded on it, and nobody is emailed
             return False, "it is not marked for deletion"
         keys = [(a_row.project_id, a_row.form_id) for a_row in forms]
-        form_data = map_from_schema(forms[0])
+        forms_data = [map_from_schema(a_row) for a_row in forms]
+        form_data = forms_data[0]
         directories = [a_row.form_directory for a_row in forms]
         schema = form_data["form_schema"]
         user = form_data["form_deletedby"] or "unknown"
@@ -206,7 +247,35 @@ def internal_delete_form(settings, project_id, form_id, locale="en"):
         # Nothing of the read is kept open across what follows
         session.rollback()
 
-        # 1 and 2: the repository, kept as a dump, then dropped
+        # 1: what is still granted on the repository, revoked, whether it is
+        # still there or a resume finds it dropped
+        if schema:
+            try:
+                revoked = revoke_repository_grants(session, schema)
+                if revoked:
+                    log.info(
+                        "Form {}: what {} held on repository {} revoked".format(
+                            form_id, ", ".join(revoked), schema
+                        )
+                    )
+            except Exception as e:
+                session.rollback()
+                log.error(
+                    "Form {}: what is granted on repository {} could not be "
+                    "revoked. {}".format(form_id, schema, e)
+                )
+                _email_technical_team(
+                    settings,
+                    "A deleted form's repository is still granted",
+                    "The deletion of form {} of project {} could not revoke what "
+                    "is granted on its repository, {}. MySQL keeps those grants "
+                    "when it drops the repository, and restoring the repository's "
+                    "dump would give those accounts their access back: revoke "
+                    "them by hand.\n\nError: {}".format(form_id, project_id, schema, e),
+                    locale,
+                )
+
+        # 2 and 3: the repository, kept as a dump, then dropped
         if schema and repository_exists(session, schema):
             directory = os.path.join(
                 odk_dir, "forms", form_data["form_directory"] or form_id, "repository"
@@ -216,11 +285,11 @@ def internal_delete_form(settings, project_id, form_id, locale="en"):
             drop_repository(session, schema)
             log.info("Form {}: repository {} dropped".format(form_id, schema))
 
-        # 3: the directories, renamed
+        # 4: the directories, renamed
         for directory in directories:
             rename_directory(odk_dir, directory, user, stamp)
 
-        # 4: the index documents and the buckets
+        # 5: the index documents and the buckets
         request = TaskRequest(session, settings, _)
         for project, form in keys:
             delete_dataset_from_index(settings, project, form)
@@ -229,7 +298,7 @@ def internal_delete_form(settings, project_id, form_id, locale="en"):
         if form_data["form_case"] == 1 and form_data["form_casetype"] == 1 and schema:
             delete_case_lookup_table(request, project_id)
 
-        # 5: the rows, with what cascades from them
+        # 6: the rows, with what cascades from them
         for project, form in keys:
             session.query(Odkform).filter(Odkform.project_id == project).filter(
                 Odkform.form_id == form
@@ -245,16 +314,29 @@ def internal_delete_form(settings, project_id, form_id, locale="en"):
             )
         )
 
-        # 6: the Celery plugins
-        for a_plugin in plugins.PluginImplementations(plugins.IFormDeletionProcess):
-            try:
-                a_plugin.after_deleting_form(
-                    settings, user, project_id, form_id, form_data, log
-                )
-            except Exception as e:
-                log.error(
-                    "A plugin failed after deleting form {}: {}".format(form_id, e)
-                )
+        # 7: the Celery plugins, once for each form deleted, the form asked
+        # for first. What a plugin keeps of a version is under the version's
+        # own ID: the Superset plugin's chart suggestions are
+        deletion_plugins = list(
+            plugins.PluginImplementations(plugins.IFormDeletionProcess)
+        )
+        for a_form in forms_data:
+            for a_plugin in deletion_plugins:
+                try:
+                    a_plugin.after_deleting_form(
+                        settings,
+                        user,
+                        a_form["project_id"],
+                        a_form["form_id"],
+                        a_form,
+                        log,
+                    )
+                except Exception as e:
+                    log.error(
+                        "A plugin failed after deleting form {}: {}".format(
+                            a_form["form_id"], e
+                        )
+                    )
         return True, ""
     except Exception as e:
         session.rollback()

@@ -10,14 +10,18 @@ In a project of its own:
 - Then its deletion runs here, in this process, and stops three times: a
   dump that mysqldump cut short, a mysqldump that fails, and the leftover of
   a form deleted before 2026-10-28, whose foreign key the drop refuses. Each
-  time the form stays marked with the reason, and its repository whole.
-- resume_form_deletion finishes it: the dump of each attempt in the renamed
-  directory, the repository dropped, the form gone, and the Celery plugins
-  told, one that fails included.
+  time the form stays marked with the reason, and its repository whole. The
+  first attempt has already revoked what an account held on the repository,
+  but not a grant on a pattern that covers other schemas too.
+- resume_form_deletion finishes it, with a version that shares the
+  repository: the dump of each attempt in the renamed directory, the
+  repository dropped, both forms gone, and the Celery plugins told of each,
+  one that fails included.
 
 Every deletion made to stop here runs with the suite's settings, which send
 no email: resume_form_deletion reads development.ini, so it only runs those
-that succeed or stop before emailing anyone.
+that succeed or stop before emailing anyone. The grants are revoked before
+then, so a resume has none to revoke, nor a failure to email.
 
 The refusals of the longitudinal study are in case_journey.py, where the
 cases and their follow-ups are.
@@ -151,6 +155,7 @@ def t_e_s_t_form_deletion_task(test_object):
         dump_is_whole,
         internal_delete_form,
         rename_directory,
+        revoke_repository_grants,
     )
     from formshare.scripts.resumeformdeletion import main as resume_main
 
@@ -312,6 +317,28 @@ def t_e_s_t_form_deletion_task(test_object):
         project_id,
         PARENT,
     )
+    # What accounts hold on the repository: MySQL keeps it when it drops a
+    # database, and restoring the dump would make the schema again under its
+    # name. A grant on the name, as the analytics plugin makes; one with its
+    # underscores escaped; and one on a pattern that covers every
+    # repository, which is not the repository's to revoke
+    role = "fsdel_" + uuid.uuid4().hex[:12]
+    escaped = schema.replace("_", "\\_")
+    _execute(config, "CREATE ROLE '{}'".format(role))
+    _execute(
+        config,
+        "GRANT SELECT ON `{}`.* TO '{}' WITH GRANT OPTION".format(schema, role),
+    )
+    _execute(config, "GRANT SELECT ON `{}`.* TO '{}'".format(escaped, role))
+    _execute(config, "GRANT SELECT ON `FS\\_%`.* TO '{}'".format(role))
+
+    def granted():
+        rows = _execute(
+            config, "SELECT Db FROM mysql.db WHERE User = %s ORDER BY Db", role
+        )
+        return [a_row[0] for a_row in rows]
+
+    assert granted() == sorted([schema, escaped, "FS\\_%"])
 
     # A dump that mysqldump cut short is not kept, and nothing is dropped
     fake_bin = tempfile.mkdtemp()
@@ -328,6 +355,9 @@ def t_e_s_t_form_deletion_task(test_object):
     assert not deleted and "is not whole" in reason
     assert _repository_exists(config, schema)
     assert not _dumps(repository_dir, schema)
+    # The task revoked the repository's grants before anything else, stopped
+    # or not, and left the pattern's
+    assert granted() == ["FS\\_%"]
 
     # A mysqldump that fails
     settings = dict(config)
@@ -398,8 +428,24 @@ def t_e_s_t_form_deletion_task(test_object):
     first_dump = _dumps(repository_dir, schema)
     assert len(first_dump) == 1 and dump_is_whole(first_dump[0])
 
+    # A version that shares the repository goes with the form. A form in
+    # testing stands in for it, marked as the request marks every version
+    _add_testing_form(test_object, login, resources)
+    version_directory = form_row(config, project_id, TESTING_FORM)["form_directory"]
+    _execute(
+        config,
+        "UPDATE odkform SET form_schema = %s, form_accsub = 0, form_blocked = 1, "
+        "form_deleting = 1, form_deletedby = %s "
+        "WHERE project_id = %s AND form_id = %s",
+        schema,
+        login,
+        project_id,
+        TESTING_FORM,
+    )
+
     # The team deals with the leftover and resumes the deletion, on the
-    # server. The Celery plugins hear of it, after one that fails
+    # server. The Celery plugins hear of each form, after one that fails:
+    # what a plugin keeps of a version is under the version's own ID
     _execute(config, "DROP DATABASE `{}`".format(referring))
     # A dump is named by the second it was made in, and the team comes back
     # later than that
@@ -428,9 +474,19 @@ def t_e_s_t_form_deletion_task(test_object):
         assert resume_main([ini_file, project_id, PARENT]) == 0
     finally:
         fs_plugins.PluginImplementations = implementations
-    assert told == [(login, project_id, PARENT, schema)]
+    assert told == [
+        (login, project_id, PARENT, schema),
+        (login, project_id, TESTING_FORM, schema),
+    ]
     assert deletion_state(config, login, PROJECT, PARENT) is None
+    assert deletion_state(config, login, PROJECT, TESTING_FORM) is None
     assert not _repository_exists(config, schema)
+    assert granted() == ["FS\\_%"]
+    _execute(config, "DROP ROLE '{}'".format(role))
+    assert (
+        len(glob.glob(os.path.join(odk_dir, version_directory + "_deleted_by_*_on_*")))
+        == 1
+    )
     renamed = glob.glob(
         os.path.join(odk_dir, parent["form_directory"] + "_deleted_by_*_on_*")
     )
@@ -444,14 +500,15 @@ def t_e_s_t_form_deletion_task(test_object):
     # A deletion already done is done: resuming it again changes nothing
     assert resume_main([ini_file, project_id, PARENT]) == 0
 
-    # A name that is no repository's is never dropped, and a directory that
-    # is not there is not renamed
-    try:
-        drop_repository(None, "not a repository`; DROP DATABASE mysql")
-    except FormDeletionError:
-        pass
-    else:
-        raise AssertionError("a name that is no repository's was dropped")
+    # A name that is no repository's is never dropped nor revoked, and a
+    # directory that is not there is not renamed
+    for a_step in (drop_repository, revoke_repository_grants):
+        try:
+            a_step(None, "not a repository`; DROP DATABASE mysql")
+        except FormDeletionError:
+            pass
+        else:
+            raise AssertionError("a name that is no repository's was used")
     assert rename_directory(os.path.dirname(odk_dir), None, login, "now") is None
     assert (
         rename_directory(os.path.dirname(odk_dir), "no_such_form", login, "now") is None

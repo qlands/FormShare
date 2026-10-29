@@ -1155,22 +1155,25 @@ class IFormDeletionProcess(Interface):  # pragma: no cover
     This interface allow to hook up plugins to the Celery task that deletes a
     form (2026-10-28). The request only marks the form as being deleted and
     queues the task; IForm.before_deleting_form still runs there, and may
-    refuse. The task keeps a dump of the repository, drops it, renames the
-    form's directory and deletes the form and its versions, and then calls
-    this.
+    refuse. The task revokes what is granted on the repository, keeps a dump
+    of it, drops it, renames the form's directory and deletes the form and
+    its versions, and then calls this.
     """
 
     def after_deleting_form(self, settings, user, project, form, form_data, log):
         """
         Called after Celery deletes a form and its versions: their rows, their
         index documents and their repository, of which a dump is kept in the
-        form's renamed directory
+        form's renamed directory. It is called once for each form deleted,
+        the form asked for first and then each version that shared its
+        repository, so that what a plugin keeps under a version's own ID goes
+        too
         :param settings: Settings from FormShare
         :param user: ID of the user who deleted the form
         :param project: Project ID
-        :param form: Form ID of the form that was deleted
-        :param form_data: Its row as it was, form_schema included (None for a
-                          form in testing)
+        :param form: Form ID of a form that was deleted
+        :param form_data: Its row as it was. Its form_schema is None for a
+                          form in testing
         :param log: Celery logger
         :return: None
         """

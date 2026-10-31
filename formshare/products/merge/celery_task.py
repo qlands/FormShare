@@ -24,6 +24,7 @@ from formshare.models import (
     Project,
 )
 from formshare.processes.email.send_async_email import send_async_email
+from formshare.processes.odk_audit import make_audit_table_for
 from formshare.processes.sse.messaging import send_task_status_to_form
 from formshare.processes.testing_data import record_testing_data
 from formshare.processes.db.encryption import (
@@ -503,6 +504,11 @@ def make_database_changes(
                 )
             )
             error = True
+    if not error:
+        # A repository built before each submission's ODK audit had a table
+        # gets it at its next merge, which is how a form gains an audit row
+        # (processes/odk_audit.py). Nothing happens to one that has it.
+        make_audit_table_for(settings, b_schema)
     if error:
         raise MergeDataBaseError(error_message)
 

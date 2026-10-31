@@ -38,6 +38,15 @@ from formshare.processes.db.encryption import (
     submission_digest,
     survey_marks,
 )
+from formshare.processes.odk_audit import (
+    AUDIT_FILE,
+    AUDIT_TABLE,
+    AuditFormatError,
+    audit_file_of,
+    audit_table_taken,
+    load_audit,
+    seal_audit,
+)
 from formshare.processes.logging.loggerclass import masked_command
 from formshare.processes.db.actions import (
     actions_json,
@@ -819,6 +828,17 @@ def check_jxform_file(
     if p.returncode == 0:
         try:
             if not get_languages:
+                # A repeat with that name would be a table of the name each
+                # submission's ODK audit is kept in (processes/odk_audit.py)
+                if audit_table_taken(create_xml_file):
+                    return (
+                        1,
+                        _(
+                            'The form has a repeat called "{}". FormShare keeps '
+                            "the ODK audit of each submission in a table of that "
+                            "name, so the repeat needs another name."
+                        ).format(AUDIT_TABLE),
+                    )
                 root = etree.fromstring(machine_xml(stdout))
                 missing_files = root.findall(".//missingFile")
                 for a_file in missing_files:
@@ -5234,6 +5254,21 @@ def store_json_file(
                             )
                             return 1, message
 
+                        if p.returncode == 0:
+                            # The submission's ODK audit goes into its
+                            # repository before any plugin hears of its
+                            # media: one may move the file off the disk, and
+                            # the data quality checks read the rows
+                            # (processes/odk_audit.py)
+                            load_audit(
+                                request.dbsession.get_bind(),
+                                schema,
+                                submission_id,
+                                audit_file_of(odk_dir, xform_directory, submission_id),
+                                marks,
+                                public_key,
+                            )
+
                         media_path = os.path.join(
                             odk_dir,
                             *[
@@ -5454,6 +5489,21 @@ def store_json_file(
                     move_media_files(
                         odk_dir, xform_directory, submission_id, sameas.submission_id
                     )
+
+                    # A later part of a submission Collect sent in parts may
+                    # bring its audit, now with the first part's files
+                    # (processes/odk_audit.py)
+                    if any(os.path.basename(a_file) == AUDIT_FILE for a_file in files):
+                        load_audit(
+                            request.dbsession.get_bind(),
+                            schema,
+                            sameas.submission_id,
+                            audit_file_of(
+                                odk_dir, xform_directory, sameas.submission_id
+                            ),
+                            marks,
+                            get_active_project_key(request, project) if marks else None,
+                        )
 
                     # Account for the media files
                     submission_directory = os.path.join(
@@ -5866,6 +5916,8 @@ def store_json_submission(request, user, project, assistant_uuid):
     os.makedirs(path)
     json_file = ""
     json_raw = None
+    audit_file = None
+    audit_data = None
     for key in request.POST.keys():
         try:
             if key != "*isIncomplete*":
@@ -5889,6 +5941,11 @@ def store_json_submission(request, user, project, assistant_uuid):
                     # anywhere (field encryption, formshare.md 5.2).
                     json_file = file_path
                     json_raw = input_file.read()
+                elif filename == AUDIT_FILE:
+                    # Kept in memory too: its old and new values are answers
+                    # (processes/odk_audit.py)
+                    audit_file = file_path
+                    audit_data = input_file.read()
                 else:
                     temp_file_path = file_path + "~"
                     with open(temp_file_path, "wb") as output_file:
@@ -5938,6 +5995,9 @@ def store_json_submission(request, user, project, assistant_uuid):
                 # An API client may have sealed answers itself: they are
                 # kept as they came.
                 json_raw, sealed = seal_json_text(json_raw, marks, public_key)
+                audit_data, _left_out = _sealed_audit(
+                    unique_id, audit_data, marks, public_key
+                )
         elif get_active_project_key(request, project) is not None:
             # A form FormShare does not know cannot say what it encrypts; in
             # a project that seals answers nothing of it is kept.
@@ -5946,6 +6006,7 @@ def store_json_submission(request, user, project, assistant_uuid):
         if keep_json:
             with open(json_file, "wb") as json_output:
                 json_output.write(json_raw)
+            _write_audit(audit_file, audit_data)
         if xform_id is not None:
             if form_data is not None:
                 if form_data["form_accsub"] == 1:
@@ -6133,10 +6194,47 @@ def post_with_sealed_xml(post, xml_key, sealed_xml):
     """A submission's POST with its XML in the form FormShare keeps: what the
     plugins that see a submission as it came (IRawSubmission) are given when
     the form encrypts answers, so that none of them sees one in clear."""
+    return post_with_sealed_parts(post, {xml_key: sealed_xml})
+
+
+def _sealed_audit(unique_id, audit_data, marks, public_key):
+    """A received audit.csv as FormShare keeps it for a form that encrypts
+    answers: (the bytes to keep, its marked values sealed, False), or (None,
+    True) when it cannot be read. It is then not kept at all, since what it
+    holds in clear could not be sealed. (None, False) when none was sent."""
+    if audit_data is None:
+        return None, False
+    try:
+        return seal_audit(audit_data, marks, public_key)[0], False
+    except AuditFormatError as e:
+        log.error(
+            "The ODK audit of submission {} was not kept: it cannot be read, so "
+            "the answers it holds could not be sealed. {}".format(unique_id, str(e))
+        )
+        return None, True
+
+
+def _write_audit(audit_file, audit_data):
+    """Writes a received audit.csv where the submission's other media are
+    written as they arrive, whole or not at all."""
+    if audit_file is None or audit_data is None:
+        return
+    temp_file_path = audit_file + "~"
+    with open(temp_file_path, "wb") as output_file:
+        output_file.write(audit_data)
+    os.rename(temp_file_path, audit_file)
+
+
+def post_with_sealed_parts(post, sealed, left_out=()):
+    """A submission's POST with the parts FormShare seals as it keeps them:
+    sealed maps a part to its sealed bytes (the XML, the ODK audit), and a
+    part in left_out, which FormShare does not keep, is not handed on."""
     parts = {}
     for key in post.keys():
-        if key == xml_key:
-            parts[key] = _Upload(post[key].filename, sealed_xml)
+        if key in left_out:
+            continue
+        if key in sealed:
+            parts[key] = _Upload(post[key].filename, sealed[key])
         else:
             parts[key] = post[key]
     return parts
@@ -6160,6 +6258,9 @@ def store_submission(request, user, project, assistant_uuid):
     xml_file = ""
     xml_key = None
     xml_data = None
+    audit_file = None
+    audit_key = None
+    audit_data = None
     submission_message = ""
     if request.registry.settings.get("log_submissions", "false").upper() == "TRUE":
         if not "*isIncomplete*" in request.POST.keys():
@@ -6221,6 +6322,14 @@ def store_submission(request, user, project, assistant_uuid):
                             + " ".join(TIDY_XML)
                         )
                         return False, 500, ""
+                elif filename == AUDIT_FILE:
+                    # Kept in memory until the form is known, as the XML is:
+                    # with track-changes it holds every answer, and those the
+                    # form encrypts are sealed before it is written
+                    # (processes/odk_audit.py)
+                    audit_file = file_path
+                    audit_key = key
+                    audit_data = input_file.read()
                 else:
                     temp_file_path = file_path + "~"
                     with open(temp_file_path, "wb") as output_file:
@@ -6280,8 +6389,18 @@ def store_submission(request, user, project, assistant_uuid):
                     shutil.rmtree(path, ignore_errors=True)
                     return False, 403, no_key_message(_)
                 xml_data, sealed = seal_xml(xml_data, marks, public_key)
+                sealed_parts = {xml_key: xml_data}
+                audit_data, audit_left_out = _sealed_audit(
+                    unique_id, audit_data, marks, public_key
+                )
+                if audit_data is not None:
+                    sealed_parts[audit_key] = audit_data
                 # The plugins that see a submission as it came get it sealed.
-                posted = post_with_sealed_xml(request.POST, xml_key, xml_data)
+                posted = post_with_sealed_parts(
+                    request.POST,
+                    sealed_parts,
+                    [audit_key] if audit_left_out else [],
+                )
         elif get_active_project_key(request, project) is not None:
             # A form FormShare does not know cannot say what it encrypts; in
             # a project that seals answers nothing of it is kept.
@@ -6290,6 +6409,7 @@ def store_submission(request, user, project, assistant_uuid):
         if keep_xml:
             with open(xml_file, "wb") as xml_output:
                 xml_output.write(xml_data)
+            _write_audit(audit_file, audit_data)
         if xform_id is not None:
             if form_data is not None:
                 if form_data["form_accsub"] == 1:
@@ -6860,6 +6980,16 @@ def push_revision(request, user, project, form, submission):
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
+        # Its ODK audit comes with it: a submission that went to the logs, or
+        # left the repository for them, had no rows (processes/odk_audit.py)
+        load_audit(
+            request.dbsession.get_bind(),
+            schema,
+            submission,
+            audit_file_of(odk_dir, form_directory, submission),
+            manifest_marks(odk_dir, form_directory),
+            public_key,
+        )
         # An unassigned case goes to whoever registered it, as after a live
         # load (store_json_file), or to whoever held it before the edit
         if not manifest_assigns_cases(manifest_file):

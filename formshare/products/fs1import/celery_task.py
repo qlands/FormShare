@@ -24,6 +24,7 @@ from formshare.processes.db.encryption import (
 )
 from formshare.processes.geometry import add_location, parse_geoshape_variables
 from formshare.processes.logging.loggerclass import masked_command
+from formshare.processes.odk_audit import audit_file_of, load_audit
 from formshare.processes.sse.messaging import send_task_status_to_form
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
@@ -480,6 +481,16 @@ def store_json_file(
                     log.error(message)
                     return 1, message
             else:
+                # Its ODK audit, when it has one: the testing data a build
+                # brings in keeps its media (processes/odk_audit.py)
+                load_audit(
+                    engine,
+                    schema,
+                    submission_id,
+                    audit_file_of(odk_dir, xform_directory, submission_id),
+                    marks,
+                    public_key,
+                )
                 # Add the JSON to the Elastic Search index but only submissions without error
                 index_data = {
                     "_submitted_date": submission_data.get("_submitted_date", ""),

@@ -61,6 +61,7 @@ from .steps.login import t_e_s_t_login
 from .steps.modify_config import t_e_s_t_modify_config
 from .steps.multilanguage_odk import t_e_s_t_multilanguage_odk
 from .steps.odk import t_e_s_t_odk
+from .steps.odk_audit import t_e_s_t_odk_audit
 from .steps.one_user_assistant import t_e_s_t_one_user_assistant
 from .steps.partners import t_e_s_t_partners
 from .steps.plugin_utility_functions import t_e_s_t_plugin_utility_functions
@@ -284,6 +285,8 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_encryption_writes(self.test_object)
             print("Testing that losing access takes the key")
             t_e_s_t_encryption_access(self.test_object)
+            print("Testing a submission's ODK audit")
+            t_e_s_t_odk_audit(self.test_object)
             print("Testing the export and import of published lists")
             t_e_s_t_list_transfer(self.test_object)
             print("Testing partners")

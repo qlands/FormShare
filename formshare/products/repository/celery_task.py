@@ -27,6 +27,7 @@ from formshare.processes.db.encryption import (
     field_labelled_encrypted,
 )
 from formshare.processes.email.send_async_email import send_async_email
+from formshare.processes.odk_audit import make_audit_table_for
 from formshare.processes.sse.messaging import send_task_status_to_form
 from formshare.processes.testing_data import record_testing_data
 from formshare.products.fs1import.celery_task import internal_import_json_files
@@ -154,6 +155,11 @@ def build_database(
         else:
             error = True
             log_message("Error creating triggers", stderr, stdout, " ".join(args))
+
+    if not error:
+        # Each submission's ODK audit is a table of the repository, there
+        # before the form takes its first submission (processes/odk_audit.py)
+        make_audit_table_for(settings, schema)
 
     if error:
         raise BuildDataBaseError(error_message)

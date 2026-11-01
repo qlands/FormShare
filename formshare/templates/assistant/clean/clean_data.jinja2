@@ -224,7 +224,10 @@
                                                             $(elem).click(function () {
                                                                 $("#update_title").text({{ _("Update multi select field")|tojson }} + ' "' + {{ field.desc|tojson }} + '"');
                                                                 let info_url = "{{ request.route_url('cleanmultiselect', userid=userid, projcode=projcode, formid=formid, table='table-to-change', mseltable= 'mseltable-to-change',rowuuid='rowuuid-to-change')}}";
-                                                                let info_url_final = info_url.replace("mseltable-to-change", $(elem).attr("mseltable_name")) + " #msel_content";
+                                                                {# The page's info_url_final, which the dialog posts to: a
+                                                                   let here hid it, and with columns chosen the dialog
+                                                                   posted to the page itself and saved nothing. #}
+                                                                info_url_final = info_url.replace("mseltable-to-change", $(elem).attr("mseltable_name")) + " #msel_content";
                                                                 info_url_final = info_url_final.replace("rowuuid-to-change",$(elem).attr("rowid"))
                                                                 info_url_final = info_url_final.replace("table-to-change",$(elem).attr("table_name"))
                                                                 $('#multi_select_content').html('{{ _('Loading...') }}');
@@ -388,26 +391,42 @@
                 // here, which the edit form then posts with the other answers.
                 $('#update_form').on('show.bs.modal', function () {
                     $('#fs_msel_reason').val($('#fs_reason').val() || '');
+                    $('#update_form_error').addClass('d-none').text('');
                 });
+
+                // The server says whether it stored the options, and why
+                // not: a refusal stays in the dialog, and the edit form is
+                // not posted. The dialog used to close as if it had saved.
+                function fsMultiSelectRefused(message) {
+                    $('#update_form_error').text(message).removeClass('d-none');
+                }
 
                 $('#update_multiselect').submit(function(e) {
                     e.preventDefault();
                     $('#multiselect option').prop('selected', true);
                     $('#multiselect_to option').prop('selected', true);
                     $('#fs_reason').val($('#fs_msel_reason').val() || '');
+                    $('#update_form_error').addClass('d-none').text('');
                     var formData = $("#update_multiselect").serialize();
                     $.ajax({
                         url: info_url_final, // Specify the URL to post the form data to
                         type: 'POST', // Specify the HTTP method (POST in this case)
                         data: formData, // Specify the form data to be sent
                         success: function (response) {
+                            if (!response || response.status !== 200) {
+                                fsMultiSelectRefused((response && response.message) || {{ _("The multi-select could not be updated")|tojson }});
+                                return;
+                            }
                             update_button.click();
                             cancel_button.click();
                             $('#update_form').modal('hide');
                         },
-                        error: function (xhr, status, error) {
-                            // Handle errors here
-                            console.error(xhr.responseText);
+                        error: function () {
+                            fsMultiSelectRefused({{ _("The multi-select could not be updated")|tojson }});
+                        },
+                        complete: function () {
+                            // The form is one of the page's busy forms
+                            $('#busy').hide();
                         }
                     });
                 });

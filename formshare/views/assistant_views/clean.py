@@ -13,6 +13,7 @@ from formshare.processes.submission.api import (
     get_primary_key_data,
     get_lookup_options,
     update_multiselect_data,
+    multiselect_options,
     change_reason,
     reason_too_long,
     reason_too_long_message,
@@ -425,7 +426,10 @@ class CleanMultiSelect(AssistantView):
                 else:
                     who_updates = self.assistant.linked_user
 
-                updated = update_multiselect_data(
+                # A refusal says why, and the page keeps the dialog open with
+                # it: a failure used to answer "updated", and the page closed
+                # the dialog as if it were.
+                updated, message = update_multiselect_data(
                     self.request,
                     who_updates,
                     self.projectID,
@@ -449,12 +453,14 @@ class CleanMultiSelect(AssistantView):
                         form_id,
                         table_name,
                         row_uuid,
-                        {parts[1]: " ".join(selected_items).strip() or None},
+                        {
+                            parts[1]: " ".join(multiselect_options(selected_items))
+                            or None
+                        },
                         reason,
                     )
                 else:
                     status = 400
-                    message = self._("The multiselect has been updated")
                 response = Response(
                     content_type="application/json",
                     status=200,

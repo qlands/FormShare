@@ -31,6 +31,7 @@ from formshare.processes.db import (
     get_dictionary_fields,
     get_dictionary_table_desc,
     get_dictionary_tables,
+    get_primary_keys,
     update_dictionary_table_desc,
     update_dictionary_field_desc,
     update_dictionary_field_sensitive,
@@ -1490,21 +1491,117 @@ def get_lookup_options(
 
 
 def get_primary_key_data(request, project, form, table_name, keys, row_uuid):
+    """{key: value} of a row's keys, found by its rowuuid; None when there
+    is no such row. The table and the row come with the multi-select
+    editor's address: names go into the SQL quoted once known to be names,
+    the row only as a parameter. The row used to be pasted in."""
     schema = get_form_schema(request, project, form)
-    query_keys = []
-    for a_key in keys:
-        query_keys.append("`{}`".format(a_key))
-
-    sql = "SELECT {} FROM {}.`{}` WHERE rowuuid = '{}'".format(
-        ",".join(query_keys), schema, table_name, row_uuid
-    )
-    res = request.dbsession.execute(sql).fetchone()
+    if not keys:
+        return None
+    try:
+        sql = sqlalchemy_text(
+            "SELECT {} FROM {}.{} WHERE rowuuid = :rowuuid".format(
+                ",".join(_quoted(a_key) for a_key in keys),
+                _quoted(schema),
+                _quoted(table_name),
+            )
+        )
+    except ValueError:
+        return None
+    res = request.dbsession.execute(sql, {"rowuuid": row_uuid}).fetchone()
     if res is not None:
-        result = {}
-        for a_key in keys:
-            result[a_key] = res[a_key]
-        return result
+        return {a_key: res[index] for index, a_key in enumerate(keys)}
     return None
+
+
+def multiselect_options(value):
+    """The options of a multi-select's answer as given: ODK writes them
+    separated by spaces, and a list is taken as the options themselves. Each
+    is kept once, in the order given; no answer is no option."""
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        parts = [str(a_part).strip() for a_part in value if a_part is not None]
+    else:
+        parts = str(value).split()
+    return list(dict.fromkeys(a_part for a_part in parts if a_part))
+
+
+def option_refused_message(translate, option, field):
+    return translate('The option "{}" of {} is not in its lookup table').format(
+        option, field
+    )
+
+
+def _option_statements(schema, options_table, option_column, key_names):
+    """The two statements that write a row's options in its multi-select's
+    table, where each option is a row keyed by the row's keys and the option:
+    the DELETE of the options it has, and the INSERT of one, with the keys
+    as :k0, :k1... and the option as :option. Names are quoted once known to
+    be names, or ValueError."""
+    where = " AND ".join(
+        "{} = :k{}".format(_quoted(a_key), index)
+        for index, a_key in enumerate(key_names)
+    )
+    delete_sql = sqlalchemy_text(
+        "DELETE FROM {}.{} WHERE {}".format(
+            _quoted(schema), _quoted(options_table), where
+        )
+    )
+    insert_sql = sqlalchemy_text(
+        "INSERT INTO {}.{} ({}) VALUES ({})".format(
+            _quoted(schema),
+            _quoted(options_table),
+            ",".join(
+                [_quoted(a_key) for a_key in key_names] + [_quoted(option_column)]
+            ),
+            ",".join(
+                [":k{}".format(index) for index in range(len(key_names))] + [":option"]
+            ),
+        )
+    )
+    return delete_sql, insert_sql
+
+
+def _write_options(session, statements, keys, options):
+    """Replaces a row's options in its multi-select's table, in the
+    caller's transaction. The table's key to the lookup refuses an option
+    the lookup does not have: that option is returned, for the caller to
+    roll everything back, and None when every option was written."""
+    delete_sql, insert_sql = statements
+    session.execute(delete_sql, keys)
+    for an_option in options:
+        try:
+            session.execute(insert_sql, dict(keys, option=an_option))
+        except exc.IntegrityError:
+            return an_option
+    return None
+
+
+def _multiselects(request, project, form, table, fields):
+    """The multi-selects among fields of a table, as the cleaning grid knows
+    them: (the table's keys, {field: (options table, option column)}). The
+    options of a multi-select are rows of a table of its own,
+    <table>_msel_<field>, keyed by the row's keys and the option."""
+    tables = _grid_tables(request, project, form)
+    candidates = {
+        a_field: "{}_msel_{}".format(table, a_field)
+        for a_field in fields
+        if "{}_msel_{}".format(table, a_field) in tables
+    }
+    if not candidates:
+        return [], {}
+    table_keys = get_primary_keys(request, project, form, table) or []
+    found = {}
+    for a_field, options_table in candidates.items():
+        option_columns = [
+            a_key
+            for a_key in get_primary_keys(request, project, form, options_table) or []
+            if a_key not in table_keys
+        ]
+        if len(option_columns) == 1:
+            found[a_field] = (options_table, option_columns[0])
+    return table_keys, found
 
 
 def update_multiselect_data(
@@ -1523,49 +1620,32 @@ def update_multiselect_data(
 ):
     """Writes a multi-select's options: the space-separated answer in the
     parent table and one row per option in its _msel_ table, in one
-    transaction. Names go into the SQL quoted once known to be names, the
-    values only as parameters. reason is why, for the audit log."""
+    transaction, so that an option its lookup does not have leaves both as
+    they were. Names go into the SQL quoted once known to be names, the
+    values only as parameters. reason is why, for the audit log. Returns
+    (True, "") or (False, what to tell the person)."""
     _ = request.translate
     sql_url = request.registry.settings.get("sqlalchemy.url")
     schema = get_form_schema(request, project, form)
+    cannot = _("This multi-select cannot be changed")
     # Both tables come with the request: only the grid's own are written.
     if not {parent_table, multiselect_table} <= _grid_tables(request, project, form):
-        return False
+        return False, cannot
+    if not primary_key_data:
+        return False, _("This submission does not exist")
 
-    # Update the multiselect field in the parent table; no option is NULL
-    string_value = " ".join(multiselect_values)
-    string_value = string_value.strip() or None
+    # The answer lists the options; no option is NULL
+    options = multiselect_options(multiselect_values)
+    string_value = " ".join(options) or None
+    key_names = list(primary_key_data.keys())
     try:
         parent_sql = sqlalchemy_text(
             "UPDATE {}.{} SET {} = :value WHERE rowuuid = :rowuuid".format(
                 _quoted(schema), _quoted(parent_table), _quoted(parent_field)
             )
         )
-        key_names = list(primary_key_data.keys())
-        where = " AND ".join(
-            "{} = :k{}".format(_quoted(a_key), index)
-            for index, a_key in enumerate(key_names)
-        )
-        # Delete the current multiselect values
-        delete_sql = sqlalchemy_text(
-            "DELETE FROM {}.{} WHERE {}".format(
-                _quoted(schema), _quoted(multiselect_table), where
-            )
-        )
-        # Insert the selected values
-        insert_sql = sqlalchemy_text(
-            "INSERT INTO {}.{} ({}) VALUES ({})".format(
-                _quoted(schema),
-                _quoted(multiselect_table),
-                ",".join(
-                    [_quoted(a_key) for a_key in key_names]
-                    + [_quoted(multiselect_field)]
-                ),
-                ",".join(
-                    [":k{}".format(index) for index in range(len(key_names))]
-                    + [":option"]
-                ),
-            )
+        statements = _option_statements(
+            schema, multiselect_table, multiselect_field, key_names
         )
     except ValueError as e:
         log.error(
@@ -1573,7 +1653,7 @@ def update_multiselect_data(
                 multiselect_table, schema, str(e)
             )
         )
-        return False
+        return False, cannot
     keys = {
         "k{}".format(index): primary_key_data[a_key]
         for index, a_key in enumerate(key_names)
@@ -1590,19 +1670,22 @@ def update_multiselect_data(
             {"reason": reason},
         )
         session.execute(parent_sql, {"value": string_value, "rowuuid": row_uuid})
-        session.execute(delete_sql, keys)
-        for a_value in multiselect_values:
-            session.execute(insert_sql, dict(keys, option=a_value))
-
+        refused = _write_options(session, statements, keys, options)
+        if refused is not None:
+            session.rollback()
+            return False, option_refused_message(_, refused, parent_field)
         session.commit()
-        return True
-    except exc.IntegrityError as e:
+        return True, ""
+    except Exception as e:
+        refusal = _write_refusal(e, _)
+        if refusal is not None:
+            return False, refusal
         log.error(
             "Error while updating multiselect table {} schema {} parent table {} rowuuid {}. Error {}".format(
                 multiselect_table, schema, parent_table, row_uuid, str(e)
             )
         )
-        return False
+        return False, _("The multi-select could not be updated")
     finally:
         # Closing rolls back what a failed statement left open, and with it
         # the lock MySQL holds on the table until then (see update_data).
@@ -1723,7 +1806,9 @@ def delete_submission(
     reason=None,
 ):
     """Deletes a submission from its repository, or moves it to the logs.
-    The audit log records deleted_by, who asked for it, and reason, why."""
+    The audit log records deleted_by, who asked for it, and reason, why.
+    Returns (True, "") or (False, what to tell the person), which the
+    view says: a refusal used to look like a deletion."""
     schema = get_form_schema(request, project, form)
     _ = request.translate
 
@@ -2021,10 +2106,12 @@ def delete_submission(
 
         if not added:
             log.error(message)
-            return False
-        else:
-            return True
-    return True
+            return False, _(
+                "The submission left the repository but could not be added to "
+                "the logs"
+            )
+        return True, ""
+    return True, ""
 
 
 def delete_all_submission(request, user, project, form, deleted_by):
@@ -2097,10 +2184,19 @@ def delete_all_submission(request, user, project, form, deleted_by):
         return False, str(e)
 
 
-def update_record_with_id(request, user, schema, table, rowuuid, data, reason=None):
+def update_record_with_id(
+    request, user, project, form, schema, table, rowuuid, data, reason=None
+):
     """Writes the values of one row for the API (/api_update). Returns (True,
     "") or (False, message). data is left with the values written. reason is
-    why, for the audit log."""
+    why, for the audit log.
+
+    A multi-select is written as the cleaning grid writes it: its answer,
+    the options separated by spaces, and a row per option in its own table,
+    whose key to the lookup refuses an option the lookup does not have. The
+    row's values and the options are one transaction: one option refused,
+    nothing is written. The API used to write the answer alone, and the
+    option rows kept the options it replaced."""
     columns = _table_columns(request, schema, table)
     keys = {
         row[0]
@@ -2127,6 +2223,13 @@ def update_record_with_id(request, user, schema, table, rowuuid, data, reason=No
 
     fields_not_found = [a_key for a_key in data.keys() if a_key not in columns]
     if len(fields_not_found) == 0:
+        table_keys, multiselects = _multiselects(
+            request, project, form, table, data.keys()
+        )
+        options = {}
+        for a_field in multiselects:
+            options[a_field] = multiselect_options(data[a_field])
+            data[a_field] = " ".join(options[a_field]) or None
         # The names are the table's own, checked above; the values go in as
         # parameters, never into the statement.
         try:
@@ -2137,6 +2240,19 @@ def update_record_with_id(request, user, schema, table, rowuuid, data, reason=No
             sql = sqlalchemy_text(
                 "UPDATE {}.{} SET {} WHERE rowuuid = :rowuuid".format(
                     _quoted(schema), _quoted(table), ",".join(updates)
+                )
+            )
+            statements = {
+                a_field: _option_statements(
+                    schema, options_table, option_column, table_keys
+                )
+                for a_field, (options_table, option_column) in multiselects.items()
+            }
+            keys_sql = sqlalchemy_text(
+                "SELECT {} FROM {}.{} WHERE rowuuid = :rowuuid".format(
+                    ",".join(_quoted(a_key) for a_key in table_keys) or "rowuuid",
+                    _quoted(schema),
+                    _quoted(table),
                 )
             )
         except ValueError as e:
@@ -2157,6 +2273,23 @@ def update_record_with_id(request, user, schema, table, rowuuid, data, reason=No
                 {"reason": reason},
             )
             session.execute(sql, values)
+            if statements:
+                row = session.execute(keys_sql, {"rowuuid": rowuuid}).fetchone()
+                if row is None:
+                    session.rollback()
+                    return False, request.translate("This submission does not exist")
+                key_values = {
+                    "k{}".format(index): row[index] for index in range(len(table_keys))
+                }
+                for a_field, field_statements in statements.items():
+                    refused = _write_options(
+                        session, field_statements, key_values, options[a_field]
+                    )
+                    if refused is not None:
+                        session.rollback()
+                        return False, option_refused_message(
+                            request.translate, refused, a_field
+                        )
             session.commit()
             return True, ""
         except Exception as e:

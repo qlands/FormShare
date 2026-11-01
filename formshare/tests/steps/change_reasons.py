@@ -20,6 +20,8 @@ listens.
 Needs the cleaning interface's state: the assistant cleans the form.
 """
 
+import re
+
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
@@ -75,6 +77,42 @@ def _last_change(config, schema, row_uuid, column):
     return tuple(rows[0]) if rows else None
 
 
+def _option_changes(config, schema, since):
+    """(audit_action, option, audit_reason) of each row of maintable_msel_crops
+    deleted or inserted since the database's clock read since. A multi-select
+    keeps one row per option there, and audit_log names a row's values in
+    audit_insdeldata as (column)HEX."""
+    reason = "audit_reason" if _has_column(config, schema) else "NULL"
+    rows = _query(
+        config,
+        "SELECT audit_action, audit_insdeldata, {} FROM `{}`.audit_log "
+        "WHERE audit_table = 'maintable_msel_crops' AND audit_date >= %s "
+        "ORDER BY audit_action".format(reason, schema),
+        (since,),
+    )
+    changes = []
+    for action, values, a_reason in rows:
+        option = re.search(r"\(crops\)([0-9A-F]*)", values).group(1)
+        changes.append((action, bytes.fromhex(option).decode(), a_reason))
+    return sorted(changes)
+
+
+def _crops(config, schema, row_uuid):
+    """The row's answer to crops, and its option rows, sorted."""
+    answer = _query(
+        config,
+        "SELECT crops FROM `{}`.maintable WHERE rowuuid = %s".format(schema),
+        (row_uuid,),
+    )[0][0]
+    options = _query(
+        config,
+        "SELECT o.crops FROM `{0}`.maintable_msel_crops o JOIN `{0}`.maintable m "
+        "ON m.i_d = o.i_d WHERE m.rowuuid = %s ORDER BY o.crops".format(schema),
+        (row_uuid,),
+    )
+    return answer, [a_row[0] for a_row in options]
+
+
 def _audit_without_reason(config, schema):
     """Writes maintable's UPDATE audit trigger as a createaudittriggers from
     before RSTools f0757d9 wrote it: what every older repository keeps until
@@ -124,11 +162,14 @@ def t_e_s_t_change_reasons(test_object):
         "/user/{}/project/{}/assistantaccess/form/{}/clean/maintable/"
         "multiselect/maintable_msel_crops/{}".format(login, project, form_id, row_uuid)
     )
-    crop = _query(
-        config,
-        "SELECT crop_list_cod FROM `{}`.lkpcrop_list ORDER BY crop_list_cod "
-        "LIMIT 1".format(schema),
-    )[0][0]
+    crop, other_crop = [
+        a_row[0]
+        for a_row in _query(
+            config,
+            "SELECT crop_list_cod FROM `{}`.lkpcrop_list ORDER BY crop_list_cod "
+            "LIMIT 2".format(schema),
+        )
+    ]
 
     # What the installed tool wrote decides the branch
     kept = _kept(config, schema)
@@ -254,10 +295,44 @@ def t_e_s_t_change_reasons(test_object):
         )
         assert heard[0]["changes"] == {"crops": crop}
         assert heard[0]["reason"] == "Crops confirmed"
+        # Each option is a row of maintable_msel_crops, audited by triggers of
+        # its own: the option taken out and the one put in carry the reason
+        # too, as the answer's own change does.
+        assert _kept(config, schema, "maintable_msel_crops", "DELETE") == kept
+        assert _kept(config, schema, "maintable_msel_crops", "INSERT") == kept
+        since = _query(config, "SELECT NOW(6)")[0][0]
+        res = testapp.post(
+            multiselect, {"to[]": other_crop, "_reason": "The other crop"}, status=200
+        )
+        assert res.json["status"] == 200
+        assert _last_change(config, schema, row_uuid, "crops")[1:] == (
+            other_crop,
+            "The other crop" if kept else None,
+        )
+        switched = [
+            ("DELETE", crop, "The other crop" if kept else None),
+            ("INSERT", other_crop, "The other crop" if kept else None),
+        ]
+        assert _option_changes(config, schema, since) == switched
         del heard[:]
         res = testapp.post(multiselect, {"to[]": crop, "_reason": "y" * 1001})
         assert res.json["status"] == 400
         assert heard == []
+        # Refused before anything was written: no option row changed either
+        assert _option_changes(config, schema, since) == switched
+        # An option the lookup does not have: the answer and its option rows
+        # are one transaction, so both stay as they were, and the dialog is
+        # told why. It used to be told the multi-select was updated.
+        res = testapp.post(
+            multiselect, {"to[]": [crop, "not_a_crop"], "_reason": "A typo"}
+        )
+        assert res.json == {
+            "status": 400,
+            "message": 'The option "not_a_crop" of crops is not in its lookup table',
+        }
+        assert heard == []
+        assert _crops(config, schema, row_uuid) == (other_crop, [other_crop])
+        assert _option_changes(config, schema, since) == switched
 
         # --- The API -------------------------------------------------------------
         del heard[:]
@@ -314,6 +389,61 @@ def t_e_s_t_change_reasons(test_object):
         assert float(_last_change(config, schema, row_uuid, "landcultivated")[1]) == 21
         assert heard == []
 
+        # A multi-select is written as the editor writes it: the answer, its
+        # options once each, and a row per option, with the reason. The API
+        # used to write the answer alone.
+        since = _query(config, "SELECT NOW(6)")[0][0]
+        res = testapp.post_json(
+            "/api_update",
+            {
+                "apikey": test_object.assistantLoginKey,
+                "rowuuid": row_uuid,
+                "crops": "{}  {} {}".format(crop, other_crop, crop),
+                "_reason": "Both crops",
+            },
+            status=200,
+        )
+        both = "{} {}".format(crop, other_crop)
+        assert _crops(config, schema, row_uuid) == (both, sorted([crop, other_crop]))
+        reason = "Both crops" if kept else None
+        assert _option_changes(config, schema, since) == sorted(
+            [
+                ("DELETE", other_crop, reason),
+                ("INSERT", crop, reason),
+                ("INSERT", other_crop, reason),
+            ]
+        )
+        assert [an_entry["changes"] for an_entry in heard] == [{"crops": both}]
+        # One option the lookup does not have: nothing is written, not even
+        # the other value sent with it
+        del heard[:]
+        since = _query(config, "SELECT NOW(6)")[0][0]
+        res = testapp.post_json(
+            "/api_update",
+            {
+                "apikey": test_object.assistantLoginKey,
+                "rowuuid": row_uuid,
+                "landcultivated": 99,
+                "crops": "{} not_a_crop".format(crop),
+            },
+            status=500,
+        )
+        assert res.json == {
+            "error": 'The option "not_a_crop" of crops is not in its lookup table',
+            "error_type": "update_error",
+        }
+        assert float(_last_change(config, schema, row_uuid, "landcultivated")[1]) == 21
+        assert _crops(config, schema, row_uuid) == (both, sorted([crop, other_crop]))
+        assert _option_changes(config, schema, since) == []
+        assert heard == []
+        # No option: no answer and no option row, as the editor leaves it
+        testapp.post_json(
+            "/api_update",
+            {"apikey": test_object.assistantLoginKey, "rowuuid": row_uuid, "crops": ""},
+            status=200,
+        )
+        assert _crops(config, schema, row_uuid) == (None, [])
+
         # --- Deleting asks too, and refuses a reason too long before anything --
         res = testapp.get(
             "/user/{}/project/{}/form/{}/submissions".format(login, project, form_id),
@@ -325,8 +455,9 @@ def t_e_s_t_change_reasons(test_object):
                 login, project, form_id
             ),
             {"oper": "del", "id": row_uuid, "_reason": "w" * 1001},
-            status=400,
+            status=200,
         )
+        assert res.json == {"error": "A reason can have at most 1000 characters"}
         res = testapp.post(
             "/user/{}/project/{}/form/{}/submissions/delete".format(
                 login, project, form_id
@@ -340,11 +471,34 @@ def t_e_s_t_change_reasons(test_object):
             status=302,
         )
         assert "FS_error" in res.headers
+        assert "A reason can have at most 1000 characters" in res.follow().text
         assert _query(
             config,
             "SELECT COUNT(*) FROM `{}`.maintable WHERE rowuuid = %s".format(schema),
             (row_uuid,),
         )[0][0]
+        # A refusal is said: the grid's delete dialog shows the error it is
+        # answered (with a 200: the grid shows nothing of any other), and a
+        # move to the logs comes back with it. Both used to answer as if the
+        # submission had gone.
+        res = testapp.post(
+            "/user/{}/project/{}/form/{}/submissions/delete".format(
+                login, project, form_id
+            ),
+            {"oper": "del", "id": "not-a-row", "_reason": "Gone already"},
+            status=200,
+        )
+        assert res.json == {"error": "This submission does not exist"}
+        res = testapp.post(
+            "/user/{}/project/{}/form/{}/submissions/delete".format(
+                login, project, form_id
+            ),
+            {"move_submission": "", "rowuuid": "not-a-row", "coll_id": "||"},
+            status=302,
+        )
+        assert "FS_error" in res.headers
+        # The submissions page it comes back to says why
+        assert "This submission does not exist" in res.follow().text
         # The audit page shows the reason where audit_log keeps it
         res = testapp.get(
             "/user/{}/project/{}/form/{}/audit".format(login, project, form_id),

@@ -14,6 +14,7 @@
                 {% block update_form_content %}
                     {{ form.secure_form(request) }}
                     <div class="modal-body">
+                        <div id="update_form_error" class="alert alert-danger d-none" role="alert"></div>
                         <div id="multi_select_content">
                         </div>
                         {% if keepsReasons %}

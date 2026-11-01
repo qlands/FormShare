@@ -417,13 +417,16 @@ class DeleteFormSubmission(PrivateView):
             request_data = self.get_post_dict()
             reason = change_reason(request_data.get(REASON_FIELD))
             if request_data.get("oper", None) == "del":
+                # A refusal is answered as {"error": ...} with a 200, which
+                # the grid's delete dialog shows and stays open with: the
+                # grid shows nothing of an answer that is not 200, as with
+                # the cleaning grid's edits.
                 if reason_too_long(reason):
-                    self.request.response.status = 400
                     return {"error": reason_too_long_message(self._)}
                 if request_data.get("id", "") != "":
                     # The audit log records who deletes: self.userID is the
                     # project's owner, from the address.
-                    delete_submission(
+                    deleted, message = delete_submission(
                         self.request,
                         user_id,
                         project_id,
@@ -433,6 +436,11 @@ class DeleteFormSubmission(PrivateView):
                         self.user.login,
                         reason=reason,
                     )
+                    # A follow-up still points at the case, a plugin
+                    # refuses, the submission is gone: the dialog used to
+                    # close as if it were deleted.
+                    if not deleted:
+                        return {"error": message}
             else:
                 if "move_submission" in request_data.keys():
                     if reason_too_long(reason):
@@ -453,7 +461,7 @@ class DeleteFormSubmission(PrivateView):
                             if assistant_data[0] == "":
                                 assistant_data[0] = None
                                 assistant_data[1] = None
-                            delete_submission(
+                            moved, message = delete_submission(
                                 self.request,
                                 user_id,
                                 project_id,
@@ -465,6 +473,18 @@ class DeleteFormSubmission(PrivateView):
                                 assistant_data[2],
                                 reason=reason,
                             )
+                            if not moved:
+                                self.add_error(message)
+                                self.returnRawViewResult = True
+                                return HTTPFound(
+                                    location=self.request.route_url(
+                                        "manageSubmissions",
+                                        userid=project_details["owner"],
+                                        projcode=project_code,
+                                        formid=form_id,
+                                    ),
+                                    headers={"FS_error": "true"},
+                                )
                     self.returnRawViewResult = True
                     return HTTPFound(
                         location=self.request.route_url(
@@ -665,6 +685,8 @@ class API1UpdateRepository(UpdateAPIView):
                 modified, error = update_record_with_id(
                     self.request,
                     assistan_data["coll_id"],
+                    project_id,
+                    form_id,
                     schema,
                     table,
                     self.json["rowuuid"],

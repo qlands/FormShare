@@ -989,6 +989,58 @@ def _write_refusal(error, translate, for_api=False):
     return None
 
 
+# Why a person changed answers or deleted a submission goes into the
+# repository's audit_log, in audit_reason (a TEXT, RSTools f0757d9): the
+# audit triggers read it from @odktools_update_reason, which is set right
+# after @odktools_current_user. Past 65,535 bytes MySQL would refuse the
+# UPDATE or DELETE that carries it (1406, rstools.md 43.3), so a reason is
+# held to a thousand characters, far below.
+REASON_MAX_LENGTH = 1000
+# What a reason is posted as, beside the answers: the cleaning grid, the
+# multi-select editor, the API and the deletion all take it under this name.
+# A leading underscore marks the control columns FormShare and RSTools add,
+# not a form's questions; a column called so could not be changed through
+# them.
+REASON_FIELD = "_reason"
+
+
+def change_reason(value):
+    """A reason for a change as given, without the spaces around it; None
+    when there is none."""
+    if value is None:
+        return None
+    value = str(value).strip()
+    return value or None
+
+
+def reason_too_long(reason):
+    return reason is not None and len(reason) > REASON_MAX_LENGTH
+
+
+def reason_too_long_message(translate):
+    return translate("A reason can have at most {} characters").format(
+        REASON_MAX_LENGTH
+    )
+
+
+def submission_cleaned(request, user, project, form, table, row_uuid, changes, reason):
+    """Tells the plugins (ICleanSubmission) that answers of a row were changed
+    and stored. The change is committed: a plugin that fails is logged, and
+    the change stands."""
+    for plugin in p.PluginImplementations(p.ICleanSubmission):
+        try:
+            plugin.after_cleaning_submission(
+                request, user, project, form, table, row_uuid, changes, reason
+            )
+        except Exception as e:
+            log.error(
+                "Plugin {} failed after the cleaning of row {} of table {} in "
+                "form {} of project {}: {}".format(
+                    type(plugin).__name__, row_uuid, table, form, project, str(e)
+                )
+            )
+
+
 def field_is_editable(field_name):
     read_only_fields = [
         "surveyid",
@@ -1467,11 +1519,12 @@ def update_multiselect_data(
     multiselect_field,
     primary_key_data,
     multiselect_values,
+    reason=None,
 ):
     """Writes a multi-select's options: the space-separated answer in the
     parent table and one row per option in its _msel_ table, in one
     transaction. Names go into the SQL quoted once known to be names, the
-    values only as parameters."""
+    values only as parameters. reason is why, for the audit log."""
     _ = request.translate
     sql_url = request.registry.settings.get("sqlalchemy.url")
     schema = get_form_schema(request, project, form)
@@ -1532,6 +1585,10 @@ def update_multiselect_data(
         session.execute(
             sqlalchemy_text("SET @odktools_current_user = :user"), {"user": user}
         )
+        session.execute(
+            sqlalchemy_text("SET @odktools_update_reason = :reason"),
+            {"reason": reason},
+        )
         session.execute(parent_sql, {"value": string_value, "rowuuid": row_uuid})
         session.execute(delete_sql, keys)
         for a_value in multiselect_values:
@@ -1553,12 +1610,14 @@ def update_multiselect_data(
         engine.dispose()
 
 
-def update_data(request, user, project, form, table_name, row_uuid, field, value):
+def update_data(
+    request, user, project, form, table_name, row_uuid, field, value, reason=None
+):
     """Writes one value of one row from the cleaning grid. Returns
     {"data": {field: value}}, or {"fieldErrors": [{"name", "status"}]} with
     what to tell the person: a lookup the value is not in, an answer in clear
     in an encrypted column (MySQL's 3819, field encryption), a column that
-    cannot be changed."""
+    cannot be changed. reason is why, for the audit log."""
     _ = request.translate
     sql_url = request.registry.settings.get("sqlalchemy.url")
     schema = get_form_schema(request, project, form)
@@ -1598,6 +1657,10 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
     try:
         session.execute(
             sqlalchemy_text("SET @odktools_current_user = :user"), {"user": user}
+        )
+        session.execute(
+            sqlalchemy_text("SET @odktools_update_reason = :reason"),
+            {"reason": reason},
         )
         session.execute(sql, {"value": value, "rowuuid": row_uuid})
         session.commit()
@@ -1657,18 +1720,25 @@ def delete_submission(
     deleted_by,
     move_to_logs=False,
     assistant_uuid=None,
+    reason=None,
 ):
+    """Deletes a submission from its repository, or moves it to the logs.
+    The audit log records deleted_by, who asked for it, and reason, why."""
     schema = get_form_schema(request, project, form)
     _ = request.translate
 
-    sql = (
-        "SELECT surveyid FROM "
-        + schema
-        + ".maintable WHERE rowuuid = '"
-        + row_uuid
-        + "'"
-    )
-    records = request.dbsession.execute(sql).fetchone()
+    # The row comes with the request: it goes into the SQL only as a
+    # parameter.
+    records = request.dbsession.execute(
+        sqlalchemy_text(
+            "SELECT surveyid FROM {}.maintable WHERE rowuuid = :rowuuid".format(
+                _quoted(schema)
+            )
+        ),
+        {"rowuuid": row_uuid},
+    ).fetchone()
+    if records is None:
+        return False, _("This submission does not exist")
     submission_id = records.surveyid
 
     continue_processing = True
@@ -1683,16 +1753,26 @@ def delete_submission(
     if not continue_processing:
         return False, message
 
-    # Remove the submission from the repository
-
-    sql = "SET @odktools_current_user = '" + user + "'"
-    request.dbsession.execute(sql)
+    # Remove the submission from the repository. The audit log names who
+    # asked for it: user is the project's owner, whoever deletes.
+    request.dbsession.execute(
+        sqlalchemy_text("SET @odktools_current_user = :user"), {"user": deleted_by}
+    )
+    request.dbsession.execute(
+        sqlalchemy_text("SET @odktools_update_reason = :reason"), {"reason": reason}
+    )
     try:
         # What the form's actions wrote for this submission goes with it,
         # in the same transaction as the delete (formshare.md 8.4).
         take_back_runs(request, project, main_rowuuid=row_uuid)
-        sql = "DELETE FROM " + schema + ".maintable WHERE rowuuid = '" + row_uuid + "'"
-        request.dbsession.execute(sql)
+        request.dbsession.execute(
+            sqlalchemy_text(
+                "DELETE FROM {}.maintable WHERE rowuuid = :rowuuid".format(
+                    _quoted(schema)
+                )
+            ),
+            {"rowuuid": row_uuid},
+        )
         request.dbsession.commit()
     except IntegrityError:
         request.dbsession.rollback()
@@ -1709,6 +1789,18 @@ def delete_submission(
                 "delete any related follow-up submissions before deleting this submission.".format(
                     row_uuid
                 )
+            )
+    finally:
+        # The request's connection goes back to the pool, and a reason left
+        # set on it would be recorded with the next change made there.
+        try:
+            request.dbsession.execute(
+                sqlalchemy_text("SET @odktools_update_reason = NULL")
+            )
+        except Exception as e:
+            log.error(
+                "Could not clear the reason after deleting submission {}: "
+                "{}".format(row_uuid, str(e))
             )
 
     odk_dir = get_odk_path(request)
@@ -2005,9 +2097,10 @@ def delete_all_submission(request, user, project, form, deleted_by):
         return False, str(e)
 
 
-def update_record_with_id(request, user, schema, table, rowuuid, data):
+def update_record_with_id(request, user, schema, table, rowuuid, data, reason=None):
     """Writes the values of one row for the API (/api_update). Returns (True,
-    "") or (False, message)."""
+    "") or (False, message). data is left with the values written. reason is
+    why, for the audit log."""
     columns = _table_columns(request, schema, table)
     keys = {
         row[0]
@@ -2058,6 +2151,10 @@ def update_record_with_id(request, user, schema, table, rowuuid, data):
         try:
             session.execute(
                 sqlalchemy_text("SET @odktools_current_user = :user"), {"user": user}
+            )
+            session.execute(
+                sqlalchemy_text("SET @odktools_update_reason = :reason"),
+                {"reason": reason},
             )
             session.execute(sql, values)
             session.commit()

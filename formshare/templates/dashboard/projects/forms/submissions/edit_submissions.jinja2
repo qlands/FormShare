@@ -154,8 +154,30 @@
                     errorTextFormat: function (data) {
                         return 'Error: ' + data.responseText
                     },
+                    beforeShowForm: function (form) {
+                        {% if keepsReasons %}
+                            // Why it is deleted, for the audit log: optional,
+                            // and asked for only where the audit trigger
+                            // records it.
+                            if ($('#fs_delete_reason').length === 0) {
+                                let box = $('<div class="form-group mt-2 mb-0">');
+                                box.append($('<label for="fs_delete_reason">').text({{ _("Reason for deleting it")|tojson }}));
+                                box.append(
+                                    $('<input type="text" id="fs_delete_reason" class="form-control">')
+                                        .attr('maxlength', {{ reasonMaxLength|tojson }})
+                                        .attr('placeholder', {{ _("Optional")|tojson }})
+                                );
+                                form.find('td.delmsg').first().append(box);
+                            }
+                            $('#fs_delete_reason').val('');
+                        {% endif %}
+                    },
                     onclickSubmit: function () {
-                        return {csrf_token: '{{ request.session.get_csrf_token() }}'};
+                        let extra = {csrf_token: '{{ request.session.get_csrf_token() }}'};
+                        {% if keepsReasons %}
+                            extra[{{ reasonField|tojson }}] = $('#fs_delete_reason').val() || '';
+                        {% endif %}
+                        return extra;
                     }
                 },
                 {
@@ -176,6 +198,7 @@
                             var submission_id = $("#jqGrid").jqGrid ('getCell', selRowIds, 'surveyid');
                             $('#txt_sub_id').text(submission_id);
                             $('#rowuuid').val(selRowIds)
+                            $('#fs_move_reason').val('');
                             $('#move_dialog').modal('show');
                         }
                     },

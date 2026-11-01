@@ -3,6 +3,7 @@ import time
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
+from formshare.processes.audit_triggers import audit_log_has_reason, reason_kept
 from .repository_downloads import t_e_s_t_repository_downloads
 from .sql import get_form_details
 
@@ -266,10 +267,39 @@ def t_e_s_t_repository_tasks(test_object):
         status=404,
     )
 
+    # Deleted with a reason: the audit log records who deleted it and why,
+    # where the table's DELETE trigger records a reason (rstools.md 43)
     test_object.testapp.post(
         "/user/{}/project/{}/form/{}/submissions/delete".format(
             test_object.randonLogin, test_object.project, test_object.formID
         ),
-        {"oper": "del", "id": row_uuid},
+        {"oper": "del", "id": row_uuid, "_reason": "Registered twice"},
         status=200,
     )
+    schema = form_details["form_schema"]
+    engine = create_engine(
+        test_object.server_config["sqlalchemy.url"], poolclass=NullPool
+    )
+    try:
+        with engine.connect() as connection:
+            kept = reason_kept(connection, schema, "maintable", "DELETE")
+            reason = (
+                "audit_reason" if audit_log_has_reason(connection, schema) else "NULL"
+            )
+            deleted = connection.exec_driver_sql(
+                "SELECT audit_user, {} FROM `{}`.audit_log WHERE audit_action = "
+                "'DELETE' AND audit_table = 'maintable' AND audit_key = %s".format(
+                    reason, schema
+                ),
+                (row_uuid,),
+            ).fetchall()
+            remaining = connection.exec_driver_sql(
+                "SELECT COUNT(*) FROM `{}`.maintable WHERE rowuuid = %s".format(schema),
+                (row_uuid,),
+            ).fetchone()[0]
+    finally:
+        engine.dispose()
+    assert remaining == 0
+    assert [tuple(a_row) for a_row in deleted] == [
+        (test_object.randonLogin, "Registered twice" if kept else None)
+    ]

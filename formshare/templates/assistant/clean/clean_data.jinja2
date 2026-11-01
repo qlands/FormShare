@@ -276,8 +276,32 @@
                         width: 'auto',
                         height: 400,
                         dataheight: 300,
+                        beforeShowForm: function (form) {
+                            {% if keepsReasons %}
+                                // Why the answers change, for the audit log:
+                                // optional, and asked for only where the
+                                // table's audit trigger records it.
+                                if ($('#fs_reason').length === 0) {
+                                    let row = $('<tr class="FormData" id="tr_fs_reason">');
+                                    row.append($('<td class="CaptionTD">').append(
+                                        $('<label for="fs_reason">').text({{ _("Reason for the change")|tojson }})
+                                    ));
+                                    row.append($('<td class="DataTD">').append(
+                                        $('<input type="text" id="fs_reason" class="form-control">')
+                                            .attr('maxlength', {{ reasonMaxLength|tojson }})
+                                            .attr('placeholder', {{ _("Optional")|tojson }})
+                                    ));
+                                    form.find('tbody').first().append(row);
+                                }
+                                $('#fs_reason').val('');
+                            {% endif %}
+                        },
                         onclickSubmit: function () {
-                            return {csrf_token: '{{ request.session.get_csrf_token() }}'};
+                            let extra = {csrf_token: '{{ request.session.get_csrf_token() }}'};
+                            {% if keepsReasons %}
+                                extra[{{ reasonField|tojson }}] = $('#fs_reason').val() || '';
+                            {% endif %}
+                            return extra;
                         },
                         afterSubmit: function (response) {
                             // The server says which values it refused (an
@@ -298,6 +322,9 @@
                                 });
                                 return [false, lines.join('<br>')];
                             }
+                            // A reason goes with the change it was given
+                            // for, not with the next row's.
+                            $('#fs_reason').val('');
                             return [true, ''];
                         },
                         serializeEditData: function(postedData) {
@@ -356,10 +383,18 @@
                    docs/formshare_field_encryption/plugin.md 5.1). #}
                 {% block clean_grid_extra %}{% endblock clean_grid_extra %}
 
+                // The multi-select is part of the row's edit: it takes the
+                // reason typed in the edit form, and gives back what is typed
+                // here, which the edit form then posts with the other answers.
+                $('#update_form').on('show.bs.modal', function () {
+                    $('#fs_msel_reason').val($('#fs_reason').val() || '');
+                });
+
                 $('#update_multiselect').submit(function(e) {
                     e.preventDefault();
                     $('#multiselect option').prop('selected', true);
                     $('#multiselect_to option').prop('selected', true);
+                    $('#fs_reason').val($('#fs_msel_reason').val() || '');
                     var formData = $("#update_multiselect").serialize();
                     $.ajax({
                         url: info_url_final, // Specify the URL to post the form data to

@@ -1,10 +1,15 @@
 """Writing a repository table's audit triggers again (processes/
 audit_triggers.py), without a server: telling a createaudittriggers that
-still audits generated columns from one that leaves them out, and putting a
+still audits generated columns from one that leaves them out, telling one
+that records the reason for a change from one that does not, and putting a
 saved trigger back without its DEFINER.
 """
 
-from formshare.processes.audit_triggers import names_generated, without_definer
+from formshare.processes.audit_triggers import (
+    names_generated,
+    names_reason,
+    without_definer,
+)
 
 # What a createaudittriggers from before rstools.md 29 wrote on a table with
 # a trace: the geometry audited beside its answer, names unquoted.
@@ -38,6 +43,28 @@ def test_a_longer_name_is_not_the_generated_column():
     assert names_generated("OLD.`geometry_json`", ["geometry"]) == []
     assert names_generated("NEW.route_geometry_note", ["route_geom"]) == []
     assert names_generated("OLD.`geometry`", ["geometry"]) == ["geometry"]
+
+
+# What one since RSTools f0757d9 writes: the reason for the change beside
+# who made it (rstools.md 43.1).
+REASONED = (
+    "IF IFnull(OLD.`route`,'NULL') <> IFNULL(NEW.`route`,'NULL') THEN INSERT "
+    "INTO audit_log(audit_id,audit_date,audit_action,audit_user,audit_table,"
+    "audit_column,audit_key,audit_oldvalue,audit_newvalue,audit_reason) VALUES "
+    "(uuid(),ts,'UPDATE',@odktools_current_user,'maintable','route',"
+    "NEW.rowuuid,OLD.`route`,NEW.`route`,@odktools_update_reason); END IF;"
+)
+
+
+def test_a_tool_that_records_the_reason_is_told_apart():
+    assert names_reason(REASONED)
+    assert not names_reason(SINCE)
+    assert not names_reason(BEFORE)
+    # The variable alone is not the column, and a question may be called
+    # audit_reasons or my_audit_reason.
+    assert not names_reason("SET @odktools_update_reason = NULL")
+    assert not names_reason("NEW.`audit_reasons`, OLD.my_audit_reason")
+    assert names_reason("ALTER TABLE audit_log ADD COLUMN `audit_reason` TEXT NULL")
 
 
 def test_a_trigger_comes_back_as_whoever_restores_it():

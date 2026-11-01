@@ -28,6 +28,15 @@ regenerate_table_audit writes one table's set again with the installed tool:
 
 regenerate_properties_audit (processes/db/case_management.py) does the same
 for a properties table each time a property is added, without the refusal.
+
+Since RSTools f0757d9 (rstools.md 42 and 43, 2026-11-01) the triggers also
+record why a person made a change: audit_log.audit_reason, from
+@odktools_update_reason, which FormShare sets beside @odktools_current_user.
+Every audit_log gets the column once the tool's SQL is next loaded in its
+repository, but a merge writes again only the triggers of the tables it
+changes, and a trigger from before records no reason, without an error. So
+reason_kept asks a table's own trigger, and regenerate_table_audit, told to
+(``reasons``), refuses a tool that would write triggers without it.
 """
 
 import os
@@ -42,6 +51,9 @@ __all__ = [
     "generated_columns",
     "audit_triggers",
     "names_generated",
+    "names_reason",
+    "audit_log_has_reason",
+    "reason_kept",
     "without_definer",
     "regenerate_table_audit",
 ]
@@ -118,6 +130,50 @@ def names_generated(sql, columns):
     return named
 
 
+def names_reason(sql):
+    """Whether a set of triggers' SQL records the reason for a change: a
+    createaudittriggers since RSTools f0757d9 names audit_reason in every
+    row it writes to audit_log, one from before never does."""
+    return (
+        re.search(r"(?<![A-Za-z0-9_])`?audit_reason`?(?![A-Za-z0-9_])", sql) is not None
+    )
+
+
+def audit_log_has_reason(connection, schema):
+    """Whether a repository's audit_log has the column for the reason of a
+    change: one created or loaded by a createaudittriggers since RSTools
+    f0757d9 has it."""
+    return (
+        connection.execute(
+            text(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS "
+                "WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = 'audit_log' "
+                "AND COLUMN_NAME = 'audit_reason'"
+            ),
+            {"schema": schema},
+        ).scalar()
+        > 0
+    )
+
+
+def reason_kept(connection, schema, table, event="UPDATE"):
+    """Whether the audit trigger of a repository table records the reason
+    for a change of that event (UPDATE, DELETE). A table whose trigger was
+    written before RSTools f0757d9 drops the reason without an error, even
+    where audit_log has the column (rstools.md 43.3)."""
+    for row in connection.execute(
+        text(
+            "SELECT ACTION_STATEMENT FROM information_schema.TRIGGERS "
+            "WHERE TRIGGER_SCHEMA = :schema AND EVENT_OBJECT_TABLE = :table "
+            "AND EVENT_MANIPULATION = :event AND TRIGGER_NAME LIKE :audit"
+        ),
+        {"schema": schema, "table": table, "event": event, "audit": _PATTERNS[0]},
+    ).fetchall():
+        if names_reason(row[0] or ""):
+            return True
+    return False
+
+
 def without_definer(statement):
     """A CREATE TRIGGER statement without its DEFINER clause, so that it is
     created as the user who runs it -- a managed MySQL without SUPER refuses a
@@ -148,16 +204,17 @@ def _load(settings, schema, sql_file):
     return process.returncode == 0, error.decode("utf-8", "replace").strip()
 
 
-def regenerate_table_audit(settings, connection, schema, table, columns):
+def regenerate_table_audit(settings, connection, schema, table, columns, reasons=False):
     """Writes a table's audit triggers again with the installed
-    createaudittriggers. columns are the table's generated columns.
+    createaudittriggers. columns are the table's generated columns. With
+    reasons, the new triggers must record the reason for a change.
 
     Returns (status, message):
 
     - "regenerated";
     - "none": the table had no audit triggers, and is left without;
-    - "old tool": the installed tool still names one of columns, and nothing
-      was changed;
+    - "old tool": the installed tool still names one of columns, or, with
+      reasons, records no reason, and nothing was changed;
     - "failed": the tool or the load failed, and the previous triggers are as
       they were.
     """
@@ -188,7 +245,8 @@ def regenerate_table_audit(settings, connection, schema, table, columns):
                 schema, table, (stderr or stdout).decode("utf-8", "replace").strip()
             )
         with open(sql_file) as a_file:
-            named = names_generated(a_file.read(), columns)
+            sql = a_file.read()
+        named = names_generated(sql, columns)
         if named:
             return (
                 "old tool",
@@ -196,6 +254,13 @@ def regenerate_table_audit(settings, connection, schema, table, columns):
                 "column(s) {} of {}.{}: it predates RSTools' rstools.md 29 and "
                 "would write the same triggers. Update RSTools and run this "
                 "again.".format(", ".join(named), schema, table),
+            )
+        if reasons and not names_reason(sql):
+            return (
+                "old tool",
+                "The installed createaudittriggers writes triggers that do not "
+                "record the reason for a change: it predates RSTools f0757d9 "
+                "(rstools.md 43). Update RSTools and run this again.",
             )
         connection.execute(text("SET SESSION lock_wait_timeout = {}".format(LOCK_WAIT)))
         try:

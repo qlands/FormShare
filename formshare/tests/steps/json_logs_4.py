@@ -5,6 +5,7 @@ import uuid
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
+from formshare.processes.audit_triggers import audit_log_has_reason, reason_kept
 from .sql import get_form_details
 
 
@@ -205,9 +206,33 @@ def t_e_s_t_json_logs_4(test_object):
             "move_submission": "",
             "rowuuid": row_uuid,
             "coll_id": "{}|{}|{}".format(json4_project_id, "json4001", json4001_uuid),
+            "_reason": "Back to the officer to fix the household ID",
         },
         status=302,
     )
+    # Moved with a reason: the audit log keeps it beside the deletion, where
+    # the table's DELETE trigger records a reason (rstools.md 43)
+    schema = form_details["form_schema"]
+    engine = create_engine(
+        test_object.server_config["sqlalchemy.url"], poolclass=NullPool
+    )
+    try:
+        with engine.connect() as connection:
+            kept = reason_kept(connection, schema, "maintable", "DELETE")
+            column = (
+                "audit_reason" if audit_log_has_reason(connection, schema) else "NULL"
+            )
+            moved = connection.exec_driver_sql(
+                "SELECT {} FROM `{}`.audit_log WHERE audit_action = 'DELETE' "
+                "AND audit_table = 'maintable' AND audit_key = %s "
+                "ORDER BY audit_date DESC LIMIT 1".format(column, schema),
+                (row_uuid,),
+            ).fetchall()
+    finally:
+        engine.dispose()
+    assert [a_row[0] for a_row in moved] == [
+        "Back to the officer to fix the household ID" if kept else None
+    ]
 
     res = test_object.testapp.post(
         "/user/{}/project/{}/assistantaccess/login".format(

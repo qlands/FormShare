@@ -2,7 +2,8 @@ import json
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 from formshare.middleware.response import Response
-from formshare.processes.db import get_form_data, is_form_blocked
+from formshare.processes.audit_triggers import reason_kept
+from formshare.processes.db import get_form_data, get_form_schema, is_form_blocked
 from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
 from formshare.processes.submission.api import (
     get_tables_from_form,
@@ -12,6 +13,12 @@ from formshare.processes.submission.api import (
     get_primary_key_data,
     get_lookup_options,
     update_multiselect_data,
+    change_reason,
+    reason_too_long,
+    reason_too_long_message,
+    submission_cleaned,
+    REASON_FIELD,
+    REASON_MAX_LENGTH,
 )
 from formshare.processes.db.dictionary import (
     get_primary_keys,
@@ -151,6 +158,14 @@ class CleanInterface(AssistantView):
                             )
                         )
 
+            # A reason is asked for only where the table's audit trigger
+            # records it (rstools.md 43.3).
+            keeps_reasons = False
+            if table is not None:
+                schema = get_form_schema(self.request, self.projectID, form_id)
+                keeps_reasons = schema is not None and reason_kept(
+                    self.request.dbsession, schema, table
+                )
             return {
                 "canclean": permissions["enum_canclean"],
                 "formid": form_id,
@@ -162,6 +177,9 @@ class CleanInterface(AssistantView):
                 "token": self.request.session.get_csrf_token(),
                 "strFields": str_fields,
                 "formData": form_data,
+                "keepsReasons": keeps_reasons,
+                "reasonField": REASON_FIELD,
+                "reasonMaxLength": REASON_MAX_LENGTH,
             }
         else:
             raise HTTPForbidden()
@@ -256,12 +274,23 @@ class PerformAction(AssistantView):
                     post_data.pop("oper")
                     post_data.pop("id")
                     post_data.pop("csrf_token", None)
+                    reason = change_reason(post_data.pop(REASON_FIELD, None))
+                    if reason_too_long(reason):
+                        return {
+                            "errors": [
+                                {
+                                    "field": self._("Reason"),
+                                    "message": reason_too_long_message(self._),
+                                }
+                            ]
+                        }
                     # Each value is written on its own, and what was refused
                     # is said, field by field: the grid used to be told
                     # nothing, so a refused value -- an answer in clear in an
                     # encrypted column, an option not in its lookup -- looked
                     # saved.
                     errors = []
+                    stored = {}
                     for key, value in post_data.items():
                         result = update_data(
                             self.request,
@@ -272,11 +301,24 @@ class PerformAction(AssistantView):
                             row_uuid,
                             key,
                             value,
+                            reason,
                         )
+                        stored.update(result.get("data", {}))
                         for a_error in result.get("fieldErrors", []):
                             errors.append(
                                 {"field": a_error["name"], "message": a_error["status"]}
                             )
+                    if stored:
+                        submission_cleaned(
+                            self.request,
+                            who_updates,
+                            self.projectID,
+                            form_id,
+                            table_name,
+                            row_uuid,
+                            stored,
+                            reason,
+                        )
                     if errors:
                         return {"errors": errors}
                     return {}
@@ -348,6 +390,19 @@ class CleanMultiSelect(AssistantView):
                 else:
                     selected_items = to_items
 
+                reason = change_reason(form_data.get(REASON_FIELD))
+                if reason_too_long(reason):
+                    return Response(
+                        content_type="application/json",
+                        status=200,
+                        body=json.dumps(
+                            {
+                                "status": 400,
+                                "message": reason_too_long_message(self._),
+                            }
+                        ).encode(),
+                    )
+
                 primary_keys = get_primary_keys(
                     self.request, self.projectID, form_id, table_name
                 )
@@ -382,10 +437,21 @@ class CleanMultiSelect(AssistantView):
                     field_name,
                     primary_key_data,
                     selected_items,
+                    reason,
                 )
                 if updated:
                     status = 200
                     message = self._("The multiselect has been updated")
+                    submission_cleaned(
+                        self.request,
+                        who_updates,
+                        self.projectID,
+                        form_id,
+                        table_name,
+                        row_uuid,
+                        {parts[1]: " ".join(selected_items).strip() or None},
+                        reason,
+                    )
                 else:
                     status = 400
                     message = self._("The multiselect has been updated")

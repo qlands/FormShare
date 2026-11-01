@@ -11,6 +11,7 @@ from formshare.processes.db import (
     get_project_details,
     get_form_xml_create_file,
 )
+from formshare.processes.audit_triggers import audit_log_has_reason, reason_kept
 from formshare.processes.db.encryption import encrypted_columns
 from formshare.processes.elasticsearch.record_index import (
     get_project_and_form,
@@ -23,6 +24,12 @@ from formshare.processes.submission.api import (
     delete_submission,
     delete_all_submission,
     update_record_with_id,
+    change_reason,
+    reason_too_long,
+    reason_too_long_message,
+    submission_cleaned,
+    REASON_FIELD,
+    REASON_MAX_LENGTH,
 )
 from formshare.views.classes import PrivateView, UpdateAPIView
 from formshare.middleware.httpexceptions import HTTPNotFound, HTTPFound
@@ -73,6 +80,12 @@ class ManageSubmissions(PrivateView):
             fields, checked = get_fields_from_table(
                 self.request, project_id, form_id, "maintable", []
             )
+            # Deleting a submission, or moving it to the logs, asks for a
+            # reason only where the audit trigger records it (rstools.md
+            # 43.3).
+            keeps_reasons = reason_kept(
+                self.request.dbsession, form_data["form_schema"], "maintable", "DELETE"
+            )
             return {
                 "projectDetails": project_details,
                 "formid": form_id,
@@ -80,6 +93,9 @@ class ManageSubmissions(PrivateView):
                 "userid": user_id,
                 "fields": fields,
                 "assistants": assistants,
+                "keepsReasons": keeps_reasons,
+                "reasonField": REASON_FIELD,
+                "reasonMaxLength": REASON_MAX_LENGTH,
             }
         else:
             raise HTTPNotFound
@@ -164,6 +180,8 @@ class ReviewAudit(PrivateView):
                 {"name": "audit_newvalue", "desc": "New value"},
                 {"name": "audit_key", "desc": "Row ID"},
             ]
+            if audit_log_has_reason(self.request.dbsession, form_data["form_schema"]):
+                fields.append({"name": "audit_reason", "desc": "Reason"})
 
             return {
                 "projectDetails": project_details,
@@ -328,6 +346,10 @@ class GetFormAudit(PrivateView):
                     "audit_key",
                 ]
 
+            # Why a person made the change, where audit_log keeps it
+            if audit_log_has_reason(self.request.dbsession, form_data["form_schema"]):
+                field_names.append("audit_reason")
+
             table_order_is_none = False
             if request_data["sidx"] == "":
                 table_order = "audit_date"
@@ -393,8 +415,14 @@ class DeleteFormSubmission(PrivateView):
             if self.request.method == "GET":
                 raise HTTPNotFound
             request_data = self.get_post_dict()
+            reason = change_reason(request_data.get(REASON_FIELD))
             if request_data.get("oper", None) == "del":
+                if reason_too_long(reason):
+                    self.request.response.status = 400
+                    return {"error": reason_too_long_message(self._)}
                 if request_data.get("id", "") != "":
+                    # The audit log records who deletes: self.userID is the
+                    # project's owner, from the address.
                     delete_submission(
                         self.request,
                         user_id,
@@ -402,10 +430,23 @@ class DeleteFormSubmission(PrivateView):
                         form_id,
                         request_data.get("id"),
                         project_code,
-                        self.userID,
+                        self.user.login,
+                        reason=reason,
                     )
             else:
                 if "move_submission" in request_data.keys():
+                    if reason_too_long(reason):
+                        self.add_error(reason_too_long_message(self._))
+                        self.returnRawViewResult = True
+                        return HTTPFound(
+                            location=self.request.route_url(
+                                "manageSubmissions",
+                                userid=project_details["owner"],
+                                projcode=project_code,
+                                formid=form_id,
+                            ),
+                            headers={"FS_error": "true"},
+                        )
                     if request_data.get("rowuuid", "") != "":
                         assistant_data = request_data.get("coll_id", "").split("|")
                         if len(assistant_data) == 3:
@@ -419,9 +460,10 @@ class DeleteFormSubmission(PrivateView):
                                 form_id,
                                 request_data.get("rowuuid", ""),
                                 project_code,
-                                self.userID,
+                                self.user.login,
                                 True,
                                 assistant_data[2],
+                                reason=reason,
                             )
                     self.returnRawViewResult = True
                     return HTTPFound(
@@ -590,6 +632,16 @@ class API1UpdateRepository(UpdateAPIView):
                 "error_type": "form_not_found",
             }
         if "rowuuid" in self.json.keys():
+            # Why the answers change, for the audit log: optional, and kept
+            # where the table's audit trigger records it (rstools.md 43.3),
+            # which the answer says.
+            reason = change_reason(self.json.get(REASON_FIELD))
+            if reason_too_long(reason):
+                self.error = True
+                return {
+                    "error": reason_too_long_message(self._),
+                    "error_type": "reason_too_long",
+                }
             # The API leaves encrypted fields alone: only the Encryption
             # plugin's cleaning grid changes them, sealed in a browser. The
             # rest of the update goes ahead, and the answer names what was
@@ -599,7 +651,7 @@ class API1UpdateRepository(UpdateAPIView):
             data = {
                 a_key: a_value
                 for a_key, a_value in self.json.items()
-                if a_key not in encrypted
+                if a_key not in encrypted and a_key != REASON_FIELD
             }
             if ignored and not set(data) - {"rowuuid", "rowindex", "apikey"}:
                 return {
@@ -617,11 +669,27 @@ class API1UpdateRepository(UpdateAPIView):
                     table,
                     self.json["rowuuid"],
                     data,
+                    reason,
                 )
                 if modified:
                     result = {"status": "OK", "message": self._("Update completed")}
                     if ignored:
                         result["ignored"] = ignored
+                    if reason is not None:
+                        result["reason_kept"] = reason_kept(
+                            self.request.dbsession, schema, table
+                        )
+                    # data is left with the values written
+                    submission_cleaned(
+                        self.request,
+                        assistan_data["coll_id"],
+                        project_id,
+                        form_id,
+                        table,
+                        self.json["rowuuid"],
+                        dict(data),
+                        reason,
+                    )
                     return result
                 else:
                     self.error_code = 500

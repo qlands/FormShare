@@ -25,6 +25,12 @@
                             </select>
                         </div>
                     </div>
+                    {% if keepsReasons %}
+                        <div class="form-group">
+                            <label for="fs_move_reason" class="col-form-label">{{ _('Reason for moving it') }}</label>
+                            <input type="text" id="fs_move_reason" name="{{ reasonField }}" class="form-control" maxlength="{{ reasonMaxLength }}" placeholder="{{ _('Optional') }}">
+                        </div>
+                    {% endif %}
                 </div>
                 <div class="modal-footer">
                     <button type="submit" name="move_submission" class="btn btn-primary">{{ _('Move') }}</button>

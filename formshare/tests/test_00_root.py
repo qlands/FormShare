@@ -17,6 +17,7 @@ from .steps.avatar_generator import t_e_s_t_avatar_generator
 from .steps.case_management import t_e_s_t_case_management
 from .steps.case_management_start import t_e_s_t_case_management_start
 from .steps.clean_interface import t_e_s_t_clean_interface
+from .steps.change_reasons import t_e_s_t_change_reasons
 from .steps.clean_interface_unauthorized import t_e_s_t_clean_interface_unauthorized
 from .steps.collaborator_access import t_e_s_t_collaborator_access
 from .steps.collaborator_projects import t_e_s_t_collaborator_projects
@@ -310,6 +311,8 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_json_logs_4(self.test_object)
             print("Testing cleaning interface")
             t_e_s_t_clean_interface(self.test_object)
+            print("Testing the reason for a change, and the cleaning hook")
+            t_e_s_t_change_reasons(self.test_object)
             print("Testing cleaning interface unauthorized")
             t_e_s_t_clean_interface_unauthorized(self.test_object)
             print("Testing audit")

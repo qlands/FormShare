@@ -16,6 +16,12 @@
                     <div class="modal-body">
                         <div id="multi_select_content">
                         </div>
+                        {% if keepsReasons %}
+                            <div class="form-group mt-3">
+                                <label for="fs_msel_reason">{{ _('Reason for the change') }}</label>
+                                <input type="text" id="fs_msel_reason" name="{{ reasonField }}" class="form-control" maxlength="{{ reasonMaxLength }}" placeholder="{{ _('Optional') }}">
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="modal-footer">
                         {% block update_form_actions %}

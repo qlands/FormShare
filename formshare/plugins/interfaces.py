@@ -55,6 +55,7 @@ __all__ = [
     "IAuthenticationPolicy",
     "IRoles",
     "IDeleteSubmission",
+    "ICleanSubmission",
     "ISubmissionStorage",
     "IExportGenerator",
     "IFileStorage",
@@ -1991,6 +1992,33 @@ class IDeleteSubmission(Interface):  # pragma: no cover
         :param submission: Submission ID
         :param submission_directory: Submission directory
         :return Error True, "" or False, Message
+        """
+
+
+class ICleanSubmission(Interface):  # pragma: no cover
+    """Allows to hook into the cleaning of a submission: answers of a row
+    changed in the cleaning grid, a multi-select changed there, or answers
+    changed through the cleaning API (/api_update)"""
+
+    def after_cleaning_submission(
+        self, request, user, project, form, table, row_uuid, changes, reason
+    ):
+        """
+        Called by FormShare once a change of answers is stored. The change
+        is committed: what a plugin does here, or fails to do, does not undo
+        it, and an error is only logged.
+        :param request: Pyramid request object
+        :param user: Who made the change, as the audit log records it
+        :param project: Project ID
+        :param form: XForm ID
+        :param table: The table of the row
+        :param row_uuid: The row's rowuuid
+        :param changes: {column: value} as stored. None for an answer
+                        emptied; a multi-select's codes separated by spaces
+        :param reason: The reason given for the change, or None. The
+                       repository's audit_log keeps it too, in audit_reason,
+                       where the table's audit triggers record it
+        :return: None
         """
 
 

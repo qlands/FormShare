@@ -1981,17 +1981,39 @@ class IDeleteSubmission(Interface):  # pragma: no cover
         """
 
     def after_deleting_submission(
-        self, request, user, project, form, submission, submission_directory
+        self,
+        request,
+        user,
+        project,
+        form,
+        submission,
+        submission_directory,
+        row_uuid,
+        deleted_by,
+        moved_to_logs,
+        reason,
     ):
         """
-        Called by FormShare before FormShare process before deleting a submission
+        Called by FormShare once a submission has left its repository: deleted,
+        or moved to the logs. The removal is committed: what a plugin does here,
+        or fails to do, does not undo it, and an error is only logged. Since
+        2026-11-03 it also says which row went, who removed it, how and why.
         :param request: Pyramid request object
-        :param user: User ID
+        :param user: The project's owner (User ID), whoever removed it
         :param project: Project ID
         :param form: XForm ID
-        :param submission: Submission ID
-        :param submission_directory: Submission directory
-        :return Error True, "" or False, Message
+        :param submission: Submission ID (maintable's surveyid)
+        :param submission_directory: Submission directory. A deletion removes it
+                                     after plugins are told; a move to the logs
+                                     keeps it
+        :param row_uuid: The rowuuid of the submission's maintable row
+        :param deleted_by: Who removed it (User ID), as the audit log records it
+        :param moved_to_logs: True when it was moved to the logs, from where it
+                              can be fixed and pushed again; False when deleted
+        :param reason: The reason given, or None. The repository's audit_log
+                       keeps it too, in audit_reason, where maintable's audit
+                       triggers record it
+        :return: None
         """
 
 

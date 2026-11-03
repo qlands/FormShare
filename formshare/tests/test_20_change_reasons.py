@@ -225,7 +225,17 @@ def test_a_submission_that_is_not_there_is_said_so_and_nothing_is_written(
             return True, ""
 
         def after_deleting_submission(
-            self, request, user, project, form, submission, submission_directory
+            self,
+            request,
+            user,
+            project,
+            form,
+            submission,
+            submission_directory,
+            row_uuid,
+            deleted_by,
+            moved_to_logs,
+            reason,
         ):
             heard.append(submission)
 
@@ -283,6 +293,162 @@ def test_a_reason_is_cleared_after_a_refused_deletion_too(deletion):
     # change made on it would be recorded with this reason.
     assert session.statements[-3:] == [DELETE, ("ROLLBACK", None), CLEAR]
     assert deletion["errors"] == ["Cannot delete submission row-1"]
+
+
+def removal_listener():
+    """A plugin that hears of each removal, as the DQ plugin does
+    (2026-11-03). A plugin class is active once defined, so each test
+    defines it when it should start listening."""
+
+    class RemovalListener(p.SingletonPlugin):
+        p.implements(p.IDeleteSubmission)
+
+        heard = []
+
+        def before_deleting_submission(self, request, user, project, form, submission):
+            return True, ""
+
+        def after_deleting_submission(
+            self,
+            request,
+            user,
+            project,
+            form,
+            submission,
+            submission_directory,
+            row_uuid,
+            deleted_by,
+            moved_to_logs,
+            reason,
+        ):
+            self.heard.append(
+                {
+                    "user": user,
+                    "submission": submission,
+                    "directory": submission_directory,
+                    "row": row_uuid,
+                    "by": deleted_by,
+                    "to_logs": moved_to_logs,
+                    "reason": reason,
+                }
+            )
+
+    return RemovalListener
+
+
+def test_plugins_hear_which_row_was_deleted_by_whom_and_why(deletion, tmp_path):
+    listener = removal_listener()
+    session = RecordingSession(row=types.SimpleNamespace(surveyid="sub-1"))
+    try:
+        assert delete(session) == (True, "")
+    finally:
+        listener().deactivate()
+    # The project's owner is still user; who deleted it is ana, as the audit
+    # log records her. A plugin used to read that, and the reason, back from
+    # the audit log, and could not tell a deletion from a move to the logs.
+    assert listener.heard == [
+        {
+            "user": "owner",
+            "submission": "sub-1",
+            "directory": str(tmp_path / "forms" / "f" / "submissions" / "sub-1"),
+            "row": "row-1",
+            "by": "ana",
+            "to_logs": False,
+            "reason": "Registered twice",
+        }
+    ]
+
+
+def test_plugins_hear_of_a_move_to_the_logs_which_names_who_moved_it(
+    deletion, monkeypatch, tmp_path
+):
+    logged = []
+
+    def add_json_log(request, project, form, submission, json_file, log_file, *rest):
+        logged.append(log_file)
+        return True, ""
+
+    monkeypatch.setattr(api, "add_json_log", add_json_log)
+    (tmp_path / "forms" / "f" / "submissions" / "logs").mkdir(parents=True)
+    listener = removal_listener()
+    session = RecordingSession(row=types.SimpleNamespace(surveyid="sub-1"))
+    try:
+        assert api.delete_submission(
+            RecordingRequest(session),
+            "owner",
+            "project-1",
+            "form-1",
+            "row-1",
+            "project",
+            "ana",
+            move_to_logs=True,
+            assistant_uuid="officer-1",
+            reason="The household is in another district",
+        ) == (True, "")
+    finally:
+        listener().deactivate()
+    assert [(a["by"], a["to_logs"], a["reason"]) for a in listener.heard] == [
+        ("ana", True, "The household is in another district")
+    ]
+    # A move keeps FormShare's record of the submission, to push it again
+    assert ("DELETE submission", None) not in session.statements
+    # The logs name who moved it: they used to name the project's owner
+    with open(logged[0], encoding="utf-8") as a_log:
+        entry = a_log.read()
+    assert 'Error="Moved to logs by ana"' in entry
+    assert "owner" not in entry
+
+
+def test_a_plugin_failing_after_a_removal_neither_undoes_it_nor_stops_the_rest(
+    deletion,
+):
+    # PyUtilib calls the plugins in an order of its own: one listens on each
+    # side of the plugin that fails
+    before = removal_listener()
+
+    class FailingRemovalPlugin(p.SingletonPlugin):
+        p.implements(p.IDeleteSubmission)
+
+        def before_deleting_submission(self, request, user, project, form, submission):
+            return True, ""
+
+        # A plugin written before 2026-11-03 takes six arguments
+        def after_deleting_submission(
+            self, request, user, project, form, submission, submission_directory
+        ):
+            raise AssertionError("never called with six")
+
+    after = removal_listener()
+    session = RecordingSession(row=types.SimpleNamespace(surveyid="sub-1"))
+    try:
+        assert delete(session) == (True, "")
+    finally:
+        before().deactivate()
+        FailingRemovalPlugin().deactivate()
+        after().deactivate()
+    # The others heard of it, and FormShare's record of the submission and
+    # its index went: a plugin failing used to stop the rest half way
+    assert [an_entry["row"] for an_entry in before.heard + after.heard] == [
+        "row-1",
+        "row-1",
+    ]
+    assert session.statements[-3:] == [
+        ("ROLLBACK", None),
+        ("DELETE submission", None),
+        ("COMMIT", None),
+    ]
+    assert deletion["unindexed"] == ["sub-1"]
+    failed = [
+        an_error
+        for an_error in deletion["errors"]
+        if an_error.startswith("Plugin FailingRemovalPlugin")
+    ]
+    assert len(failed) == 1
+    assert failed[0].startswith(
+        "Plugin FailingRemovalPlugin failed after submission sub-1 of form form-1 "
+        "in project project-1 was removed: "
+    )
+    assert "takes 7 positional arguments but 11 were given" in failed[0]
 
 
 def test_the_multiselect_editor_finds_its_row_by_a_parameter(monkeypatch):

@@ -1806,7 +1806,8 @@ def delete_submission(
     reason=None,
 ):
     """Deletes a submission from its repository, or moves it to the logs.
-    The audit log records deleted_by, who asked for it, and reason, why.
+    The audit log records deleted_by, who asked for it, and reason, why;
+    IDeleteSubmission's plugins hear both, and whether it went to the logs.
     Returns (True, "") or (False, what to tell the person), which the
     view says: a refusal used to look like a deletion."""
     schema = get_form_schema(request, project, form)
@@ -1894,10 +1895,34 @@ def delete_submission(
     paths = ["forms", form_directory, "submissions", submission_id]
     path = os.path.join(odk_dir, *paths)
 
+    # Plugins hear which row went, who removed it, whether to the logs, and
+    # why: user is the project's owner. The removal is committed, so one
+    # that fails is logged, and the files, the indexes and the logs are
+    # still dealt with; it used to stop the rest half way.
     for plugin in p.PluginImplementations(p.IDeleteSubmission):
-        plugin.after_deleting_submission(
-            request, user, project, form, submission_id, path
-        )
+        try:
+            plugin.after_deleting_submission(
+                request,
+                user,
+                project,
+                form,
+                submission_id,
+                path,
+                row_uuid,
+                deleted_by,
+                move_to_logs,
+                reason,
+            )
+        except Exception as e:
+            # What the plugin left half written is its own; FormShare's
+            # record of the submission is still to be deleted on this session
+            request.dbsession.rollback()
+            log.error(
+                "Plugin {} failed after submission {} of form {} in project {} "
+                "was removed: {}".format(
+                    type(plugin).__name__, submission_id, form, project, str(e)
+                )
+            )
 
     if not move_to_logs:
         log.info(
@@ -2070,18 +2095,20 @@ def delete_submission(
         ]
         submission_file = os.path.join(odk_dir, *paths)
 
+        # Named by who moved it, as the audit log names them; it used to name
+        # the project's owner. The logs page reads the words before the name
         root = etree.Element("XMLErrorLog")
         errors = etree.Element("errors")
         an_error = etree.Element(
             "error",
             FileUUID=submission_id,
-            Error="Moved to logs by {}".format(user),
+            Error="Moved to logs by {}".format(deleted_by),
             Table="maintable",
             JSONVariable="",
             Notes="",
             RowInJSON="1",
         )
-        an_error.text = "Moved to logs by {}".format(user)
+        an_error.text = "Moved to logs by {}".format(deleted_by)
         errors.append(an_error)
         root.append(errors)
         tree = etree.ElementTree(root)

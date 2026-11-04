@@ -1446,32 +1446,38 @@ def get_form_files(request, project, form):
 
 
 def copy_assistants(request, project_id, parent_form, new_form):
-    res = (
-        request.dbsession.query(Formacces)
-        .filter(Formacces.form_project == project_id)
-        .filter(Formacces.form_id == parent_form)
-        .all()
-    )
-    assistants = map_from_schema(res)
+    """Gives a new version the access its parent form gives ("Keep
+    assistants", when a version is uploaded for merging): each assistant's
+    and each assistant group's, with their privileges and their supervisor
+    mark. Groups were left behind until 2026-11-03: their members could no
+    longer submit to or clean the new version, and the DQ plugin lost the
+    groups that supervise it. Returns (True, "") or (False, the error)."""
     add_error = False
     error_message = ""
-    for an_assistant in assistants:
-        an_assistant["form_id"] = new_form
-        mapped_data = map_to_schema(Formacces, an_assistant)
-        new_assistant = Formacces(**mapped_data)
-        try:
-            request.dbsession.add(new_assistant)
-            request.dbsession.commit()
-        except Exception as e:
-            error_message = str(e)
-            log.error(
-                "Error {} while moving assistants from {} to {}".format(
-                    str(e), parent_form, new_form
+    for model in (Formacces, Formgrpacces):
+        res = (
+            request.dbsession.query(model)
+            .filter(model.form_project == project_id)
+            .filter(model.form_id == parent_form)
+            .all()
+        )
+        for an_access in map_from_schema(res):
+            an_access["form_id"] = new_form
+            mapped_data = map_to_schema(model, an_access)
+            try:
+                request.dbsession.add(model(**mapped_data))
+                request.dbsession.commit()
+            except Exception as e:
+                # The session cannot take the next row until it is rolled back
+                request.dbsession.rollback()
+                error_message = str(e)
+                log.error(
+                    "Error {} while moving the {} of form {} to {}".format(
+                        str(e), model.__tablename__, parent_form, new_form
+                    )
                 )
-            )
-            add_error = True
+                add_error = True
     if add_error:
-        request.dbsession.rollback()
         return False, error_message
     else:
         return True, error_message

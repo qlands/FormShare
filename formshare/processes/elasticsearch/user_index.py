@@ -1,6 +1,7 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import RequestError
 from elasticsearch.exceptions import ConnectionError as ESConnectionError
+from formshare.processes.elasticsearch import delete_matching
 
 
 class UserExistError(Exception):
@@ -262,9 +263,8 @@ class UserIndexManager(object):
         if self.user_exists(user_id):
             connection = self.create_connection()
             if connection is not None:
-                connection.delete_by_query(
-                    index=self.index_name,
-                    body=_get_user_search_dict(user_id),
+                delete_matching(
+                    connection, self.index_name, _get_user_search_dict(user_id)
                 )
                 connection.close()
                 return True

@@ -1,6 +1,7 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import RequestError
 from elasticsearch.exceptions import ConnectionError as ESConnectionError
+from formshare.processes.elasticsearch import delete_matching
 
 
 class PartnerExistError(Exception):
@@ -271,9 +272,8 @@ class PartnerIndexManager(object):
         if self.partner_exists(partner_id):
             connection = self.create_connection()
             if connection is not None:
-                connection.delete_by_query(
-                    index=self.index_name,
-                    body=_get_partner_search_dict(partner_id),
+                delete_matching(
+                    connection, self.index_name, _get_partner_search_dict(partner_id)
                 )
                 connection.close()
                 return True

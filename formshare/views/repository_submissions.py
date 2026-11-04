@@ -547,6 +547,9 @@ class DeleteAllSubmissions(PrivateView):
                         self.userID,
                     )
                     if deleted:
+                        # Deleted, with the search index still listing them
+                        if message:
+                            self.add_warning_message(message)
                         return HTTPFound(
                             location=self.request.route_url(
                                 "form_details",

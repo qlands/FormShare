@@ -3,6 +3,7 @@ from uuid import UUID
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import RequestError
 from elasticsearch.exceptions import ConnectionError as ESConnectionError
+from formshare.processes.elasticsearch import delete_matching
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 import os
@@ -190,9 +191,8 @@ def delete_form_records(settings, project_id, form_id):
     if connection is not None:
         try:
             index_name = get_index_name(settings)
-            connection.delete_by_query(
-                index=index_name,
-                body=_get_record_search_dict(project_id, form_id),
+            delete_matching(
+                connection, index_name, _get_record_search_dict(project_id, form_id)
             )
             connection.close()
         except RequestError as e:

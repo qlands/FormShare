@@ -4,6 +4,7 @@ functions it uses. No database and no index: the files are made here, and the
 index is a stand-in."""
 
 import os
+import types
 
 import pytest
 
@@ -139,9 +140,12 @@ class FakeConnection:
     def __init__(self):
         self.deleted = []
         self.closed = False
+        # delete_matching refreshes the index before it deletes
+        self.indices = types.SimpleNamespace(refresh=lambda index: None)
 
-    def delete_by_query(self, index, body):
+    def delete_by_query(self, index, body, **params):
         self.deleted.append((index, body))
+        return {"version_conflicts": 0}
 
     def close(self):
         self.closed = True

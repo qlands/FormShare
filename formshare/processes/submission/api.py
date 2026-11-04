@@ -2202,13 +2202,27 @@ def delete_all_submission(request, user, project, form, deleted_by):
                 deleted_by, form, project, string_date
             )
         )
-        delete_dataset_from_index(request.registry.settings, project, form)
-        delete_form_records(request.registry.settings, project, form)
-
-        return True, ""
     except Exception as e:
         log.error("Unable to remove submissions. Error {}".format(str(e)))
         return False, str(e)
+
+    # The submissions are gone by now, and the indexes only follow them. One
+    # that cannot be cleared is said, but the deletion stands: it used to be
+    # told as a failure, with the repository already empty
+    try:
+        delete_dataset_from_index(request.registry.settings, project, form)
+        delete_form_records(request.registry.settings, project, form)
+    except Exception as e:
+        log.error(
+            "All submissions of form {} in project {} were deleted, but the "
+            "search index still lists them: {}".format(form, project, str(e))
+        )
+        _ = request.translate
+        return True, _(
+            "All submissions were deleted, but they could not be removed from "
+            "the search index, which may still count them."
+        )
+    return True, ""
 
 
 def update_record_with_id(

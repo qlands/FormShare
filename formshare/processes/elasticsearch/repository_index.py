@@ -3,6 +3,7 @@ from elasticsearch.helpers import scan
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.exceptions import RequestError
 from elasticsearch.exceptions import ConnectionError as ESConnectionError
+from formshare.processes.elasticsearch import delete_matching
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 import os
@@ -396,9 +397,10 @@ def delete_from_dataset_index(settings, project_id, form_id, submission_id):
     if connection is not None:
         try:
             index_name = get_index_name(settings)
-            connection.delete_by_query(
-                index=index_name,
-                body=_get_submission_search_dict(project_id, form_id, submission_id),
+            delete_matching(
+                connection,
+                index_name,
+                _get_submission_search_dict(project_id, form_id, submission_id),
             )
             connection.close()
         except RequestError as e:
@@ -419,8 +421,8 @@ def delete_dataset_from_index(settings, project_id, form_id):
     if connection is not None:
         try:
             index_name = get_index_name(settings)
-            connection.delete_by_query(
-                index=index_name, body=_get_dateset_search_dict(project_id, form_id)
+            delete_matching(
+                connection, index_name, _get_dateset_search_dict(project_id, form_id)
             )
             connection.close()
         except RequestError as e:
@@ -473,7 +475,7 @@ def delete_datasets_by_id(settings, project_id, form_id, submission_ids):
             query["query"]["bool"]["must"].append(
                 {"terms": {"submission_id": submission_ids[start : start + 1000]}}
             )
-            connection.delete_by_query(index=index_name, body=query)
+            delete_matching(connection, index_name, query)
     finally:
         connection.close()
 
@@ -483,8 +485,8 @@ def delete_dataset_index_by_project(settings, project_id):
     if connection is not None:
         try:
             index_name = get_index_name(settings)
-            connection.delete_by_query(
-                index=index_name, body=_get_project_search_dict(project_id)
+            delete_matching(
+                connection, index_name, _get_project_search_dict(project_id)
             )
             connection.close()
         except RequestError as e:

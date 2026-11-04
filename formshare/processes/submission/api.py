@@ -2252,6 +2252,8 @@ def update_record_with_id(
     data.pop("rowuuid", None)
     data.pop("rowindex", None)
     data.pop("apikey", None)
+    # What is left out, to say so when nothing else remains
+    left_out = sorted(a_key for a_key in data.keys() if a_key in keys)
     for a_key in keys:
         data.pop(a_key, None)
 
@@ -2260,7 +2262,20 @@ def update_record_with_id(
     # Nothing MySQL derives is written either (CLAUDE.md).
     for a_key in list(data.keys()):
         if field_is_editable(a_key) == "false" or columns.get(a_key):
+            left_out.append(a_key)
             data.pop(a_key, None)
+
+    # Nothing left to write: the UPDATE would have no SET, and MySQL would
+    # answer with a syntax error (1064) where the client needs a refusal
+    if not data:
+        if left_out:
+            return False, request.translate(
+                "Nothing was updated: {} cannot be changed. A row's key, "
+                "a column FormShare keeps and one MySQL derives are not edited"
+            ).format(", ".join(sorted(left_out)))
+        return False, request.translate(
+            "Nothing was updated: the request names no field to change"
+        )
 
     fields_not_found = [a_key for a_key in data.keys() if a_key not in columns]
     if len(fields_not_found) == 0:

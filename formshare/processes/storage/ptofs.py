@@ -5,7 +5,7 @@ Rufus Pollock, under the Apache License, Version 2.0: LICENSE-ofs.txt, beside
 this file. Its last release, 0.4.3, is from 2018-03-22, and it imports
 pkg_resources when it loads. setuptools 81 removed pkg_resources, so with a
 current setuptools FormShare could not even be imported
-(formshare_enterprise:20261018). FormShare uses one class of ofs, so the class
+FormShare uses one class of ofs, so the class
 is here, with the changes below.
 
 - PTOFS (ofs/local/pairtreestore.py) and PersistentState

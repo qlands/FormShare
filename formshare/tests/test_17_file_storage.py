@@ -174,7 +174,7 @@ def test_formshare_stores_reads_and_deletes_files(tmp_path):
 
 def test_formshare_imports_without_pkg_resources_or_ofs():
     """What an image built today has: no pkg_resources, which setuptools 81
-    removed, and no ofs. formshare_enterprise:20261018 could not import
+    removed, and no ofs. Could not import
     FormShare at all (alembic, uvicorn, Celery)."""
     code = (
         "import sys\n"

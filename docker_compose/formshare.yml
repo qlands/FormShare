@@ -10,7 +10,7 @@ version: "3.8"
 
 services:
   formshare:
-    image: ${FORMSHARE_IMAGE:-qlands/formshare2:20260218}
+    image: ${FORMSHARE_IMAGE:-qlands/formshare2_community:20261105}
     container_name: ${COMPOSE_PROJECT_NAME:-formshare}_app
 
     environment:

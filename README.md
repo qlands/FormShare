@@ -100,11 +100,11 @@ ScreenShot
 
 Releases
 ------------
-The current stable release is 3.1.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-3.1.0) 
+The current stable release is 3.2.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-3.2.0) 
 
-The database signature for stable 3.1.0 is 89adc46b7aaa
+The database signature for stable 3.2.0 is 7b4e1d09c3a2
 
-The Docker image for stable 3.1.0 is 20261018
+The Docker image for stable 3.2.0 is 20261105
 
 **Never upgrade FormShare from one Docker image to another without checking the "Upgrading information" section below.**
 

@@ -26,6 +26,7 @@ __all__ = [
     "IPublicView",
     "IPrivateView",
     "IODKView",
+    "IFormList",
     "IAssistantView",
     "IPartnerView",
     "ILogOut",
@@ -1274,6 +1275,38 @@ class IODKView(Interface):  # pragma: no cover
         """
         raise NotImplementedError(
             "IODKView after_processing_odk_view must be implemented in subclasses"
+        )
+
+
+class IFormList(Interface):  # pragma: no cover
+    """
+    Allows to choose the forms of a project's ODK form list for the device that
+    asks, and to add elements of FormShare's namespace to their entries. A
+    journey (docs/device-journeys.md) offers each device the forms of its
+    stage this way.
+    """
+
+    def filter_form_list(
+        self, request, project_id, assistant_uuid, device_uuid, entries
+    ):
+        """
+        Called each time a project's ODK form list is built, once FormShare has
+        chosen its forms: every active form in a crowdsourcing project, the
+        assistant's otherwise. Every plugin is called in turn, with what the
+        one before returned.
+        :param request: Pyramid request object
+        :param project_id: The project's ID
+        :param assistant_uuid: The assistant asking, None in a crowdsourcing project
+        :param device_uuid: The device asking, from the X-FormShare-Device header
+        (device_of), None when the client names none
+        :param entries: [(form, elements)]: the form as a dict of its odkform
+        row, and the elements to add to its entry, {"fs:<name>": text}
+        :return: The entries to list, in the same shape. A plugin with nothing
+        to do returns them as they came, and the list is byte for byte what it
+        would be without it.
+        """
+        raise NotImplementedError(
+            "IFormList filter_form_list must be implemented in subclasses"
         )
 
 

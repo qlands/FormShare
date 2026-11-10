@@ -3018,19 +3018,55 @@ def generate_manifest(media_file_array):
     return etree.tostring(root, encoding="utf-8")
 
 
-def get_form_list(request, user, project_code, assistant_uuid, api=False):
+DEVICE_HEADER = "X-FormShare-Device"
+_DEVICE = re.compile(r"[A-Za-z0-9-]{1,64}")
+
+
+def device_of(request):
+    """The device asking, as FormShare Collect names it in every request: the
+    _device_uuid it writes into each submission's <meta>, which fills
+    maintable._device_uuid (varchar(64)). None when the client names none, or
+    names it in a shape no device has (docs/device-journeys.md 6.1)."""
+    value = request.headers.get(DEVICE_HEADER)
+    if value is not None and _DEVICE.fullmatch(value.strip()):
+        return value.strip()
+    return None
+
+
+def form_list_varies():
+    """Whether a plugin chooses the forms of a list by the device asking, so
+    the list's response varies with its header."""
+    return any(True for _ in plugins.PluginImplementations(plugins.IFormList))
+
+
+def get_form_list(
+    request, user, project_code, assistant_uuid, api=False, device_uuid=None
+):
     project_id = get_project_id_from_name(request, user, project_code)
     prj_list = []
     odk_dir = get_odk_path(request)
-    if not project_has_crowdsourcing(request, project_id):
+    crowdsourcing = project_has_crowdsourcing(request, project_id)
+    if not crowdsourcing:
         if not api:
             forms = get_assistant_forms(request, project_id, assistant_uuid)
         else:
             forms = get_all_project_forms(request, project_id, True)
     else:
         forms = get_all_project_forms(request, project_id, True)
+    # A plugin may choose, of these, the forms for the device asking, and add
+    # elements to their entries (IFormList): a journey offers each device the
+    # forms of its stage (docs/device-journeys.md)
+    entries = [(form, {}) for form in forms]
+    for a_plugin in plugins.PluginImplementations(plugins.IFormList):
+        entries = a_plugin.filter_form_list(
+            request,
+            project_id,
+            None if crowdsourcing else assistant_uuid,
+            device_uuid,
+            entries,
+        )
     uses_registry = project_uses_registry(request, project_id)
-    for form in forms:
+    for form, elements in entries:
         path = os.path.join(odk_dir, *["forms", form["form_directory"], "*.json"])
         files = glob.glob(path)
         if files:
@@ -3054,6 +3090,7 @@ def get_form_list(request, user, project_code, assistant_uuid, api=False):
                             get_form_data(request, project_id, form["form_id"]) or {}
                         )
                     )
+                data.update(elements)
             prj_list.append(data)
     return generate_form_list(prj_list)
 

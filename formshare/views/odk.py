@@ -12,6 +12,9 @@ from formshare.processes.db import (
     project_has_crowdsourcing,
 )
 from formshare.processes.odk.api import (
+    DEVICE_HEADER,
+    device_of,
+    form_list_varies,
     get_manifest,
     get_media_file,
     get_repository_file,
@@ -56,6 +59,21 @@ def submission_response(status, message=""):
 
 
 class ODKFormList(ODKView):
+    def form_list_response(self, user_id, project_code, assistant_uuid, api=False):
+        """The list for the device asking, which a plugin may choose by it
+        (IFormList): then the answer varies with the device's header."""
+        return self.create_xmll_response(
+            get_form_list(
+                self.request,
+                user_id,
+                project_code,
+                assistant_uuid,
+                api,
+                device_uuid=device_of(self.request),
+            ),
+            vary=(DEVICE_HEADER,) if form_list_varies() else (),
+        )
+
     def process_view(self):
         project_code = self.request.matchdict["projcode"]
         user_id = self.request.matchdict["userid"]
@@ -70,25 +88,19 @@ class ODKFormList(ODKView):
                         if self.authorize(
                             get_assistant_password(self.request, assistant_uuid)
                         ):
-                            return self.create_xmll_response(
-                                get_form_list(
-                                    self.request, user_id, project_code, assistant_uuid
-                                )
+                            return self.form_list_response(
+                                user_id, project_code, assistant_uuid
                             )
                         else:
                             return self.ask_for_credentials()
                     else:
                         return self.ask_for_credentials()
                 else:
-                    return self.create_xmll_response(
-                        get_form_list(
-                            self.request, user_id, project_code, assistant_uuid, True
-                        )
+                    return self.form_list_response(
+                        user_id, project_code, assistant_uuid, True
                     )
             else:
-                return self.create_xmll_response(
-                    get_form_list(self.request, user_id, project_code, "NA")
-                )
+                return self.form_list_response(user_id, project_code, "NA")
         else:
             response = Response(status=404)
             return response

@@ -214,12 +214,14 @@ class ODKView(object):
         reponse = Response(status=401, headerlist=headers)
         return reponse
 
-    def create_xmll_response(self, xml_data):
+    def create_xmll_response(self, xml_data, vary=()):
+        """vary: request headers the answer depends on besides the usual ones,
+        such as the device's for a form list a plugin chose (IFormList)."""
         headers = [
             ("Content-Type", "text/xml; charset=utf-8"),
             ("X-OpenRosa-Accept-Content-Length", "10000000"),
             ("Content-Language", self.request.locale_name),
-            ("Vary", "Accept-Language,Cookie,Accept-Encoding"),
+            ("Vary", ",".join(["Accept-Language", "Cookie", "Accept-Encoding", *vary])),
             ("X-OpenRosa-Version", "1.0"),
             ("Allow", "GET, HEAD, OPTIONS"),
         ]

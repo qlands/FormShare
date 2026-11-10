@@ -1,0 +1,36 @@
+{# A form written for ODK Central's entities uploads like any other, and
+   nothing of its entities happens. What to set up instead, in the form's own
+   names, until it is set up (processes/odk/foreign_entities.py,
+   formshare.md 3.6). Every name is printed as text: they come from the
+   workbook. #}
+{% if entity_notice %}
+    <div class="alert alert-info">
+        <h4><i class="fas fa-project-diagram"></i> {{ _('Written for ODK Central') }}</h4>
+        {% for a_paragraph in entity_notice.paragraphs %}
+            <p>{{ a_paragraph }}</p>
+        {% endfor %}
+        {% if entity_notice.steps|length > 0 %}
+            <ol class="m-b-none" style="padding-left: 20px">
+                {% for a_step in entity_notice.steps %}
+                    <li>
+                        {{ a_step.text }}
+                        {% if a_step.link == "lists" %}
+                            <a class="alert-link" href="{{ request.route_url('project_case_lists', userid=projectDetails.owner, projcode=projectDetails.project_code) }}">{{ _('Published lists') }}</a>
+                        {% elif a_step.link == "links" %}
+                            <a class="alert-link" href="{{ request.route_url('form_case_links', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">{{ _('Links to lists') }}</a>
+                        {% elif a_step.link == "actions" %}
+                            <a class="alert-link" href="{{ request.route_url('form_case_actions', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">{{ _('Form actions') }}</a>
+                        {% endif %}
+                        {% if a_step.details|length > 0 %}
+                            <ul style="padding-left: 18px">
+                                {% for a_detail in a_step.details %}
+                                    <li>{{ a_detail }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ol>
+        {% endif %}
+    </div>
+{% endif %}

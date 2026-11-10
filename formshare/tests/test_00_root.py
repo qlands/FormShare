@@ -80,6 +80,7 @@ from .steps.actions_split import t_e_s_t_actions_split
 from .steps.geo_clean import t_e_s_t_geo_clean
 from .steps.geo_index import t_e_s_t_geo_index
 from .steps.geo_lists import t_e_s_t_geo_lists
+from .steps.central_entities import t_e_s_t_central_entities
 from .steps.reserved_names import t_e_s_t_reserved_names
 from .steps.merge_manifest import t_e_s_t_merge_manifest
 from .steps.properties_export import t_e_s_t_properties_export
@@ -270,6 +271,8 @@ class FunctionalTests(unittest.TestCase):
             t_e_s_t_geo_index(self.test_object)
             print("Testing published lists served as GeoJSON")
             t_e_s_t_geo_lists(self.test_object)
+            print("Testing a form written for ODK Central's entities")
+            t_e_s_t_central_entities(self.test_object)
             print("Testing a form with reserved words as names")
             t_e_s_t_reserved_names(self.test_object)
             print("Testing a wide form's merge, and emoji in the audit log")

@@ -148,6 +148,9 @@
 
                                     </div>
                                 </div>
+                                {% block form_entity_notice %}
+                                    {% include 'dashboard/projects/forms/snippets/entity_notice.jinja2' %}
+                                {% endblock form_entity_notice %}
                                 {% if assistants|length > 0 %}
                                     {% include 'dashboard/projects/forms/snippets/form_details.jinja2' %}
                                 {% endif %}

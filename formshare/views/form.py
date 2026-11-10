@@ -81,7 +81,10 @@ from formshare.processes.db import (
     update_lookup_from_csv,
     get_case_creator_forms,
 )
+from formshare.processes.db.actions import get_form_actions
 from formshare.processes.db.case_management import (
+    get_case_link_consumer,
+    get_published_list_by_filename,
     inherit_consumers,
 )
 from formshare.processes.elasticsearch.repository_index import (
@@ -122,6 +125,12 @@ from formshare.processes.db.encryption import (
     marked_columns,
 )
 from formshare.processes.odk.processes import get_form_primary_key, get_form_case_params
+from formshare.processes.odk.foreign_entities import (
+    declared_entity,
+    entity_notice,
+    list_file_name,
+)
+from formshare.plugins.helpers import feature_exists
 from formshare.processes.storage import (
     store_file,
     delete_stream,
@@ -1235,6 +1244,26 @@ class FormDetails(PrivateView):
                     self.request, user_id, project_id, form_id, form_choices_columns
                 )
 
+            # A form written for ODK Central's entities uploads like any
+            # other, and nothing of its entities happens (formshare.md 3.6).
+            # Its page says what to set up instead, to those who can
+            entity = declared_entity(form_data["form_jsonfile"])
+            form_entity_notice = None
+            if entity is not None and access_type < 4:
+                form_entity_notice = entity_notice(
+                    self._,
+                    entity,
+                    project_details["project_case"] != 1
+                    and feature_exists("workflows"),
+                    get_published_list_by_filename(
+                        self.request, project_id, list_file_name(entity)
+                    )
+                    is not None,
+                    get_case_link_consumer(self.request, project_id, form_id)
+                    is not None,
+                    len(get_form_actions(self.request, project_id, form_id)) > 0,
+                )
+
             res = {
                 "projectDetails": project_details,
                 "formid": form_id,
@@ -1262,6 +1291,7 @@ class FormDetails(PrivateView):
                 "form_survey_columns": form_survey_columns,
                 "form_choices_columns": form_choices_columns,
                 "form_invalid_columns": form_invalid_columns,
+                "entity_notice": form_entity_notice,
             }
             end_time = time.perf_counter()
             elapsed_time = end_time - start_time

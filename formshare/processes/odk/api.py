@@ -3621,20 +3621,24 @@ def get_manifest(request, user, project, project_id, form, assistant_uuid=None):
                         last_clean_date_in_logs = get_last_clean_date_from_log_history(
                             request, project_id, case_form
                         )
-                        outdated = False
-                        if last_submission_date is not None:
-                            if last_submission_date > last_gen:
-                                outdated = True
-                        if last_clean_date is not None:
-                            if last_clean_date > last_gen:
-                                outdated = True
-                        if last_clean_date_in_logs is not None:
-                            if last_clean_date_in_logs > last_gen:
-                                outdated = True
-                        if outdated:
-                            generate_file = True
+                        # A change in the second of the last generation counts,
+                        # as for a published list. With "later than" alone, a
+                        # case that arrived in that second stayed off the
+                        # devices until another one arrived.
+                        generate_file = list_is_stale(
+                            last_gen,
+                            last_submission_date,
+                            last_clean_date,
+                            last_clean_date_in_logs,
+                        )
                     if generate_file:
                         log.info("Generating file {}".format(file["file_name"]))
+                        # Taken before the file reads the cases, so one that
+                        # arrives meanwhile counts as newer, and in whole
+                        # seconds, as the dates it is compared with: MySQL
+                        # rounds a fraction, and a stamp rounded up made a case
+                        # of the same second look older than the file.
+                        generated_on = datetime.datetime.now().replace(microsecond=0)
                         odk_dir = get_odk_path(request)
                         uid = str(uuid.uuid4())
                         paths = ["tmp", uid]
@@ -3686,9 +3690,7 @@ def get_manifest(request, user, project, project_id, form, assistant_uuid=None):
                                             request,
                                             project_id,
                                             form,
-                                            {
-                                                "form_caseselectorlastgen": datetime.datetime.now()
-                                            },
+                                            {"form_caseselectorlastgen": generated_on},
                                         )
                                     else:
                                         update_media_lastgen(
@@ -3696,7 +3698,7 @@ def get_manifest(request, user, project, project_id, form, assistant_uuid=None):
                                             project_id,
                                             form,
                                             file["file_name"],
-                                            datetime.datetime.now(),
+                                            generated_on,
                                         )
                                     file_name = file["file_name"]
                                     file_array.append(

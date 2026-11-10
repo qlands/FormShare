@@ -848,6 +848,25 @@ def t_e_s_t_case_management(test_object):
             FS_for_testing="true", FS_user_for_testing="caseassistant001"
         ),
     )
+
+    # The devices get both cases. From 9de2fb9d (2026-09-12) to 2026-11-10
+    # MySQL refused the SELECT that builds the file, and it kept the
+    # placeholder uploaded with the form; nothing here read the file then
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/{}/manifest/mediafile/{}".format(
+            test_object.randonLogin,
+            "case001",
+            "case_follow_up_20210319",
+            "households.csv",
+        ),
+        status=200,
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing="caseassistant001"
+        ),
+    )
+    test_object.root.assertIn(b"list_caseselector,001,Carlos,4_7,40701", res.body)
+    test_object.root.assertIn(b"list_caseselector,004,Carlos 003,4_7,40701", res.body)
+    test_object.root.assertNotIn(b"test1", res.body)
     print("Waiting 10 seconds for ES to store submissions")
     time.sleep(30)
     form_details = get_form_details(

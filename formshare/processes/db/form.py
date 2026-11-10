@@ -246,7 +246,10 @@ def generate_lookup_file(request, project, schema, file_name, only_inactive):
         # select_field, heading and empty are written in lockstep: the Nth
         # select expression is the Nth column of the header and of the
         # placeholder row. Append to all three together or the CSV shifts.
-        select_field = ["'list_caseselector' as list_name"]
+        # Each name is quoted on its own, never the expression: quoted whole,
+        # `hid as name` is one column to MySQL, which does not exist (1054),
+        # and the list stopped updating as soon as the creator had a case.
+        select_field = ["'list_caseselector' AS `list_name`"]
         heading = ["list_name"]
         empty = ["list_caseselector"]
 
@@ -258,7 +261,7 @@ def generate_lookup_file(request, project, schema, file_name, only_inactive):
             .first()
         )
         name_field = res[0]
-        select_field.append(name_field + " as name")
+        select_field.append("`{}` AS `name`".format(name_field))
         heading.append("name")
         empty.append("empty")
 
@@ -269,7 +272,7 @@ def generate_lookup_file(request, project, schema, file_name, only_inactive):
             .filter(CaseLookUp.field_editable == 0)
             .first()
         )
-        select_field.append(res[0] + " as label")
+        select_field.append("`{}` AS `label`".format(res[0]))
         heading.append("label")
         empty.append("empty")
         label_field = res[0]
@@ -282,11 +285,13 @@ def generate_lookup_file(request, project, schema, file_name, only_inactive):
         )
         for a_field in fields:
             if a_field.field_name == a_field.field_as:
-                select_field.append(a_field.field_name)
+                select_field.append("`{}`".format(a_field.field_name))
                 heading.append(a_field.field_name)
                 empty.append("empty")
             else:
-                select_field.append(a_field.field_name + " as " + a_field.field_as)
+                select_field.append(
+                    "`{}` AS `{}`".format(a_field.field_name, a_field.field_as)
+                )
                 heading.append(a_field.field_as)
                 empty.append("empty")
 
@@ -297,13 +302,9 @@ def generate_lookup_file(request, project, schema, file_name, only_inactive):
         sql = "SELECT count(surveyid) FROM {}.maintable".format(schema)
         res = request.dbsession.execute(sql).fetchone()
 
-        query_field = []
-        for a_field in select_field:
-            query_field.append("`{}`".format(a_field))
-
         if res[0] > 0:
             sql = (
-                "SELECT " + ",".join(query_field) + " from {}.maintable".format(schema)
+                "SELECT " + ",".join(select_field) + " from {}.maintable".format(schema)
             )
             if only_inactive:
                 sql = sql + " WHERE _active = 0"

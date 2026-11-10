@@ -2444,3 +2444,105 @@ def test_a_submissions_date_is_moved_onto_the_databases_clock():
     assert api.database_clock_offset(
         _Request(datetime.timedelta(0))
     ) == datetime.timedelta(0)
+
+
+# ---------------------------------------------------------------------------
+# The classic (2021) case file: the list a project with case support serves
+# its follow-ups, built from the creator's maintable by generate_lookup_file
+# ---------------------------------------------------------------------------
+
+
+def _classic_case_project(tmp_path, cases):
+    """A session over SQLite holding a case project's lookup definition and,
+    attached as its own database as a repository is in MySQL, the creator's
+    maintable. SQLite reads a backtick-quoted name as MySQL does, so a SELECT
+    MySQL would refuse fails here too."""
+    import sqlalchemy as sa
+    from sqlalchemy.orm import sessionmaker
+
+    from formshare.models import CaseLookUp
+
+    engine = sa.create_engine("sqlite:///{}".format(tmp_path / "formshare.db"))
+    repository = str(tmp_path / "repository.db")
+
+    @sa.event.listens_for(engine, "connect")
+    def _attach(connection, _record):
+        connection.execute("ATTACH DATABASE '{}' AS FS_case".format(repository))
+
+    CaseLookUp.__table__.create(engine)
+    with engine.begin() as connection:
+        connection.exec_driver_sql(
+            "CREATE TABLE FS_case.maintable (surveyid TEXT, hid TEXT, fname TEXT, "
+            "canton TEXT, distrito INTEGER, _active INTEGER, _submitted_date TEXT)"
+        )
+        for case in cases:
+            connection.exec_driver_sql(
+                "INSERT INTO FS_case.maintable VALUES (?, ?, ?, ?, ?, ?, ?)", case
+            )
+    session = sessionmaker(bind=engine)()
+    # What the case lookup page stores: the creator's key served as the
+    # name, its label, and two more columns, one under another name
+    for field_name, field_as, editable in [
+        ("canton", "canton", 1),
+        ("distrito", "distrito_id", 1),
+        ("fname", "label", 0),
+        ("hid", "name", 0),
+    ]:
+        session.add(
+            CaseLookUp(
+                project_id="p1",
+                field_name=field_name,
+                field_as=field_as,
+                field_editable=editable,
+            )
+        )
+    session.commit()
+
+    class _Request:
+        dbsession = session
+
+    return _Request()
+
+
+def _classic_case_file(tmp_path, cases, only_inactive=False):
+    from formshare.processes.db.form import generate_lookup_file
+
+    request = _classic_case_project(tmp_path, cases)
+    out = tmp_path / "cases.csv"
+    assert generate_lookup_file(request, "p1", "FS_case", str(out), only_inactive)
+    with open(out, newline="") as f:
+        return list(csv.reader(f))
+
+
+_CASES = [
+    ("s1", "001", "Carlos", "4_7", 40701, 1, "2026-01-01 10:00:00"),
+    ("s2", "002", "Ana", "4_8", 40702, 0, "2026-01-02 10:00:00"),
+    ("s3", "003", None, "4_9", 40703, 1, "2026-01-03 10:00:00"),
+    ("s4", "004", "Luis", "4_7", 40701, 1, "2026-01-04 10:00:00"),
+]
+
+
+def test_the_classic_case_file_serves_the_active_cases(tmp_path):
+    """From 9de2fb9d (2026-09-12) to 2026-11-10 each expression of this SELECT
+    was quoted whole, `hid as name`. MySQL refused it (1054) as soon as the
+    creator had a case, so the list stayed as it was before: new cases never
+    reached the devices, and closed ones stayed on them."""
+    assert _classic_case_file(tmp_path, _CASES) == [
+        ["list_name", "name", "label", "canton", "distrito_id"],
+        ["list_caseselector", "001", "Carlos", "4_7", "40701"],
+        ["list_caseselector", "004", "Luis", "4_7", "40701"],
+    ]
+
+
+def test_an_activation_form_is_served_the_inactive_cases(tmp_path):
+    assert _classic_case_file(tmp_path, _CASES, only_inactive=True) == [
+        ["list_name", "name", "label", "canton", "distrito_id"],
+        ["list_caseselector", "002", "Ana", "4_8", "40702"],
+    ]
+
+
+def test_a_creator_without_cases_gets_the_placeholder_row(tmp_path):
+    assert _classic_case_file(tmp_path, []) == [
+        ["list_name", "name", "label", "canton", "distrito_id"],
+        ["list_caseselector", "empty", "empty", "empty", "empty"],
+    ]

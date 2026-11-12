@@ -23,6 +23,12 @@ In a project of its own:
   one that fails included.
 - In a classic case project (2021), no follow-up can be added while the
   form that creates the cases is being deleted.
+- The pages showing a form being deleted refresh when it ends (2026-11-11):
+  the request stores the task's ID on the form, which the project's page
+  names as the stream it listens to, and the task says on it how the
+  deletion ended. A stop says "failure", which is not kept, and its page
+  listens no more; the end says "success", kept for a stream opened late,
+  as the worker's deletion of the form in testing and the resume do.
 
 Every deletion made to stop here runs with the suite's settings, which send
 no email: resume_form_deletion reads development.ini, so it only runs those
@@ -45,9 +51,12 @@ import time
 import uuid
 from types import SimpleNamespace
 
+import redis
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import NullPool
+
+from formshare.processes.sse.messaging import KEEP_SECONDS, kept_status_key
 
 from .form_deletion import confirmed, delete_form, deletion_state
 from .in_process import add_task, build_in_process, finish_task, form_row
@@ -65,6 +74,35 @@ def _execute(config, sql, *params):
         return result.fetchall() if result.returns_rows else result.rowcount
     finally:
         engine.dispose()
+
+
+def _listen(config):
+    """What a page's stream hears, for every task: a subscription to the
+    tasks' channels, in place before the step goes on."""
+    client = redis.from_url(config["celery.broker"], decode_responses=True)
+    pubsub = client.pubsub()
+    pubsub.psubscribe("formshare:tasks:*")
+    assert pubsub.get_message(timeout=5)["type"] == "psubscribe"
+    return client, pubsub
+
+
+def _heard(pubsub, until=None, seconds=60):
+    """The (task, status) pairs heard, until one that until accepts or, with
+    no until, until the statuses already sent are read."""
+    heard = []
+    deadline = time.time() + seconds
+    while time.time() < deadline:
+        message = pubsub.get_message(
+            ignore_subscribe_messages=True, timeout=1.0 if until else 0.5
+        )
+        if message is None:
+            if until is None:
+                break
+            continue
+        heard.append((message["channel"].split(":")[2], message["data"]))
+        if until is not None and until(*heard[-1]):
+            break
+    return heard
 
 
 def _repository_exists(config, schema):
@@ -302,8 +340,30 @@ def t_e_s_t_form_deletion_task(test_object):
     _refused(test_object, login, TESTING_FORM, confirmed("justtest_b"))
     assert deletion_state(config, login, PROJECT, TESTING_FORM) == (0, None)
 
-    # Typed, the worker deletes it, and its directory is renamed
-    delete_form(test_object, PROJECT, TESTING_FORM)
+    # Typed, the worker deletes it, and its directory is renamed. The task
+    # runs under the ID the request stored on the form, and says on its
+    # stream that the form is gone, kept for a page that listens late; an
+    # export says "success" too, and keeps nothing
+    client, pubsub = _listen(config)
+    try:
+        delete_form(test_object, PROJECT, TESTING_FORM)
+        heard = _heard(
+            pubsub,
+            until=lambda task, status: status == "success"
+            and client.get(kept_status_key(task)) == "success",
+        )
+        assert heard, "The deletion said nothing on its stream"
+        task, status = heard[-1]
+        assert status == "success"
+        assert 0 < client.ttl(kept_status_key(task)) <= KEEP_SECONDS
+        assert str(uuid.UUID(task)) == task
+    finally:
+        pubsub.close()
+        client.close()
+    # A stream opened now, as by a page that loaded before the end, hears it
+    # at once and ends
+    res = testapp.get("/task_stream/{}".format(task), status=200)
+    assert res.body.endswith(b"data: success\n\n")
     odk_dir = os.path.join(config["repository.path"], "odk", "forms")
     assert not os.path.exists(os.path.join(odk_dir, testing_directory))
     assert glob.glob(
@@ -501,14 +561,25 @@ def t_e_s_t_form_deletion_task(test_object):
     # --- The task, here, stopping --------------------------------------------
     # The request marks the form as being deleted before it queues the task;
     # here it is marked as the request does, and the task runs in this process
+    deletion_task = str(uuid.uuid4())
     _execute(
         config,
         "UPDATE odkform SET form_accsub = 0, form_blocked = 1, form_deleting = 1, "
-        "form_deletedby = %s WHERE project_id = %s AND form_id = %s",
+        "form_deletedby = %s, form_deletetask = %s "
+        "WHERE project_id = %s AND form_id = %s",
         login,
+        deletion_task,
         project_id,
         PARENT,
     )
+    # The project's page listens to the task's stream, to refresh when the
+    # deletion ends
+    res = testapp.get("/user/{}/project/{}".format(login, PROJECT), status=200)
+    assert re.search(
+        r'data-deletion-stream="[^"]*/task_stream/{}"'.format(deletion_task),
+        res.body.decode("utf-8"),
+    )
+    client, pubsub = _listen(config)
     # What accounts hold on the repository: MySQL keeps it when it drops a
     # database, and restoring the dump would make the schema again under its
     # name. A grant on the name, as the analytics plugin makes; one with its
@@ -550,6 +621,10 @@ def t_e_s_t_form_deletion_task(test_object):
     # The task revoked the repository's grants before anything else, stopped
     # or not, and left the pattern's
     assert granted() == ["FS\\_%"]
+    # It said so on its stream, and kept nothing: a page that opens later
+    # waits, and the next one does not listen
+    assert (deletion_task, "failure") in _heard(pubsub)
+    assert client.get(kept_status_key(deletion_task)) is None
 
     # A mysqldump that fails
     settings = dict(config)
@@ -567,10 +642,14 @@ def t_e_s_t_form_deletion_task(test_object):
     # downloads, the assistant's and the partner's pages, and what devices
     # download, the cases its lists serve included
     assert _gone_for_everyone(test_object, login, assistant, partner_email) > 80
-    # The project's page says so, and leads to none of it
+    # The project's page says so, and leads to none of it. It listens no more
+    # to a deletion that stopped: only the technical team goes on with it
     res = testapp.get("/user/{}/project/{}".format(login, PROJECT), status=200)
     assert b"Being deleted" in res.body
     assert '/form/{}"'.format(PARENT).encode() not in res.body
+    assert b'data-deletion-stream="' not in res.body
+    heard = _heard(pubsub)
+    assert [status for task, status in heard if task == deletion_task] == ["failure"]
     # and its map draws none of its points, which the index still holds
     total, datasets = dataset_index.get_datasets_from_project(config, project_id)
     assert PARENT in [a_dataset["_xform_id_string"] for a_dataset in datasets]
@@ -681,6 +760,7 @@ def t_e_s_t_form_deletion_task(test_object):
     assert _repository_exists(config, schema)
     first_dump = _dumps(repository_dir, schema)
     assert len(first_dump) == 1 and dump_is_whole(first_dump[0])
+    assert (deletion_task, "failure") in _heard(pubsub)
 
     # A version that shares the repository goes with the form. A form in
     # testing stands in for it, marked as the request marks every version
@@ -689,10 +769,11 @@ def t_e_s_t_form_deletion_task(test_object):
     _execute(
         config,
         "UPDATE odkform SET form_schema = %s, form_accsub = 0, form_blocked = 1, "
-        "form_deleting = 1, form_deletedby = %s "
+        "form_deleting = 1, form_deletedby = %s, form_deletetask = %s "
         "WHERE project_id = %s AND form_id = %s",
         schema,
         login,
+        deletion_task,
         project_id,
         TESTING_FORM,
     )
@@ -734,6 +815,15 @@ def t_e_s_t_form_deletion_task(test_object):
     ]
     assert deletion_state(config, login, PROJECT, PARENT) is None
     assert deletion_state(config, login, PROJECT, TESTING_FORM) is None
+    # The resume said so on the stream the forms named, once for both, and
+    # kept it: a page that listened before the stop is long gone, and one
+    # opened now hears it at once
+    heard = _heard(pubsub, until=lambda task, status: task == deletion_task)
+    assert heard[-1] == (deletion_task, "success")
+    assert client.get(kept_status_key(deletion_task)) == "success"
+    assert 0 < client.ttl(kept_status_key(deletion_task)) <= KEEP_SECONDS
+    res = testapp.get("/task_stream/{}".format(deletion_task), status=200)
+    assert res.body.endswith(b"data: success\n\n")
     assert not _repository_exists(config, schema)
     assert granted() == ["FS\\_%"]
     _execute(config, "DROP ROLE '{}'".format(role))
@@ -751,8 +841,14 @@ def t_e_s_t_form_deletion_task(test_object):
     with gzip.open(dumps[-1], "rt") as dump:
         text = dump.read()
     assert "CREATE DATABASE" in text and "CREATE TABLE `maintable`" in text
-    # A deletion already done is done: resuming it again changes nothing
+    # A deletion already done is done: resuming it again changes nothing, and
+    # says nothing
     assert resume_main([ini_file, project_id, PARENT]) == 0
+    try:
+        assert deletion_task not in [task for task, _status in _heard(pubsub)]
+    finally:
+        pubsub.close()
+        client.close()
 
     # A name that is no repository's is never dropped nor revoked, and a
     # directory that is not there is not renamed

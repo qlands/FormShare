@@ -2,7 +2,32 @@
    is paying attention, and the deletion cannot be stopped once it starts.
    A delete button carries the class remove_form, its address in urn, the
    form's ID in data-form-id, and data-has-parent="true" on a newer version,
-   whose deletion deletes every version. Included inside a page's script. #}
+   whose deletion deletes every version. Included inside a page's script.
+   A form being deleted names the stream of its task in data-deletion-stream,
+   and the page refreshes when it ends (2026-11-11), as it does for an
+   export: one stream for a deletion, whatever versions show it. #}
+$(function () {
+    var streams = [];
+    $('.form-deleting[data-deletion-stream]').each(function () {
+        var url = $(this).attr('data-deletion-stream');
+        if (streams.indexOf(url) < 0) {
+            streams.push(url);
+        }
+    });
+    streams.forEach(function (url) {
+        var source = new EventSource(url);
+        source.onmessage = function (e) {
+            if (e.data === 'success' || e.data === 'failure') {
+                source.close();
+                location.reload();
+            }
+        };
+        source.onerror = function () {
+            source.close();
+        };
+    });
+});
+
 $(document).on('click', '.remove_form', function () {
     var action_url = $(this).attr('urn');
     var form_id = $(this).attr('data-form-id');

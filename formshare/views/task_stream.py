@@ -16,6 +16,12 @@ frame.  When the message payload is ``"success"`` or ``"failure"`` the
 stream is closed server-side; the browser can then reload or refresh the
 relevant UI fragment.
 
+A task that can end before its page listens keeps its last status
+(``send_task_status_to_form(..., keep=True)``, a form deletion since
+2026-11-11). A stream opened after it was sent gets it at once, and ends.
+The kept status is read after the subscription, so a status sent in between
+is heard either way.
+
 Authentication
 --------------
 The endpoint validates the "main" auth cookie (itsdangerous-signed) that
@@ -29,6 +35,7 @@ import logging
 import redis.asyncio as aioredis
 from starlette.responses import StreamingResponse
 
+from formshare.processes.sse.messaging import kept_status_key, task_channel
 from formshare.views.classes import AsyncView
 
 log = logging.getLogger("formshare")
@@ -41,20 +48,31 @@ class TaskStreamView(AsyncView):
     requireAuth = True
 
     # The stream stays open until the task ends, which the synchronous test
-    # client cannot wait for
+    # client cannot wait for. One that finds a kept status ends at once:
+    # tests/steps/form_deletion_task.py reads one
     async def process_view(self, request):  # pragma: no cover
         task_id = request.path_params["task_id"]
         redis_url = self.settings.get("celery.broker", "redis://localhost:6379/0")
-        channel = "formshare:tasks:{}".format(task_id)
+        channel = task_channel(task_id)
 
         async def event_generator():
             r = aioredis.from_url(redis_url, decode_responses=True)
             pubsub = r.pubsub()
             await pubsub.subscribe(channel)
             try:
+                # Redis confirms the subscription before anything published
+                # after it, so what is kept is read once it is in place
+                await pubsub.get_message(timeout=2.0)
+
                 # Initial comment keeps the connection alive and confirms
                 # the subscription before the first real message.
                 yield ": connected\n\n"
+
+                # A task that ended before this page listened
+                kept = await r.get(kept_status_key(task_id))
+                if kept is not None:
+                    yield "data: {}\n\n".format(kept)
+                    return
 
                 while True:
                     if await request.is_disconnected():

@@ -2057,15 +2057,20 @@ class DeleteForm(PrivateView):
             )
             if not continue_delete:
                 return self.refuse(next_page, message)
-        # Who asked: the person signed in, not the project's owner
-        marked = mark_for_deletion(self.request, project_id, forms, self.user.id)
+        # Who asked: the person signed in, not the project's owner. The task's
+        # ID is stored with the mark, so the page this goes back to listens to
+        # the task and refreshes when it ends (2026-11-11)
+        task_id = str(uuid.uuid4())
+        marked = mark_for_deletion(
+            self.request, project_id, forms, self.user.id, task_id
+        )
         if not marked:  # pragma: no cover  # Blocked or marked since it was read
             return self.refuse(
                 next_page,
                 self._("This form is blocked and cannot be changed at the moment."),
             )
         try:
-            queue_form_deletion(self.request, project_id, form_id)
+            queue_form_deletion(self.request, project_id, form_id, task_id)
         except Exception as e:
             # The forms stay marked: the technical team resumes the deletion
             # on the server (resume_form_deletion)

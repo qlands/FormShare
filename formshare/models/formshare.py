@@ -483,6 +483,9 @@ class Odkform(Base):
     form_deleting = Column(INTEGER, server_default=text("'0'"))
     form_deletedby = Column(Unicode(120))
     form_deleteerror = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    # The ID of that task, whose stream tells the pages when it ends
+    # (2026-11-11)
+    form_deletetask = Column(Unicode(64))
     form_testing = Column(INTEGER, server_default=text("'0'"))
     form_incversion = Column(INTEGER, server_default=text("'0'"))
     parent_project = Column(Unicode(64))

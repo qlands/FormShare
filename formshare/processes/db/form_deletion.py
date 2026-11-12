@@ -245,10 +245,12 @@ def deletion_refusal(request, project, form, forms):
     return None
 
 
-def mark_for_deletion(request, project, forms, user):
+def mark_for_deletion(request, project, forms, user, task_id=None):
     """Marks the forms inactive, blocked and being deleted, in one commit,
     unless one of them got blocked or marked in the meantime. Returns whether
-    it marked them."""
+    it marked them. Each keeps the ID of the task that will delete them,
+    chosen before it is queued, so that a page showing any of them listens to
+    the stream that says when the deletion ends (2026-11-11)."""
     keys = [(a_row.project_id, a_row.form_id) for a_row in forms]
     try:
         marked = 0
@@ -266,6 +268,7 @@ def mark_for_deletion(request, project, forms, user):
                         "form_deleting": 1,
                         "form_deletedby": user,
                         "form_deleteerror": None,
+                        "form_deletetask": task_id,
                     },
                     synchronize_session=False,
                 )

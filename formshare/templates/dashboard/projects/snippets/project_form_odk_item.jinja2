@@ -43,7 +43,8 @@
                         {% endif %}
                     {% endif %}
                     {% if form.form_deleting == 1 %}
-                        <span class="label label-danger form-deleting" title="{{ _('FormShare is deleting this form. It leaves the project when it is done.') }}">{{ _('Being deleted') }}</span>
+                        {# The page refreshes when the deletion ends (2026-11-11), except one that stopped: only the technical team goes on with it #}
+                        <span class="label label-danger form-deleting" {% if form.form_deletetask and not form.form_deleteerror %}data-deletion-stream="{{ request.route_url('task_stream', task_id=form.form_deletetask) }}"{% endif %} title="{{ _('FormShare is deleting this form. It leaves the project when it is done.') }}">{{ _('Being deleted') }}</span>
                     {% elif form.form_blocked != 0 %}
                         <span class="label label-danger" title="{{ _('This form is merging with another form or it had a problem while merging and cannot receive submissions. Contact the technical support.') }}">{{ _('Blocked') }}</span>
                     {% endif %}

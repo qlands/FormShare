@@ -28,6 +28,13 @@ and being deleted, the reason goes in form_deleteerror, and the technical
 team is emailed: only they resume it (owner, 2026-10-28). A repository a
 deleted form's leftover still refers to is one such stop. Users cannot
 cancel it: the task is no AbortableTask, and no page offers to stop it.
+
+The pages showing a form being deleted listen to the stream of the task
+whose ID the request stored on the forms (form_deletetask), and refresh when
+it ends (owner, 2026-11-11). So the task says "success" there once the rows
+are gone, and keeps it for an hour: a small form is gone before its page
+listens. A stop says "failure", which is not kept: the page listens no more
+to a deletion that stopped, since only the technical team goes on with it.
 """
 
 import datetime
@@ -57,6 +64,7 @@ from formshare.processes.elasticsearch.repository_index import (
     delete_dataset_from_index,
 )
 from formshare.processes.email.send_async_email import send_async_email
+from formshare.processes.sse.messaging import send_task_status_to_form
 from formshare.processes.storage.local_storage import delete_bucket
 from sqlalchemy import create_engine
 from sqlalchemy import text as sqlalchemy_text
@@ -228,6 +236,8 @@ def internal_delete_form(settings, project_id, form_id, locale="en"):
     engine = create_engine(settings["sqlalchemy.url"], poolclass=NullPool)
     session = Session(bind=engine)
     keys = [(project_id, form_id)]
+    # The streams the pages showing these forms listen to
+    tasks = set()
     try:
         forms = forms_of_deletion(session, project_id, form_id)
         if not forms:
@@ -237,6 +247,7 @@ def internal_delete_form(settings, project_id, form_id, locale="en"):
             # recorded on it, and nobody is emailed
             return False, "it is not marked for deletion"
         keys = [(a_row.project_id, a_row.form_id) for a_row in forms]
+        tasks = {a_row.form_deletetask for a_row in forms if a_row.form_deletetask}
         forms_data = [map_from_schema(a_row) for a_row in forms]
         form_data = forms_data[0]
         directories = [a_row.form_directory for a_row in forms]
@@ -313,6 +324,10 @@ def internal_delete_form(settings, project_id, form_id, locale="en"):
                 form_id, project_id, user, stamp
             )
         )
+        # The form is gone: its pages refresh. What the Celery plugins clean
+        # up of their own shows on none of them
+        for task in sorted(tasks):
+            send_task_status_to_form(settings, task, "success", keep=True)
 
         # 7: the Celery plugins, once for each form deleted, the form asked
         # for first. What a plugin keeps of a version is under the version's
@@ -351,6 +366,8 @@ def internal_delete_form(settings, project_id, form_id, locale="en"):
         except Exception as recording_error:
             session.rollback()
             log.error("The reason could not be recorded: {}".format(recording_error))
+        for task in sorted(tasks):
+            send_task_status_to_form(settings, task, "failure")
         _email_technical_team(
             settings,
             "A form deletion stopped",

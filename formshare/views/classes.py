@@ -52,7 +52,10 @@ from formshare.processes.db import (
     get_project_tenant,
     get_assistant_uuid,
     get_user_id_with_email,
+    is_assistant_active,
+    get_assistant_password,
 )
+from formshare.processes.db.assistant import get_odk_assistant_uuid
 from formshare.middleware.httpexceptions import HTTPFound
 from formshare.middleware.httpexceptions import HTTPNotFound, exception_response
 from formshare.middleware.response import Response, FileResponse
@@ -213,6 +216,30 @@ class ODKView(object):
         ]
         reponse = Response(status=401, headerlist=headers)
         return reponse
+
+    def signed_in_assistant(self, project_id):
+        """The assistant of the project who signed in, as the form list signs
+        them in: the uuid of an active assistant who may send the project's
+        forms (its own, one of another project given one of its forms, or
+        one linked to a user, by email) whose Digest response is right; None
+        otherwise, to answer with ask_for_credentials(). Not for a
+        crowdsourcing project, where nobody signs in, nor for an API token
+        (self.api).
+
+        Plugins that answer at a project's OpenRosa address
+        (FormShareODKView) sign assistants in through this, so that they
+        cannot drift from the form list: FormAtlas copied the ODK view
+        instead, and keeps a copy of its own."""
+        assistant_uuid = get_odk_assistant_uuid(
+            self.request, self.user_id, project_id, self.user
+        )
+        if not is_assistant_active(self.request, assistant_uuid):
+            return None
+        if not self.authorize(get_assistant_password(self.request, assistant_uuid)):
+            # A wrong Digest answer: the suite signs in with
+            # FS_for_testing, where authorize says yes
+            return None  # pragma: no cover
+        return assistant_uuid
 
     def create_xmll_response(self, xml_data, vary=()):
         """vary: request headers the answer depends on besides the usual ones,

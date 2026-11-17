@@ -80,22 +80,19 @@ class ODKFormList(ODKView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
             if not project_has_crowdsourcing(self.request, project_id):
-                assistant_uuid = get_odk_assistant_uuid(
-                    self.request, user_id, project_id, self.user
-                )
                 if not self.api:
-                    if is_assistant_active(self.request, assistant_uuid):
-                        if self.authorize(
-                            get_assistant_password(self.request, assistant_uuid)
-                        ):
-                            return self.form_list_response(
-                                user_id, project_code, assistant_uuid
-                            )
-                        else:
-                            return self.ask_for_credentials()
-                    else:
+                    assistant_uuid = self.signed_in_assistant(project_id)
+                    if assistant_uuid is None:
                         return self.ask_for_credentials()
-                else:
+                    return self.form_list_response(
+                        user_id, project_code, assistant_uuid
+                    )
+                else:  # pragma: no cover - an API token signs in only
+                    # through ODKView's Bearer branch, which the suite does
+                    # not reach (it signs in with FS_for_testing)
+                    assistant_uuid = get_odk_assistant_uuid(
+                        self.request, user_id, project_id, self.user
+                    )
                     return self.form_list_response(
                         user_id, project_code, assistant_uuid, True
                     )

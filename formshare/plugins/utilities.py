@@ -26,6 +26,7 @@ from formshare.views.classes import (
     ProjectsView,
     AssistantView,
     PartnerView,
+    ODKView,
 )
 from formshare.middleware.httpexceptions import HTTPNotFound
 
@@ -49,6 +50,7 @@ __all__ = [
     "FormShareAsyncView",
     "FormShareFormEditorView",
     "FormShareFormAdminView",
+    "FormShareODKView",
     "add_field_to_form_access_schema",
     "add_field_to_form_group_access_schema",
 ]
@@ -221,6 +223,27 @@ class FormSharePartnerView(
 ):  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
     A view class for plugins which require an Partner view.
+    """
+
+    def process_view(self):
+        raise NotImplementedError("process_view must be implemented in subclasses")
+
+
+class FormShareODKView(
+    ODKView
+):  # pragma: no cover - Tested by loading testing plugins but not Covered
+    """
+    A view class for plugins that answer at a project's OpenRosa address
+    (/user/{userid}/project/{projcode}/...), as the form list does: ODK
+    clients and FormShare Collect, not a browser session. Register its route
+    with the renderer None: process_view returns a Response.
+
+    When process_view runs, self.user is the Digest username (empty when the
+    request carries no login, which only a crowdsourcing project lets
+    through), self.user_id the project's owner, and self.api True for an API
+    token. Sign the assistant in with self.signed_in_assistant(project_id),
+    the form list's own sign-in, and answer self.ask_for_credentials() when it
+    gives None.
     """
 
     def process_view(self):

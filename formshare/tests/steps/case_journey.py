@@ -1856,6 +1856,32 @@ def t_e_s_t_case_journey(test_object):
         )
         assert "FS_error" not in res.headers
     _assign_assistant(test_object, tool2_v6)
+
+    # The merge gives it Tool 2's actions and the module they compose to
+    # (inherit_actions, 2026-11-21): a merge used to leave them behind, and
+    # the version that receives the follow-ups changed no case.
+    def actions_of(form_id):
+        return _scalar(
+            config,
+            "SELECT GROUP_CONCAT(CONCAT(action_order, ':', action_kind, ':', "
+            "action_desc) ORDER BY action_order SEPARATOR '|') FROM propertyaction "
+            "WHERE project_id = '{}' AND form_id = '{}'".format(
+                test_object.projectID, form_id
+            ),
+        )
+
+    def module_of(form_id):
+        return _scalar(
+            config,
+            "SELECT action_module FROM odkform WHERE project_id = '{}' "
+            "AND form_id = '{}'".format(test_object.projectID, form_id),
+        )
+
+    # Not while it is in testing: it has no dictionary yet, so its rules
+    # would read as naming fields it does not have.
+    assert actions_of(TOOL2), "Tool 2 has no action left to inherit"
+    assert actions_of(tool2_v6) is None and not module_of(tool2_v6)
+
     # In testing, the new version tells the device which form it will merge
     # into and has no repository of its own yet.
     v6_entry = _form_list(test_object, login, project)[tool2_v6]
@@ -1928,6 +1954,28 @@ def t_e_s_t_case_journey(test_object):
     assert (
         merged_schema == schema2
     ), "the merge did not hand the schema to the new version"
+    # It took over the repository with Tool 2's actions and their module,
+    # each rule reading as its author described it.
+    assert actions_of(tool2_v6) == actions_of(TOOL2)
+    assert module_of(tool2_v6) and module_of(tool2_v6) == module_of(TOOL2)
+    # The task writes the version's dictionary after it hands the schema
+    # over, and until then the page cannot read the names the rules use.
+    expected = [
+        a_description.split(":", 2)[2].encode("utf-8")
+        for a_description in actions_of(TOOL2).split("|")
+    ]
+    for _ in range(40):
+        res = testapp.get(
+            "/user/{}/project/{}/form/{}/actions?partial=actions_list".format(
+                login, project, tool2_v6
+            ),
+            status=200,
+        )
+        if all(a_description in res.body for a_description in expected):
+            break
+        time.sleep(3)
+    for a_description in expected:
+        test_object.root.assertIn(a_description, res.body)
     # Merged, it belongs to the repository it merged into: the device keeps
     # one mirror for both versions.
     v6_entry = _form_list(test_object, login, project)[tool2_v6]
@@ -1969,6 +2017,23 @@ def t_e_s_t_case_journey(test_object):
     )
     assert "FS_error" not in res.headers
     assert _maintable_count(test_object.server_config, schema2) == before + 1
+    # The actions it kept ran on it: one run, applied, under the new version.
+    with io.open(merged_submission, encoding="utf-8") as a_file:
+        merged_instance = re.search(
+            r"<instanceID>([^<]*)</instanceID>", a_file.read()
+        ).group(1)
+    assert (
+        int(
+            _scalar(
+                config,
+                "SELECT COUNT(*) FROM actionrun WHERE project_id = '{}' "
+                "AND form_id = '{}' AND instance_id = '{}' AND run_status = 0".format(
+                    test_object.projectID, tool2_v6, merged_instance
+                ),
+            )
+        )
+        == 1
+    ), "the merged version did not run the actions it kept"
     # With its files: the merge task used to delete whatever the new
     # version's submissions directory held once it had handed it the schema,
     # so this submission could lose them silently or, caught half way, get a
@@ -1985,6 +2050,25 @@ def t_e_s_t_case_journey(test_object):
         FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
     )
     actions_v6 = "/user/{}/project/{}/form/{}/actions".format(login, project, tool2_v6)
+    # The count wants the counting module alone: the actions the version
+    # kept from Tool 2 go first.
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    try:
+        kept_ids = [
+            a_row[0]
+            for a_row in engine.execute(
+                "SELECT action_id FROM propertyaction WHERE project_id = '{}' "
+                "AND form_id = '{}'".format(test_object.projectID, tool2_v6)
+            ).fetchall()
+        ]
+    finally:
+        engine.dispose()
+    for an_id in kept_ids:
+        res = testapp.post(
+            actions_v6, {"delete_action": "1", "action_id": an_id}, status=302
+        )
+        assert "FS_error" not in res.headers
+    assert actions_of(tool2_v6) is None
     res = testapp.post(
         actions_v6 + "/add/code",
         {

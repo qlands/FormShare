@@ -496,6 +496,77 @@ def move_form_action(request, project_id, form_id, action_id, direction):
     return recompile_form_module(request, project_id, form_id)
 
 
+def inherit_actions(request, project_id, parent_form, child_form):
+    """A new version starts with the actions of the version it replaces
+    (2026-11-21). A merge used to carry the case links and the properties
+    over (inherit_consumers, inherit_properties) and leave the actions
+    behind, so the version that receives the follow-ups changed no case.
+
+    The actions act on the same cases, through a case link the merge refuses
+    to change, in the repository the version merges into, so the parent's
+    rows and its composed module are copied as they are. The module is not
+    composed again here: the child's dictionary is written by the merge, and
+    saving, moving or removing one of its actions composes the module with
+    the child's own names. A child that has actions keeps them and gets none.
+
+    Called by the merge (RepositoryMergeForm) once mergeversions has accepted
+    the version, before the task that hands it the repository. Not at upload:
+    a version in testing has no dictionary yet, so its Form actions page would
+    show every rule as naming a field the form does not have. Returns the
+    number of actions copied."""
+    if (
+        request.dbsession.query(PropertyAction)
+        .filter(PropertyAction.project_id == project_id)
+        .filter(PropertyAction.form_id == child_form)
+        .first()
+        is not None
+    ):
+        return 0
+    rows = (
+        request.dbsession.query(PropertyAction)
+        .filter(PropertyAction.project_id == project_id)
+        .filter(PropertyAction.form_id == parent_form)
+        .order_by(PropertyAction.action_order)
+        .all()
+    )
+    parent = _form(request, project_id, parent_form)
+    child = _form(request, project_id, child_form)
+    if not rows or parent is None or child is None:
+        return 0
+    try:
+        for a_row in rows:
+            request.dbsession.add(
+                PropertyAction(
+                    action_id=str(uuid.uuid4()),
+                    project_id=project_id,
+                    form_id=child_form,
+                    action_order=a_row.action_order,
+                    action_kind=a_row.action_kind,
+                    action_code=a_row.action_code,
+                    action_desc=a_row.action_desc,
+                    target_scope=a_row.target_scope,
+                    target_kind=a_row.target_kind,
+                    target_name=a_row.target_name,
+                    value_kind=a_row.value_kind,
+                    value=a_row.value,
+                    when_rules=a_row.when_rules,
+                    action_cdate=a_row.action_cdate,
+                )
+            )
+        child.action_module = parent.action_module
+        child.action_mode = parent.action_mode
+        request.dbsession.commit()
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} copying the actions of form {} to its new version {}".format(
+                e, parent_form, child_form
+            )
+        )
+        return 0
+    return len(rows)
+
+
 def _renumber(request, project_id, form_id):
     rows = get_form_actions(request, project_id, form_id)
     for order, a_row in enumerate(rows, 1):

@@ -19,6 +19,7 @@ from formshare.processes.db import (
     get_case_form,
     get_field_details,
 )
+from formshare.processes.db.actions import inherit_actions
 from formshare.processes.db.encryption import (
     encryption_change_message,
     marked_columns,
@@ -325,6 +326,12 @@ class RepositoryMergeForm(PrivateView):
                     s_values_to_ignore,
                 )
                 if merged == 0:
+                    # The new version takes over the repository with the
+                    # actions of the version it replaces (2026-11-21): they
+                    # act on the same cases, through the same case link. A
+                    # merge used to leave them behind, and the version that
+                    # receives the follow-ups changed no case.
+                    inherit_actions(self.request, project_id, old_form_id, new_form_id)
                     task_id = merge_form(
                         self.request,
                         project_details["owner"],

@@ -10,7 +10,7 @@
                 <div class="tabs-container">
                     <ul class="nav nav-tabs" role="tablist">
                         <li><a class="nav-link active" data-toggle="tab" href="#example-formshare">FormShare 1.0</a></li>
-                        <li><a class="nav-link" data-toggle="tab" href="#example-collect">{{ _('ODK Collect XML data files') }}</a></li>
+                        <li><a class="nav-link" data-toggle="tab" href="#example-collect">{{ _('FormShare Collect XML data files') }}</a></li>
                         {% block import_guide_tabs_exta %}
 
                         {% endblock import_guide_tabs_exta %}
@@ -26,7 +26,7 @@
                         </div>
                         <div role="tabpanel" id="example-collect" class="tab-pane">
                             <div class="panel-body">
-                                {{ _('FormShare can import ODK Collect XML files. However, the files must be inside a zip. The following image shows how to zip the files.') }}
+                                {{ _('FormShare can import FormShare Collect XML files. However, the files must be inside a zip. The following image shows how to zip the files.') }}
                                 <img style="margin-top: 5px; margin-bottom: 5px; margin-left: 30px" src="{{request.url_for_static('xml_zip.png')}}">
                                 <br/>
                                 {{ _('Store the submissions in separate directories. Each directory must contain the XML data file and any media files (if present). You can decide how to name each directory, submission file, and zip file.') }}

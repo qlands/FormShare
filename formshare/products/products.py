@@ -138,7 +138,7 @@ def get_product_description(request, product):
     if product == "fs1import":
         return _("Import FormShare 1.0 data")
     if product == "xmlimport":
-        return _("Import ODK Collect XML data")
+        return _("Import FormShare Collect XML data")
     if product == "repository":
         return _("Build repository")
     if product == "xlsx_public_export":

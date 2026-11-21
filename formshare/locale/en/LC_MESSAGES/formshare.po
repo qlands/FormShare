@@ -572,7 +572,7 @@ msgid "Import FormShare 1.0 data"
 msgstr ""
 
 #: formshare/products/products.py:113
-msgid "Import ODK Collect XML data"
+msgid "Import FormShare Collect XML data"
 msgstr ""
 
 #: formshare/products/products.py:115
@@ -898,7 +898,7 @@ msgid "QR Code"
 msgstr ""
 
 #: formshare/templates/assistant/index.jinja2:43
-msgid "Use this QR Code to configure ODK collect"
+msgid "Use this QR Code to configure FormShare Collect"
 msgstr ""
 
 #: formshare/templates/assistant/page.jinja2:147
@@ -2665,7 +2665,7 @@ msgstr ""
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:6
 msgid ""
 "This is a simple name to identify the assistant in FormShare. It is the "
-"name that the assistant will use in ODK Collect. The assistant id must be"
+"name that the assistant will use in FormShare Collect. The assistant id must be"
 " unique and cannot be changed afterward."
 msgstr ""
 
@@ -3388,7 +3388,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/import_data/import_form.jinja2:44
 #: formshare/templates/dashboard/projects/forms/import_data/snippets/import_guide.jinja2:13
-msgid "ODK Collect XML data files"
+msgid "FormShare Collect XML data files"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/import_data/import_form.jinja2:49
@@ -3453,7 +3453,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/import_data/snippets/import_guide.jinja2:29
 msgid ""
-"FormShare can import ODK Collect XML files. However, the files must be "
+"FormShare can import FormShare Collect XML files. However, the files must be "
 "inside a zip. The following image shows how to zip the files."
 msgstr ""
 
@@ -4565,7 +4565,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:49
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:30
-msgid "Use this QR to configure ODK Collect"
+msgid "Use this QR to configure FormShare Collect"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:50
@@ -5801,7 +5801,7 @@ msgid "The code must be unique and cannot be changed afterwards"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/snippets/project_form.jinja2:19
-msgid "You will use this in ODK Collect to identify your project."
+msgid "You will use this in FormShare Collect to identify your project."
 msgstr ""
 
 #: formshare/templates/dashboard/projects/snippets/project_form.jinja2:23
@@ -5810,7 +5810,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/snippets/project_form.jinja2:24
 msgid ""
-"You will use this in ODK Collect to identify your project. Only the first"
+"You will use this in FormShare Collect to identify your project. Only the first"
 " Emoji will be used."
 msgstr ""
 

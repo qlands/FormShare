@@ -409,8 +409,8 @@ msgid "Import FormShare 1.0 data"
 msgstr "Імпорт даних FormShare 1.0"
 
 #: formshare/products/products.py:113
-msgid "Import ODK Collect XML data"
-msgstr "Імпорт ODK Збір даних XML"
+msgid "Import FormShare Collect XML data"
+msgstr "Імпорт даних XML з FormShare Collect"
 
 #: formshare/products/products.py:115
 msgid "Build repository"
@@ -727,8 +727,8 @@ msgid "QR Code"
 msgstr "QR-код"
 
 #: formshare/templates/assistant/index.jinja2:43
-msgid "Use this QR Code to configure ODK collect"
-msgstr "Використовуйте цей QR-код, щоб налаштувати збір ODK"
+msgid "Use this QR Code to configure FormShare Collect"
+msgstr "Використовуйте цей QR-код, щоб налаштувати FormShare Collect"
 
 #: formshare/templates/assistant/page.jinja2:147
 #: formshare/templates/assistant/page.jinja2:176
@@ -2460,8 +2460,8 @@ msgid "Assistant ID"
 msgstr "Посвідчення асистента"
 
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:6
-msgid "This is a simple name to identify the assistant in FormShare. It is the name that the assistant will use in ODK Collect. The assistant id must be unique and cannot be changed afterward."
-msgstr "Це просте ім'я для ідентифікації помічника у FormShare. Це ім'я, яке помічник буде використовувати в ODK Collect. Ідентифікатор асистента має бути унікальним і не може бути змінений згодом."
+msgid "This is a simple name to identify the assistant in FormShare. It is the name that the assistant will use in FormShare Collect. The assistant id must be unique and cannot be changed afterward."
+msgstr "Це просте ім'я для ідентифікації помічника у FormShare. Це ім'я, яке помічник буде використовувати в FormShare Collect. Ідентифікатор асистента має бути унікальним і не може бути змінений згодом."
 
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:31
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form_edit.jinja2:18
@@ -3104,8 +3104,8 @@ msgstr "Тип джерела"
 
 #: formshare/templates/dashboard/projects/forms/import_data/import_form.jinja2:44
 #: formshare/templates/dashboard/projects/forms/import_data/snippets/import_guide.jinja2:13
-msgid "ODK Collect XML data files"
-msgstr "ODK Збір файлів даних XML"
+msgid "FormShare Collect XML data files"
+msgstr "Файли даних XML з FormShare Collect"
 
 #: formshare/templates/dashboard/projects/forms/import_data/import_form.jinja2:49
 msgid "Use these"
@@ -3162,8 +3162,8 @@ msgid "Store the submission files in a zip file. The files cannot be inside dire
 msgstr "Зберігайте файли заявки у zip-архіві. Файли не повинні знаходитися всередині каталогів. Ви можете вирішити, як назвати кожен файл заявки та zip-архів."
 
 #: formshare/templates/dashboard/projects/forms/import_data/snippets/import_guide.jinja2:29
-msgid "FormShare can import ODK Collect XML files. However, the files must be inside a zip. The following image shows how to zip the files."
-msgstr "FormShare може імпортувати XML-файли ODK Collect. Однак, файли повинні бути в архіві. На наступному зображенні показано, як заархівувати файли."
+msgid "FormShare can import FormShare Collect XML files. However, the files must be inside a zip. The following image shows how to zip the files."
+msgstr "FormShare може імпортувати XML-файли FormShare Collect. Однак, файли повинні бути в архіві. На наступному зображенні показано, як заархівувати файли."
 
 #: formshare/templates/dashboard/projects/forms/import_data/snippets/import_guide.jinja2:32
 msgid "Store the submissions in separate directories. Each directory must contain the XML data file and any media files (if present). You can decide how to name each directory, submission file, and zip file."
@@ -4183,8 +4183,8 @@ msgstr "Завантажити надіслані медіа"
 
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:49
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:30
-msgid "Use this QR to configure ODK Collect"
-msgstr "Використовуйте цей QR-код, щоб налаштувати ODK Collect"
+msgid "Use this QR to configure FormShare Collect"
+msgstr "Використовуйте цей QR-код, щоб налаштувати FormShare Collect"
 
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:50
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:31
@@ -5201,16 +5201,16 @@ msgid "The code must be unique and cannot be changed afterwards"
 msgstr "Код повинен бути унікальним і не може бути змінений згодом"
 
 #: formshare/templates/dashboard/projects/snippets/project_form.jinja2:19
-msgid "You will use this in ODK Collect to identify your project."
-msgstr "Ви будете використовувати його у ODK Collect для ідентифікації вашого проекту."
+msgid "You will use this in FormShare Collect to identify your project."
+msgstr "Ви будете використовувати його у FormShare Collect для ідентифікації вашого проекту."
 
 #: formshare/templates/dashboard/projects/snippets/project_form.jinja2:23
 msgid "Icon"
 msgstr "Ікона"
 
 #: formshare/templates/dashboard/projects/snippets/project_form.jinja2:24
-msgid "You will use this in ODK Collect to identify your project. Only the first Emoji will be used."
-msgstr "Ви будете використовувати його в ODK Collect для ідентифікації вашого проекту. Буде використано лише перший емодзі."
+msgid "You will use this in FormShare Collect to identify your project. Only the first Emoji will be used."
+msgstr "Ви будете використовувати його в FormShare Collect для ідентифікації вашого проекту. Буде використано лише перший емодзі."
 
 #: formshare/templates/dashboard/projects/snippets/project_form.jinja2:36
 #: formshare/templates/dashboard/projects/snippets/project_form_edit.jinja2:33

@@ -7090,3 +7090,106 @@ msgstr "CSV з неприпустимими опціями"
 msgid "Invalid options"
 msgstr "Неправильні варіанти"
 
+#: formshare/templates/dashboard/projects/case_management/lists.jinja2:131
+msgid "No form uses this list."
+msgstr "Жодна форма не використовує цей список."
+
+#: formshare/templates/dashboard/projects/snippets/project_form.jinja2
+msgid "Logo"
+msgstr "Логотип"
+
+#: formshare/templates/dashboard/projects/snippets/project_form.jinja2
+msgid "Remove the logo"
+msgstr "Видалити логотип"
+
+#: formshare/templates/dashboard/projects/snippets/project_form.jinja2
+msgid "Shown on the main menu of FormShare Collect, at most 64 points tall. A PNG with a transparent background, about four times as wide as it is tall, such as 1200 × 300 px: from square to 6:1, at least 192 px tall and at most 200 KB. A wider image is scaled down to 1600 px. Check that it reads on both backgrounds."
+msgstr "Показується в головному меню FormShare Collect, заввишки не більше 64 пунктів. PNG із прозорим тлом, приблизно вчетверо ширший, ніж заввишки, наприклад 1200 × 300 px: від квадрата до 6:1, заввишки щонайменше 192 px і не більше 200 КБ. Ширше зображення зменшується до 1600 px. Перевірте, що його добре видно на обох тлах."
+
+#: formshare/templates/dashboard/projects/snippets/project_form.jinja2
+msgid "It stays checked while these lists serve each assistant their own cases, since public submissions name no assistant:"
+msgstr "Позначка залишається, доки ці списки надають кожному помічнику його власні справи, адже публічні подання не називають помічника:"
+
+#: formshare/templates/dashboard/projects/snippets/project_form.jinja2
+msgid "Set them to serve every case first."
+msgstr "Спочатку налаштуйте їх надавати всі справи."
+
+#: formshare/processes/project_logo.py
+msgid "The logo file is larger than 10 MB."
+msgstr "Файл логотипу більший за 10 МБ."
+
+#: formshare/processes/project_logo.py
+msgid "The logo is not an image FormShare can read. Upload a PNG."
+msgstr "Логотип не є зображенням, яке FormShare може прочитати. Завантажте PNG."
+
+#: formshare/processes/project_logo.py
+msgid "The logo must be a PNG (a WebP is converted). This file is a {}."
+msgstr "Логотип має бути у форматі PNG (WebP перетворюється). Цей файл має формат {}."
+
+#: formshare/processes/project_logo.py
+msgid "The logo cannot be animated."
+msgstr "Логотип не може бути анімованим."
+
+#: formshare/processes/project_logo.py
+msgid "The logo is {} × {} px: taller than it is wide. It must be from square (1:1) to six times as wide as it is tall, such as 1200 × 300 px."
+msgstr "Логотип має розмір {} × {} px: він вищий, ніж ширший. Він має бути від квадрата (1:1) до вшестеро ширшого, ніж заввишки, наприклад 1200 × 300 px."
+
+#: formshare/processes/project_logo.py
+msgid "The logo is {} × {} px: more than six times as wide as it is tall. It must be from square (1:1) to 6:1, such as 1200 × 300 px."
+msgstr "Логотип має розмір {} × {} px: він більш ніж ушестеро ширший, ніж заввишки. Він має бути від квадрата (1:1) до 6:1, наприклад 1200 × 300 px."
+
+#: formshare/processes/project_logo.py
+msgid "The logo is {} px tall. It must be at least {} px tall to stay sharp on a phone."
+msgstr "Логотип має {} px заввишки. Він має бути щонайменше {} px заввишки, щоб залишатися чітким на телефоні."
+
+#: formshare/processes/project_logo.py
+msgid "The logo is {} KB as a PNG. It must be at most 200 KB: fewer colours or a smaller canvas make it lighter."
+msgstr "Логотип у форматі PNG має {} КБ. Він має бути не більше 200 КБ: менше кольорів або менше полотно зроблять його легшим."
+
+#: formshare/processes/db/actions.py
+msgid "No such form"
+msgstr "Такої форми немає"
+
+#: formshare/processes/db/actions.py
+msgid "No such action"
+msgstr "Такої дії немає"
+
+#: formshare/processes/db/actions.py
+msgid "The action was not removed, because the form's other actions cannot be put together without it: {}"
+msgstr "Дію не видалено, бо інші дії форми не можна скласти без неї: {}"
+
+#: formshare/processes/db/actions.py
+msgid "The action was not moved, because the form's actions cannot be put together in that order: {}"
+msgstr "Дію не переміщено, бо дії форми не можна скласти в такому порядку: {}"
+
+#: formshare/processes/db/case_management.py
+msgid "The filter \"{}\" of the published list \"{}\", given to assistants, reads this property. Change the filter first."
+msgstr "Фільтр \"{}\" опублікованого списку \"{}\", наданий помічникам, читає цю властивість. Спершу змініть фільтр."
+
+#: formshare/processes/db/case_management.py
+msgid "Action {} of the form \"{}\" uses this property ({}). Change or remove the action first."
+msgstr "Дія {} форми \"{}\" використовує цю властивість ({}). Спершу змініть або видаліть дію."
+
+#: formshare/processes/db/case_management.py
+msgid "no description"
+msgstr "без опису"
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "the case's parent"
+msgstr "батьківський запис справи"
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "deactivate the case"
+msgstr "деактивувати справу"
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "reactivate the case"
+msgstr "знову активувати справу"
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "deactivate the case's parent"
+msgstr "деактивувати батьківський запис справи"
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "reactivate the case's parent"
+msgstr "знову активувати батьківський запис справи"

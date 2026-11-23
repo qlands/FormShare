@@ -7083,3 +7083,106 @@ msgstr "CSV avec des options non valides"
 msgid "Invalid options"
 msgstr "Options non valides"
 
+#: formshare/templates/dashboard/projects/case_management/lists.jinja2:131
+msgid "No form uses this list."
+msgstr "Aucun formulaire n'utilise cette liste."
+
+#: formshare/templates/dashboard/projects/snippets/project_form.jinja2
+msgid "Logo"
+msgstr "Logo"
+
+#: formshare/templates/dashboard/projects/snippets/project_form.jinja2
+msgid "Remove the logo"
+msgstr "Supprimer le logo"
+
+#: formshare/templates/dashboard/projects/snippets/project_form.jinja2
+msgid "Shown on the main menu of FormShare Collect, at most 64 points tall. A PNG with a transparent background, about four times as wide as it is tall, such as 1200 × 300 px: from square to 6:1, at least 192 px tall and at most 200 KB. A wider image is scaled down to 1600 px. Check that it reads on both backgrounds."
+msgstr "Affiché dans le menu principal de FormShare Collect, sur 64 points de haut au plus. Un PNG à fond transparent, environ quatre fois plus large que haut, par exemple 1200 × 300 px : du carré au 6:1, d'au moins 192 px de haut et d'au plus 200 Ko. Une image plus large est réduite à 1600 px. Vérifiez qu'il se lit sur les deux fonds."
+
+#: formshare/templates/dashboard/projects/snippets/project_form.jinja2
+msgid "It stays checked while these lists serve each assistant their own cases, since public submissions name no assistant:"
+msgstr "Elle reste cochée tant que ces listes servent à chaque assistant ses propres cas, car les soumissions publiques ne nomment aucun assistant :"
+
+#: formshare/templates/dashboard/projects/snippets/project_form.jinja2
+msgid "Set them to serve every case first."
+msgstr "Configurez-les d'abord pour servir tous les cas."
+
+#: formshare/processes/project_logo.py
+msgid "The logo file is larger than 10 MB."
+msgstr "Le fichier du logo dépasse 10 Mo."
+
+#: formshare/processes/project_logo.py
+msgid "The logo is not an image FormShare can read. Upload a PNG."
+msgstr "Le logo n'est pas une image que FormShare peut lire. Téléversez un PNG."
+
+#: formshare/processes/project_logo.py
+msgid "The logo must be a PNG (a WebP is converted). This file is a {}."
+msgstr "Le logo doit être un PNG (un WebP est converti). Ce fichier est un {}."
+
+#: formshare/processes/project_logo.py
+msgid "The logo cannot be animated."
+msgstr "Le logo ne peut pas être animé."
+
+#: formshare/processes/project_logo.py
+msgid "The logo is {} × {} px: taller than it is wide. It must be from square (1:1) to six times as wide as it is tall, such as 1200 × 300 px."
+msgstr "Le logo mesure {} × {} px : il est plus haut que large. Il doit aller du carré (1:1) à six fois plus large que haut, par exemple 1200 × 300 px."
+
+#: formshare/processes/project_logo.py
+msgid "The logo is {} × {} px: more than six times as wide as it is tall. It must be from square (1:1) to 6:1, such as 1200 × 300 px."
+msgstr "Le logo mesure {} × {} px : il est plus de six fois plus large que haut. Il doit aller du carré (1:1) au 6:1, par exemple 1200 × 300 px."
+
+#: formshare/processes/project_logo.py
+msgid "The logo is {} px tall. It must be at least {} px tall to stay sharp on a phone."
+msgstr "Le logo mesure {} px de haut. Il doit mesurer au moins {} px de haut pour rester net sur un téléphone."
+
+#: formshare/processes/project_logo.py
+msgid "The logo is {} KB as a PNG. It must be at most 200 KB: fewer colours or a smaller canvas make it lighter."
+msgstr "Le logo pèse {} Ko en PNG. Il doit peser au plus 200 Ko : moins de couleurs ou un canevas plus petit l'allègent."
+
+#: formshare/processes/db/actions.py
+msgid "No such form"
+msgstr "Ce formulaire n'existe pas"
+
+#: formshare/processes/db/actions.py
+msgid "No such action"
+msgstr "Cette action n'existe pas"
+
+#: formshare/processes/db/actions.py
+msgid "The action was not removed, because the form's other actions cannot be put together without it: {}"
+msgstr "L'action n'a pas été supprimée, car les autres actions du formulaire ne peuvent pas être assemblées sans elle : {}"
+
+#: formshare/processes/db/actions.py
+msgid "The action was not moved, because the form's actions cannot be put together in that order: {}"
+msgstr "L'action n'a pas été déplacée, car les actions du formulaire ne peuvent pas être assemblées dans cet ordre : {}"
+
+#: formshare/processes/db/case_management.py
+msgid "The filter \"{}\" of the published list \"{}\", given to assistants, reads this property. Change the filter first."
+msgstr "Le filtre \"{}\" de la liste publiée \"{}\", attribué à des assistants, lit cette propriété. Modifiez d'abord le filtre."
+
+#: formshare/processes/db/case_management.py
+msgid "Action {} of the form \"{}\" uses this property ({}). Change or remove the action first."
+msgstr "L'action {} du formulaire \"{}\" utilise cette propriété ({}). Modifiez ou supprimez d'abord l'action."
+
+#: formshare/processes/db/case_management.py
+msgid "no description"
+msgstr "sans description"
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "the case's parent"
+msgstr "le parent du cas"
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "deactivate the case"
+msgstr "désactiver le cas"
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "reactivate the case"
+msgstr "réactiver le cas"
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "deactivate the case's parent"
+msgstr "désactiver le parent du cas"
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "reactivate the case's parent"
+msgstr "réactiver le parent du cas"

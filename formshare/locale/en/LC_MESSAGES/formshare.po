@@ -7538,6 +7538,58 @@ msgstr ""
 msgid "You need to provide an explanation when canceling a disregard"
 msgstr ""
 
+#: formshare/templates/dashboard/projects/case_management/lists.jinja2:131
+msgid "No form uses this list."
+msgstr ""
+
+#: formshare/processes/db/actions.py
+msgid "No such form"
+msgstr ""
+
+#: formshare/processes/db/actions.py
+msgid "No such action"
+msgstr ""
+
+#: formshare/processes/db/actions.py
+msgid "The action was not removed, because the form's other actions cannot be put together without it: {}"
+msgstr ""
+
+#: formshare/processes/db/actions.py
+msgid "The action was not moved, because the form's actions cannot be put together in that order: {}"
+msgstr ""
+
+#: formshare/processes/db/case_management.py
+msgid "The filter \"{}\" of the published list \"{}\", given to assistants, reads this property. Change the filter first."
+msgstr ""
+
+#: formshare/processes/db/case_management.py
+msgid "Action {} of the form \"{}\" uses this property ({}). Change or remove the action first."
+msgstr ""
+
+#: formshare/processes/db/case_management.py
+msgid "no description"
+msgstr ""
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "the case's parent"
+msgstr ""
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "deactivate the case"
+msgstr ""
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "reactivate the case"
+msgstr ""
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "deactivate the case's parent"
+msgstr ""
+
+#: formshare/templates/dashboard/projects/case_management/action_rule.jinja2
+msgid "reactivate the case's parent"
+msgstr ""
+
 #~ msgid "Copyright &copy; Pylons Project"
 #~ msgstr ""
 

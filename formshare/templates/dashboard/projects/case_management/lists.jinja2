@@ -71,7 +71,7 @@
                                             </div>
                                         </div>
                                         {% if a_list.has_active_consumers == False %}
-                                            <a style="color: white" urn="{{ request.route_url('project_case_list_delete', userid=userid, projcode=projcode, listid=a_list.list_id) }}" class="btn btn-xs btn-danger remove_list"><i class="fas fa-trash"></i> {{ _('Delete') }}</a>
+                                            <a style="color: white" urn="{{ request.route_url('project_case_list_delete', userid=userid, projcode=projcode, listid=a_list.list_id) }}" data-forms="{{ a_list.consumer_count }}" class="btn btn-xs btn-danger remove_list"><i class="fas fa-trash"></i> {{ _('Delete') }}</a>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -123,9 +123,12 @@
             });
             $('.remove_list').click(function () {
                 var action_url = $( this ).attr('urn');
+                // Forms still in testing can reference a list that no built
+                // form uses: only they lose its fresh data.
+                var forms = parseInt($(this).attr('data-forms') || '0', 10);
                 swal({
                         title: "{{ _('Are you sure?') }}",
-                        text: "{{ _('Forms that reference this file will stop receiving fresh data.') }}",
+                        text: forms > 0 ? "{{ _('Forms that reference this file will stop receiving fresh data.') }}" : "{{ _('No form uses this list.') }}",
                         type: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#DD6B55",

@@ -1013,6 +1013,19 @@ def internal_merge_into_repository(
                 "form_hasdictionary": 1,
             }
             update_form(db_session, project_id, a_form_id, form_data)
+            # The dictionary goes in the commit that hands the version the
+            # repository (2026-11-23). Written after it, the version had the
+            # repository for a few seconds without a dictionary, and the pages
+            # that read names from it, such as Form actions, showed its rules
+            # as naming fields it does not have.
+            log.info("Updating dictionary")
+            send_task_status_to_form(settings, task_id, _("Updating dictionary"))
+            update_dictionary_tables(
+                db_session,
+                a_form_id,
+                c_create_xml_file,
+                survey_data_columns,
+            )
             # Before the commit unblocks the new version: from then on its
             # submissions load through the merged manifest
             manifest_adopted = adopt_merged_manifest(odk_dir, a_form_directory)
@@ -1025,15 +1038,6 @@ def internal_merge_into_repository(
                 geo_point_variables = get_geopoint_variables(
                     db_session, project_id, a_form_id
                 )
-            log.info("Updating dictionary")
-            send_task_status_to_form(settings, task_id, _("Updating dictionary"))
-            update_dictionary_tables(
-                db_session,
-                a_form_id,
-                c_create_xml_file,
-                survey_data_columns,
-            )
-            db_session.commit()
             critical_part = False
         except Exception as e:
             if manifest_adopted:

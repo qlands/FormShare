@@ -636,7 +636,21 @@ def get_project_published_lists(request, project_id):
         a_list["has_active_consumers"] = list_has_active_consumers(
             request, project_id, a_list["list_id"]
         )
+        a_list["consumer_count"] = list_consumer_count(
+            request, project_id, a_list["list_id"]
+        )
     return res
+
+
+def list_consumer_count(request, project_id, list_id):
+    """How many forms reference a list, built or still in testing: those a
+    deletion leaves without fresh data (2026-11-23)."""
+    return (
+        request.dbsession.query(ListConsumer)
+        .filter(ListConsumer.list_project == project_id)
+        .filter(ListConsumer.list_id == list_id)
+        .count()
+    )
 
 
 def set_list_columns(request, project_id, list_id, columns):
@@ -2820,6 +2834,32 @@ def property_filters_a_list(request, project_id, form_id, table_name, property_n
     return None
 
 
+def property_filters_assistants(
+    request, project_id, form_id, table_name, property_name
+):
+    """(filter name, list id) of a filter given to assistants, on a published
+    list of the table, that reads the property, or None. Those assistants'
+    copies of the list would fail once the property is gone (2026-11-23)."""
+    lists = (
+        request.dbsession.query(PublishedList)
+        .filter(PublishedList.source_project == project_id)
+        .filter(PublishedList.source_form == form_id)
+        .filter(PublishedList.source_table == table_name)
+        .all()
+    )
+    for a_list in lists:
+        filters = (
+            request.dbsession.query(ListFilter)
+            .filter(ListFilter.project_id == a_list.project_id)
+            .filter(ListFilter.list_id == a_list.list_id)
+            .all()
+        )
+        for a_filter in filters:
+            if property_name in referenced_properties(a_filter.filter_rules):
+                return a_filter.filter_name, a_list.list_id
+    return None
+
+
 def _form_schema(request, project_id, form_id):
     res = (
         request.dbsession.query(Odkform.form_schema)
@@ -3037,6 +3077,28 @@ def delete_table_property(request, project_id, form_id, table_name, property_nam
             'The filter of the published list "{}" reads this property. '
             "Change the filter first."
         ).format(filtering)
+    given = property_filters_assistants(
+        request, project_id, form_id, table_name, property_name
+    )
+    if given:
+        return False, _(
+            'The filter "{}" of the published list "{}", given to assistants, '
+            "reads this property. Change the filter first."
+        ).format(*given)
+    # An action that reads or writes the property would fail on every run,
+    # and no other action of its form could be saved (2026-11-23). Imported
+    # here: the actions module imports this one.
+    from formshare.processes.db.actions import actions_using_property
+
+    acting = actions_using_property(
+        request, project_id, form_id, table_name, property_name
+    )
+    if acting:
+        _project, acting_form, number, description = acting[0]
+        return False, _(
+            'Action {} of the form "{}" uses this property ({}). Change or '
+            "remove the action first."
+        ).format(number, acting_form, description or _("no description"))
     schema = _form_schema(request, project_id, form_id)
     if not schema:
         return False, _("The form has no repository")

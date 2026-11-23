@@ -127,10 +127,21 @@
 
       function refreshTargets(selectedName) {
         var scope = $("#act-scope").val();
+        // A parent without properties can still be deactivated: the kinds
+        // with nothing to set in this scope are greyed out.
+        ["property", "column"].forEach(function (aKind) {
+          var none = !(((actTargets[scope] || {})[aKind]) || []).length;
+          $("#act-kind option[value='" + aKind + "']").prop("disabled", none);
+        });
+        if ($("#act-kind option:selected").prop("disabled")) { $("#act-kind").val("active"); }
         var kind = $("#act-kind").val();
         var names = ((actTargets[scope] || {})[kind]) || [];
         if (kind === "active") {
-          fillSelect($("#act-name"), [{value: "0", label: {{ _('deactivate the case')|tojson }}}, {value: "1", label: {{ _('reactivate the case')|tojson }}}], selectedName);
+          var onParent = scope === "parent";
+          fillSelect($("#act-name"), [
+            {value: "0", label: onParent ? {{ _("deactivate the case's parent")|tojson }} : {{ _('deactivate the case')|tojson }}},
+            {value: "1", label: onParent ? {{ _("reactivate the case's parent")|tojson }} : {{ _('reactivate the case')|tojson }}}
+          ], selectedName);
           $("#act-value-row, #act-value-label").hide();
         } else {
           fillSelect($("#act-name"), names.map(function (n) { return {value: n.name, label: n.name + " (" + n.type + ")"}; }), selectedName);

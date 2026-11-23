@@ -1510,6 +1510,11 @@ class ActionRuleView(ActionsSection):
             targets.setdefault(scope, {}).setdefault(kind, []).append(
                 {"name": name, "type": a_type}
             )
+        # The parent is a target whenever the case has one: it can be
+        # deactivated or reactivated without having properties (2026-11-23).
+        # It used to be offered only through its properties.
+        if catalogue.has_parent:
+            targets.setdefault("parent", {})
         return {
             "projectDetails": project_details,
             "userid": user_id,

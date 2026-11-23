@@ -455,26 +455,187 @@ def update_code_action(request, project_id, form_id, action_id, code, descriptio
     )
 
 
-def delete_form_action(request, project_id, form_id, action_id):
+def _condition_fields(when_rules):
+    """The field ids a QueryBuilder condition reads (p.status, pp.count,
+    v.still_working, ...)."""
+    if not when_rules:
+        return set()
+    if isinstance(when_rules, str):
+        try:
+            when_rules = json.loads(when_rules)
+        except ValueError:
+            return set()
+    found = set()
+
+    def walk(node):
+        if not isinstance(node, dict):
+            return
+        for a_rule in node.get("rules") or []:
+            walk(a_rule)
+        field_id = node.get("field") or node.get("id")
+        if field_id:
+            found.add(str(field_id))
+
+    walk(when_rules)
+    return found
+
+
+def uses_property(a_row, scopes, property_name):
+    """Whether an action reads or writes a property of its case ("case" in
+    scopes) or of the row its case belongs to ("parent"): as a rule's
+    target, in its condition or as its value; in code, wherever the name is
+    written as a string, as api.case.set("name") and
+    api.case.property("name") write it."""
+    if (a_row.get("action_kind") or "rule") == "code":
+        return (
+            re.search(
+                "[\"']" + re.escape(property_name) + "[\"']",
+                a_row.get("action_code") or "",
+            )
+            is not None
+        )
+    prefixes = {"case": "p.", "parent": "pp."}
+    ids = {prefixes[scope] + property_name for scope in scopes}
+    if (
+        a_row.get("target_kind") == "property"
+        and a_row.get("target_name") == property_name
+        and (a_row.get("target_scope") or "case") in scopes
+    ):
+        return True
+    if a_row.get("value_kind") == "variable" and a_row.get("value") in ids:
+        return True
+    return bool(ids & _condition_fields(a_row.get("when_rules")))
+
+
+def actions_using_property(request, project_id, form_id, table_name, property_name):
+    """The actions that read or write a property of a table: those of every
+    form whose case is a row of that table, or a row of a repeat of it, in
+    any project. [(project id, form id, action number, description)].
+
+    Deleting the property would leave them broken: every run of their form
+    would fail, and no other action of it could be saved, so the deletion is
+    refused while there is one (2026-11-23)."""
+    found = []
+    forms = sorted(
+        {
+            (a_row.project_id, a_row.form_id)
+            for a_row in request.dbsession.query(PropertyAction).all()
+        }
+    )
+    for a_project, a_form in forms:
+        source = case_source_of(request, a_project, a_form)
+        if source is None or (source["project"], source["form"]) != (
+            project_id,
+            form_id,
+        ):
+            continue
+        scopes = set()
+        if source["table"] == table_name:
+            scopes.add("case")
+        if source.get("parent_table") == table_name:
+            scopes.add("parent")
+        if not scopes:
+            continue
+        for a_row in get_form_actions(request, a_project, a_form):
+            if uses_property(a_row, scopes, property_name):
+                found.append(
+                    (
+                        a_project,
+                        a_form,
+                        a_row["action_order"],
+                        a_row.get("action_desc") or "",
+                    )
+                )
+    return found
+
+
+def _store_order(request, project_id, form_id, form, rows, module, removed=None):
+    """The actions in their new order (and one removed), with the module
+    composed from them, in one commit."""
     try:
-        request.dbsession.query(PropertyAction).filter(
-            PropertyAction.project_id == project_id
-        ).filter(PropertyAction.form_id == form_id).filter(
-            PropertyAction.action_id == action_id
-        ).delete()
+        if removed is not None:
+            request.dbsession.query(PropertyAction).filter(
+                PropertyAction.project_id == project_id
+            ).filter(PropertyAction.form_id == form_id).filter(
+                PropertyAction.action_id == removed
+            ).delete()
+        for a_row in rows:
+            request.dbsession.query(PropertyAction).filter(
+                PropertyAction.project_id == project_id
+            ).filter(PropertyAction.form_id == form_id).filter(
+                PropertyAction.action_id == a_row["action_id"]
+            ).update(
+                {"action_order": a_row["action_order"]}
+            )
+        _set_module(form, rows, module)
         request.dbsession.commit()
     except Exception as e:
         request.dbsession.rollback()
-        log.error("Error {} deleting action {}".format(str(e), action_id))
+        log.error("Error {} storing the actions of form {}".format(str(e), form_id))
         return False, str(e)
-    _renumber(request, project_id, form_id)
-    return recompile_form_module(request, project_id, form_id)
+    return True, ""
+
+
+def _as_listed(rows, listed, catalogue, translate):
+    """Why rows cannot be composed, each action named by its number in the
+    list the page shows (listed), not by its place among the rows."""
+    shown = {a_row["action_id"]: number for number, a_row in enumerate(listed, 1)}
+    numbered = [
+        dict(a_row, action_order=place, action_number=shown[a_row["action_id"]])
+        for place, a_row in enumerate(rows, 1)
+    ]
+    ok, message = _compose(numbered, catalogue, translate)
+    return message if not ok else ""
+
+
+def delete_form_action(request, project_id, form_id, action_id):
+    """Removes an action, and composes the module without it, in one commit
+    (2026-11-23). The row used to be deleted first and the module composed
+    after: when another action was broken, the composition failed and the
+    old module, with the removed action in it, kept running on the server
+    and on the devices. Now nothing is removed when the other actions
+    cannot be composed, and the answer says why."""
+    _ = request.translate
+    form = _form(request, project_id, form_id)
+    if form is None:
+        return False, _("No such form")
+    rows = get_form_actions(request, project_id, form_id)
+    if action_id not in [a_row["action_id"] for a_row in rows]:
+        return False, _("No such action")
+    remaining = [
+        dict(a_row, action_order=order)
+        for order, a_row in enumerate(
+            [a_row for a_row in rows if a_row["action_id"] != action_id], 1
+        )
+    ]
+    catalogue = build_catalogue(request, project_id, form_id)
+    ok, module = _compose(remaining, catalogue, _)
+    if not ok:
+        return False, _(
+            "The action was not removed, because the form's other actions "
+            "cannot be put together without it: {}"
+        ).format(
+            _as_listed(
+                [a_row for a_row in rows if a_row["action_id"] != action_id],
+                rows,
+                catalogue,
+                _,
+            )
+        )
+    return _store_order(
+        request, project_id, form_id, form, remaining, module, removed=action_id
+    )
 
 
 def move_form_action(request, project_id, form_id, action_id, direction):
-    """Moves a row up (-1) or down (+1) and recompiles: the order is the
-    order of the chains, and inside a target's chain it decides which row
-    wins."""
+    """Moves a row up (-1) or down (+1): the order is the order of the
+    chains, and inside a target's chain it decides which row wins. The new
+    order and the module composed in it are stored in one commit, or
+    nothing is (2026-11-23), as for a removal."""
+    _ = request.translate
+    form = _form(request, project_id, form_id)
+    if form is None:
+        return False, _("No such form")
     rows = get_form_actions(request, project_id, form_id)
     ids = [a["action_id"] for a in rows]
     if action_id not in ids:
@@ -483,17 +644,17 @@ def move_form_action(request, project_id, form_id, action_id, direction):
     other = index + (1 if direction > 0 else -1)
     if other < 0 or other >= len(ids):
         return True, ""
-    ids[index], ids[other] = ids[other], ids[index]
-    try:
-        for order, an_id in enumerate(ids, 1):
-            request.dbsession.query(PropertyAction).filter(
-                PropertyAction.action_id == an_id
-            ).update({"action_order": order})
-        request.dbsession.commit()
-    except Exception as e:
-        request.dbsession.rollback()
-        return False, str(e)
-    return recompile_form_module(request, project_id, form_id)
+    listed = list(rows)
+    rows[index], rows[other] = rows[other], rows[index]
+    reordered = [dict(a_row, action_order=order) for order, a_row in enumerate(rows, 1)]
+    catalogue = build_catalogue(request, project_id, form_id)
+    ok, module = _compose(reordered, catalogue, _)
+    if not ok:
+        return False, _(
+            "The action was not moved, because the form's actions cannot be "
+            "put together in that order: {}"
+        ).format(_as_listed(rows, listed, catalogue, _))
+    return _store_order(request, project_id, form_id, form, reordered, module)
 
 
 def inherit_actions(request, project_id, parent_form, child_form):
@@ -565,16 +726,6 @@ def inherit_actions(request, project_id, parent_form, child_form):
         )
         return 0
     return len(rows)
-
-
-def _renumber(request, project_id, form_id):
-    rows = get_form_actions(request, project_id, form_id)
-    for order, a_row in enumerate(rows, 1):
-        if int(a_row["action_order"] or 0) != order:
-            request.dbsession.query(PropertyAction).filter(
-                PropertyAction.action_id == a_row["action_id"]
-            ).update({"action_order": order})
-    request.dbsession.commit()
 
 
 # ---------------------------------------------------------------------------
@@ -993,6 +1144,7 @@ def build_catalogue(request, project_id, form_id):
                 }
             )
         if source.get("parent_table"):
+            catalogue.has_parent = True
             for a_property in get_table_properties(
                 request, source["project"], source["form"], source["parent_table"]
             ):

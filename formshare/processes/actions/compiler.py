@@ -170,10 +170,14 @@ class Catalogue:
     from the dictionary and the registry; the compiler only reads it.
     """
 
-    def __init__(self, fields=None, targets=None, repeats=None):
+    def __init__(self, fields=None, targets=None, repeats=None, has_parent=False):
         self.fields = fields or {}
         self.targets = targets or {}
         self.repeats = repeats or {}
+        # Whether the case is a row of a repeat, with a row it belongs to: a
+        # rule can then activate or deactivate that parent, whether or not
+        # its table has properties (2026-11-23).
+        self.has_parent = has_parent
 
     def field(self, field_id):
         if field_id not in self.fields:

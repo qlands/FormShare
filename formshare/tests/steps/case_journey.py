@@ -673,6 +673,15 @@ def t_e_s_t_case_journey(test_object):
     page = refused_deletion(test_object, project, TOOL1)
     assert b"Delete the lists first" in page.body
     assert _has_table(test_object.server_config, schema1, "maintable")
+    # No form references Tool 1's lists yet: their Delete asks no question
+    # about forms (2026-11-23). It always warned that forms would stop
+    # receiving fresh data.
+    res = testapp.get(
+        "/user/{}/project/{}/caselists".format(login, project), status=200
+    )
+    assert re.findall(rb'data-forms="(\d+)"', res.body)
+    assert set(re.findall(rb'data-forms="(\d+)"', res.body)) == {b"0"}
+    test_object.root.assertIn(b"No form uses this list.", res.body)
 
     # --- The device mirror: the build files travel in the manifest ---------
     # A FormShare Collect device builds a SQLite copy of the repository from
@@ -984,6 +993,12 @@ def t_e_s_t_case_journey(test_object):
         status=302,
     )
     assert "FS_error" not in res.headers
+    # Tool 2 is still in testing: the lists it reads can be deleted, and
+    # their Delete now warns that a form references them.
+    res = testapp.get(
+        "/user/{}/project/{}/caselists".format(login, project), status=200
+    )
+    assert b'data-forms="1"' in res.body
 
     # Pull Tool 2's manifest first, as a device would: the placeholders are
     # replaced by the real generated lists, rows and all. Building with those
@@ -1688,6 +1703,44 @@ def t_e_s_t_case_journey(test_object):
         and 'api.case.set("risk_factor", 7)' in served["module"]
     )
 
+    # A rule can deactivate the case's parent, whether or not the parent's
+    # table has properties (2026-11-23): the page offered "the case's parent"
+    # only through its properties. Removed at once: it would deactivate the
+    # schools of the rest of the journey.
+    res = testapp.get(actions + "/add", status=200)
+    page_targets = json.loads(
+        re.search(rb"var actTargets = (.*?);\n", res.body).group(1).decode("utf-8")
+    )
+    assert "parent" in page_targets, page_targets
+    res = testapp.post(
+        actions + "/add",
+        {
+            "action_desc": "Deactivates the worker's school",
+            "when_rules": "",
+            "target_scope": "parent",
+            "target_kind": "active",
+            "target_name": "0",
+            "value_kind": "constant",
+            "value": "",
+            "save_action": "1",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers, res.headers
+    parent_rule = re.search(r"/actions/([^/]+)/test$", res.headers["Location"]).group(1)
+    served = json.loads(
+        _served_file(
+            test_object,
+            _pull_manifest(test_object, login, project, TOOL2),
+            "actions.json",
+        )
+    )
+    assert "api.case.parent" in served["module"]
+    res = testapp.post(
+        actions, {"delete_action": "1", "action_id": parent_rule}, status=302
+    )
+    assert "FS_error" not in res.headers
+
     # --- A column added to a list reaches the devices -----------------------
     # A form's copy is regenerated at manifest time only when stale, and stale
     # is decided against the source's data; a change to the list's own
@@ -1958,24 +2011,19 @@ def t_e_s_t_case_journey(test_object):
     # each rule reading as its author described it.
     assert actions_of(tool2_v6) == actions_of(TOOL2)
     assert module_of(tool2_v6) and module_of(tool2_v6) == module_of(TOOL2)
-    # The task writes the version's dictionary after it hands the schema
-    # over, and until then the page cannot read the names the rules use.
-    expected = [
-        a_description.split(":", 2)[2].encode("utf-8")
-        for a_description in actions_of(TOOL2).split("|")
-    ]
-    for _ in range(40):
-        res = testapp.get(
-            "/user/{}/project/{}/form/{}/actions?partial=actions_list".format(
-                login, project, tool2_v6
-            ),
-            status=200,
+    # At once: the dictionary is written in the commit that hands the version
+    # the repository (2026-11-23). It used to come a few seconds after, and
+    # the page meanwhile read each rule as naming a field the form lacks.
+    res = testapp.get(
+        "/user/{}/project/{}/form/{}/actions?partial=actions_list".format(
+            login, project, tool2_v6
+        ),
+        status=200,
+    )
+    for a_description in actions_of(TOOL2).split("|"):
+        test_object.root.assertIn(
+            a_description.split(":", 2)[2].encode("utf-8"), res.body
         )
-        if all(a_description in res.body for a_description in expected):
-            break
-        time.sleep(3)
-    for a_description in expected:
-        test_object.root.assertIn(a_description, res.body)
     # Merged, it belongs to the repository it merged into: the device keeps
     # one mirror for both versions.
     v6_entry = _form_list(test_object, login, project)[tool2_v6]

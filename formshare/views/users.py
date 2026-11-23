@@ -174,21 +174,22 @@ class EditUserView(PrivateView):
                                 "invalid_" + secrets.token_hex(16) + "_invalid"
                             )
                         if "user_apisecret" in user_details.keys():
-                            if (
-                                user_data["user_apisecret"]
-                                != user_details["user_apisecret"]
-                            ):
-                                log.warning(
-                                    "Administrator {} changed the API secret of user {} from {} to {}".format(
-                                        user_id,
-                                        user_to_modify,
-                                        user_data["user_apisecret"],
-                                        user_details["user_apisecret"],
-                                    )
+                            # The form sends a secret only when one is made
+                            # on it. It is stored encrypted, as the profile
+                            # stores it, and the log names no secret: it used
+                            # to keep this one as given, and to log it
+                            # (2026-11-23)
+                            log.warning(
+                                "Administrator {} changed the API secret of user {}".format(
+                                    user_id, user_to_modify
                                 )
-                                user_details["user_apitoken"] = (
-                                    "invalid_" + secrets.token_hex(16) + "_invalid"
-                                )
+                            )
+                            user_details["user_apisecret"] = encode_data(
+                                self.request, user_details["user_apisecret"]
+                            )
+                            user_details["user_apitoken"] = (
+                                "invalid_" + secrets.token_hex(16) + "_invalid"
+                            )
                         continue_edit = True
                         for plugin in p.PluginImplementations(p.IUser):
                             if continue_edit:
@@ -453,8 +454,9 @@ class AddUserView(PrivateView):
                                     user_details.pop("user_password2", None)
                                     user_details["user_cdate"] = datetime.datetime.now()
                                     user_details["user_apikey"] = str(uuid.uuid4())
-                                    user_details["user_apisecret"] = secrets.token_hex(
-                                        16
+                                    # Stored encrypted, as registration stores it
+                                    user_details["user_apisecret"] = encode_data(
+                                        self.request, secrets.token_hex(16)
                                     )
                                     continue_creation = True
                                     for plugin in p.PluginImplementations(p.IUser):

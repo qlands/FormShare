@@ -201,6 +201,16 @@ class ODKView(object):
         else:
             return True
 
+    def refuse_a_token(self):
+        """A submission is an assistant's, who signs in with Digest. A user's
+        API token reads the forms and their files and sends nothing (ab1a7439):
+        a push with one is asked for an assistant's credentials, before
+        authorize, which reads Digest's fields (2026-11-23). None when the
+        caller is not one."""
+        if self.api:
+            return self.ask_for_credentials()
+        return None
+
     def ask_for_credentials(self):  # pragma: no cover
         headers = [
             (
@@ -297,42 +307,37 @@ class ODKView(object):
         testing_calls = self.request.encget("FS_for_testing", default="false")
         if "Authorization" in self.request.headers or testing_calls == "true":
             if testing_calls == "false":  # pragma: no cover
-                if self.request.headers["Authorization"].find("Basic ") == -1:
-                    self.get_auth_dict()
-                    self.user = self.authHeader["Digest username"]
-                    return self.pre_process_view()
-                else:
-                    if self.request.headers["Authorization"].find("Bearer") >= 0:
-                        parts = self.request.headers.get("Authorization", "").split(" ")
-                        if len(parts) > 1:
-                            authorization_token = parts[1]
-                            token_user = get_user_with_token(
-                                self.request, authorization_token
-                            )
-                            if token_user is not None:
-                                if (
-                                    get_project_access_type(
-                                        self.request, project_id, user_id, token_user
-                                    )
-                                    != 5
-                                ):
-                                    self.api = True
-                                    self.user = token_user
-                                    return self.pre_process_view()
-                    headers = [
-                        (
-                            "WWW-Authenticate",
-                            'Digest realm="'
-                            + self.realm
-                            + '",qop="auth,auth-int",nonce="'
-                            + self.nonce
-                            + '",opaque="'
-                            + self.opaque
-                            + '"',
+                scheme, _, credentials = (
+                    self.request.headers["Authorization"].strip().partition(" ")
+                )
+                scheme = scheme.lower()
+                if scheme == "bearer":
+                    # The API token of a user who has the project
+                    # (/api/1/security/login). It was read only in the branch
+                    # of a Basic header, which a token never reaches, so the
+                    # Digest parser failed on it and every ODK route answered
+                    # a token with a 500 (2026-11-23).
+                    token_user = get_user_with_token(self.request, credentials.strip())
+                    if (
+                        token_user is not None
+                        and get_project_access_type(
+                            self.request, project_id, user_id, token_user
                         )
-                    ]
-                    response = Response(status=401, headerlist=headers)
-                    return response
+                        != 5
+                    ):
+                        self.api = True
+                        self.user = token_user
+                        return self.pre_process_view()
+                elif scheme == "digest":
+                    try:
+                        self.get_auth_dict()
+                        self.user = self.authHeader["Digest username"]
+                    except (IndexError, KeyError):
+                        # A header that cannot be read is asked for again
+                        self.authHeader = {}
+                    else:
+                        return self.pre_process_view()
+                return self.ask_for_credentials()
             else:
                 self.user = self.request.encget("FS_user_for_testing", default="None")
                 return self.pre_process_view()

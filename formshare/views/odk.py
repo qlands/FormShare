@@ -111,6 +111,9 @@ class ODKPushData(ODKView):
         if project_id is not None:
             if self.request.method == "POST":
                 if not project_has_crowdsourcing(self.request, project_id):
+                    refused = self.refuse_a_token()
+                    if refused is not None:
+                        return refused
                     assistant_uuid = get_odk_assistant_uuid(
                         self.request, user_id, project_id, self.user
                     )
@@ -161,6 +164,9 @@ class ODKPushJSONData(ODKView):
         if project_id is not None:
             if self.request.method == "POST":
                 if not project_has_crowdsourcing(self.request, project_id):
+                    refused = self.refuse_a_token()
+                    if refused is not None:
+                        return refused
                     assistant_uuid = get_odk_assistant_uuid(
                         self.request, user_id, project_id, self.user
                     )
@@ -204,6 +210,9 @@ class ODKSubmission(ODKView):
         if project_id is not None:
             if self.request.method == "HEAD":
                 if not project_has_crowdsourcing(self.request, project_id):
+                    refused = self.refuse_a_token()
+                    if refused is not None:
+                        return refused
                     assistant_uuid = get_odk_assistant_uuid(
                         self.request, user_id, project_id, self.user
                     )
@@ -236,6 +245,9 @@ class ODKSubmission(ODKView):
             else:
                 if self.request.method == "POST":
                     if not project_has_crowdsourcing(self.request, project_id):
+                        refused = self.refuse_a_token()
+                        if refused is not None:
+                            return refused
                         assistant_uuid = get_odk_assistant_uuid(
                             self.request, user_id, project_id, self.user
                         )

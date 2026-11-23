@@ -78,7 +78,11 @@ def main(raw_args=None):
                     is None
                 ):
                     api_key = str(uuid.uuid4())
-                    api_secret = secrets.token_hex(16)
+                    # Stored encrypted, as every other secret: the API's login
+                    # read one stored as given as no secret (2026-11-23)
+                    api_secret = encode_data_with_key(
+                        secrets.token_hex(16), settings["aes.key"].encode()
+                    )
                     new_user = User(
                         user_id=user_id,
                         user_email=user_email,

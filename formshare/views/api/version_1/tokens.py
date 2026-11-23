@@ -6,7 +6,12 @@ from formshare.processes.logging.loggerclass import SecretLogger
 from dateutil.relativedelta import relativedelta
 from formshare.models import User, Collaborator
 from formshare.middleware.response import Response
-from formshare.config.encdecdata import decode_data
+from formshare.config.encdecdata import (
+    encode_data,
+    secret_matches,
+    stored_as_given,
+    stored_secret,
+)
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -50,25 +55,28 @@ class TokenView(object):
                     .first()
                 )
                 if res is not None:
-                    current_secret = decode_data(
-                        self.request, res.user_apisecret.encode()
-                    )
-                    # decode_data hands back bytes, so the comparison has
-                    # to be with bytes: against "" it was never equal, and a
-                    # user with an empty secret was told the key did not exist
-                    if current_secret != b"":
-                        if current_secret.decode() == api_secret:
+                    # A secret stored as given (createsuperuser and the Users
+                    # page until 2026-11-23) is read too: decode_data gave
+                    # those "", whose .decode() was a 500 (stored_secret)
+                    current_secret = stored_secret(self.request, res.user_apisecret)
+                    if current_secret is not None:
+                        if secret_matches(self.request, res.user_apisecret, api_secret):
                             token = secrets.token_hex(16)
                             token_expires_on = datetime.now() + relativedelta(hours=+24)
+                            changes = {
+                                "user_apitoken": token,
+                                "user_apitoken_expires_on": token_expires_on,
+                            }
+                            # Stored encrypted from now on, as FormShare
+                            # stores every secret
+                            if stored_as_given(res.user_apisecret):
+                                changes["user_apisecret"] = encode_data(
+                                    self.request, current_secret
+                                )
                             try:
                                 self.request.dbsession.query(User).filter(
                                     User.user_apikey == api_key
-                                ).update(
-                                    {
-                                        "user_apitoken": token,
-                                        "user_apitoken_expires_on": token_expires_on,
-                                    }
-                                )
+                                ).update(changes)
                                 self.request.dbsession.commit()
                             except Exception as e:
                                 log.error(
@@ -118,10 +126,9 @@ class TokenView(object):
                     .first()
                 )
                 if res is not None:
-                    current_secret = decode_data(
-                        self.request, res.coll_apisecret.encode()
-                    )
-                    if current_secret.decode() == api_secret:
+                    # One without a secret, or whose secret does not decrypt,
+                    # is refused, where it was a 500
+                    if secret_matches(self.request, res.coll_apisecret, api_secret):
                         token = secrets.token_hex(16)
                         token_expires_on = datetime.now() + relativedelta(hours=+24)
                         self.request.dbsession.query(Collaborator).filter(

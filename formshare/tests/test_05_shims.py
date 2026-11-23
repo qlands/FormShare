@@ -269,6 +269,31 @@ def test_a_template_s_scripts_get_the_nonce_and_its_data_s_do_not():
         assert page.count("nonce=") == 1
 
 
+def test_a_flash_message_reaches_the_page_as_written():
+    """pop_flash_js used to print the message HTML-escaped inside a quoted
+    script string, so the dialog showed "the project&#39;s" for "the
+    project's" (2026-11-23). It prints it with tojson now: as written on
+    screen, and still unable to close its script or its string."""
+    import os
+
+    from jinja2 import Environment, FileSystemLoader
+
+    templates = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
+    env = Environment(autoescape=True, loader=FileSystemLoader(templates))
+    template = env.get_template("dashboard/snippets/pop_flash_js.jinja2")
+    message = 'The project\'s "pantry" & co. </script><script>alert(1)</script>'
+    session = SimpleNamespace(pop_flash=lambda: [message + "|info"])
+    script = template.render(request=SimpleNamespace(session=session))
+    assert "&#39;" not in script and "&amp;" not in script and "&#34;" not in script
+    assert "</script>" not in script
+    line = [a_line for a_line in script.splitlines() if "messageData = " in a_line][0]
+    printed = line.split("messageData = ", 1)[1].rstrip().rstrip(";")
+    assert json.loads(printed) == message + "|info"
+    # Nothing to show, nothing printed
+    session.pop_flash = lambda: []
+    assert template.render(request=SimpleNamespace(session=session)).strip() == ""
+
+
 def test_the_policy_and_how_it_is_sent():
     assert csp.csp_mode({}) == "report"
     assert csp.csp_mode({"security.csp": " Enforce "}) == "enforce"

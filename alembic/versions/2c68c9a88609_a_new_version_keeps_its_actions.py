@@ -7,14 +7,18 @@ Create Date: 2026-11-21
 A merge carried a follow-up's case links and properties over to the new
 version and left its actions behind (propertyaction rows and the composed
 odkform.action_module are kept per version), so the version that receives
-the follow-ups changed no case. The upload of a version for merging now
-copies them (inherit_actions in processes/db/actions.py).
+the follow-ups changed no case. A version now gets them when mergeversions
+accepts it (inherit_actions in processes/db/actions.py, called by
+RepositoryMergeForm), not at upload: a version in testing has no dictionary,
+and its rules would read as naming fields it lacks.
 
-This repairs the versions uploaded before: each version with a parent in its
-project, oldest first so that a chain of versions passes them along, gets a
-copy of its parent's actions and module when it has no action of its own. A
-version that has actions, whoever added them, is left as it is. Each version
-repaired is named in the output.
+This repairs the versions merged before: each version with a parent in its
+project and a repository (form_schema, which the merge gives it), oldest
+first so that a chain of versions passes them along, gets a copy of its
+parent's actions and module when it has no action of its own. A version
+still in testing is left alone: its merge copies them. A version that has
+actions, whoever added them, is left as it is. Each version repaired is
+named in the output.
 
 Nothing is undone on a downgrade: a copied action cannot be told from one
 added by hand.
@@ -43,6 +47,7 @@ def upgrade():
         sa.text(
             "SELECT project_id, form_id, parent_form FROM odkform "
             "WHERE parent_form IS NOT NULL AND parent_project = project_id "
+            "AND form_schema IS NOT NULL "
             "ORDER BY form_cdate, form_id"
         )
     ).fetchall()
